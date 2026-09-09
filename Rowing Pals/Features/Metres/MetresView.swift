@@ -16,23 +16,33 @@ struct MetresView: View {
         let club: String
         let metres: String
         let ergFraction: Double
+        var isCurrentUser: Bool = false
     }
 
     static let podium = [
         Row(rank: 1, name: "Tom Ashworth", club: "Newcastle University BC", metres: "128,400", ergFraction: 0.82),
         Row(rank: 2, name: "Jack Fenwick", club: "Durham University BC", metres: "121,900", ergFraction: 0.7),
-        Row(rank: 3, name: "Piero Ciobanu", club: "UEA Boat Club", metres: "116,250", ergFraction: 0.78)
+        Row(rank: 3, name: "Piero Ciobanu", club: "UEA Boat Club", metres: "116,250", ergFraction: 0.78, isCurrentUser: true)
     ]
 
     static let rest = [
         Row(rank: 4, name: "Marcus Reilly", club: "UEA Boat Club", metres: "104,800", ergFraction: 0.64),
-        Row(rank: 5, name: "Sam Okonkwo", club: "UEA Boat Club", metres: "41,300", ergFraction: 0.5)
+        Row(rank: 5, name: "Sam Okonkwo", club: "UEA Boat Club", metres: "41,300", ergFraction: 0.5),
+        Row(rank: 6, name: "Ollie Grant", club: "UEA Boat Club", metres: "38,200", ergFraction: 0.55),
+        Row(rank: 7, name: "Freya Lomax", club: "UEA Novice Squad", metres: "35,900", ergFraction: 0.6),
+        Row(rank: 8, name: "Nina Bergström", club: "Norwich Rowing Club", metres: "31,750", ergFraction: 0.45),
+        Row(rank: 9, name: "Ewan Sinclair", club: "UEA Boat Club", metres: "28,400", ergFraction: 0.5),
+        Row(rank: 10, name: "Grace Halloran", club: "Durham University BC", metres: "24,100", ergFraction: 0.58)
     ]
 
     @State private var periodSelection = 0
     @State private var genderSelection = 0
     @State private var sourceSelection = 0
     @State private var scopeSelection = 2
+    /// Whether the current user's own row is visible in the scrollable list.
+    /// The pinned row below only shows once it scrolls out of view, so
+    /// Piero never appears twice on screen at once.
+    @State private var isOwnRowVisible = true
 
     var body: some View {
         // Direct ScrollView child, same constraint as FeedView — see its comment.
@@ -41,7 +51,7 @@ struct MetresView: View {
                 Text("Metres")
                     .font(.system(size: 30, weight: .bold))
                     .foregroundStyle(Tokens.Ink.primary)
-                    .padding(.top, 56)
+                    .padding(.top, 8)
 
                 PillSegmentedControl(options: ["Week", "Month", "Year"], selection: $periodSelection)
 
@@ -91,8 +101,11 @@ struct MetresView: View {
         }
         .background(Tokens.Base.ground)
         .overlay(alignment: .bottom) {
-            MetresPinnedRow()
-                .padding(.bottom, 20)
+            if !isOwnRowVisible {
+                MetresPinnedRow()
+                    .padding(.bottom, 20)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
         }
     }
 
@@ -115,6 +128,7 @@ struct MetresView: View {
             RoundedRectangle(cornerRadius: 22, style: .continuous)
                 .fill(Tokens.Accent.pb.opacity(0.07))
         }
+        .modifier(TrackVisibility(isTracked: row.isCurrentUser, isVisible: $isOwnRowVisible))
     }
 
     private func restRow(_ row: Row) -> some View {
@@ -171,8 +185,31 @@ struct MetresView: View {
     }
 }
 
-/// The pinned "You" row shown above the floating tab bar while on the Metres
-/// tab, hosted via `RootView`'s `.tabViewBottomAccessory`.
+/// Reports whether the current user's row has scrolled out of the visible
+/// area, so the pinned row can appear only once its inline counterpart is
+/// gone — never both at once.
+private struct TrackVisibility: ViewModifier {
+    let isTracked: Bool
+    @Binding var isVisible: Bool
+
+    func body(content: Content) -> some View {
+        if isTracked {
+            content.onGeometryChange(for: CGFloat.self) { proxy in
+                proxy.frame(in: .scrollView).maxY
+            } action: { newValue in
+                withAnimation(.easeInOut(duration: 0.25)) {
+                    isVisible = newValue > 0
+                }
+            }
+        } else {
+            content
+        }
+    }
+}
+
+/// The pinned "You" row shown above the floating tab bar once the user's own
+/// row scrolls out of view — an overlay on this screen's ScrollView, not a
+/// TabView-level accessory (see the design handoff doc for why).
 struct MetresPinnedRow: View {
     var body: some View {
         HStack(spacing: 12) {

@@ -40,7 +40,7 @@ struct TestsView: View {
                         .textStyle(Typography.bodySecondary)
                         .foregroundStyle(Tokens.Ink.secondary)
                 }
-                .padding(.top, 56)
+                .padding(.top, 8)
 
                 LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 3), spacing: 10) {
                     ForEach(tiles, id: \.label) { tile in

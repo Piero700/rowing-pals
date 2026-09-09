@@ -92,7 +92,7 @@ struct ProfileView: View {
                         .fill(Tokens.Ink.primary.opacity(0.09))
                 }
         }
-        .padding(.top, 52)
+        .padding(.top, 8)
     }
 
     private var statsRow: some View {
