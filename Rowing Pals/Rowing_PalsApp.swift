@@ -11,7 +11,7 @@ import SwiftUI
 struct Rowing_PalsApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            RootView()
         }
     }
 }
