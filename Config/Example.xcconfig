@@ -1,0 +1,11 @@
+//
+//  Example.xcconfig
+//  Rowing Pals
+//
+//  Template for Debug.xcconfig / Staging.xcconfig / Release.xcconfig.
+//  Copy this file, rename it to match the configuration, and fill in real
+//  values. The real files are gitignored — never commit one with a real key.
+//
+
+SUPABASE_URL = https://example.supabase.co
+SUPABASE_ANON_KEY = your-anon-key-here
