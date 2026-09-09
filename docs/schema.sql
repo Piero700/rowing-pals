@@ -250,6 +250,12 @@ create policy read_all on reactions    for select to authenticated using (true);
 create policy read_all on comments     for select to authenticated using (true);
 
 -- Writable only by the person it belongs to.
+-- Named differently from the update policy below — Postgres requires policy
+-- names to be unique per table regardless of command, so reusing "own_row"
+-- here would silently fail to create a second policy.
+create policy insert_own on profiles for insert to authenticated
+  with check (id = auth.uid());
+
 create policy own_row on profiles for update to authenticated
   using (id = auth.uid()) with check (id = auth.uid());
 
