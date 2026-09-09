@@ -30,13 +30,17 @@ struct PhotoPlaceholder: View {
     }
 }
 
-/// A circular variant for avatars and crests.
+/// A circular variant for avatars and crests. A stroked outline keeps it
+/// readable against low-contrast row backgrounds, especially in light mode.
 struct AvatarPlaceholder: View {
     var diameter: CGFloat = 36
 
     var body: some View {
         Circle()
-            .fill(Tokens.Ink.primary.opacity(0.08))
+            .fill(Tokens.Ink.primary.opacity(0.1))
+            .overlay {
+                Circle().strokeBorder(Tokens.Ink.primary.opacity(0.18), lineWidth: 1)
+            }
             .frame(width: diameter, height: diameter)
     }
 }
