@@ -5,18 +5,15 @@
 
 import SwiftUI
 
-/// Placeholder sheet content presented from the Post tab. Real capture flow
-/// arrives in tasks 07 and 08.
+/// The sheet presented from the Post tab. A NavigationStack scoped to this
+/// sheet is safe — it doesn't affect the tab content's own scroll-to-minimise
+/// behaviour, since the sheet isn't part of that view hierarchy.
 struct PostSheetView: View {
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         NavigationStack {
-            Text("Post")
-                .textStyle(Typography.displayNumeral)
-                .foregroundStyle(Tokens.Ink.primary)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(Tokens.Base.ground)
+            CaptureView()
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) {
                         Button("Cancel") { dismiss() }
