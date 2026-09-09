@@ -51,16 +51,6 @@ enum Tokens {
         static let primary = Color(light: Base.dark, dark: .white)
         static let secondary = primary.opacity(0.6)
     }
-
-    /// Glass fill and edge values, expressed as opacities to be composited over
-    /// whatever material sits behind `GlassSurface`.
-    enum Glass {
-        static let fillOpacity: Double = 0.13
-        /// Bright specular highlight along the upper rim.
-        static let edgeTopOpacity: Double = 0.22
-        /// Darkened outer edge.
-        static let edgeBottomOpacity: Double = 0.30
-    }
 }
 
 // MARK: - Typography
