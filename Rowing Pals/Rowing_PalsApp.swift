@@ -13,11 +13,18 @@ struct Rowing_PalsApp: App {
 
     var body: some Scene {
         WindowGroup {
-            if authState.isSignedIn {
-                RootView()
-            } else {
+            if !authState.isSignedIn {
                 SignInView()
+            } else if authState.needsOnboarding == nil {
+                // Briefly true right after sign-in while the profile's
+                // club_id is being checked — avoids a flash of RootView.
+                ProgressView()
+            } else if authState.needsOnboarding == true {
+                ClubSearchView()
+            } else {
+                RootView()
             }
         }
+        .environment(authState)
     }
 }
