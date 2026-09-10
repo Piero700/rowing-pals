@@ -9,9 +9,15 @@ import SwiftUI
 
 @main
 struct Rowing_PalsApp: App {
+    @State private var authState = AuthState()
+
     var body: some Scene {
         WindowGroup {
-            RootView()
+            if authState.isSignedIn {
+                RootView()
+            } else {
+                SignInView()
+            }
         }
     }
 }

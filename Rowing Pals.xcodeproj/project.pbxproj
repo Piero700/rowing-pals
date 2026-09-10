@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		7618FD0E3052101000711870 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = 7618FD0D3052101000711870 /* Supabase */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		76BC2C453050B65000D29DEB /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -68,6 +72,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7618FD0E3052101000711870 /* Supabase in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -131,6 +136,7 @@
 			);
 			name = "Rowing Pals";
 			packageProductDependencies = (
+				7618FD0D3052101000711870 /* Supabase */,
 			);
 			productName = "Rowing Pals";
 			productReference = 76BC2C373050B64E00D29DEB /* Rowing Pals.app */;
@@ -214,6 +220,9 @@
 			);
 			mainGroup = 76BC2C2E3050B64E00D29DEB;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				7618FD0C3052101000711870 /* XCRemoteSwiftPackageReference "supabase-swift" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 76BC2C383050B64E00D29DEB /* Products */;
 			projectDirPath = "";
@@ -547,6 +556,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = X734984ZF7;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = "Rowing Pals/Info.plist";
@@ -735,6 +745,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		7618FD0C3052101000711870 /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/supabase/supabase-swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.5.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		7618FD0D3052101000711870 /* Supabase */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 7618FD0C3052101000711870 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Supabase;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 76BC2C2F3050B64E00D29DEB /* Project object */;
 }
