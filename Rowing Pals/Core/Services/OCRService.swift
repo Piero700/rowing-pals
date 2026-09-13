@@ -26,6 +26,22 @@ enum OCRError: LocalizedError {
     }
 }
 
+nonisolated extension CGImagePropertyOrientation {
+    init(_ uiOrientation: UIImage.Orientation) {
+        switch uiOrientation {
+        case .up: self = .up
+        case .upMirrored: self = .upMirrored
+        case .down: self = .down
+        case .downMirrored: self = .downMirrored
+        case .left: self = .left
+        case .leftMirrored: self = .leftMirrored
+        case .right: self = .right
+        case .rightMirrored: self = .rightMirrored
+        @unknown default: self = .up
+        }
+    }
+}
+
 nonisolated enum OCRService {
     /// Runs on-device text recognition over a monitor photo. Accurate, not
     /// fast — this only ever runs once per segment, not live. Language
@@ -55,7 +71,13 @@ nonisolated enum OCRService {
             request.recognitionLevel = .accurate
             request.usesLanguageCorrection = false
 
-            let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
+            // UIImage(contentsOfFile:) reads EXIF orientation into
+            // .imageOrientation, but .cgImage is the raw, un-rotated pixel
+            // buffer — real phone photos of a monitor are routinely shot in
+            // landscape while the monitor itself is upright, so without
+            // passing this through, Vision reads sideways text badly.
+            let orientation = CGImagePropertyOrientation(image.imageOrientation)
+            let handler = VNImageRequestHandler(cgImage: cgImage, orientation: orientation, options: [:])
             do {
                 try handler.perform([request])
             } catch {
