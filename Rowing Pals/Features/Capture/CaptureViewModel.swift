@@ -7,49 +7,82 @@
 import Supabase
 import UIKit
 
-/// Owns the rear-camera `AVCaptureSession` and drives one shutter press
-/// through downscale → upload → `sessions` insert. Single camera only —
-/// the front camera arrives with task 08's `AVCaptureMultiCamSession`.
+/// Owns the capture session and drives one shutter press through both
+/// photos → both uploads → one `sessions` row. Uses `AVCaptureMultiCamSession`
+/// for true simultaneous rear+front capture where the device supports it,
+/// falling back to a single `AVCaptureSession` swapped between cameras
+/// (rear photo, then front) where it doesn't — per the task's explicit
+/// fallback requirement. iPhone 11 and later all support multi-cam, so the
+/// fallback path is real but untested on the one device available here.
 @Observable
 final class CaptureViewModel: NSObject {
     enum Phase: Equatable {
         case configuring
         case ready
-        case capturing
+        case capturingRear
+        case capturingFront
         case uploading
         case done
         case failed(String)
     }
 
-    let session = AVCaptureSession()
-    var phase: Phase = .configuring
+    let session: AVCaptureSession
+    let isMultiCam: Bool
 
-    private let photoOutput = AVCapturePhotoOutput()
+    var phase: Phase = .configuring
+    var rearPreviewLayer: AVCaptureVideoPreviewLayer?
+    /// nil until the front camera is actually live — always true once ready
+    /// in multi-cam mode; only true once the sequential fallback reaches its
+    /// second shot.
+    var frontPreviewLayer: AVCaptureVideoPreviewLayer?
+
     private let sessionQueue = DispatchQueue(label: "com.rowingpals.camera-session")
-    // AVCapturePhotoCaptureDelegate's callback arrives on an arbitrary
-    // AVFoundation-owned queue, not the main actor every other member of this
-    // class defaults to — the delegate method below is `nonisolated` to
-    // match, so this property (its only reader/writer) has to opt out too.
-    // Not UI state, so it's excluded from Observation tracking — which also
-    // lets it be `nonisolated` cleanly (the macro can't apply that to a
-    // tracked property).
+    // Read from the nonisolated delegate callback below, alongside the two
+    // continuations — immutable, so plain `nonisolated` (not `unsafe`) is
+    // enough.
+    nonisolated private let rearOutput = AVCapturePhotoOutput()
+    nonisolated private let frontOutput = AVCapturePhotoOutput()
+    private var rearInput: AVCaptureDeviceInput?
+    private var frontInput: AVCaptureDeviceInput?
+    private var runtimeErrorObserver: NSObjectProtocol?
+
+    // Both delegate callbacks land on an AVFoundation-owned queue, not the
+    // main actor every other member of this class defaults to (this
+    // module sets SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor) — these two
+    // are excluded from Observation tracking so `nonisolated` can apply.
     @ObservationIgnored
-    nonisolated(unsafe) private var photoContinuation: CheckedContinuation<Data, Error>?
+    nonisolated(unsafe) private var rearContinuation: CheckedContinuation<Data, Error>?
+    @ObservationIgnored
+    nonisolated(unsafe) private var frontContinuation: CheckedContinuation<Data, Error>?
 
     enum CaptureError: LocalizedError {
         case permissionDenied
         case deviceUnavailable
         case noPhotoData
         case downscaleFailed
+        case runtimeError(String)
 
         var errorDescription: String? {
             switch self {
             case .permissionDenied: "Camera access is off. Enable it in Settings to shoot a session."
-            case .deviceUnavailable: "No rear camera is available on this device."
+            case .deviceUnavailable: "Both cameras aren't available on this device."
             case .noPhotoData: "The camera didn't return a usable photo. Try again."
             case .downscaleFailed: "Couldn't process that photo. Try again."
+            case .runtimeError(let reason): "Camera session stopped: \(reason)"
             }
         }
+    }
+
+    override init() {
+        if AVCaptureMultiCamSession.isMultiCamSupported {
+            session = AVCaptureMultiCamSession()
+            isMultiCam = true
+        } else {
+            session = AVCaptureSession()
+            isMultiCam = false
+        }
+        super.init()
+        observeRuntimeErrors()
     }
 
     func start() {
@@ -59,7 +92,11 @@ final class CaptureViewModel: NSObject {
                 phase = .failed(CaptureError.permissionDenied.localizedDescription)
                 return
             }
-            configureSession()
+            if isMultiCam {
+                configureMultiCam()
+            } else {
+                configureSequentialRear()
+            }
         }
     }
 
@@ -80,7 +117,95 @@ final class CaptureViewModel: NSObject {
         }
     }
 
-    private func configureSession() {
+    private func observeRuntimeErrors() {
+        runtimeErrorObserver = NotificationCenter.default.addObserver(
+            forName: AVCaptureSession.runtimeErrorNotification,
+            object: session,
+            queue: .main
+        ) { [weak self] notification in
+            let reason = (notification.userInfo?[AVCaptureSessionErrorKey] as? Error)?.localizedDescription ?? "unknown"
+            self?.phase = .failed(CaptureError.runtimeError(reason).localizedDescription)
+        }
+    }
+
+    // MARK: - Multi-cam setup
+
+    private func configureMultiCam() {
+        guard let multiCamSession = session as? AVCaptureMultiCamSession else { return }
+
+        sessionQueue.async { [weak self] in
+            guard let self else { return }
+
+            multiCamSession.beginConfiguration()
+
+            guard
+                let rearDevice = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back),
+                let frontDevice = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .front),
+                let rearInput = try? AVCaptureDeviceInput(device: rearDevice),
+                let frontInput = try? AVCaptureDeviceInput(device: frontDevice),
+                multiCamSession.canAddInput(rearInput),
+                multiCamSession.canAddInput(frontInput)
+            else {
+                multiCamSession.commitConfiguration()
+                fail(.deviceUnavailable)
+                return
+            }
+            multiCamSession.addInput(rearInput)
+            multiCamSession.addInput(frontInput)
+            self.rearInput = rearInput
+            self.frontInput = frontInput
+
+            guard
+                let rearPort = rearInput.ports(for: .video, sourceDeviceType: rearDevice.deviceType, sourceDevicePosition: .back).first,
+                let frontPort = frontInput.ports(for: .video, sourceDeviceType: frontDevice.deviceType, sourceDevicePosition: .front).first,
+                multiCamSession.canAddOutput(rearOutput),
+                multiCamSession.canAddOutput(frontOutput)
+            else {
+                multiCamSession.commitConfiguration()
+                fail(.deviceUnavailable)
+                return
+            }
+            multiCamSession.addOutputWithNoConnections(rearOutput)
+            multiCamSession.addOutputWithNoConnections(frontOutput)
+
+            let rearConnection = AVCaptureConnection(inputPorts: [rearPort], output: rearOutput)
+            let frontConnection = AVCaptureConnection(inputPorts: [frontPort], output: frontOutput)
+            guard multiCamSession.canAddConnection(rearConnection), multiCamSession.canAddConnection(frontConnection) else {
+                multiCamSession.commitConfiguration()
+                fail(.deviceUnavailable)
+                return
+            }
+            multiCamSession.addConnection(rearConnection)
+            multiCamSession.addConnection(frontConnection)
+
+            let rearLayer = AVCaptureVideoPreviewLayer(sessionWithNoConnection: multiCamSession)
+            let frontLayer = AVCaptureVideoPreviewLayer(sessionWithNoConnection: multiCamSession)
+            let rearLayerConnection = AVCaptureConnection(inputPort: rearPort, videoPreviewLayer: rearLayer)
+            let frontLayerConnection = AVCaptureConnection(inputPort: frontPort, videoPreviewLayer: frontLayer)
+            guard multiCamSession.canAddConnection(rearLayerConnection), multiCamSession.canAddConnection(frontLayerConnection) else {
+                multiCamSession.commitConfiguration()
+                fail(.deviceUnavailable)
+                return
+            }
+            multiCamSession.addConnection(rearLayerConnection)
+            multiCamSession.addConnection(frontLayerConnection)
+
+            // startRunning() must come strictly after commitConfiguration()
+            // returns — see the note task 07 left about this exact ordering.
+            multiCamSession.commitConfiguration()
+            multiCamSession.startRunning()
+
+            DispatchQueue.main.async {
+                self.rearPreviewLayer = rearLayer
+                self.frontPreviewLayer = frontLayer
+                self.phase = .ready
+            }
+        }
+    }
+
+    // MARK: - Sequential fallback (devices without multi-cam support)
+
+    private func configureSequentialRear() {
         sessionQueue.async { [weak self] in
             guard let self else { return }
 
@@ -93,40 +218,104 @@ final class CaptureViewModel: NSObject {
                 session.canAddInput(input)
             else {
                 session.commitConfiguration()
-                DispatchQueue.main.async { self.phase = .failed(CaptureError.deviceUnavailable.localizedDescription) }
+                fail(.deviceUnavailable)
                 return
             }
             session.addInput(input)
+            rearInput = input
 
-            guard session.canAddOutput(photoOutput) else {
+            guard session.canAddOutput(rearOutput) else {
                 session.commitConfiguration()
-                DispatchQueue.main.async { self.phase = .failed(CaptureError.deviceUnavailable.localizedDescription) }
+                fail(.deviceUnavailable)
                 return
             }
-            session.addOutput(photoOutput)
+            session.addOutput(rearOutput)
 
-            // startRunning() must come strictly after commitConfiguration()
-            // returns — calling it while a begin/commit block is still open
-            // (even via a `defer` that hasn't fired yet) throws.
             session.commitConfiguration()
             session.startRunning()
-            DispatchQueue.main.async { self.phase = .ready }
+
+            let layer = AVCaptureVideoPreviewLayer(session: session)
+            DispatchQueue.main.async {
+                self.rearPreviewLayer = layer
+                self.phase = .ready
+            }
         }
     }
 
-    /// Captures a photo, downscales/re-encodes it, uploads it, and inserts
-    /// the `sessions` row. Placeholder distance/time — OCR arrives in task 09.
+    /// Swaps the sequential session from the rear camera to the front one,
+    /// reusing the same single `AVCaptureSession` and output.
+    private func switchSequentialToFront() async throws {
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+            sessionQueue.async { [weak self] in
+                guard let self else { return }
+
+                session.beginConfiguration()
+                if let rearInput { session.removeInput(rearInput) }
+
+                guard
+                    let device = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .front),
+                    let input = try? AVCaptureDeviceInput(device: device),
+                    session.canAddInput(input)
+                else {
+                    session.commitConfiguration()
+                    continuation.resume(throwing: CaptureError.deviceUnavailable)
+                    return
+                }
+                session.addInput(input)
+                frontInput = input
+                session.commitConfiguration()
+
+                let layer = AVCaptureVideoPreviewLayer(session: session)
+                DispatchQueue.main.async {
+                    self.frontPreviewLayer = layer
+                    continuation.resume()
+                }
+            }
+        }
+    }
+
+    private func fail(_ error: CaptureError) {
+        DispatchQueue.main.async { self.phase = .failed(error.localizedDescription) }
+    }
+
+    // MARK: - Capture, upload, insert
+
+    /// Captures both photos, uploads rear to `monitors` and front to
+    /// `selfies` under a path named after the new session's own id, and
+    /// inserts the `sessions` row. The row is inserted *before* the uploads
+    /// so both paths can be named after its id — sessions has no photo-path
+    /// columns (those live on segments, task 10), so this is how "both
+    /// paths reference one row" without a schema change.
     func captureAndUpload(userId: UUID) async {
-        phase = .capturing
         do {
-            let rawData = try await capturePhotoData()
-            guard let jpegData = Self.downscaledJPEG(from: rawData) else {
+            let sessionId = try await insertSession(userId: userId)
+
+            let rearData: Data
+            let frontData: Data
+            if isMultiCam {
+                phase = .capturingRear
+                async let rear = capturePhotoData(from: rearOutput, isRear: true)
+                async let front = capturePhotoData(from: frontOutput, isRear: false)
+                (rearData, frontData) = try await (rear, front)
+            } else {
+                phase = .capturingRear
+                rearData = try await capturePhotoData(from: rearOutput, isRear: true)
+                phase = .capturingFront
+                try await switchSequentialToFront()
+                frontData = try await capturePhotoData(from: rearOutput, isRear: false)
+            }
+
+            guard
+                let rearJPEG = Self.downscaledJPEG(from: rearData),
+                let frontJPEG = Self.downscaledJPEG(from: frontData)
+            else {
                 throw CaptureError.downscaleFailed
             }
 
             phase = .uploading
-            _ = try await StorageService.uploadMonitorPhoto(jpegData, userId: userId)
-            try await insertSession(userId: userId)
+            async let rearUpload: Void = StorageService.uploadSessionPhoto(rearJPEG, bucket: "monitors", userId: userId, sessionId: sessionId)
+            async let frontUpload: Void = StorageService.uploadSessionPhoto(frontJPEG, bucket: "selfies", userId: userId, sessionId: sessionId)
+            _ = try await (rearUpload, frontUpload)
 
             phase = .done
         } catch {
@@ -134,13 +323,15 @@ final class CaptureViewModel: NSObject {
         }
     }
 
-    private func capturePhotoData() async throws -> Data {
+    private func capturePhotoData(from output: AVCapturePhotoOutput, isRear: Bool) async throws -> Data {
         try await withCheckedThrowingContinuation { continuation in
-            self.photoContinuation = continuation
-            let settings = AVCapturePhotoSettings()
-            sessionQueue.async { [photoOutput] in
-                photoOutput.capturePhoto(with: settings, delegate: self)
+            if isRear {
+                self.rearContinuation = continuation
+            } else {
+                self.frontContinuation = continuation
             }
+            let settings = AVCapturePhotoSettings()
+            sessionQueue.async { output.capturePhoto(with: settings, delegate: self) }
         }
     }
 
@@ -162,9 +353,12 @@ final class CaptureViewModel: NSObject {
         return resized.jpegData(compressionQuality: quality)
     }
 
-    /// Placeholder payload for the `sessions` insert — not the full `Session`
-    /// model, since the DB fills in id/posted_at/created_at itself.
+    /// Placeholder payload for the `sessions` insert — not the full
+    /// `Session` model, since the DB fills in posted_at/created_at itself.
+    /// `id` is supplied (rather than left to the default) so the uploads
+    /// that follow can be named after it.
     private struct NewSession: Encodable {
+        let id: UUID
         let userId: UUID
         let type: SessionType
         let totalDistanceM: Int
@@ -175,6 +369,7 @@ final class CaptureViewModel: NSObject {
         let sessionDate: String
 
         enum CodingKeys: String, CodingKey {
+            case id
             case userId = "user_id"
             case type
             case totalDistanceM = "total_distance_m"
@@ -186,13 +381,15 @@ final class CaptureViewModel: NSObject {
         }
     }
 
-    private func insertSession(userId: UUID) async throws {
+    private func insertSession(userId: UUID) async throws -> UUID {
         let formatter = DateFormatter()
         formatter.calendar = Calendar.current
         formatter.timeZone = .current
         formatter.dateFormat = "yyyy-MM-dd"
 
+        let sessionId = UUID()
         let newSession = NewSession(
+            id: sessionId,
             userId: userId,
             type: .erg,
             totalDistanceM: 0,
@@ -207,18 +404,28 @@ final class CaptureViewModel: NSObject {
             .from("sessions")
             .insert(newSession)
             .execute()
+
+        return sessionId
     }
 }
 
 extension CaptureViewModel: AVCapturePhotoCaptureDelegate {
     nonisolated func photoOutput(_ output: AVCapturePhotoOutput, didFinishProcessingPhoto photo: AVCapturePhoto, error: Error?) {
-        if let error {
-            photoContinuation?.resume(throwing: error)
-        } else if let data = photo.fileDataRepresentation() {
-            photoContinuation?.resume(returning: data)
+        let continuation: CheckedContinuation<Data, Error>?
+        if output === rearOutput {
+            continuation = rearContinuation
+            rearContinuation = nil
         } else {
-            photoContinuation?.resume(throwing: CaptureError.noPhotoData)
+            continuation = frontContinuation
+            frontContinuation = nil
         }
-        photoContinuation = nil
+
+        if let error {
+            continuation?.resume(throwing: error)
+        } else if let data = photo.fileDataRepresentation() {
+            continuation?.resume(returning: data)
+        } else {
+            continuation?.resume(throwing: CaptureError.noPhotoData)
+        }
     }
 }

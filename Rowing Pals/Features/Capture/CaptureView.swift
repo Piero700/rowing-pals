@@ -7,9 +7,9 @@ import AVFoundation
 import SwiftUI
 import Supabase
 
-/// Screen 3 — single rear-camera capture and upload. The front-camera inset
-/// stays a static placeholder until task 08 wires up real dual capture via
-/// `AVCaptureMultiCamSession`.
+/// Screen 3 — dual camera capture and upload. Simultaneous on devices that
+/// support `AVCaptureMultiCamSession` (iPhone 11+); sequential rear-then-
+/// front elsewhere.
 struct CaptureView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var viewModel = CaptureViewModel()
@@ -25,11 +25,7 @@ struct CaptureView: View {
                 Spacer()
             }
 
-            PhotoPlaceholder(cornerRadius: 22, caption: "FRONT CAMERA")
-                .frame(width: 104, height: 140)
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
-                .padding(.top, 150)
-                .padding(.trailing, 16)
+            frontInset
 
             VStack(spacing: 24) {
                 Spacer()
@@ -50,13 +46,13 @@ struct CaptureView: View {
         if viewModel.phase == .configuring {
             PhotoPlaceholder(cornerRadius: 0, caption: "STARTING CAMERA…")
                 .ignoresSafeArea()
-        } else if case .failed = viewModel.phase, viewModel.session.inputs.isEmpty {
+        } else if case .failed = viewModel.phase, viewModel.rearPreviewLayer == nil {
             // Camera never came up at all (e.g. permission denied) — no
             // point showing a black preview layer underneath. The message
             // itself renders once, from statusView below.
             Tokens.Base.dark.ignoresSafeArea()
-        } else {
-            CameraPreviewView(session: viewModel.session)
+        } else if let rearLayer = viewModel.rearPreviewLayer {
+            CameraPreviewView(previewLayer: rearLayer)
                 .ignoresSafeArea()
 
             RoundedRectangle(cornerRadius: 22, style: .continuous)
@@ -67,13 +63,33 @@ struct CaptureView: View {
         }
     }
 
+    /// Live once the front camera is actually active — always true once
+    /// ready in multi-cam mode; only true once the sequential fallback
+    /// reaches its second shot. A static placeholder the rest of the time.
+    private var frontInset: some View {
+        Group {
+            if let frontLayer = viewModel.frontPreviewLayer {
+                CameraPreviewView(previewLayer: frontLayer)
+                    .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+            } else {
+                PhotoPlaceholder(cornerRadius: 22, caption: "FRONT CAMERA")
+            }
+        }
+        .frame(width: 104, height: 140)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
+        .padding(.top, 150)
+        .padding(.trailing, 16)
+    }
+
     @ViewBuilder
     private var statusView: some View {
         switch viewModel.phase {
         case .ready:
             shutterButton
-        case .capturing:
-            statusLabel("Capturing…")
+        case .capturingRear:
+            statusLabel(viewModel.isMultiCam ? "Capturing…" : "Capturing rear…")
+        case .capturingFront:
+            statusLabel("Capturing front…")
         case .uploading:
             statusLabel("Uploading…")
         case .done:
@@ -98,11 +114,11 @@ struct CaptureView: View {
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 24)
                 Button("Try again") {
-                    // The session itself is fine if it already has an input —
-                    // only a capture/upload attempt failed, not camera setup.
-                    // A never-configured session (e.g. permission was denied)
-                    // needs a real restart, not just flipping the phase.
-                    if viewModel.session.inputs.isEmpty {
+                    // The session itself is fine if it already has a rear
+                    // preview — only a capture/upload attempt failed, not
+                    // camera setup. A never-configured session (e.g.
+                    // permission was denied) needs a real restart.
+                    if viewModel.rearPreviewLayer == nil {
                         viewModel.start()
                     } else {
                         viewModel.phase = .ready
