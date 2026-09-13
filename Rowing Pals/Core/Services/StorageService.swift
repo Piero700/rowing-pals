@@ -7,12 +7,10 @@ import Foundation
 import Supabase
 
 enum StorageService {
-    /// Uploads JPEG data for one session's photo — `monitors` for the rear
-    /// shot, `selfies` for the front one — at `userID/sessionID.jpg`. Naming
-    /// both buckets' files after the session's own id is what lets "both
-    /// paths reference one row" (per task 08) without a schema change —
-    /// `sessions` has no photo-path columns; those live on `segments`
-    /// (task 10).
+    /// Uploads JPEG data for a session's one-per-session photo — the
+    /// `selfies` front shot — at `userID/sessionID.jpg`. A session has
+    /// exactly one selfie no matter how many monitor photos it has (task
+    /// 10 adds multiple), so it doesn't need a position in its path.
     static func uploadSessionPhoto(_ data: Data, bucket: String, userId: UUID, sessionId: UUID) async throws {
         // Swift's UUID.uuidString is uppercase; Postgres's auth.uid()::text
         // is lowercase. The storage RLS policies compare them as exact
@@ -21,5 +19,18 @@ enum StorageService {
         try await SupabaseService.shared.storage
             .from(bucket)
             .upload(path, data: data, options: FileOptions(contentType: "image/jpeg"))
+    }
+
+    /// Uploads one segment's monitor photo to `monitors`, nested under the
+    /// session by its position — a session can have several (task 10's
+    /// "+ Add another photo"), so unlike the selfie these can't share a bare
+    /// `sessionID.jpg` path. Returns the path to store on the segment's
+    /// `monitor_photo_path` column.
+    static func uploadSegmentPhoto(_ data: Data, userId: UUID, sessionId: UUID, position: Int) async throws -> String {
+        let path = "\(userId.uuidString.lowercased())/\(sessionId.uuidString.lowercased())/\(position).jpg"
+        try await SupabaseService.shared.storage
+            .from("monitors")
+            .upload(path, data: data, options: FileOptions(contentType: "image/jpeg"))
+        return path
     }
 }

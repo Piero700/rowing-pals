@@ -4,16 +4,25 @@
 //
 
 @preconcurrency import AVFoundation
-import Supabase
 import UIKit
 
-/// Owns the capture session and drives one shutter press through both
-/// photos → both uploads → one `sessions` row. Uses `AVCaptureMultiCamSession`
-/// for true simultaneous rear+front capture where the device supports it,
-/// falling back to a single `AVCaptureSession` swapped between cameras
-/// (rear photo, then front) where it doesn't — per the task's explicit
-/// fallback requirement. iPhone 11 and later all support multi-cam, so the
-/// fallback path is real but untested on the one device available here.
+/// Owns the capture session and turns shutter presses into downscaled JPEG
+/// data — nothing more. Uploading and the `sessions`/`segments` writes moved
+/// to `ReviewSheetViewModel` in task 10, since a session isn't final until
+/// the user has confirmed its numbers.
+///
+/// Uses `AVCaptureMultiCamSession` for true simultaneous rear+front capture
+/// where the device supports it, falling back to a single `AVCaptureSession`
+/// swapped between cameras (rear photo, then front) where it doesn't — per
+/// the task's explicit fallback requirement. iPhone 11 and later all support
+/// multi-cam, so the fallback path is real but untested on the one device
+/// available here.
+///
+/// `rearOnly` skips the front camera entirely, for task 10's "+ Add another
+/// photo" — a session has one selfie no matter how many monitor photos it
+/// has, so re-shooting the front camera for a second or third photo would be
+/// pointless. It reuses the same sequential-rear code path as the multi-cam
+/// fallback above, rather than a duplicate camera setup.
 @Observable
 final class CaptureViewModel: NSObject {
     enum Phase: Equatable {
@@ -21,19 +30,19 @@ final class CaptureViewModel: NSObject {
         case ready
         case capturingRear
         case capturingFront
-        case uploading
         case done
         case failed(String)
     }
 
     let session: AVCaptureSession
     let isMultiCam: Bool
+    private let rearOnly: Bool
 
     var phase: Phase = .configuring
     var rearPreviewLayer: AVCaptureVideoPreviewLayer?
     /// nil until the front camera is actually live — always true once ready
     /// in multi-cam mode; only true once the sequential fallback reaches its
-    /// second shot.
+    /// second shot. Stays nil for the whole session in `rearOnly` mode.
     var frontPreviewLayer: AVCaptureVideoPreviewLayer?
 
     private let sessionQueue = DispatchQueue(label: "com.rowingpals.camera-session")
@@ -73,8 +82,9 @@ final class CaptureViewModel: NSObject {
         }
     }
 
-    override init() {
-        if AVCaptureMultiCamSession.isMultiCamSupported {
+    init(rearOnly: Bool = false) {
+        self.rearOnly = rearOnly
+        if !rearOnly && AVCaptureMultiCamSession.isMultiCamSupported {
             session = AVCaptureMultiCamSession()
             isMultiCam = true
         } else {
@@ -278,18 +288,14 @@ final class CaptureViewModel: NSObject {
         DispatchQueue.main.async { self.phase = .failed(error.localizedDescription) }
     }
 
-    // MARK: - Capture, upload, insert
+    // MARK: - Capture
 
-    /// Captures both photos, uploads rear to `monitors` and front to
-    /// `selfies` under a path named after the new session's own id, and
-    /// inserts the `sessions` row. The row is inserted *before* the uploads
-    /// so both paths can be named after its id — sessions has no photo-path
-    /// columns (those live on segments, task 10), so this is how "both
-    /// paths reference one row" without a schema change.
-    func captureAndUpload(userId: UUID) async {
+    /// Captures the rear (monitor) and front (selfie) photos simultaneously
+    /// or sequentially, downscaled and ready to hand to the review sheet.
+    /// No upload, no DB write — those happen once the user confirms the
+    /// extracted numbers.
+    func captureInitialPair() async -> (rear: Data, front: Data)? {
         do {
-            let sessionId = try await insertSession(userId: userId)
-
             let rearData: Data
             let frontData: Data
             if isMultiCam {
@@ -312,14 +318,26 @@ final class CaptureViewModel: NSObject {
                 throw CaptureError.downscaleFailed
             }
 
-            phase = .uploading
-            async let rearUpload: Void = StorageService.uploadSessionPhoto(rearJPEG, bucket: "monitors", userId: userId, sessionId: sessionId)
-            async let frontUpload: Void = StorageService.uploadSessionPhoto(frontJPEG, bucket: "selfies", userId: userId, sessionId: sessionId)
-            _ = try await (rearUpload, frontUpload)
-
             phase = .done
+            return (rearJPEG, frontJPEG)
         } catch {
             phase = .failed(error.localizedDescription)
+            return nil
+        }
+    }
+
+    /// Captures a single rear-camera photo — `rearOnly` mode, for adding a
+    /// second or third monitor photo to a session already in review.
+    func captureMonitorPhoto() async -> Data? {
+        do {
+            phase = .capturingRear
+            let data = try await capturePhotoData(from: rearOutput, isRear: true)
+            guard let jpeg = Self.downscaledJPEG(from: data) else { throw CaptureError.downscaleFailed }
+            phase = .done
+            return jpeg
+        } catch {
+            phase = .failed(error.localizedDescription)
+            return nil
         }
     }
 
@@ -353,60 +371,6 @@ final class CaptureViewModel: NSObject {
         return resized.jpegData(compressionQuality: quality)
     }
 
-    /// Placeholder payload for the `sessions` insert — not the full
-    /// `Session` model, since the DB fills in posted_at/created_at itself.
-    /// `id` is supplied (rather than left to the default) so the uploads
-    /// that follow can be named after it.
-    private struct NewSession: Encodable {
-        let id: UUID
-        let userId: UUID
-        let type: SessionType
-        let totalDistanceM: Int
-        let totalTimeMs: Int
-        let photoVerified: Bool
-        let loggedLate: Bool
-        let capturedAt: Date
-        let sessionDate: String
-
-        enum CodingKeys: String, CodingKey {
-            case id
-            case userId = "user_id"
-            case type
-            case totalDistanceM = "total_distance_m"
-            case totalTimeMs = "total_time_ms"
-            case photoVerified = "photo_verified"
-            case loggedLate = "logged_late"
-            case capturedAt = "captured_at"
-            case sessionDate = "session_date"
-        }
-    }
-
-    private func insertSession(userId: UUID) async throws -> UUID {
-        let formatter = DateFormatter()
-        formatter.calendar = Calendar.current
-        formatter.timeZone = .current
-        formatter.dateFormat = "yyyy-MM-dd"
-
-        let sessionId = UUID()
-        let newSession = NewSession(
-            id: sessionId,
-            userId: userId,
-            type: .erg,
-            totalDistanceM: 0,
-            totalTimeMs: 0,
-            photoVerified: true,
-            loggedLate: false,
-            capturedAt: Date(),
-            sessionDate: formatter.string(from: Date())
-        )
-
-        try await SupabaseService.shared
-            .from("sessions")
-            .insert(newSession)
-            .execute()
-
-        return sessionId
-    }
 }
 
 extension CaptureViewModel: AVCapturePhotoCaptureDelegate {
