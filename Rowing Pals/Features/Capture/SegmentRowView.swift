@@ -71,6 +71,7 @@ struct SegmentRowView: View {
             HStack(spacing: 6) {
                 ForEach(SegmentLabel.allCases, id: \.self) { tag in
                     Button {
+                        guard tag != segment.label else { return }
                         segment.label = tag
                         segment.wasEdited = true
                     } label: {
