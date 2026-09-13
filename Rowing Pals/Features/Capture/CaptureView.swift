@@ -181,6 +181,13 @@ struct CaptureView: View {
         Button {
             Task {
                 if let (rear, front) = await viewModel.captureInitialPair() {
+                    // Stop here, deterministically, rather than relying on
+                    // `.onDisappear` — pushing to ReviewSheetView via
+                    // `navigationDestination` keeps this view on the nav
+                    // stack (for back-swipe), so `onDisappear` isn't a
+                    // reliable place to release the camera before "+ Add
+                    // another photo" tries to start a second session.
+                    viewModel.stop()
                     initialCapture = InitialCapture(rearJPEG: rear, frontJPEG: front)
                 }
             }
