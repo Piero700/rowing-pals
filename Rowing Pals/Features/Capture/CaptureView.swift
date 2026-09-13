@@ -3,24 +3,20 @@
 //  Rowing Pals
 //
 
+import AVFoundation
 import SwiftUI
+import Supabase
 
-/// Screen 3 — dual camera, live capture only. Static mockup; real
-/// `AVCaptureMultiCamSession` wiring arrives with tasks 07/08 on a physical
-/// device (the simulator has no camera).
+/// Screen 3 — single rear-camera capture and upload. The front-camera inset
+/// stays a static placeholder until task 08 wires up real dual capture via
+/// `AVCaptureMultiCamSession`.
 struct CaptureView: View {
-    @State private var showReview = false
+    @Environment(\.dismiss) private var dismiss
+    @State private var viewModel = CaptureViewModel()
 
     var body: some View {
         ZStack(alignment: .bottom) {
-            PhotoPlaceholder(cornerRadius: 0, caption: "REAR CAMERA · PM5 MONITOR IN FRAME")
-                .ignoresSafeArea()
-
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .strokeBorder(Tokens.Ink.primary.opacity(0.22), lineWidth: 2)
-                .frame(width: 289, height: 230)
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-                .padding(.top, 210)
+            cameraLayer
 
             VStack {
                 countdownBanner
@@ -37,7 +33,7 @@ struct CaptureView: View {
 
             VStack(spacing: 24) {
                 Spacer()
-                shutterButton
+                statusView
                 Text("Log a water session instead")
                     .textStyle(Typography.bodySecondary)
                     .foregroundStyle(Tokens.Ink.secondary)
@@ -45,8 +41,87 @@ struct CaptureView: View {
             }
             .padding(.bottom, 130)
         }
-        .navigationDestination(isPresented: $showReview) {
-            ReviewSheetView()
+        .onAppear { viewModel.start() }
+        .onDisappear { viewModel.stop() }
+    }
+
+    @ViewBuilder
+    private var cameraLayer: some View {
+        if viewModel.phase == .configuring {
+            PhotoPlaceholder(cornerRadius: 0, caption: "STARTING CAMERA…")
+                .ignoresSafeArea()
+        } else if case .failed = viewModel.phase, viewModel.session.inputs.isEmpty {
+            // Camera never came up at all (e.g. permission denied) — no
+            // point showing a black preview layer underneath. The message
+            // itself renders once, from statusView below.
+            Tokens.Base.dark.ignoresSafeArea()
+        } else {
+            CameraPreviewView(session: viewModel.session)
+                .ignoresSafeArea()
+
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                .strokeBorder(Tokens.Ink.primary.opacity(0.22), lineWidth: 2)
+                .frame(width: 289, height: 230)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                .padding(.top, 210)
+        }
+    }
+
+    @ViewBuilder
+    private var statusView: some View {
+        switch viewModel.phase {
+        case .ready:
+            shutterButton
+        case .capturing:
+            statusLabel("Capturing…")
+        case .uploading:
+            statusLabel("Uploading…")
+        case .done:
+            VStack(spacing: 12) {
+                Image(systemName: "checkmark.circle.fill")
+                    .font(.system(size: 40))
+                    .foregroundStyle(Tokens.Accent.signal)
+                Button("Done") { dismiss() }
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(Tokens.Base.dark)
+                    .padding(.horizontal, 24)
+                    .padding(.vertical, 12)
+                    .background {
+                        Capsule().fill(Tokens.Accent.signal)
+                    }
+            }
+        case .failed(let message):
+            VStack(spacing: 10) {
+                Text(message)
+                    .textStyle(Typography.bodySecondary)
+                    .foregroundStyle(Tokens.Accent.live)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 24)
+                Button("Try again") {
+                    // The session itself is fine if it already has an input —
+                    // only a capture/upload attempt failed, not camera setup.
+                    // A never-configured session (e.g. permission was denied)
+                    // needs a real restart, not just flipping the phase.
+                    if viewModel.session.inputs.isEmpty {
+                        viewModel.start()
+                    } else {
+                        viewModel.phase = .ready
+                    }
+                }
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(Tokens.Ink.primary)
+            }
+        case .configuring:
+            EmptyView()
+        }
+    }
+
+    private func statusLabel(_ text: String) -> some View {
+        VStack(spacing: 10) {
+            ProgressView().tint(Tokens.Ink.primary)
+            Text(text)
+                .textStyle(Typography.bodySecondary)
+                .foregroundStyle(Tokens.Ink.secondary)
         }
     }
 
@@ -85,7 +160,10 @@ struct CaptureView: View {
 
     private var shutterButton: some View {
         Button {
-            showReview = true
+            Task {
+                guard let userId = try? await SupabaseService.shared.auth.session.user.id else { return }
+                await viewModel.captureAndUpload(userId: userId)
+            }
         } label: {
             Circle()
                 .fill(Tokens.Ink.primary.opacity(0.1))
