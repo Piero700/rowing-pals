@@ -12,7 +12,10 @@ import SwiftUI
 /// nothing is uploaded or written to the database until the user confirms
 /// the extracted numbers there.
 struct CaptureView: View {
-    @Environment(\.dismiss) private var dismiss
+    /// Closes the whole "Post" sheet, all the way back to the feed — passed
+    /// down from `PostSheetView` (the sheet's actual owner) rather than
+    /// resolved locally, and threaded on into `ReviewSheetView` below.
+    let onPosted: () -> Void
     @State private var viewModel = CaptureViewModel()
     @State private var initialCapture: InitialCapture?
 
@@ -51,7 +54,7 @@ struct CaptureView: View {
         .onAppear { viewModel.start() }
         .onDisappear { viewModel.stop() }
         .navigationDestination(item: $initialCapture) { capture in
-            ReviewSheetView(selfieJPEG: capture.frontJPEG, initialMonitorPhoto: capture.rearJPEG)
+            ReviewSheetView(selfieJPEG: capture.frontJPEG, initialMonitorPhoto: capture.rearJPEG, onPosted: onPosted)
         }
     }
 
@@ -206,6 +209,6 @@ struct CaptureView: View {
 
 #Preview {
     NavigationStack {
-        CaptureView()
+        CaptureView(onPosted: {})
     }
 }

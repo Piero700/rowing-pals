@@ -11,15 +11,21 @@ import SwiftUI
 /// Post. The test-detection prompt in the design brief is task 11's — this
 /// screen doesn't fake it.
 struct ReviewSheetView: View {
-    @Environment(\.dismiss) private var dismiss
+    /// Closes the whole "Post" sheet on a successful post. Not
+    /// `@Environment(\.dismiss)` — this view is pushed onto the same
+    /// NavigationStack as `CaptureView` underneath it, so its own dismiss
+    /// would only pop back to that camera screen instead of closing the
+    /// sheet, leaving a stale, already-used capture session behind.
+    let onPosted: () -> Void
     @State private var viewModel: ReviewSheetViewModel
     @State private var isShowingAddPhoto = false
     @FocusState private var focusedField: ReviewField?
 
     private let initialMonitorPhoto: Data
 
-    init(selfieJPEG: Data, initialMonitorPhoto: Data) {
+    init(selfieJPEG: Data, initialMonitorPhoto: Data, onPosted: @escaping () -> Void) {
         self.initialMonitorPhoto = initialMonitorPhoto
+        self.onPosted = onPosted
         _viewModel = State(initialValue: ReviewSheetViewModel(selfieJPEG: selfieJPEG))
     }
 
@@ -127,7 +133,7 @@ struct ReviewSheetView: View {
     private var postButton: some View {
         Button {
             Task {
-                if await viewModel.post() { dismiss() }
+                if await viewModel.post() { onPosted() }
             }
         } label: {
             Group {
@@ -162,6 +168,6 @@ struct ReviewSheetView: View {
 
 #Preview {
     NavigationStack {
-        ReviewSheetView(selfieJPEG: Data(), initialMonitorPhoto: Data())
+        ReviewSheetView(selfieJPEG: Data(), initialMonitorPhoto: Data(), onPosted: {})
     }
 }

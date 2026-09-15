@@ -13,7 +13,11 @@ struct PostSheetView: View {
 
     var body: some View {
         NavigationStack {
-            CaptureView()
+            // Passed explicitly rather than letting ReviewSheetView resolve
+            // its own @Environment(\.dismiss): it's pushed onto this same
+            // NavigationStack via navigationDestination, so its own dismiss
+            // would only pop back to CaptureView, not close this sheet.
+            CaptureView(onPosted: { dismiss() })
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) {
                         Button("Cancel") { dismiss() }
