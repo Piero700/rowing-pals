@@ -7,9 +7,9 @@ import SwiftUI
 
 /// Screen 4 — session review. Recomputes the session total from segments
 /// live, runs OCR on every photo (the first at appear, more via "+ Add
-/// another photo"), and writes the real `sessions` + `segments` rows on
-/// Post. The test-detection prompt in the design brief is task 11's — this
-/// screen doesn't fake it.
+/// another photo"), shows the test-detection prompt when the Main segment
+/// matches a standard distance, and writes the real `sessions` +
+/// `segments` (+ `test_results`, on Yes) rows on Post.
 struct ReviewSheetView: View {
     /// Closes the whole "Post" sheet on a successful post. Not
     /// `@Environment(\.dismiss)` — this view is pushed onto the same
@@ -70,6 +70,10 @@ struct ReviewSheetView: View {
                 }
                 .buttonStyle(.plain)
 
+                if viewModel.showsTestPrompt, let test = viewModel.detectedTest {
+                    testDetectedBanner(test)
+                }
+
                 if let postError = viewModel.postError {
                     Text(postError)
                         .textStyle(Typography.bodySecondary)
@@ -128,6 +132,58 @@ struct ReviewSheetView: View {
         }
         .padding(14)
         .glassSurface(cornerRadius: 24)
+    }
+
+    /// "Nothing enters the rankings without this tap" (design brief) — Yes
+    /// only records the decision locally; the actual `test_results` row is
+    /// written in `post()`, since it needs the session and segment rows to
+    /// exist first.
+    private func testDetectedBanner(_ test: StandardTest) -> some View {
+        HStack(spacing: 12) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("This looks like a \(test.label) test.")
+                    .font(.system(size: 14.5, weight: .semibold))
+                    .foregroundStyle(Tokens.Ink.primary)
+                Text("Add it to the \(test.label) leaderboard?")
+                    .textStyle(Typography.bodySecondary)
+                    .foregroundStyle(Tokens.Ink.secondary)
+            }
+            Spacer()
+            Button {
+                viewModel.decideTest(accepted: true)
+            } label: {
+                Text("Yes")
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundStyle(Tokens.Base.dark)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 9)
+                    .background {
+                        RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Tokens.Accent.signal)
+                    }
+            }
+            Button {
+                viewModel.decideTest(accepted: false)
+            } label: {
+                Text("No")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(Tokens.Ink.primary.opacity(0.8))
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 9)
+                    .background {
+                        RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Tokens.Ink.primary.opacity(0.1))
+                    }
+            }
+        }
+        .padding(14)
+        .background {
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                .fill(Tokens.Accent.signal.opacity(0.14))
+        }
+        .overlay {
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                .strokeBorder(Tokens.Accent.signal.opacity(0.35), lineWidth: 1)
+        }
+        .buttonStyle(.plain)
     }
 
     private var postButton: some View {

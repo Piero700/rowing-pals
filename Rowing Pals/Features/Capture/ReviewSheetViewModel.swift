@@ -39,8 +39,33 @@ final class ReviewSheetViewModel {
 
     var canPost: Bool { !segments.isEmpty && !isPosting }
 
+    /// The standard test the Main segment currently matches, if any — re-read
+    /// live off `segments`, so editing a field can make the prompt appear,
+    /// change which distance it names, or disappear again.
+    var detectedTest: StandardTest? {
+        guard let main = segments.first(where: { $0.label == .main }) else { return nil }
+        return StandardTest.match(distanceM: main.distanceM, timeMs: main.timeMs)
+    }
+
+    /// Which test key the user has already answered Yes/No for — so editing
+    /// the Main segment into a *different* standard distance re-prompts,
+    /// rather than silently keeping a stale decision.
+    private var decidedTestKey: String?
+    private var testAccepted = false
+
+    /// Whether the highlighted test-detection block should show right now.
+    var showsTestPrompt: Bool { detectedTest != nil && detectedTest?.key != decidedTestKey }
+
     init(selfieJPEG: Data) {
         self.selfieJPEG = selfieJPEG
+    }
+
+    /// Records the user's Yes/No answer to "Add it to the Xk leaderboard?".
+    /// Nothing is written until Post — `test_results` needs the session and
+    /// segment rows to exist first (its foreign keys aren't nullable).
+    func decideTest(accepted: Bool) {
+        decidedTestKey = detectedTest?.key
+        testAccepted = accepted
     }
 
     /// Runs OCR on a freshly captured monitor photo and appends it as a new
@@ -107,6 +132,10 @@ final class ReviewSheetViewModel {
     }
 
     private struct NewSegment: Encodable {
+        /// `DraftSegment.id`, reused as the posted row's own id — so the
+        /// Main segment's id is already known for `test_results.segment_id`
+        /// without a round trip to read back what the insert generated.
+        let id: UUID
         let sessionId: UUID
         let label: SegmentLabel
         let position: Int
@@ -119,6 +148,7 @@ final class ReviewSheetViewModel {
         let wasEdited: Bool
 
         enum CodingKeys: String, CodingKey {
+            case id
             case sessionId = "session_id"
             case label, position
             case distanceM = "distance_m"
@@ -128,6 +158,34 @@ final class ReviewSheetViewModel {
             case monitorPhotoPath = "monitor_photo_path"
             case ocrConfidence = "ocr_confidence"
             case wasEdited = "was_edited"
+        }
+    }
+
+    /// Written only when the user tapped Yes on the test-detection prompt.
+    /// `genderAtTime`/`categoryAtTime` are snapshots of the profile *at post
+    /// time*, not a join — docs/schema.sql: reading them live would let a
+    /// later profile edit silently rewrite history and the rankings.
+    private struct NewTestResult: Encodable {
+        let userId: UUID
+        let sessionId: UUID
+        let segmentId: UUID
+        let distanceKey: String
+        let distanceM: Int
+        let timeMs: Int
+        let splitMs: Int
+        let genderAtTime: RowerGender
+        let categoryAtTime: RowerCategory
+
+        enum CodingKeys: String, CodingKey {
+            case userId = "user_id"
+            case sessionId = "session_id"
+            case segmentId = "segment_id"
+            case distanceKey = "distance_key"
+            case distanceM = "distance_m"
+            case timeMs = "time_ms"
+            case splitMs = "split_ms"
+            case genderAtTime = "gender_at_time"
+            case categoryAtTime = "category_at_time"
         }
     }
 
@@ -180,6 +238,7 @@ final class ReviewSheetViewModel {
 
             let newSegments = segments.enumerated().map { index, segment in
                 NewSegment(
+                    id: segment.id,
                     sessionId: sessionId,
                     label: segment.label,
                     position: index,
@@ -193,6 +252,31 @@ final class ReviewSheetViewModel {
                 )
             }
             try await SupabaseService.shared.from("segments").insert(newSegments).execute()
+
+            if testAccepted, let test = detectedTest, test.key == decidedTestKey,
+               let main = segments.first(where: { $0.label == .main }) {
+                let profile: Profile = try await SupabaseService.shared
+                    .from("profiles")
+                    .select()
+                    .eq("id", value: userId)
+                    .single()
+                    .execute()
+                    .value
+                if let gender = profile.gender {
+                    let newTestResult = NewTestResult(
+                        userId: userId,
+                        sessionId: sessionId,
+                        segmentId: main.id,
+                        distanceKey: test.key,
+                        distanceM: main.distanceM,
+                        timeMs: main.timeMs,
+                        splitMs: main.splitMs,
+                        genderAtTime: gender,
+                        categoryAtTime: profile.category
+                    )
+                    try await SupabaseService.shared.from("test_results").insert(newTestResult).execute()
+                }
+            }
 
             return true
         } catch {
