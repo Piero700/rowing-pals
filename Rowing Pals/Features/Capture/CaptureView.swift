@@ -5,14 +5,28 @@
 
 import AVFoundation
 import SwiftUI
-import Supabase
 
-/// Screen 3 — dual camera capture and upload. Simultaneous on devices that
-/// support `AVCaptureMultiCamSession` (iPhone 11+); sequential rear-then-
-/// front elsewhere.
+/// Screen 3 — dual camera capture. Simultaneous on devices that support
+/// `AVCaptureMultiCamSession` (iPhone 11+); sequential rear-then-front
+/// elsewhere. On success, pushes straight into the review sheet (task 10) —
+/// nothing is uploaded or written to the database until the user confirms
+/// the extracted numbers there.
 struct CaptureView: View {
-    @Environment(\.dismiss) private var dismiss
+    /// Closes the whole "Post" sheet, all the way back to the feed — passed
+    /// down from `PostSheetView` (the sheet's actual owner) rather than
+    /// resolved locally, and threaded on into `ReviewSheetView` below.
+    let onPosted: () -> Void
     @State private var viewModel = CaptureViewModel()
+    @State private var initialCapture: InitialCapture?
+
+    /// Identifies one completed rear+front capture, so `.navigationDestination(item:)`
+    /// (which requires `Hashable`, not just `Identifiable`) can push the
+    /// review sheet as soon as it exists.
+    private struct InitialCapture: Hashable {
+        let id = UUID()
+        let rearJPEG: Data
+        let frontJPEG: Data
+    }
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -39,6 +53,9 @@ struct CaptureView: View {
         }
         .onAppear { viewModel.start() }
         .onDisappear { viewModel.stop() }
+        .navigationDestination(item: $initialCapture) { capture in
+            ReviewSheetView(selfieJPEG: capture.frontJPEG, initialMonitorPhoto: capture.rearJPEG, onPosted: onPosted)
+        }
     }
 
     @ViewBuilder
@@ -90,22 +107,11 @@ struct CaptureView: View {
             statusLabel(viewModel.isMultiCam ? "Capturing…" : "Capturing rear…")
         case .capturingFront:
             statusLabel("Capturing front…")
-        case .uploading:
-            statusLabel("Uploading…")
         case .done:
-            VStack(spacing: 12) {
-                Image(systemName: "checkmark.circle.fill")
-                    .font(.system(size: 40))
-                    .foregroundStyle(Tokens.Accent.signal)
-                Button("Done") { dismiss() }
-                    .font(.system(size: 15, weight: .semibold))
-                    .foregroundStyle(Tokens.Base.dark)
-                    .padding(.horizontal, 24)
-                    .padding(.vertical, 12)
-                    .background {
-                        Capsule().fill(Tokens.Accent.signal)
-                    }
-            }
+            // Transient — `initialCapture` being set fires the
+            // `navigationDestination` push into the review sheet on the
+            // same runloop tick, so this rarely gets a frame on screen.
+            statusLabel("Processing…")
         case .failed(let message):
             VStack(spacing: 10) {
                 Text(message)
@@ -177,8 +183,16 @@ struct CaptureView: View {
     private var shutterButton: some View {
         Button {
             Task {
-                guard let userId = try? await SupabaseService.shared.auth.session.user.id else { return }
-                await viewModel.captureAndUpload(userId: userId)
+                if let (rear, front) = await viewModel.captureInitialPair() {
+                    // Stop here, deterministically, rather than relying on
+                    // `.onDisappear` — pushing to ReviewSheetView via
+                    // `navigationDestination` keeps this view on the nav
+                    // stack (for back-swipe), so `onDisappear` isn't a
+                    // reliable place to release the camera before "+ Add
+                    // another photo" tries to start a second session.
+                    viewModel.stop()
+                    initialCapture = InitialCapture(rearJPEG: rear, frontJPEG: front)
+                }
             }
         } label: {
             Circle()
@@ -195,6 +209,6 @@ struct CaptureView: View {
 
 #Preview {
     NavigationStack {
-        CaptureView()
+        CaptureView(onPosted: {})
     }
 }
