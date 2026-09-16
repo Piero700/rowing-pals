@@ -47,7 +47,7 @@ struct FeedView: View {
 
     private var feedHeader: some View {
         PillSegmentedControl(
-            options: FeedViewModel.Scope.allCases.map(\.label),
+            options: SocialScope.allCases.map(\.label),
             selection: scopeSelection
         )
         .padding(.horizontal, 14)
@@ -62,7 +62,7 @@ struct FeedView: View {
     private var scopeSelection: Binding<Int> {
         Binding(
             get: { viewModel.scope.rawValue },
-            set: { viewModel.scope = FeedViewModel.Scope(rawValue: $0) ?? .global }
+            set: { viewModel.scope = SocialScope(rawValue: $0) ?? .global }
         )
     }
 

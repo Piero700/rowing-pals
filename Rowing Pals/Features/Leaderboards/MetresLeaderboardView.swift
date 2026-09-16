@@ -1,47 +1,18 @@
 //
-//  MetresView.swift
+//  MetresLeaderboardView.swift
 //  Rowing Pals
 //
 
 import SwiftUI
 
-/// Screen 5 — Metres leaderboard. Real aggregation from `daily_totals`
-/// arrives with task 13; this is the static layout with mock rows. UK
-/// spelling "Metres" per CLAUDE.md's domain vocabulary.
-struct MetresView: View {
-    struct Row: Identifiable {
-        let id = UUID()
-        let rank: Int
-        let name: String
-        let club: String
-        let metres: String
-        let ergFraction: Double
-        var isCurrentUser: Bool = false
-    }
-
-    static let podium = [
-        Row(rank: 1, name: "Tom Ashworth", club: "Newcastle University BC", metres: "128,400", ergFraction: 0.82),
-        Row(rank: 2, name: "Jack Fenwick", club: "Durham University BC", metres: "121,900", ergFraction: 0.7),
-        Row(rank: 3, name: "Piero Ciobanu", club: "UEA Boat Club", metres: "116,250", ergFraction: 0.78, isCurrentUser: true)
-    ]
-
-    static let rest = [
-        Row(rank: 4, name: "Marcus Reilly", club: "UEA Boat Club", metres: "104,800", ergFraction: 0.64),
-        Row(rank: 5, name: "Sam Okonkwo", club: "UEA Boat Club", metres: "41,300", ergFraction: 0.5),
-        Row(rank: 6, name: "Ollie Grant", club: "UEA Boat Club", metres: "38,200", ergFraction: 0.55),
-        Row(rank: 7, name: "Freya Lomax", club: "UEA Novice Squad", metres: "35,900", ergFraction: 0.6),
-        Row(rank: 8, name: "Nina Bergström", club: "Norwich Rowing Club", metres: "31,750", ergFraction: 0.45),
-        Row(rank: 9, name: "Ewan Sinclair", club: "UEA Boat Club", metres: "28,400", ergFraction: 0.5),
-        Row(rank: 10, name: "Grace Halloran", club: "Durham University BC", metres: "24,100", ergFraction: 0.58)
-    ]
-
-    @State private var periodSelection = 0
-    @State private var genderSelection = 0
-    @State private var sourceSelection = 0
-    @State private var scopeSelection = 2
-    /// Whether the current user's own row is visible in the scrollable list.
-    /// The pinned row below only shows once it scrolls out of view, so
-    /// Piero never appears twice on screen at once.
+/// Screen 5 — Metres leaderboard, aggregated from `daily_totals` only
+/// (never `sessions`, per task 13). UK spelling "Metres" per CLAUDE.md's
+/// domain vocabulary.
+struct MetresLeaderboardView: View {
+    @State private var viewModel = MetresLeaderboardViewModel()
+    /// Whether the current user's own row is visible in the scrollable
+    /// list — the pinned row below only shows once it scrolls out of view,
+    /// so they never appear twice on screen at once.
     @State private var isOwnRowVisible = true
 
     var body: some View {
@@ -53,47 +24,50 @@ struct MetresView: View {
                     .foregroundStyle(Tokens.Ink.primary)
                     .padding(.top, 8)
 
-                PillSegmentedControl(options: ["Week", "Month", "Year"], selection: $periodSelection)
+                PillSegmentedControl(options: MetresLeaderboardViewModel.Period.allCases.map(\.label), selection: periodSelection)
 
                 HStack(spacing: 7) {
-                    FilterChip(label: "Male", isSelected: genderSelection == 0)
-                        .onTapGesture { genderSelection = 0 }
-                    FilterChip(label: "Female", isSelected: genderSelection == 1)
-                        .onTapGesture { genderSelection = 1 }
+                    FilterChip(label: "Male", isSelected: viewModel.gender == .male)
+                        .onTapGesture { viewModel.gender = .male }
+                    FilterChip(label: "Female", isSelected: viewModel.gender == .female)
+                        .onTapGesture { viewModel.gender = .female }
                     Divider().frame(height: 18)
-                    FilterChip(label: "All", isSelected: sourceSelection == 0)
-                        .onTapGesture { sourceSelection = 0 }
-                    FilterChip(label: "Erg", isSelected: sourceSelection == 1)
-                        .onTapGesture { sourceSelection = 1 }
-                    FilterChip(label: "Water", isSelected: sourceSelection == 2)
-                        .onTapGesture { sourceSelection = 2 }
+                    ForEach(MetresLeaderboardViewModel.Source.allCases, id: \.self) { source in
+                        FilterChip(label: source.label, isSelected: viewModel.source == source)
+                            .onTapGesture { viewModel.source = source }
+                    }
                 }
 
                 HStack(spacing: 16) {
-                    ForEach(Array(["Following", "My Club", "Global"].enumerated()), id: \.offset) { index, label in
-                        Text(label)
-                            .font(.system(size: 13, weight: index == scopeSelection ? .semibold : .regular))
-                            .foregroundStyle(index == scopeSelection ? Tokens.Accent.signal : Tokens.Ink.secondary)
-                            .onTapGesture { scopeSelection = index }
+                    ForEach(SocialScope.allCases, id: \.self) { scope in
+                        Text(scope.label)
+                            .font(.system(size: 13, weight: scope == viewModel.scope ? .semibold : .regular))
+                            .foregroundStyle(scope == viewModel.scope ? Tokens.Accent.signal : Tokens.Ink.secondary)
+                            .onTapGesture { viewModel.scope = scope }
                     }
                 }
                 .padding(.top, 2)
 
-                VStack(spacing: 8) {
-                    ForEach(Self.podium) { row in
-                        podiumRow(row)
+                if viewModel.rankedRows.isEmpty {
+                    emptyState
+                } else {
+                    VStack(spacing: 8) {
+                        ForEach(viewModel.rankedRows) { row in
+                            if row.rank <= 3 {
+                                podiumRow(row)
+                            } else {
+                                restRow(row)
+                            }
+                        }
                     }
-                    ForEach(Self.rest) { row in
-                        restRow(row)
-                    }
-                }
-                .padding(.top, 6)
+                    .padding(.top, 6)
 
-                HStack(spacing: 14) {
-                    legendSwatch(opacity: 0.75, label: "Erg")
-                    legendSwatch(opacity: 0.28, label: "Water")
+                    HStack(spacing: 14) {
+                        legendSwatch(opacity: 0.75, label: "Erg")
+                        legendSwatch(opacity: 0.28, label: "Water")
+                    }
+                    .padding(.top, 2)
                 }
-                .padding(.top, 2)
 
                 Color.clear.frame(height: 60)
             }
@@ -101,15 +75,49 @@ struct MetresView: View {
         }
         .background(Tokens.Base.ground)
         .overlay(alignment: .bottom) {
-            if !isOwnRowVisible {
-                MetresPinnedRow()
+            if !isOwnRowVisible, let ownRow = viewModel.rankedRows.first(where: \.isCurrentUser) {
+                MetresPinnedRow(row: ownRow, periodLabel: viewModel.period.label.lowercased())
                     .padding(.bottom, 20)
                     .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
+        .task { await viewModel.loadInitial() }
+        .refreshable { await viewModel.reload() }
     }
 
-    private func podiumRow(_ row: Row) -> some View {
+    private var periodSelection: Binding<Int> {
+        Binding(
+            get: { viewModel.period.rawValue },
+            set: { viewModel.period = MetresLeaderboardViewModel.Period(rawValue: $0) ?? .week }
+        )
+    }
+
+    @ViewBuilder
+    private var emptyState: some View {
+        VStack(spacing: 6) {
+            if let errorMessage = viewModel.errorMessage {
+                Text("Couldn't load the leaderboard")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(Tokens.Ink.primary)
+                Text(errorMessage)
+                    .textStyle(Typography.bodySecondary)
+                    .foregroundStyle(Tokens.Ink.secondary)
+                    .multilineTextAlignment(.center)
+            } else {
+                Text("Nobody's logged metres here yet")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(Tokens.Ink.primary)
+                Text("Post a session to be the first on the board.")
+                    .textStyle(Typography.bodySecondary)
+                    .foregroundStyle(Tokens.Ink.secondary)
+            }
+        }
+        .padding(.horizontal, 20)
+        .padding(.top, 40)
+        .frame(maxWidth: .infinity)
+    }
+
+    private func podiumRow(_ row: MetresLeaderboardViewModel.Row) -> some View {
         HStack(spacing: 12) {
             Text("\(row.rank)")
                 .font(.system(size: 26, weight: .bold))
@@ -118,7 +126,7 @@ struct MetresView: View {
                 .frame(width: 26)
             AvatarPlaceholder(diameter: 42)
             rowLabels(row)
-            Text(row.metres)
+            Text(row.metres.formattedWithGrouping)
                 .font(.system(size: 19, weight: .bold))
                 .tabularNumerals()
                 .foregroundStyle(Tokens.Ink.primary)
@@ -131,7 +139,7 @@ struct MetresView: View {
         .modifier(TrackVisibility(isTracked: row.isCurrentUser, isVisible: $isOwnRowVisible))
     }
 
-    private func restRow(_ row: Row) -> some View {
+    private func restRow(_ row: MetresLeaderboardViewModel.Row) -> some View {
         HStack(spacing: 12) {
             Text("\(row.rank)")
                 .font(.system(size: 17, weight: .semibold))
@@ -140,7 +148,7 @@ struct MetresView: View {
                 .frame(width: 26)
             AvatarPlaceholder(diameter: 38)
             rowLabels(row)
-            Text(row.metres)
+            Text(row.metres.formattedWithGrouping)
                 .font(.system(size: 17, weight: .semibold))
                 .tabularNumerals()
                 .foregroundStyle(Tokens.Ink.primary)
@@ -150,15 +158,16 @@ struct MetresView: View {
             RoundedRectangle(cornerRadius: 20, style: .continuous)
                 .fill(Tokens.Ink.primary.opacity(0.05))
         }
+        .modifier(TrackVisibility(isTracked: row.isCurrentUser, isVisible: $isOwnRowVisible))
     }
 
-    private func rowLabels(_ row: Row) -> some View {
+    private func rowLabels(_ row: MetresLeaderboardViewModel.Row) -> some View {
         VStack(alignment: .leading, spacing: 5) {
             Text(row.name)
                 .font(.system(size: 14.5, weight: .semibold))
                 .foregroundStyle(Tokens.Ink.primary)
                 .lineLimit(1)
-            Text(row.club)
+            Text(row.club ?? "No club")
                 .textStyle(Typography.bodySecondary)
                 .foregroundStyle(Tokens.Ink.secondary)
                 .lineLimit(1)
@@ -207,29 +216,32 @@ private struct TrackVisibility: ViewModifier {
     }
 }
 
-/// The pinned "You" row shown above the floating tab bar once the user's own
-/// row scrolls out of view — an overlay on this screen's ScrollView, not a
-/// TabView-level accessory (see the design handoff doc for why).
+/// The pinned "You" row shown above the floating tab bar once the user's
+/// own row scrolls out of view — an overlay on this screen's ScrollView,
+/// not a TabView-level accessory (see the design handoff doc for why).
 struct MetresPinnedRow: View {
+    let row: MetresLeaderboardViewModel.Row
+    let periodLabel: String
+
     var body: some View {
         HStack(spacing: 12) {
-            Text("3")
+            Text("\(row.rank)")
                 .font(.system(size: 20, weight: .bold))
                 .tabularNumerals()
-                .foregroundStyle(Tokens.Accent.pb)
+                .foregroundStyle(row.rank <= 3 ? Tokens.Accent.pb : Tokens.Ink.primary)
                 .frame(width: 26)
             AvatarPlaceholder(diameter: 38)
             VStack(alignment: .leading, spacing: 1) {
                 Text("You")
                     .font(.system(size: 15, weight: .bold))
                     .foregroundStyle(Tokens.Ink.primary)
-                Text("UEA Boat Club · this week")
+                Text("\(row.club ?? "No club") · this \(periodLabel)")
                     .textStyle(Typography.bodySecondary)
                     .foregroundStyle(Tokens.Ink.secondary)
                     .lineLimit(1)
             }
             Spacer(minLength: 8)
-            Text("116,250m")
+            Text("\(row.metres.formattedWithGrouping)m")
                 .font(.system(size: 18, weight: .bold))
                 .tabularNumerals()
                 .foregroundStyle(Tokens.Ink.primary)
@@ -245,5 +257,5 @@ struct MetresPinnedRow: View {
 }
 
 #Preview {
-    MetresView()
+    MetresLeaderboardView()
 }

@@ -10,18 +10,6 @@ import Supabase
 /// scope, and the signed URLs for every post's photos.
 @Observable
 final class FeedViewModel {
-    enum Scope: Int, CaseIterable {
-        case following, myClub, global
-
-        var label: String {
-            switch self {
-            case .following: "Following"
-            case .myClub: "My Club"
-            case .global: "Global"
-            }
-        }
-    }
-
     private static let pageSize = 20
     /// One request, shared by every embedded relation this query needs —
     /// PostgREST returns nested resources with their parent, not as
@@ -33,7 +21,7 @@ final class FeedViewModel {
     segments(id, label, position, distance_m, monitor_photo_path)
     """
 
-    var scope: Scope = .global {
+    var scope: SocialScope = .global {
         didSet {
             guard oldValue != scope else { return }
             Task { await reload() }
@@ -91,7 +79,7 @@ final class FeedViewModel {
                 .from("sessions")
                 .select(Self.selectColumns)
 
-            if let userIds = try await userIds(forScope: scope) {
+            if let userIds = try await scope.userIds() {
                 guard !userIds.isEmpty else {
                     if replacing { posts = [] }
                     hasMorePages = false
@@ -118,50 +106,6 @@ final class FeedViewModel {
             // wrong.
             print("Feed query failed (offset \(offset), scope \(scope)): \(error)")
             errorMessage = error.localizedDescription
-        }
-    }
-
-    /// nil means "no scope filter" (Global). Following/My Club resolve to a
-    /// concrete, possibly-empty list of user ids first — PostgREST filters
-    /// the base table by a column on an embedded relation awkwardly, but
-    /// filtering `sessions.user_id` by a plain id list is exactly what the
-    /// existing typed query builder already does well.
-    private func userIds(forScope scope: Scope) async throws -> [UUID]? {
-        switch scope {
-        case .global:
-            return nil
-
-        case .following:
-            let userId = try await SupabaseService.shared.auth.session.user.id
-            struct Row: Decodable { let followeeId: UUID
-                enum CodingKeys: String, CodingKey { case followeeId = "followee_id" }
-            }
-            let rows: [Row] = try await SupabaseService.shared
-                .from("follows")
-                .select("followee_id")
-                .eq("follower_id", value: userId)
-                .execute()
-                .value
-            return rows.map(\.followeeId)
-
-        case .myClub:
-            let userId = try await SupabaseService.shared.auth.session.user.id
-            let profile: Profile = try await SupabaseService.shared
-                .from("profiles")
-                .select()
-                .eq("id", value: userId)
-                .single()
-                .execute()
-                .value
-            guard let clubId = profile.clubId else { return [] }
-            struct Row: Decodable { let id: UUID }
-            let rows: [Row] = try await SupabaseService.shared
-                .from("profiles")
-                .select("id")
-                .eq("club_id", value: clubId)
-                .execute()
-                .value
-            return rows.map(\.id)
         }
     }
 

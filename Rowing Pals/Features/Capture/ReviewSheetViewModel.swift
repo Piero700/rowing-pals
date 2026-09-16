@@ -219,6 +219,7 @@ final class ReviewSheetViewModel {
             formatter.calendar = Calendar.current
             formatter.timeZone = .current
             formatter.dateFormat = "yyyy-MM-dd"
+            let sessionDate = formatter.string(from: Date())
 
             let newSession = NewSession(
                 id: sessionId,
@@ -232,7 +233,7 @@ final class ReviewSheetViewModel {
                 photoVerified: true,
                 loggedLate: false,
                 capturedAt: Date(),
-                sessionDate: formatter.string(from: Date())
+                sessionDate: sessionDate
             )
             try await SupabaseService.shared.from("sessions").insert(newSession).execute()
 
@@ -252,6 +253,8 @@ final class ReviewSheetViewModel {
                 )
             }
             try await SupabaseService.shared.from("segments").insert(newSegments).execute()
+
+            try await Self.addToDailyTotal(userId: userId, day: sessionDate, distanceM: totalDistanceM, type: .erg)
 
             if testAccepted, let test = detectedTest, test.key == decidedTestKey,
                let main = segments.first(where: { $0.label == .main }) {
@@ -283,5 +286,52 @@ final class ReviewSheetViewModel {
             postError = error.localizedDescription
             return false
         }
+    }
+
+    /// Increments (never overwrites) the user's `daily_totals` row for this
+    /// session's day. No task builds a trigger or Edge Function for this, so
+    /// it happens here, client-side, right after the row it's summarizing
+    /// exists — every leaderboard and profile chart reads only from this
+    /// table, so a session that doesn't reach it is invisible everywhere.
+    private struct DailyTotalUpsert: Encodable {
+        let userId: UUID
+        let day: String
+        let distanceM: Int
+        let ergDistanceM: Int
+        let waterDistanceM: Int
+        let sessionCount: Int
+
+        enum CodingKeys: String, CodingKey {
+            case userId = "user_id"
+            case day
+            case distanceM = "distance_m"
+            case ergDistanceM = "erg_distance_m"
+            case waterDistanceM = "water_distance_m"
+            case sessionCount = "session_count"
+        }
+    }
+
+    private static func addToDailyTotal(userId: UUID, day: String, distanceM: Int, type: SessionType) async throws {
+        let existing: [DailyTotal] = try await SupabaseService.shared
+            .from("daily_totals")
+            .select()
+            .eq("user_id", value: userId)
+            .eq("day", value: day)
+            .execute()
+            .value
+        let current = existing.first
+
+        let upsert = DailyTotalUpsert(
+            userId: userId,
+            day: day,
+            distanceM: (current?.distanceM ?? 0) + distanceM,
+            ergDistanceM: (current?.ergDistanceM ?? 0) + (type == .erg ? distanceM : 0),
+            waterDistanceM: (current?.waterDistanceM ?? 0) + (type == .water ? distanceM : 0),
+            sessionCount: (current?.sessionCount ?? 0) + 1
+        )
+        try await SupabaseService.shared
+            .from("daily_totals")
+            .upsert(upsert, onConflict: "user_id,day")
+            .execute()
     }
 }
