@@ -91,6 +91,7 @@ final class PostDetailViewModel {
     var errorMessage: String?
 
     private var ownUserId: UUID?
+    private var ownDisplayName = ""
     private var realtimeChannel: RealtimeChannelV2?
 
     init(sessionId: UUID) {
@@ -201,12 +202,14 @@ final class PostDetailViewModel {
             async let reactionSummaries = Self.loadReactions(sessionId: sessionId, viewerId: userId)
             async let commentList = Self.loadComments(sessionId: sessionId)
             async let following: Bool = row.userId == userId ? false : Self.isFollowing(follower: userId, followee: row.userId)
+            async let ownName: String = row.userId == userId ? row.author.displayName : Self.fetchDisplayName(userId: userId)
 
-            let (_, bannerResult, reactionsResult, commentsResult, followingResult) = try await (photos, banner, reactionSummaries, commentList, following)
+            let (_, bannerResult, reactionsResult, commentsResult, followingResult, ownNameResult) = try await (photos, banner, reactionSummaries, commentList, following, ownName)
             testBanner = bannerResult
             reactions = reactionsResult
             comments = commentsResult
             isFollowingAuthor = followingResult
+            ownDisplayName = ownNameResult
 
             subscribeRealtime()
             errorMessage = nil
@@ -436,18 +439,36 @@ final class PostDetailViewModel {
     func postComment(body: String) async {
         let trimmed = body.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty, let userId = ownUserId else { return }
+        let newComment = Comment(id: UUID(), sessionId: sessionId, userId: userId, body: trimmed, createdAt: Date())
         do {
             try await SupabaseService.shared
                 .from("comments")
-                .insert(Comment(id: UUID(), sessionId: sessionId, userId: userId, body: trimmed, createdAt: Date()))
+                .insert(newComment)
                 .execute()
-            // Not appended locally — the realtime echo appends it, so every
-            // viewer (including this one) adds the row exactly once, the
-            // same path, rather than a local-only version dropping the
-            // shared author name until the next reload.
+            // Appended locally immediately, not left to the realtime echo —
+            // found via real device testing that the echo of a comment this
+            // same client just wrote isn't reliably arriving, so the post
+            // only ever showed up after a full reload. appendComment's own
+            // id-based dedup still guards against a double-add on the
+            // (now best-effort) chance the echo does also arrive.
+            appendComment(CommentDisplay(id: newComment.id, authorName: ownDisplayName, body: trimmed, createdAt: newComment.createdAt))
         } catch {
             errorMessage = error.localizedDescription
         }
+    }
+
+    private static func fetchDisplayName(userId: UUID) async throws -> String {
+        struct Row: Decodable { let displayName: String
+            enum CodingKeys: String, CodingKey { case displayName = "display_name" }
+        }
+        let row: Row = try await SupabaseService.shared
+            .from("profiles")
+            .select("display_name")
+            .eq("id", value: userId)
+            .single()
+            .execute()
+            .value
+        return row.displayName
     }
 
     // MARK: - Follow
