@@ -82,6 +82,13 @@ final class MetresLeaderboardViewModel {
     private var aggregates: [UUID: Aggregate] = [:]
     private var ownUserId: UUID?
     private var hasLoadedOnce = false
+    /// The in-flight reload, if any — tapping Week/Month/Year (or any other
+    /// filter) in quick succession fires a `reload()` per tap, and without
+    /// this, whichever request happened to resolve *last* would win and
+    /// overwrite the screen, regardless of which tab was actually selected
+    /// by the time it landed. Cancelling the previous one on every new call
+    /// makes only the most recent request able to commit its results.
+    private var reloadTask: Task<Void, Never>?
 
     @MainActor
     func loadInitial() async {
@@ -107,13 +114,26 @@ final class MetresLeaderboardViewModel {
         await reload()
     }
 
+    /// Cancels any reload already in flight, then runs a fresh one and
+    /// waits for it — callers (including `.refreshable`) can `await` this
+    /// and know it reflects the current filters, not a superseded one.
     @MainActor
     func reload() async {
+        reloadTask?.cancel()
+        let task = Task { await performReload() }
+        reloadTask = task
+        await task.value
+    }
+
+    @MainActor
+    private func performReload() async {
+        guard !Task.isCancelled else { return }
         isLoading = true
         defer { isLoading = false }
 
         do {
             let scopeIds = try await scope.userIds()
+            guard !Task.isCancelled else { return }
             if let scopeIds, scopeIds.isEmpty {
                 aggregates = [:]
                 rankedRows = []
@@ -142,6 +162,7 @@ final class MetresLeaderboardViewModel {
                 profileQuery = profileQuery.in("id", values: scopeIds)
             }
             let profileRows: [ProfileRow] = try await profileQuery.execute().value
+            guard !Task.isCancelled else { return }
 
             guard !profileRows.isEmpty else {
                 aggregates = [:]
@@ -171,6 +192,7 @@ final class MetresLeaderboardViewModel {
                 .gte("day", value: Self.periodStartString(for: period))
                 .execute()
                 .value
+            guard !Task.isCancelled else { return }
 
             var newAggregates: [UUID: Aggregate] = [:]
             for row in profileRows {
