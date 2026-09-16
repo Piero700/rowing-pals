@@ -18,6 +18,9 @@ private struct EdgeSwipeToDismiss: ViewModifier {
 
     private let edgeWidth: CGFloat = 24
     private let dismissThreshold: CGFloat = 100
+    /// Comfortably wider than any device — the offset needed to carry the
+    /// view fully off-screen to the right regardless of actual width.
+    private let offscreenOffset: CGFloat = 600
 
     func body(content: Content) -> some View {
         content
@@ -31,9 +34,20 @@ private struct EdgeSwipeToDismiss: ViewModifier {
                     .onEnded { value in
                         guard value.startLocation.x <= edgeWidth else { return }
                         if value.translation.width > dismissThreshold {
-                            dismiss()
+                            // Finish the slide-right under our own animation
+                            // *before* calling dismiss() - otherwise
+                            // .fullScreenCover's own (vertical) dismiss
+                            // transition starts at the same moment as this
+                            // offset snapping back to 0, and the two fight
+                            // visibly.
+                            withAnimation(.easeOut(duration: 0.22)) {
+                                dragOffset = offscreenOffset
+                            } completion: {
+                                dismiss()
+                            }
+                        } else {
+                            withAnimation(.easeOut(duration: 0.2)) { dragOffset = 0 }
                         }
-                        withAnimation(.easeOut(duration: 0.2)) { dragOffset = 0 }
                     }
             )
     }
