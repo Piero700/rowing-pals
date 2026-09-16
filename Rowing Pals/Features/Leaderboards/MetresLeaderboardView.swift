@@ -25,7 +25,6 @@ struct MetresLeaderboardView: View {
                     .padding(.top, 8)
 
                 PillSegmentedControl(options: MetresLeaderboardViewModel.Period.allCases.map(\.label), selection: periodSelection)
-                    .gesture(periodSwipeGesture)
 
                 HStack(spacing: 7) {
                     FilterChip(label: "Male", isSelected: viewModel.gender == .male)
@@ -84,6 +83,11 @@ struct MetresLeaderboardView: View {
         }
         .task { await viewModel.loadInitial() }
         .refreshable { await viewModel.reload() }
+        // `simultaneousGesture`, not `gesture` — this must never win
+        // exclusively over the ScrollView's own vertical pan recognizer,
+        // only additionally recognize a clearly horizontal drag anywhere
+        // on the page, Safari-back/forward-swipe style.
+        .simultaneousGesture(periodSwipeGesture)
     }
 
     private var periodSelection: Binding<Int> {
@@ -93,11 +97,10 @@ struct MetresLeaderboardView: View {
         )
     }
 
-    /// Swiping the Week/Month/Year control steps to the next/previous
-    /// period — left advances (Week → Month → Year), right goes back,
-    /// clamped at either end rather than wrapping. Scoped to the control
-    /// itself, not the whole screen, so it can't fight the ScrollView's own
-    /// vertical pan gesture.
+    /// Swiping anywhere on the page — not just the Week/Month/Year control —
+    /// steps to the next/previous period, Safari-style: left advances
+    /// (Week → Month → Year), right goes back, clamped at either end
+    /// rather than wrapping.
     private var periodSwipeGesture: some Gesture {
         DragGesture(minimumDistance: 24)
             .onEnded { value in
