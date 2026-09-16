@@ -30,6 +30,10 @@ create table profiles (
   category               rower_category not null default 'novice',
   avatar_path            text,
   weekly_target_sessions int not null default 4,
+  -- Metres target for the profile's weekly volume chart (task 15) - a
+  -- separate figure from weekly_target_sessions, since a session count
+  -- can't be plotted as a dashed line on a metres-scaled bar chart.
+  weekly_target_m        int not null default 20000,
   created_at             timestamptz not null default now()
 );
 

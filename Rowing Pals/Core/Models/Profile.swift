@@ -15,6 +15,7 @@ struct Profile: Codable, Identifiable {
     var category: RowerCategory
     var avatarPath: String?
     var weeklyTargetSessions: Int
+    var weeklyTargetM: Int
     let createdAt: Date
 
     enum CodingKeys: String, CodingKey {
@@ -24,6 +25,7 @@ struct Profile: Codable, Identifiable {
         case gender, category
         case avatarPath = "avatar_path"
         case weeklyTargetSessions = "weekly_target_sessions"
+        case weeklyTargetM = "weekly_target_m"
         case createdAt = "created_at"
     }
 }
