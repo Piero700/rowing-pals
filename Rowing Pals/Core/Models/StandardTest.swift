@@ -26,6 +26,15 @@ nonisolated struct StandardTest: Identifiable, Equatable {
 
     var id: String { key }
 
+    /// True for the 4min/30min/60min pieces — fixed time, variable
+    /// distance, so "better" means a *longer* distance, and the number
+    /// worth showing large is the distance, not the (fixed) time. False
+    /// for 500m/1k/2k/5k/6k/10k, where it's the reverse: fixed distance,
+    /// variable time, faster is better.
+    var isDurationBased: Bool {
+        if case .duration = target { true } else { false }
+    }
+
     static let all: [StandardTest] = [
         StandardTest(key: "500m", label: "500m", target: .distance(m: 500)),
         StandardTest(key: "1k", label: "1k", target: .distance(m: 1000)),
