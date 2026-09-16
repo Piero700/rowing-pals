@@ -46,6 +46,7 @@ struct PostDetailView: View {
         }
         .background(Tokens.Base.ground)
         .dismissesKeyboardOnTap()
+        .edgeSwipeToDismiss()
         .overlay(alignment: .bottom) {
             composer
         }
