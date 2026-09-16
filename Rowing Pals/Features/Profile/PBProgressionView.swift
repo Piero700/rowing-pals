@@ -52,6 +52,7 @@ struct PBProgressionView: View {
             .padding(16)
         }
         .background(Tokens.Base.ground)
+        .edgeSwipeToDismiss()
         .task { await viewModel.load() }
     }
 

@@ -94,6 +94,7 @@ struct ReviewSheetView: View {
             .padding(16)
         }
         .background(Tokens.Base.ground)
+        .dismissesKeyboardOnTap()
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
         .task {

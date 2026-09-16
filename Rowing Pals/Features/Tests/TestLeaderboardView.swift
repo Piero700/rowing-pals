@@ -55,6 +55,7 @@ struct TestLeaderboardView: View {
             .padding(.horizontal, 14)
         }
         .background(Tokens.Base.ground)
+        .edgeSwipeToDismiss()
         .task { await viewModel.loadInitial() }
         .refreshable { await viewModel.reload() }
     }
