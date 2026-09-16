@@ -34,6 +34,11 @@ create table profiles (
   -- separate figure from weekly_target_sessions, since a session count
   -- can't be plotted as a dashed line on a metres-scaled bar chart.
   weekly_target_m        int not null default 20000,
+  -- Set once, at signup, when the user agrees to the terms of service
+  -- (task 17) - never updated after. Null means "never agreed", which
+  -- shouldn't happen for any real account created after this column
+  -- existed, but is distinguishable from a real timestamp on purpose.
+  terms_accepted_at      timestamptz,
   created_at             timestamptz not null default now()
 );
 
@@ -295,12 +300,20 @@ create policy own_via_session on segments for all to authenticated
     select 1 from sessions s where s.id = segments.session_id and s.user_id = auth.uid()
   ));
 
--- Blocks and reports are private to the person who made them.
-create policy own_row on blocks for all to authenticated
-  using (blocker_id = auth.uid()) with check (blocker_id = auth.uid());
-
+-- Reports are private to the person who made them.
 create policy own_row on reports for all to authenticated
   using (reporter_id = auth.uid()) with check (reporter_id = auth.uid());
+
+-- Blocks: both sides of a block can read it — the blocked party's own
+-- client is the one that has to filter the blocker's posts out of *its*
+-- feed (task 17), which needs it to know the block exists. Only the
+-- blocker can create or remove the row.
+create policy read_either_side on blocks for select to authenticated
+  using (blocker_id = auth.uid() or blocked_id = auth.uid());
+create policy write_own on blocks for insert to authenticated
+  with check (blocker_id = auth.uid());
+create policy delete_own on blocks for delete to authenticated
+  using (blocker_id = auth.uid());
 
 -- NOTE: filtering blocked users out of the feed is done in a view or in the
 -- query, not in RLS — keep the policies simple enough to reason about.

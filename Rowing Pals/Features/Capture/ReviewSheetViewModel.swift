@@ -201,6 +201,21 @@ final class ReviewSheetViewModel {
         postError = nil
         defer { isPosting = false }
 
+        // Filtering, task 17: every caption and photo is checked *before*
+        // anything is uploaded or written — a rejected post never reaches
+        // Storage or the database at all.
+        if TextFilterService.isBlocked(caption) {
+            postError = "That caption isn't allowed. Please rephrase it."
+            return false
+        }
+        for jpeg in [selfieJPEG] + segments.map(\.photoJPEG) {
+            guard let image = UIImage(data: jpeg) else { continue }
+            if await ImageModerationService.check(image) == .blocked {
+                postError = "One of your photos couldn't be posted."
+                return false
+            }
+        }
+
         do {
             let userId = try await SupabaseService.shared.auth.session.user.id
             let sessionId = UUID()

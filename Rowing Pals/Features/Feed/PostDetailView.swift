@@ -13,6 +13,10 @@ struct PostDetailView: View {
     @State private var isSelfiePrimary = false
     @State private var commentDraft = ""
     @State private var isShowingMoreReactions = false
+    @State private var isShowingReportReasons = false
+    @State private var isShowingReportConfirmation = false
+    @State private var isShowingBlockConfirmation = false
+    @State private var commentBeingReported: UUID?
     @Environment(\.dismiss) private var dismiss
     @FocusState private var isComposerFocused: Bool
 
@@ -20,6 +24,7 @@ struct PostDetailView: View {
         "fire": "🔥", "grimace": "😬", "clap": "👏", "eyes": "👀",
         "muscle": "💪", "wow": "😮", "boat": "🚣"
     ]
+    private static let reportReasons = ["Inappropriate content", "Spam", "Harassment", "Other"]
 
     init(sessionId: UUID) {
         _viewModel = State(initialValue: PostDetailViewModel(sessionId: sessionId))
@@ -53,6 +58,41 @@ struct PostDetailView: View {
         .ignoresSafeArea(edges: .top)
         .task { await viewModel.load() }
         .onDisappear { viewModel.stop() }
+        .confirmationDialog(
+            commentBeingReported == nil ? "Why are you reporting this post?" : "Why are you reporting this comment?",
+            isPresented: $isShowingReportReasons,
+            titleVisibility: .visible
+        ) {
+            ForEach(Self.reportReasons, id: \.self) { reason in
+                Button(reason) {
+                    Task {
+                        let sent: Bool
+                        if let commentId = commentBeingReported {
+                            sent = await viewModel.reportComment(commentId, reason: reason)
+                        } else {
+                            sent = await viewModel.reportPost(reason: reason)
+                        }
+                        if sent { isShowingReportConfirmation = true }
+                    }
+                }
+            }
+        }
+        .alert("Report sent", isPresented: $isShowingReportConfirmation) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("Thanks — we've received your report and will review it.")
+        }
+        .alert("Block \(viewModel.author?.displayName ?? "this rower")?", isPresented: $isShowingBlockConfirmation) {
+            Button("Cancel", role: .cancel) {}
+            Button("Block", role: .destructive) {
+                Task {
+                    await viewModel.blockAuthor()
+                    dismiss()
+                }
+            }
+        } message: {
+            Text("You won't see their posts, and they won't see yours.")
+        }
     }
 
     private var primaryURL: URL? {
@@ -104,6 +144,13 @@ struct PostDetailView: View {
             .padding(.leading, 14)
             .padding(.top, 54)
 
+            if !viewModel.isOwnPost {
+                moreOptionsButton
+                    .padding(.trailing, 14)
+                    .padding(.top, 54)
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+            }
+
             HStack(spacing: 9) {
                 AvatarPlaceholder(diameter: 24)
                 Text(viewModel.author?.displayName ?? "")
@@ -118,7 +165,7 @@ struct PostDetailView: View {
             .background {
                 Capsule().fill(.ultraThinMaterial)
             }
-            .padding(.top, 54)
+            .padding(.top, 96)
             .frame(maxWidth: .infinity, alignment: .trailing)
             .padding(.trailing, 14)
         }
@@ -140,6 +187,34 @@ struct PostDetailView: View {
                 }
         }
         .buttonStyle(.plain)
+    }
+
+    /// App Store Guideline 1.2 — Reporting and Blocking, task 17. Hidden on
+    /// the author's own post entirely: you can't report or block yourself.
+    private var moreOptionsButton: some View {
+        Menu {
+            Button {
+                commentBeingReported = nil
+                isShowingReportReasons = true
+            } label: {
+                Label("Report post", systemImage: "flag")
+            }
+            Button(role: .destructive) {
+                isShowingBlockConfirmation = true
+            } label: {
+                Label("Block \(viewModel.author?.displayName ?? "this rower")", systemImage: "hand.raised")
+            }
+        } label: {
+            Image(systemName: "ellipsis")
+                .font(.system(size: 16, weight: .bold))
+                .foregroundStyle(.white)
+                .frame(width: 36, height: 36)
+                .background {
+                    Circle().fill(.ultraThinMaterial)
+                    Circle().fill(Color.black.opacity(0.28))
+                    Circle().strokeBorder(Color.white.opacity(0.18), lineWidth: 1)
+                }
+        }
     }
 
     /// "2k test · 7:12.8 · Personal best · 3rd overall, 1st novice women" —
@@ -343,6 +418,16 @@ struct PostDetailView: View {
                 .background {
                     RoundedRectangle(cornerRadius: 20, style: .continuous)
                         .fill(Tokens.Ink.primary.opacity(0.05))
+                }
+                .contextMenu {
+                    if !viewModel.isOwnComment(comment) {
+                        Button {
+                            commentBeingReported = comment.id
+                            isShowingReportReasons = true
+                        } label: {
+                            Label("Report comment", systemImage: "flag")
+                        }
+                    }
                 }
             }
         }

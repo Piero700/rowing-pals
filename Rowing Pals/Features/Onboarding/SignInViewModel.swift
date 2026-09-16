@@ -14,16 +14,20 @@ final class SignInViewModel {
     var isSigningUp = false
     var errorMessage: String?
     var isLoading = false
+    /// Gates the Sign up button — the zero-tolerance clause, task 17.
+    var hasAgreedToTerms = false
 
     /// Payload for the one-time profiles insert. Not the full `Profile`
     /// model — the DB fills in every other column's default.
     private struct NewProfile: Encodable {
         let id: UUID
         let displayName: String
+        let termsAcceptedAt: Date
 
         enum CodingKeys: String, CodingKey {
             case id
             case displayName = "display_name"
+            case termsAcceptedAt = "terms_accepted_at"
         }
     }
 
@@ -45,12 +49,21 @@ final class SignInViewModel {
     }
 
     private func signUp() async throws {
-        // Stored in the auth user's own metadata so the display name survives
-        // even when email confirmation delays the first real sign-in.
+        guard hasAgreedToTerms else {
+            errorMessage = "Please agree to the Terms of Service to continue."
+            return
+        }
+        // Both stored in the auth user's own metadata, not just displayName,
+        // so the moment of agreement survives even when email confirmation
+        // delays the first real sign-in and the profiles row that actually
+        // records terms_accepted_at (task 17) isn't written until then.
         let response = try await SupabaseService.shared.auth.signUp(
             email: email,
             password: password,
-            data: ["display_name": .string(displayName)]
+            data: [
+                "display_name": .string(displayName),
+                "terms_accepted_at": .string(ISO8601DateFormatter().string(from: Date()))
+            ]
         )
 
         guard response.session != nil else {
@@ -81,10 +94,20 @@ final class SignInViewModel {
         guard case let .string(name)? = session.user.userMetadata["display_name"] else {
             return
         }
+        let termsAcceptedAt: Date
+        if case let .string(iso)? = session.user.userMetadata["terms_accepted_at"],
+           let parsed = ISO8601DateFormatter().date(from: iso) {
+            termsAcceptedAt = parsed
+        } else {
+            // Shouldn't happen — signUp() always sets this before this
+            // profile could exist — but a profile without it is a bigger
+            // problem than defaulting to "now" for it.
+            termsAcceptedAt = Date()
+        }
 
         try await SupabaseService.shared
             .from("profiles")
-            .insert(NewProfile(id: userId, displayName: name))
+            .insert(NewProfile(id: userId, displayName: name, termsAcceptedAt: termsAcceptedAt))
             .execute()
     }
 }

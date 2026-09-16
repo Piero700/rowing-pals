@@ -53,6 +53,7 @@ final class PostDetailViewModel {
 
     struct CommentDisplay: Identifiable {
         let id: UUID
+        let authorId: UUID
         let authorName: String
         let body: String
         let createdAt: Date
@@ -86,6 +87,7 @@ final class PostDetailViewModel {
 
     var isFollowingAuthor = false
     var isOwnPost = false
+    var isBlocked = false
 
     var isLoading = false
     var errorMessage: String?
@@ -416,29 +418,36 @@ final class PostDetailViewModel {
                 enum CodingKeys: String, CodingKey { case displayName = "display_name" }
             }
             let id: UUID
+            let userId: UUID
             let body: String
             let createdAt: Date
             let author: Author
             enum CodingKeys: String, CodingKey {
                 case id, body
+                case userId = "user_id"
                 case createdAt = "created_at"
                 case author = "profiles"
             }
         }
         let rows: [Row] = try await SupabaseService.shared
             .from("comments")
-            .select("id, body, created_at, profiles(display_name)")
+            .select("id, user_id, body, created_at, profiles(display_name)")
             .eq("session_id", value: sessionId)
             .order("created_at", ascending: true)
             .execute()
             .value
-        return rows.map { CommentDisplay(id: $0.id, authorName: $0.author.displayName, body: $0.body, createdAt: $0.createdAt) }
+        return rows.map { CommentDisplay(id: $0.id, authorId: $0.userId, authorName: $0.author.displayName, body: $0.body, createdAt: $0.createdAt) }
     }
 
     @MainActor
     func postComment(body: String) async {
         let trimmed = body.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty, let userId = ownUserId else { return }
+        // Filtering, task 17 — checked before the insert, not after.
+        guard !TextFilterService.isBlocked(trimmed) else {
+            errorMessage = "That comment isn't allowed. Please rephrase it."
+            return
+        }
         let newComment = Comment(id: UUID(), sessionId: sessionId, userId: userId, body: trimmed, createdAt: Date())
         do {
             try await SupabaseService.shared
@@ -451,7 +460,7 @@ final class PostDetailViewModel {
             // only ever showed up after a full reload. appendComment's own
             // id-based dedup still guards against a double-add on the
             // (now best-effort) chance the echo does also arrive.
-            appendComment(CommentDisplay(id: newComment.id, authorName: ownDisplayName, body: trimmed, createdAt: newComment.createdAt))
+            appendComment(CommentDisplay(id: newComment.id, authorId: userId, authorName: ownDisplayName, body: trimmed, createdAt: newComment.createdAt))
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -517,6 +526,61 @@ final class PostDetailViewModel {
         }
     }
 
+    // MARK: - Blocking and reporting (task 17)
+
+    /// Blocking the author from a post, per the task's own wording — there
+    /// isn't a separate "other rower's profile" screen yet to block from
+    /// there too. Feed exclusion is enforced by `FeedViewModel`'s query,
+    /// not here.
+    @MainActor
+    func blockAuthor() async {
+        guard let userId = ownUserId, let authorId = author?.id, !isOwnPost else { return }
+        do {
+            try await SupabaseService.shared
+                .from("blocks")
+                .insert(Block(blockerId: userId, blockedId: authorId, createdAt: Date()))
+                .execute()
+            isBlocked = true
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    @MainActor
+    func reportPost(reason: String) async -> Bool {
+        guard let userId = ownUserId else { return false }
+        do {
+            try await SupabaseService.shared
+                .from("reports")
+                .insert(Report(id: UUID(), reporterId: userId, sessionId: sessionId, commentId: nil, reason: reason, status: "open", createdAt: Date()))
+                .execute()
+            return true
+        } catch {
+            errorMessage = error.localizedDescription
+            return false
+        }
+    }
+
+    @MainActor
+    func isOwnComment(_ comment: CommentDisplay) -> Bool {
+        comment.authorId == ownUserId
+    }
+
+    @MainActor
+    func reportComment(_ commentId: UUID, reason: String) async -> Bool {
+        guard let userId = ownUserId else { return false }
+        do {
+            try await SupabaseService.shared
+                .from("reports")
+                .insert(Report(id: UUID(), reporterId: userId, sessionId: nil, commentId: commentId, reason: reason, status: "open", createdAt: Date()))
+                .execute()
+            return true
+        } catch {
+            errorMessage = error.localizedDescription
+            return false
+        }
+    }
+
     // MARK: - Realtime
 
     /// New reactions/comments from anyone (including another device signed
@@ -563,7 +627,7 @@ final class PostDetailViewModel {
                     } else {
                         authorName = "Someone"
                     }
-                    self.appendComment(CommentDisplay(id: comment.id, authorName: authorName, body: comment.body, createdAt: comment.createdAt))
+                    self.appendComment(CommentDisplay(id: comment.id, authorId: comment.userId, authorName: authorName, body: comment.body, createdAt: comment.createdAt))
                 }
             }
         }
