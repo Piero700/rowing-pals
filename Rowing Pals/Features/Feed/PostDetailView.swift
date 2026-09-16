@@ -5,6 +5,33 @@
 
 import SwiftUI
 
+/// Mock data for one post detail screen. Task 12 wired the feed to real
+/// `sessions` data via `FeedPost`, but this screen — and its tap-through
+/// from a real card — is still task 16's; kept here (rather than a real
+/// `FeedPost`) since nothing here reads past the mock yet regardless.
+struct MockFeedSession: Identifiable {
+    struct Reactions {
+        let fire: Int
+    }
+
+    let id = UUID()
+    let authorName: String
+    let photoCaption: String
+    let headline: String
+    let isPersonalBest: Bool
+    let reactions: Reactions
+}
+
+extension MockFeedSession {
+    static let personalBest = MockFeedSession(
+        authorName: "Alice Whitfield",
+        photoCaption: "ERG MONITOR PHOTO · 2K",
+        headline: "7:04.1",
+        isPersonalBest: true,
+        reactions: .init(fire: 41)
+    )
+}
+
 /// Screen 8 — full segment breakdown, reactions, comment thread. Realtime
 /// reactions/comments and follow/unfollow arrive with task 16; this is the
 /// static shell.
