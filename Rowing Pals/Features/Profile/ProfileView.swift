@@ -6,8 +6,8 @@
 import SwiftUI
 
 /// Screen 7 — profile, built in the design brief's order: (a) header, (b)
-/// streak, (c) season strip, (d) PB board. Weekly volume bars, the
-/// consistency calendar and the photo grid are task 15's second half.
+/// streak, (c) season strip, (d) PB board, (e) weekly volume bars, (f)
+/// consistency calendar, (g) photo grid.
 struct ProfileView: View {
     @State private var viewModel = ProfileViewModel()
     @State private var expandedTest: StandardTest?
@@ -28,6 +28,29 @@ struct ProfileView: View {
                                 guard tile.hasResult else { return }
                                 expandedTest = tile.test
                             }
+                    }
+                }
+
+                sectionLabel("WEEKLY VOLUME")
+                WeeklyVolumeChart(weeks: viewModel.weeklyVolumes, targetM: viewModel.weeklyTargetM)
+                    .padding(14)
+                    .background {
+                        RoundedRectangle(cornerRadius: 22, style: .continuous)
+                            .fill(Tokens.Ink.primary.opacity(0.05))
+                    }
+
+                sectionLabel("CONSISTENCY")
+                ConsistencyCalendarView(days: viewModel.consistencyDays)
+                    .padding(14)
+                    .background {
+                        RoundedRectangle(cornerRadius: 22, style: .continuous)
+                            .fill(Tokens.Ink.primary.opacity(0.05))
+                    }
+
+                sectionLabel("POSTS")
+                LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 5), count: 3), spacing: 5) {
+                    ForEach(viewModel.photos) { photo in
+                        photoTile(photo)
                     }
                 }
 
@@ -208,6 +231,23 @@ struct ProfileView: View {
                         .strokeBorder(Tokens.Ink.primary.opacity(0.14), lineWidth: 1.5)
                 }
             }
+        }
+    }
+
+    private func photoTile(_ photo: ProfileViewModel.ProfilePhoto) -> some View {
+        CachedAsyncImage(url: viewModel.photoURL(for: photo.monitorPath)) {
+            PhotoPlaceholder(cornerRadius: 12)
+        }
+        .aspectRatio(1, contentMode: .fill)
+        .clipped()
+        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .overlay(alignment: .bottomLeading) {
+            Text("\(photo.distanceM.formattedWithGrouping)m")
+                .font(.system(size: 10, weight: .semibold))
+                .tabularNumerals()
+                .foregroundStyle(.white)
+                .shadow(radius: 3)
+                .padding(6)
         }
     }
 }
