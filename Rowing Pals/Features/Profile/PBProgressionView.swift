@@ -90,6 +90,28 @@ struct PBProgressionView: View {
         .frame(maxWidth: .infinity)
     }
 
+    /// A `ClosedRange` can't express a reversed axis — its init traps if
+    /// the lower bound exceeds the upper one — so this is a two-element
+    /// array instead: Swift Charts treats `[max, min]` as an explicit,
+    /// reversed domain. Zoomed to the data's own range (plus a little
+    /// headroom) rather than `.automatic`'s default of padding out from
+    /// zero, which — for times a couple of minutes apart clustered around
+    /// 6-7 minutes — left the whole meaningful range squeezed into a few
+    /// pixels at the top of the chart.
+    private var yDomain: [Double] {
+        let values = viewModel.points.map(\.value)
+        guard let dataMin = values.min(), let dataMax = values.max() else { return [0, 1] }
+
+        if viewModel.test.isDurationBased {
+            let padding = max((dataMax - dataMin) * 0.15, 200)
+            return [max(0, dataMin - padding), dataMax + padding]
+        } else {
+            let lowerPadding: Double = 2 * 60 * 1000 // 2 minutes, ahead of the fastest time
+            let upperPadding = max((dataMax - dataMin) * 0.15, 5_000)
+            return [dataMax + upperPadding, max(0, dataMin - lowerPadding)] // max first: reversed
+        }
+    }
+
     private var chart: some View {
         Chart(viewModel.points) { point in
             LineMark(x: .value("Date", point.date), y: .value("Value", point.value))
@@ -99,7 +121,7 @@ struct PBProgressionView: View {
                 .foregroundStyle(point.isPB ? Tokens.Accent.pb : Tokens.Accent.signal)
                 .symbolSize(point.isPB ? 90 : 50)
         }
-        .chartYScale(domain: .automatic(reversed: !viewModel.test.isDurationBased))
+        .chartYScale(domain: yDomain)
         .chartYAxis {
             AxisMarks { value in
                 AxisGridLine()
