@@ -5,49 +5,29 @@
 
 import SwiftUI
 
-/// Screen 7 — profile. Streak, charts and the PB progression view arrive
-/// with task 15; this pass is the header, stats row, PB tile grid and photo
-/// grid with mock values.
+/// Screen 7 — profile, built in the design brief's order: (a) header, (b)
+/// streak, (c) season strip, (d) PB board. Weekly volume bars, the
+/// consistency calendar and the photo grid are task 15's second half.
 struct ProfileView: View {
-    private struct PBTile {
-        let label: String
-        let time: String
-        let split: String
-        let date: String
-    }
-
-    private let pbTiles = [
-        PBTile(label: "500M", time: "1:28.4", split: "1:28.4 /500m", date: "14 Feb"),
-        PBTile(label: "1K", time: "3:02.6", split: "1:31.3 /500m", date: "2 Feb"),
-        PBTile(label: "2K", time: "6:18.9", split: "1:34.7 /500m", date: "28 Jan"),
-        PBTile(label: "5K", time: "17:12.4", split: "1:43.2 /500m", date: "11 Jan"),
-        PBTile(label: "6K", time: "20:54.8", split: "1:44.6 /500m", date: "4 Dec"),
-        PBTile(label: "10K", time: "35:48.0", split: "1:47.4 /500m", date: "19 Nov"),
-        PBTile(label: "30MIN", time: "8,410m", split: "1:47.0 /500m", date: "7 Dec"),
-        PBTile(label: "60MIN", time: "16,220m", split: "1:51.0 /500m", date: "22 Oct")
-    ]
-
-    private let photoGrid = ["16,000m", "2,000m", "10,000m", "6,000m", "5,000m", "12,000m"]
+    @State private var viewModel = ProfileViewModel()
+    @State private var expandedTest: StandardTest?
 
     var body: some View {
         // Direct ScrollView child, same constraint as FeedView — see its comment.
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
                 header
-                statsRow
+                streakBlock
+                seasonStrip
 
                 sectionLabel("PERSONAL BESTS")
                 LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 9), count: 3), spacing: 9) {
-                    ForEach(pbTiles, id: \.label) { tile in
+                    ForEach(viewModel.pbTiles) { tile in
                         pbTile(tile)
-                    }
-                    emptyPBTile
-                }
-
-                sectionLabel("POSTS")
-                LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 5), count: 3), spacing: 5) {
-                    ForEach(photoGrid, id: \.self) { distance in
-                        photoTile(distance)
+                            .onTapGesture {
+                                guard tile.hasResult else { return }
+                                expandedTest = tile.test
+                            }
                     }
                 }
 
@@ -56,6 +36,11 @@ struct ProfileView: View {
             .padding(.horizontal, 14)
         }
         .background(Tokens.Base.ground)
+        .task { await viewModel.load() }
+        .refreshable { await viewModel.load() }
+        .fullScreenCover(item: $expandedTest) { test in
+            PBProgressionView(test: test)
+        }
     }
 
     private var header: some View {
@@ -63,25 +48,31 @@ struct ProfileView: View {
             AvatarPlaceholder(diameter: 52)
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 7) {
-                    Text("Piero Ciobanu")
+                    Text(viewModel.displayName)
                         .font(.system(size: 19, weight: .bold))
                         .foregroundStyle(Tokens.Ink.primary)
-                    Text("SENIOR · M")
-                        .textStyle(Typography.label)
-                        .textCase(nil)
-                        .foregroundStyle(Tokens.Ink.secondary)
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 2)
-                        .background {
-                            RoundedRectangle(cornerRadius: 6, style: .continuous)
-                                .fill(Tokens.Ink.primary.opacity(0.12))
-                        }
+                    if !viewModel.categoryLabel.isEmpty {
+                        Text(viewModel.categoryLabel)
+                            .textStyle(Typography.label)
+                            .textCase(nil)
+                            .foregroundStyle(Tokens.Ink.secondary)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background {
+                                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                    .fill(Tokens.Ink.primary.opacity(0.12))
+                            }
+                    }
                 }
-                Text("UEA Boat Club")
-                    .textStyle(Typography.bodySecondary)
-                    .foregroundStyle(Tokens.Ink.secondary)
+                if let clubName = viewModel.clubName {
+                    Text(clubName)
+                        .textStyle(Typography.bodySecondary)
+                        .foregroundStyle(Tokens.Ink.secondary)
+                }
             }
             Spacer()
+            // Settings/edit-profile is task 18's — inert placeholder here,
+            // same treatment other not-yet-built screens get elsewhere.
             Text("Edit")
                 .font(.system(size: 13.5, weight: .semibold))
                 .foregroundStyle(Tokens.Ink.primary)
@@ -95,13 +86,51 @@ struct ProfileView: View {
         .padding(.top, 8)
     }
 
-    private var statsRow: some View {
+    private var streakBlock: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .lastTextBaseline, spacing: 8) {
+                Text("\(viewModel.streakDays)")
+                    .font(.system(size: 40, weight: .bold))
+                    .tabularNumerals()
+                    .foregroundStyle(Tokens.Ink.primary)
+                Text("day streak")
+                    .textStyle(Typography.bodySecondary)
+                    .foregroundStyle(Tokens.Ink.secondary)
+            }
+            // Filled pips are spent rest days, hollow ones remain — neutral
+            // information either way, never red or a warning (CLAUDE.md /
+            // design brief: a missed day covered by a rest day is not a
+            // failure state).
+            HStack(spacing: 6) {
+                ForEach(0..<viewModel.restDaysAllowedPerWeek, id: \.self) { index in
+                    Circle()
+                        .fill(index < viewModel.restDaysUsedThisWeek ? Tokens.Ink.primary.opacity(0.45) : Color.clear)
+                        .overlay {
+                            Circle().strokeBorder(Tokens.Ink.primary.opacity(0.35), lineWidth: 1.5)
+                        }
+                        .frame(width: 9, height: 9)
+                }
+                Text(restDaysCaption)
+                    .font(.system(size: 12.5))
+                    .foregroundStyle(Tokens.Ink.secondary)
+            }
+        }
+        .padding(16)
+        .glassSurface(cornerRadius: 22)
+    }
+
+    private var restDaysCaption: String {
+        let remaining = max(0, viewModel.restDaysAllowedPerWeek - viewModel.restDaysUsedThisWeek)
+        return "\(remaining) rest day\(remaining == 1 ? "" : "s") left this week"
+    }
+
+    private var seasonStrip: some View {
         HStack {
-            StatColumn(label: "METRES", value: "1.42M", alignment: .center)
+            StatColumn(label: "METRES", value: viewModel.seasonTotalDistanceM.formattedWithGrouping, alignment: .center)
                 .frame(maxWidth: .infinity)
-            StatColumn(label: "WEEK STREAK", value: "14", alignment: .center)
+            StatColumn(label: "SESSIONS", value: "\(viewModel.seasonSessionCount)", alignment: .center)
                 .frame(maxWidth: .infinity)
-            StatColumn(label: "SESSIONS", value: "96", alignment: .center)
+            StatColumn(label: "LONGEST STREAK", value: "\(viewModel.longestStreakDays)", alignment: .center)
                 .frame(maxWidth: .infinity)
         }
         .padding(.vertical, 14)
@@ -117,67 +146,69 @@ struct ProfileView: View {
             .foregroundStyle(Tokens.Ink.secondary)
     }
 
-    private func pbTile(_ tile: PBTile) -> some View {
-        VStack(alignment: .leading, spacing: 3) {
-            Text(tile.label)
-                .textStyle(Typography.label)
-                .foregroundStyle(Tokens.Ink.secondary)
-            Text(tile.time)
-                .font(.system(size: 19, weight: .bold))
-                .tabularNumerals()
-                .foregroundStyle(Tokens.Ink.primary)
-            Text(tile.split)
-                .font(.system(size: 11.5))
-                .tabularNumerals()
-                .foregroundStyle(Tokens.Ink.secondary)
-            Spacer(minLength: 0)
-            Text(tile.date)
-                .font(.system(size: 10.5))
-                .tabularNumerals()
-                .foregroundStyle(Tokens.Ink.secondary.opacity(0.7))
-        }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 12)
-        .frame(minHeight: 96, alignment: .topLeading)
-        .background {
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .fill(Tokens.Ink.primary.opacity(0.07))
-        }
-    }
-
-    private var emptyPBTile: some View {
-        VStack(alignment: .leading, spacing: 3) {
-            Text("4MIN")
-                .textStyle(Typography.label)
-                .foregroundStyle(Tokens.Ink.secondary.opacity(0.7))
-            Text("—")
-                .font(.system(size: 19, weight: .bold))
-                .foregroundStyle(Tokens.Ink.secondary.opacity(0.5))
-            Spacer(minLength: 0)
-            Text("Have a crack")
-                .font(.system(size: 10.5))
-                .foregroundStyle(Tokens.Ink.secondary.opacity(0.7))
-        }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 12)
-        .frame(minHeight: 96, alignment: .topLeading)
-        .background {
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .strokeBorder(Tokens.Ink.primary.opacity(0.14), lineWidth: 1.5)
-        }
-    }
-
-    private func photoTile(_ distance: String) -> some View {
-        PhotoPlaceholder(cornerRadius: 12)
-            .aspectRatio(1, contentMode: .fit)
-            .overlay(alignment: .bottomLeading) {
-                Text(distance)
-                    .font(.system(size: 10, weight: .semibold))
-                    .tabularNumerals()
-                    .foregroundStyle(.white)
-                    .shadow(radius: 3)
-                    .padding(6)
+    private func pbTile(_ tile: ProfileViewModel.PBTile) -> some View {
+        Group {
+            if tile.hasResult {
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(tile.test.label.uppercased())
+                        .textStyle(Typography.label)
+                        .foregroundStyle(Tokens.Ink.secondary)
+                    Text(tile.displayValue ?? "—")
+                        .font(.system(size: 19, weight: .bold))
+                        .tabularNumerals()
+                        .foregroundStyle(Tokens.Ink.primary)
+                    if let split = tile.splitDisplay {
+                        Text(split)
+                            .font(.system(size: 11.5))
+                            .tabularNumerals()
+                            .foregroundStyle(Tokens.Ink.secondary)
+                    }
+                    Spacer(minLength: 0)
+                    HStack(spacing: 4) {
+                        if tile.isRecentPB {
+                            Circle().fill(Tokens.Accent.pb).frame(width: 5, height: 5)
+                        }
+                        Text(tile.dateDisplay ?? "")
+                            .font(.system(size: 10.5))
+                            .tabularNumerals()
+                            .foregroundStyle(tile.isRecentPB ? Tokens.Accent.pb : Tokens.Ink.secondary.opacity(0.7))
+                    }
+                }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 12)
+                .frame(minHeight: 96, alignment: .topLeading)
+                .background {
+                    RoundedRectangle(cornerRadius: 20, style: .continuous)
+                        .fill(tile.isRecentPB ? Tokens.Accent.pb.opacity(0.09) : Tokens.Ink.primary.opacity(0.07))
+                }
+                .overlay {
+                    if tile.isRecentPB {
+                        RoundedRectangle(cornerRadius: 20, style: .continuous)
+                            .strokeBorder(Tokens.Accent.pb.opacity(0.3), lineWidth: 1)
+                    }
+                }
+            } else {
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(tile.test.label.uppercased())
+                        .textStyle(Typography.label)
+                        .foregroundStyle(Tokens.Ink.secondary.opacity(0.7))
+                    Text("—")
+                        .font(.system(size: 19, weight: .bold))
+                        .foregroundStyle(Tokens.Ink.secondary.opacity(0.5))
+                    Spacer(minLength: 0)
+                    Text("Have a crack")
+                        .font(.system(size: 10.5))
+                        .foregroundStyle(Tokens.Ink.secondary.opacity(0.7))
+                }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 12)
+                .frame(minHeight: 96, alignment: .topLeading)
+                .background {
+                    RoundedRectangle(cornerRadius: 20, style: .continuous)
+                        .strokeBorder(Tokens.Ink.primary.opacity(0.14), lineWidth: 1.5)
+                }
             }
+        }
     }
 }
 
