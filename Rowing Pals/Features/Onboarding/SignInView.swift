@@ -84,6 +84,7 @@ struct SignInView: View {
             .padding(24)
         }
         .background(Tokens.Base.ground)
+        .dismissesKeyboardOnTap()
     }
 
     private var canSubmit: Bool {

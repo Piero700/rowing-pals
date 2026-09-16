@@ -96,6 +96,7 @@ struct ClubSearchView: View {
             .padding(24)
         }
         .background(Tokens.Base.ground)
+        .dismissesKeyboardOnTap()
     }
 
     private var clubResults: some View {
