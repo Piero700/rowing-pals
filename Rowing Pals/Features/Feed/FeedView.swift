@@ -6,7 +6,14 @@
 import SwiftUI
 
 struct FeedView: View {
+    /// `.fullScreenCover(item:)` requires `Identifiable` — `UUID` alone
+    /// doesn't conform.
+    private struct SelectedPost: Identifiable {
+        let id: UUID
+    }
+
     @State private var viewModel = FeedViewModel()
+    @State private var selectedPost: SelectedPost?
 
     var body: some View {
         // The scroll view must be the direct descendant of the tab content for
@@ -27,6 +34,8 @@ struct FeedView: View {
                         selfieURL: viewModel.signedURL(forPath: FeedViewModel.selfiePath(userId: post.userId, sessionId: post.id))
                     )
                     .padding(.horizontal, 12)
+                    .contentShape(Rectangle())
+                    .onTapGesture { selectedPost = SelectedPost(id: post.id) }
                     .task { await viewModel.loadMoreIfNeeded(currentPost: post) }
                 }
 
@@ -43,6 +52,9 @@ struct FeedView: View {
         }
         .task { await viewModel.loadInitial() }
         .refreshable { await viewModel.reload() }
+        .fullScreenCover(item: $selectedPost) { post in
+            PostDetailView(sessionId: post.id)
+        }
     }
 
     private var feedHeader: some View {

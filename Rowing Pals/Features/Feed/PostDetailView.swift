@@ -5,52 +5,25 @@
 
 import SwiftUI
 
-/// Mock data for one post detail screen. Task 12 wired the feed to real
-/// `sessions` data via `FeedPost`, but this screen — and its tap-through
-/// from a real card — is still task 16's; kept here (rather than a real
-/// `FeedPost`) since nothing here reads past the mock yet regardless.
-struct MockFeedSession: Identifiable {
-    struct Reactions {
-        let fire: Int
-    }
-
-    let id = UUID()
-    let authorName: String
-    let photoCaption: String
-    let headline: String
-    let isPersonalBest: Bool
-    let reactions: Reactions
-}
-
-extension MockFeedSession {
-    static let personalBest = MockFeedSession(
-        authorName: "Alice Whitfield",
-        photoCaption: "ERG MONITOR PHOTO · 2K",
-        headline: "7:04.1",
-        isPersonalBest: true,
-        reactions: .init(fire: 41)
-    )
-}
-
-/// Screen 8 — full segment breakdown, reactions, comment thread. Realtime
-/// reactions/comments and follow/unfollow arrive with task 16; this is the
-/// static shell.
+/// Screen 8 — one post, opened. Full segment breakdown, the gold
+/// test-result banner when it applies, reactions and a comment thread —
+/// both live via Realtime (task 16).
 struct PostDetailView: View {
-    let session: MockFeedSession
+    @State private var viewModel: PostDetailViewModel
+    @State private var isSelfiePrimary = false
+    @State private var commentDraft = ""
+    @State private var isShowingMoreReactions = false
     @Environment(\.dismiss) private var dismiss
+    @FocusState private var isComposerFocused: Bool
 
-    private struct MockComment: Identifiable {
-        let id = UUID()
-        let name: String
-        let when: String
-        let text: String
-    }
-
-    private let comments = [
-        MockComment(name: "Nina Bergström", when: "42m", text: "that's a 4 second PB, well in"),
-        MockComment(name: "Piero Ciobanu", when: "31m", text: "rate 33 is criminal"),
-        MockComment(name: "Freya Lomax", when: "12m", text: "see you at 6am")
+    private static let emoji: [String: String] = [
+        "fire": "🔥", "grimace": "😬", "clap": "👏", "eyes": "👀",
+        "muscle": "💪", "wow": "😮", "boat": "🚣"
     ]
+
+    init(sessionId: UUID) {
+        _viewModel = State(initialValue: PostDetailViewModel(sessionId: sessionId))
+    }
 
     var body: some View {
         ScrollView {
@@ -58,11 +31,13 @@ struct PostDetailView: View {
                 hero
 
                 VStack(alignment: .leading, spacing: 12) {
-                    if session.isPersonalBest {
-                        pbBanner
+                    if let banner = viewModel.testBanner {
+                        pbBanner(banner)
                     }
                     sessionTotalCard
-                    reactionRow
+                    if !viewModel.reactions.isEmpty {
+                        reactionRow
+                    }
                     commentThread
                 }
                 .padding(14)
@@ -74,17 +49,42 @@ struct PostDetailView: View {
             composer
         }
         .ignoresSafeArea(edges: .top)
+        .task { await viewModel.load() }
+        .onDisappear { viewModel.stop() }
+    }
+
+    private var primaryURL: URL? {
+        let monitorURL = viewModel.segments.first?.monitorPhotoPath.flatMap { viewModel.monitorURLs[$0] }
+        return isSelfiePrimary ? viewModel.selfieURL : monitorURL
+    }
+
+    private var insetURL: URL? {
+        let monitorURL = viewModel.segments.first?.monitorPhotoPath.flatMap { viewModel.monitorURLs[$0] }
+        return isSelfiePrimary ? monitorURL : viewModel.selfieURL
     }
 
     private var hero: some View {
         ZStack(alignment: .topLeading) {
-            PhotoPlaceholder(cornerRadius: 0, caption: session.photoCaption)
-                .frame(height: 330)
+            CachedAsyncImage(url: primaryURL) {
+                PhotoPlaceholder(cornerRadius: 0, caption: "MONITOR PHOTO")
+            }
+            .aspectRatio(contentMode: .fill)
+            .frame(height: 330)
+            .clipped()
 
-            PhotoPlaceholder(cornerRadius: 18, caption: "SELFIE · TAP TO SWAP")
+            Button {
+                withAnimation(.snappy) { isSelfiePrimary.toggle() }
+            } label: {
+                CachedAsyncImage(url: insetURL) {
+                    PhotoPlaceholder(cornerRadius: 18, caption: "SELFIE")
+                }
+                .aspectRatio(contentMode: .fill)
                 .frame(width: 86, height: 116)
-                .padding(.leading, 14)
-                .padding(.top, 70)
+                .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+            }
+            .buttonStyle(.plain)
+            .padding(.leading, 14)
+            .padding(.top, 70)
 
             Button {
                 dismiss()
@@ -104,9 +104,12 @@ struct PostDetailView: View {
 
             HStack(spacing: 9) {
                 AvatarPlaceholder(diameter: 24)
-                Text(session.authorName)
+                Text(viewModel.author?.displayName ?? "")
                     .font(.system(size: 13.5, weight: .semibold))
                     .foregroundStyle(Tokens.Ink.primary)
+                if !viewModel.isOwnPost {
+                    followButton
+                }
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 6)
@@ -121,25 +124,48 @@ struct PostDetailView: View {
         .clipped()
     }
 
-    private var pbBanner: some View {
+    private var followButton: some View {
+        Button {
+            Task { await viewModel.toggleFollow() }
+        } label: {
+            Text(viewModel.isFollowingAuthor ? "Following" : "Follow")
+                .font(.system(size: 11.5, weight: .bold))
+                .foregroundStyle(viewModel.isFollowingAuthor ? Tokens.Ink.primary : Tokens.Base.dark)
+                .padding(.horizontal, 9)
+                .padding(.vertical, 4)
+                .background {
+                    Capsule().fill(viewModel.isFollowingAuthor ? Tokens.Ink.primary.opacity(0.16) : Tokens.Accent.signal)
+                }
+        }
+        .buttonStyle(.plain)
+    }
+
+    /// "2k test · 7:12.8 · Personal best · 3rd overall, 1st novice women" —
+    /// design brief, Screen 8. Only the parts that actually apply render:
+    /// no "Personal best" clause if it wasn't, no rank clause for a rank
+    /// that couldn't be computed.
+    private func pbBanner(_ banner: PostDetailViewModel.TestBanner) -> some View {
         VStack(alignment: .leading, spacing: 7) {
-            Text("2K TEST · PERSONAL BEST")
+            Text("\(banner.distanceLabel.uppercased()) TEST")
                 .font(.system(size: 10, weight: .bold))
                 .tracking(1.2)
                 .foregroundStyle(Tokens.Accent.pb)
             HStack(alignment: .lastTextBaseline, spacing: 10) {
-                Text(session.headline)
+                Text(banner.valueLabel)
                     .font(.system(size: 32, weight: .bold))
                     .tabularNumerals()
                     .foregroundStyle(Tokens.Accent.pb)
-                Text("1:46.0 /500m · r34")
-                    .textStyle(Typography.bodySecondary)
-                    .tabularNumerals()
-                    .foregroundStyle(Tokens.Ink.secondary)
+                if banner.isPersonalBest {
+                    Text("Personal best")
+                        .textStyle(Typography.bodySecondary)
+                        .foregroundStyle(Tokens.Ink.secondary)
+                }
             }
-            Text("1st overall women · 1st senior women")
-                .textStyle(Typography.bodySecondary)
-                .foregroundStyle(Tokens.Ink.primary.opacity(0.8))
+            if let text = rankText(banner) {
+                Text(text)
+                    .textStyle(Typography.bodySecondary)
+                    .foregroundStyle(Tokens.Ink.primary.opacity(0.8))
+            }
         }
         .padding(14)
         .glassSurface(cornerRadius: 24)
@@ -149,6 +175,15 @@ struct PostDetailView: View {
         }
     }
 
+    private func rankText(_ banner: PostDetailViewModel.TestBanner) -> String? {
+        var parts: [String] = []
+        if let overall = banner.overallRank { parts.append("\(overall.formattedOrdinal) overall") }
+        if let category = banner.categoryRank, let label = banner.categoryLabel {
+            parts.append("\(category.formattedOrdinal) \(label)")
+        }
+        return parts.isEmpty ? nil : parts.joined(separator: ", ")
+    }
+
     private var sessionTotalCard: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
@@ -156,57 +191,71 @@ struct PostDetailView: View {
                     .textStyle(Typography.label)
                     .foregroundStyle(Tokens.Ink.secondary)
                 Spacer()
-                Label("Photo-verified", systemImage: "checkmark")
-                    .labelStyle(.titleAndIcon)
-                    .font(.system(size: 11.5, weight: .semibold))
-                    .foregroundStyle(Tokens.Accent.signal)
+                if viewModel.photoVerified {
+                    Label("Photo-verified", systemImage: "checkmark")
+                        .labelStyle(.titleAndIcon)
+                        .font(.system(size: 11.5, weight: .semibold))
+                        .foregroundStyle(Tokens.Accent.signal)
+                } else if viewModel.loggedLate {
+                    Text("Logged later")
+                        .font(.system(size: 11.5, weight: .semibold))
+                        .foregroundStyle(Tokens.Ink.primary.opacity(0.8))
+                }
             }
             HStack(alignment: .lastTextBaseline, spacing: 10) {
-                Text("6,000m")
+                Text("\(viewModel.totalDistanceM.formattedWithGrouping)m")
                     .font(.system(size: 24, weight: .bold))
                     .tabularNumerals()
                     .foregroundStyle(Tokens.Ink.primary)
-                Text("25:14.8 · 2:06.2 /500m")
+                Text("\(viewModel.totalTimeMs.formattedDurationMs) · \(viewModel.avgSplitMs?.formattedDurationMs ?? "—") /500m")
                     .textStyle(Typography.bodySecondary)
                     .tabularNumerals()
                     .foregroundStyle(Tokens.Ink.secondary)
             }
+            if let caption = viewModel.caption, !caption.isEmpty {
+                Text(caption)
+                    .textStyle(Typography.bodySecondary)
+                    .foregroundStyle(Tokens.Ink.primary.opacity(0.85))
+            }
             VStack(spacing: 8) {
-                detailSegmentRow(tag: "WARMUP", dist: "2,000m", time: "8:40.0", split: "2:10.0", rate: "r18")
-                detailSegmentRow(tag: "MAIN", dist: "2,000m", time: "7:04.1", split: "1:46.0", rate: "r34")
-                detailSegmentRow(tag: "COOLDOWN", dist: "2,000m", time: "9:30.7", split: "2:22.7", rate: "r16")
+                ForEach(viewModel.segments) { segment in
+                    detailSegmentRow(segment)
+                }
             }
         }
         .padding(14)
         .glassSurface(cornerRadius: 22)
     }
 
-    private func detailSegmentRow(tag: String, dist: String, time: String, split: String, rate: String) -> some View {
+    private func detailSegmentRow(_ segment: PostDetailViewModel.DetailSegment) -> some View {
         HStack(spacing: 10) {
-            RoundedRectangle(cornerRadius: 11, style: .continuous)
-                .fill(Tokens.Ink.primary.opacity(0.08))
-                .frame(width: 38, height: 38)
-            Text(tag)
+            CachedAsyncImage(url: segment.monitorPhotoPath.flatMap { viewModel.monitorURLs[$0] }) {
+                Rectangle().fill(Tokens.Ink.primary.opacity(0.08))
+            }
+            .aspectRatio(contentMode: .fill)
+            .frame(width: 38, height: 38)
+            .clipShape(RoundedRectangle(cornerRadius: 11, style: .continuous))
+            Text(segment.label.rawValue.uppercased())
                 .textStyle(Typography.label)
                 .foregroundStyle(Tokens.Ink.secondary)
                 .lineLimit(1)
                 .minimumScaleFactor(0.75)
                 .frame(width: 64, alignment: .leading)
-            Text(dist)
+            Text("\(segment.distanceM.formattedWithGrouping)m")
                 .font(.system(size: 13.5, weight: .semibold))
                 .tabularNumerals()
                 .foregroundStyle(Tokens.Ink.primary)
                 .frame(width: 60, alignment: .leading)
-            Text(time)
+            Text(segment.timeMs.formattedDurationMs)
                 .font(.system(size: 13))
                 .tabularNumerals()
                 .foregroundStyle(Tokens.Ink.secondary)
                 .frame(maxWidth: .infinity, alignment: .leading)
-            Text(split)
+            Text(segment.splitMs?.formattedDurationMs ?? "—")
                 .font(.system(size: 13))
                 .tabularNumerals()
                 .foregroundStyle(Tokens.Ink.secondary)
-            Text(rate)
+            Text(segment.rate.map { "r\(Int($0.rounded()))" } ?? "—")
                 .font(.system(size: 13))
                 .tabularNumerals()
                 .foregroundStyle(Tokens.Ink.secondary.opacity(0.85))
@@ -216,52 +265,73 @@ struct PostDetailView: View {
 
     private var reactionRow: some View {
         HStack(spacing: 7) {
-            reactionChip(emoji: "🔥", count: session.reactions.fire, highlighted: true)
-            reactionChip(emoji: "😬", count: 6)
-            reactionChip(emoji: "👏", count: 19)
-            reactionChip(emoji: "👀", count: 8)
+            ForEach(viewModel.reactions) { reaction in
+                reactionChip(reaction)
+            }
             Spacer()
-            Image(systemName: "plus")
-                .font(.system(size: 15, weight: .semibold))
-                .foregroundStyle(Tokens.Ink.secondary)
-                .frame(width: 34, height: 34)
-                .background {
-                    Circle().fill(Tokens.Ink.primary.opacity(0.08))
+            Button {
+                isShowingMoreReactions = true
+            } label: {
+                Image(systemName: "plus")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(Tokens.Ink.secondary)
+                    .frame(width: 34, height: 34)
+                    .background {
+                        Circle().fill(Tokens.Ink.primary.opacity(0.08))
+                    }
+            }
+            .buttonStyle(.plain)
+            .confirmationDialog("Add a reaction", isPresented: $isShowingMoreReactions, titleVisibility: .visible) {
+                ForEach(PostDetailViewModel.extraReactionKinds, id: \.self) { kind in
+                    Button("\(Self.emoji[kind] ?? "") \(kind.capitalized)") {
+                        Task { await viewModel.toggleReaction(kind: kind) }
+                    }
                 }
+            }
         }
     }
 
-    private func reactionChip(emoji: String, count: Int, highlighted: Bool = false) -> some View {
-        HStack(spacing: 5) {
-            Text(emoji)
-            Text("\(count)")
-                .tabularNumerals()
-                .fontWeight(highlighted ? .bold : .regular)
-                .foregroundStyle(highlighted ? Tokens.Accent.pb : Tokens.Ink.secondary)
+    private func reactionChip(_ reaction: PostDetailViewModel.ReactionSummary) -> some View {
+        Button {
+            Task { await viewModel.toggleReaction(kind: reaction.kind) }
+        } label: {
+            HStack(spacing: 5) {
+                Text(Self.emoji[reaction.kind] ?? "•")
+                Text("\(reaction.count)")
+                    .tabularNumerals()
+                    .fontWeight(reaction.reactedByMe ? .semibold : .regular)
+                    .foregroundStyle(reaction.reactedByMe ? Tokens.Accent.pb : Tokens.Ink.secondary)
+            }
+            .font(.system(size: 14))
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background {
+                Capsule().fill((reaction.reactedByMe ? Tokens.Accent.pb : Tokens.Ink.primary).opacity(reaction.reactedByMe ? 0.16 : 0.08))
+            }
         }
-        .font(.system(size: 14))
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
-        .background {
-            Capsule().fill((highlighted ? Tokens.Accent.pb : Tokens.Ink.primary).opacity(highlighted ? 0.16 : 0.08))
-        }
+        .buttonStyle(.plain)
     }
 
     private var commentThread: some View {
         VStack(spacing: 8) {
-            ForEach(comments) { comment in
+            if viewModel.comments.isEmpty {
+                Text("No comments yet.")
+                    .textStyle(Typography.bodySecondary)
+                    .foregroundStyle(Tokens.Ink.secondary)
+            }
+            ForEach(viewModel.comments) { comment in
                 HStack(alignment: .top, spacing: 10) {
                     AvatarPlaceholder(diameter: 30)
                     VStack(alignment: .leading, spacing: 1) {
                         HStack(spacing: 7) {
-                            Text(comment.name)
+                            Text(comment.authorName)
                                 .font(.system(size: 13.5, weight: .semibold))
                                 .foregroundStyle(Tokens.Ink.primary)
-                            Text(comment.when)
+                            Text(comment.createdAt.postedAgoLabel)
                                 .font(.system(size: 11.5))
                                 .foregroundStyle(Tokens.Ink.secondary.opacity(0.8))
                         }
-                        Text(comment.text)
+                        Text(comment.body)
                             .font(.system(size: 13.5))
                             .foregroundStyle(Tokens.Ink.primary.opacity(0.85))
                     }
@@ -278,17 +348,26 @@ struct PostDetailView: View {
 
     private var composer: some View {
         HStack(spacing: 10) {
-            Text("Say something…")
+            TextField("Say something…", text: $commentDraft)
                 .textStyle(Typography.body)
-                .foregroundStyle(Tokens.Ink.secondary)
+                .foregroundStyle(Tokens.Ink.primary)
+                .focused($isComposerFocused)
             Spacer()
-            Image(systemName: "arrow.up")
-                .font(.system(size: 15, weight: .bold))
-                .foregroundStyle(Tokens.Base.dark)
-                .frame(width: 38, height: 38)
-                .background {
-                    Circle().fill(Tokens.Accent.signal)
-                }
+            Button {
+                let text = commentDraft
+                commentDraft = ""
+                Task { await viewModel.postComment(body: text) }
+            } label: {
+                Image(systemName: "arrow.up")
+                    .font(.system(size: 15, weight: .bold))
+                    .foregroundStyle(Tokens.Base.dark)
+                    .frame(width: 38, height: 38)
+                    .background {
+                        Circle().fill(commentDraft.trimmingCharacters(in: .whitespaces).isEmpty ? Tokens.Accent.signal.opacity(0.4) : Tokens.Accent.signal)
+                    }
+            }
+            .buttonStyle(.plain)
+            .disabled(commentDraft.trimmingCharacters(in: .whitespaces).isEmpty)
         }
         .padding(.leading, 16)
         .padding(.trailing, 6)
@@ -297,8 +376,4 @@ struct PostDetailView: View {
         .padding(.horizontal, 16)
         .padding(.bottom, 24)
     }
-}
-
-#Preview {
-    PostDetailView(session: .personalBest)
 }
