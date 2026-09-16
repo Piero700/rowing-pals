@@ -98,12 +98,17 @@ create table test_results (
 );
 
 -- Pre-aggregated per day. Every profile chart and the streak read from here,
--- rather than each running its own scan over sessions.
+-- rather than each running its own scan over sessions. erg/water columns
+-- exist for the metres leaderboard's source split and toggle (task 13) -
+-- distance_m is their sum, kept as its own maintained column since charts
+-- elsewhere only ever need the combined total.
 create table daily_totals (
-  user_id       uuid not null references profiles on delete cascade,
-  day           date not null,
-  distance_m    int not null default 0,
-  session_count int not null default 0,
+  user_id          uuid not null references profiles on delete cascade,
+  day              date not null,
+  distance_m       int not null default 0,
+  erg_distance_m   int not null default 0,
+  water_distance_m int not null default 0,
+  session_count    int not null default 0,
   primary key (user_id, day)
 );
 
@@ -266,6 +271,9 @@ create policy own_row on test_results for all to authenticated
   using (user_id = auth.uid()) with check (user_id = auth.uid());
 
 create policy own_row on reactions for all to authenticated
+  using (user_id = auth.uid()) with check (user_id = auth.uid());
+
+create policy own_row on daily_totals for all to authenticated
   using (user_id = auth.uid()) with check (user_id = auth.uid());
 
 create policy own_row on comments for all to authenticated

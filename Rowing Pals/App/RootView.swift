@@ -24,7 +24,7 @@ struct RootView: View {
             }
 
             Tab("Metres", systemImage: "figure.rower", value: RootTab.metres) {
-                MetresView()
+                MetresLeaderboardView()
             }
 
             Tab("Post", systemImage: "plus.circle.fill", value: RootTab.post) {

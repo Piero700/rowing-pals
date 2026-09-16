@@ -14,12 +14,16 @@ struct DailyTotal: Codable {
     /// see the note on `Session.sessionDate` for why not `Date`.
     var day: String
     var distanceM: Int
+    var ergDistanceM: Int
+    var waterDistanceM: Int
     var sessionCount: Int
 
     enum CodingKeys: String, CodingKey {
         case userId = "user_id"
         case day
         case distanceM = "distance_m"
+        case ergDistanceM = "erg_distance_m"
+        case waterDistanceM = "water_distance_m"
         case sessionCount = "session_count"
     }
 }
