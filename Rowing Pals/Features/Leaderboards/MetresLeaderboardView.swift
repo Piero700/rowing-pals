@@ -25,6 +25,7 @@ struct MetresLeaderboardView: View {
                     .padding(.top, 8)
 
                 PillSegmentedControl(options: MetresLeaderboardViewModel.Period.allCases.map(\.label), selection: periodSelection)
+                    .gesture(periodSwipeGesture)
 
                 HStack(spacing: 7) {
                     FilterChip(label: "Male", isSelected: viewModel.gender == .male)
@@ -90,6 +91,28 @@ struct MetresLeaderboardView: View {
             get: { viewModel.period.rawValue },
             set: { viewModel.period = MetresLeaderboardViewModel.Period(rawValue: $0) ?? .week }
         )
+    }
+
+    /// Swiping the Week/Month/Year control steps to the next/previous
+    /// period — left advances (Week → Month → Year), right goes back,
+    /// clamped at either end rather than wrapping. Scoped to the control
+    /// itself, not the whole screen, so it can't fight the ScrollView's own
+    /// vertical pan gesture.
+    private var periodSwipeGesture: some Gesture {
+        DragGesture(minimumDistance: 24)
+            .onEnded { value in
+                guard abs(value.translation.width) > abs(value.translation.height) else { return }
+                advancePeriod(by: value.translation.width < 0 ? 1 : -1)
+            }
+    }
+
+    private func advancePeriod(by delta: Int) {
+        let periods = MetresLeaderboardViewModel.Period.allCases
+        guard
+            let currentIndex = periods.firstIndex(of: viewModel.period),
+            periods.indices.contains(currentIndex + delta)
+        else { return }
+        viewModel.period = periods[currentIndex + delta]
     }
 
     @ViewBuilder
