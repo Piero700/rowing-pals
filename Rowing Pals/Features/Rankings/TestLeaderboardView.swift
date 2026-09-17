@@ -12,6 +12,12 @@ import SwiftUI
 struct TestLeaderboardView: View {
     @State private var viewModel: TestLeaderboardViewModel
     @Environment(\.dismiss) private var dismiss
+    /// Redesign phase B — per-device display preference, not synced to
+    /// the profile. `row.splitValue` itself is already formatted by the
+    /// view model per this same preference (read fresh from UserDefaults
+    /// there); this view only needs it to decide whether the hand-appended
+    /// "/500m" suffix still applies (never shown for watts).
+    @AppStorage(PaceDisplay.storageKey) private var paceDisplay: PaceDisplay = .split
 
     init(test: StandardTest) {
         _viewModel = State(initialValue: TestLeaderboardViewModel(test: test))
@@ -159,7 +165,7 @@ struct TestLeaderboardView: View {
                     .font(.system(size: 18, weight: .bold))
                     .tabularNumerals()
                     .foregroundStyle(Tokens.Ink.primary)
-                Text("\(row.splitValue) /500m")
+                Text(paceDisplay == .split ? "\(row.splitValue) /500m" : row.splitValue)
                     .font(.system(size: 12))
                     .tabularNumerals()
                     .foregroundStyle(Tokens.Ink.secondary)

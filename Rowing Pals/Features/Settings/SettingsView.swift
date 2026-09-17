@@ -14,6 +14,10 @@ struct SettingsView: View {
     @State private var isShowingTerms = false
     @State private var isShowingDeleteConfirmation = false
     @FocusState private var isNameFocused: Bool
+    /// Redesign phase B — per-device display preferences, not synced to
+    /// the profile. See DesignSystem/DistanceUnit.swift.
+    @AppStorage(DistanceUnit.storageKey) private var distanceUnit: DistanceUnit = .metres
+    @AppStorage(PaceDisplay.storageKey) private var paceDisplay: PaceDisplay = .split
 
     private static let supportEmail = "support@rowingpals.app"
     private static let supportMailtoURL = URL(string: "mailto:\(supportEmail)")
@@ -42,7 +46,7 @@ struct SettingsView: View {
                         HStack {
                             Text("Weekly target")
                             Spacer()
-                            Text("\(viewModel.weeklyTargetM.formattedWithGrouping)m")
+                            Text(viewModel.weeklyTargetM.formattedDistance(unit: distanceUnit))
                                 .tabularNumerals()
                                 .foregroundStyle(Tokens.Ink.secondary)
                         }
@@ -72,6 +76,23 @@ struct SettingsView: View {
                     Text("Profile")
                 } footer: {
                     Text("Novice means you're in your first season. You can change this any time.")
+                }
+
+                Section {
+                    Picker("Distance", selection: $distanceUnit) {
+                        ForEach(DistanceUnit.allCases, id: \.self) { unit in
+                            Text(unit.label).tag(unit)
+                        }
+                    }
+                    Picker("Pace shown as", selection: $paceDisplay) {
+                        ForEach(PaceDisplay.allCases, id: \.self) { display in
+                            Text(display.label).tag(display)
+                        }
+                    }
+                } header: {
+                    Text("Units and display")
+                } footer: {
+                    Text("Changes apply everywhere a distance or pace is shown. Distances are still stored in metres either way.")
                 }
 
                 Section {

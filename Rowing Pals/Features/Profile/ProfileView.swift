@@ -12,6 +12,9 @@ struct ProfileView: View {
     @State private var viewModel = ProfileViewModel()
     @State private var expandedTest: StandardTest?
     @State private var isShowingSettings = false
+    /// Redesign phase B — per-device display preference, not synced to
+    /// the profile. See DesignSystem/DistanceUnit.swift.
+    @AppStorage(DistanceUnit.storageKey) private var distanceUnit: DistanceUnit = .metres
 
     var body: some View {
         // Direct ScrollView child, same constraint as FeedView — see its comment.
@@ -161,7 +164,7 @@ struct ProfileView: View {
 
     private var seasonStrip: some View {
         HStack {
-            StatColumn(label: "METRES", value: viewModel.seasonTotalDistanceM.formattedWithGrouping, alignment: .center)
+            StatColumn(label: seasonDistanceLabel, value: viewModel.seasonTotalDistanceM.formattedDistance(unit: distanceUnit), alignment: .center)
                 .frame(maxWidth: .infinity)
             StatColumn(label: "SESSIONS", value: "\(viewModel.seasonSessionCount)", alignment: .center)
                 .frame(maxWidth: .infinity)
@@ -173,6 +176,12 @@ struct ProfileView: View {
             RoundedRectangle(cornerRadius: 22, style: .continuous)
                 .fill(Tokens.Ink.primary.opacity(0.07))
         }
+    }
+
+    /// "METRES" only describes the value while the preference is metres —
+    /// matches the season total's own unit once it's switched to km.
+    private var seasonDistanceLabel: String {
+        distanceUnit == .metres ? "METRES" : "KILOMETRES"
     }
 
     private func sectionLabel(_ text: String) -> some View {
@@ -254,7 +263,7 @@ struct ProfileView: View {
         .clipped()
         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         .overlay(alignment: .bottomLeading) {
-            Text("\(photo.distanceM.formattedWithGrouping)m")
+            Text(photo.distanceM.formattedDistance(unit: distanceUnit))
                 .font(.system(size: 10, weight: .semibold))
                 .tabularNumerals()
                 .foregroundStyle(.white)

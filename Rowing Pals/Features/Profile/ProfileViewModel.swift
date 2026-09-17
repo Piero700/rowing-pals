@@ -57,14 +57,25 @@ final class ProfileViewModel {
         var hasResult: Bool { setAt != nil }
 
         /// Time for a distance test, distance for a duration test —
-        /// matches the picker tiles on the Tests tab (task 14).
+        /// matches the picker tiles on the Tests tab (task 14). Reads the
+        /// distance-unit preference fresh from `UserDefaults` on every
+        /// access (a computed property, not cached) — this is a plain
+        /// struct, not a View, so it can't hold `@AppStorage` itself.
         var displayValue: String? {
             guard hasResult, let timeMs, let distanceM else { return nil }
-            return test.isDurationBased ? "\(distanceM.formattedWithGrouping)m" : timeMs.formattedDurationMs
+            return test.isDurationBased ? distanceM.formattedDistance(unit: .current) : timeMs.formattedDurationMs
         }
 
+        /// Same fresh-read approach for the pace-display preference. The
+        /// "/500m" suffix only makes sense for an actual split, so it's
+        /// dropped once the preference is watts (`formattedPace` already
+        /// appends "W" to the watts value itself).
         var splitDisplay: String? {
-            splitMs.map { "\($0.formattedDurationMs) /500m" }
+            splitMs.map { splitMs in
+                let paceDisplay = PaceDisplay.current
+                let formatted = splitMs.formattedPace(display: paceDisplay)
+                return paceDisplay == .split ? "\(formatted) /500m" : formatted
+            }
         }
 
         var dateDisplay: String? {

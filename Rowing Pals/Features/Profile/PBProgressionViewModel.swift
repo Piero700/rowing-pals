@@ -76,14 +76,19 @@ final class PBProgressionViewModel {
             }
 
             let overallBest = test.isDurationBased ? points.map(\.value).max() : points.map(\.value).min()
-            currentBestLabel = overallBest.map { Self.format($0, isDurationBased: test.isDurationBased) }
+            currentBestLabel = overallBest.map { Self.format($0, isDurationBased: test.isDurationBased, unit: .current) }
             errorMessage = nil
         } catch {
             errorMessage = error.localizedDescription
         }
     }
 
-    static func format(_ value: Double, isDurationBased: Bool) -> String {
-        isDurationBased ? "\(Int(value).formattedWithGrouping)m" : Int(value).formattedDurationMs
+    /// Duration tests: distance covered, unit-aware (`unit`, read fresh
+    /// from `DistanceUnit.current` by view-model callers; a View passes its
+    /// own `@AppStorage`-backed value instead — see `PBProgressionView`'s
+    /// chart axis). Distance tests: total time taken to finish — elapsed
+    /// time, never a split/watts value, so it always stays formattedDurationMs.
+    static func format(_ value: Double, isDurationBased: Bool, unit: DistanceUnit) -> String {
+        isDurationBased ? Int(value).formattedDistance(unit: unit) : Int(value).formattedDurationMs
     }
 }

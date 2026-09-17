@@ -19,6 +19,9 @@ import SwiftUI
 struct PBProgressionView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var viewModel: PBProgressionViewModel
+    /// Redesign phase B — per-device display preference, not synced to
+    /// the profile. See DesignSystem/DistanceUnit.swift.
+    @AppStorage(DistanceUnit.storageKey) private var distanceUnit: DistanceUnit = .metres
 
     init(test: StandardTest) {
         _viewModel = State(initialValue: PBProgressionViewModel(test: test))
@@ -128,7 +131,7 @@ struct PBProgressionView: View {
                 AxisGridLine()
                 AxisValueLabel {
                     if let raw = value.as(Double.self) {
-                        Text(PBProgressionViewModel.format(raw, isDurationBased: viewModel.test.isDurationBased))
+                        Text(PBProgressionViewModel.format(raw, isDurationBased: viewModel.test.isDurationBased, unit: distanceUnit))
                             .tabularNumerals()
                     }
                 }

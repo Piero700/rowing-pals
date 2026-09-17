@@ -19,6 +19,10 @@ struct PostDetailView: View {
     @State private var commentBeingReported: UUID?
     @Environment(\.dismiss) private var dismiss
     @FocusState private var isComposerFocused: Bool
+    /// Redesign phase B — per-device display preferences, not synced to
+    /// the profile. See DesignSystem/DistanceUnit.swift, PaceDisplay.swift.
+    @AppStorage(DistanceUnit.storageKey) private var distanceUnit: DistanceUnit = .metres
+    @AppStorage(PaceDisplay.storageKey) private var paceDisplay: PaceDisplay = .split
 
     private static let emoji: [String: String] = [
         "fire": "🔥", "grimace": "😬", "clap": "👏", "eyes": "👀",
@@ -280,11 +284,11 @@ struct PostDetailView: View {
                 }
             }
             HStack(alignment: .lastTextBaseline, spacing: 10) {
-                Text("\(viewModel.totalDistanceM.formattedWithGrouping)m")
+                Text(viewModel.totalDistanceM.formattedDistance(unit: distanceUnit))
                     .font(.system(size: 24, weight: .bold))
                     .tabularNumerals()
                     .foregroundStyle(Tokens.Ink.primary)
-                Text("\(viewModel.totalTimeMs.formattedDurationMs) · \(viewModel.avgSplitMs?.formattedDurationMs ?? "—") /500m")
+                Text(totalTimeAndSplitLabel)
                     .textStyle(Typography.bodySecondary)
                     .tabularNumerals()
                     .foregroundStyle(Tokens.Ink.secondary)
@@ -304,6 +308,14 @@ struct PostDetailView: View {
         .glassSurface(cornerRadius: 22)
     }
 
+    /// "1:04:50 · 2:01.6 /500m" for split, "1:04:50 · 186W" for watts — the
+    /// hand-appended "/500m" only makes sense alongside an actual split.
+    private var totalTimeAndSplitLabel: String {
+        let split = viewModel.avgSplitMs?.formattedPace(display: paceDisplay) ?? "—"
+        let time = viewModel.totalTimeMs.formattedDurationMs
+        return paceDisplay == .split ? "\(time) · \(split) /500m" : "\(time) · \(split)"
+    }
+
     private func detailSegmentRow(_ segment: PostDetailViewModel.DetailSegment) -> some View {
         HStack(spacing: 10) {
             CachedAsyncImage(url: segment.monitorPhotoPath.flatMap { viewModel.monitorURLs[$0] }) {
@@ -318,7 +330,7 @@ struct PostDetailView: View {
                 .lineLimit(1)
                 .minimumScaleFactor(0.75)
                 .frame(width: 64, alignment: .leading)
-            Text("\(segment.distanceM.formattedWithGrouping)m")
+            Text(segment.distanceM.formattedDistance(unit: distanceUnit))
                 .font(.system(size: 13.5, weight: .semibold))
                 .tabularNumerals()
                 .foregroundStyle(Tokens.Ink.primary)
@@ -328,7 +340,7 @@ struct PostDetailView: View {
                 .tabularNumerals()
                 .foregroundStyle(Tokens.Ink.secondary)
                 .frame(maxWidth: .infinity, alignment: .leading)
-            Text(segment.splitMs?.formattedDurationMs ?? "—")
+            Text(segment.splitMs?.formattedPace(display: paceDisplay) ?? "—")
                 .font(.system(size: 13))
                 .tabularNumerals()
                 .foregroundStyle(Tokens.Ink.secondary)

@@ -299,7 +299,9 @@ final class PostDetailViewModel {
 
         return TestBanner(
             distanceLabel: test.label,
-            valueLabel: test.isDurationBased ? "\(thisResult.distanceM.formattedWithGrouping)m" : thisResult.timeMs.formattedDurationMs,
+            // Duration tests: distance covered, unit-aware. Distance tests:
+            // total time taken to finish — elapsed time, not a split.
+            valueLabel: test.isDurationBased ? thisResult.distanceM.formattedDistance(unit: .current) : thisResult.timeMs.formattedDurationMs,
             isPersonalBest: isPersonalBest,
             overallRank: overall,
             categoryLabel: categoryLabel,

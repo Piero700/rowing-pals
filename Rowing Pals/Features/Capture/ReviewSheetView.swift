@@ -20,6 +20,14 @@ struct ReviewSheetView: View {
     @State private var viewModel: ReviewSheetViewModel
     @State private var isShowingAddPhoto = false
     @FocusState private var focusedField: ReviewField?
+    /// Redesign phase B — per-device display preferences, not synced to
+    /// the profile. See DesignSystem/DistanceUnit.swift, PaceDisplay.swift.
+    /// The session-total card is a read-only recap (not an editable
+    /// field), so it's safe to make unit-aware — unlike the per-segment
+    /// editable fields in SegmentRowView, which are deliberately left in
+    /// plain metres/split; see that file's header comment.
+    @AppStorage(DistanceUnit.storageKey) private var distanceUnit: DistanceUnit = .metres
+    @AppStorage(PaceDisplay.storageKey) private var paceDisplay: PaceDisplay = .split
 
     private let initialMonitorPhoto: Data
 
@@ -129,23 +137,26 @@ struct ReviewSheetView: View {
         }
     }
 
+    /// "AVG /500M" only means something for a split value — once the
+    /// preference is watts, the label has to stop implying a distance unit.
+    private var avgSplitLabel: String {
+        paceDisplay == .split ? "AVG /500M" : "AVG WATTS"
+    }
+
     private var totalCard: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("SESSION TOTAL")
                 .textStyle(Typography.label)
                 .foregroundStyle(Tokens.Ink.secondary)
             HStack(alignment: .lastTextBaseline, spacing: 8) {
-                Text(viewModel.totalDistanceM.formattedWithGrouping)
+                Text(viewModel.totalDistanceM.formattedDistance(unit: distanceUnit))
                     .font(.system(size: 31, weight: .bold))
                     .tabularNumerals()
                     .foregroundStyle(Tokens.Ink.primary)
-                Text("m")
-                    .font(.system(size: 17, weight: .semibold))
-                    .foregroundStyle(Tokens.Ink.secondary)
             }
             HStack(spacing: 24) {
                 StatColumn(label: "TIME", value: viewModel.totalTimeMs.formattedDurationMs)
-                StatColumn(label: "AVG /500M", value: viewModel.avgSplitMs?.formattedDurationMs ?? "—")
+                StatColumn(label: avgSplitLabel, value: viewModel.avgSplitMs?.formattedPace(display: paceDisplay) ?? "—")
                 StatColumn(label: "RATE", value: viewModel.avgRate.map { "r\(Int($0.rounded()))" } ?? "—")
             }
         }

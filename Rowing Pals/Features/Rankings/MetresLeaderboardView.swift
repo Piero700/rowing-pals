@@ -19,6 +19,9 @@ struct MetresLeaderboardView: View {
     var showsOwnTitle = true
     /// Only used when `showsOwnTitle` is false — see `RankingsView`.
     var mode: Binding<RankingsMode>?
+    /// Redesign phase B — per-device display preference, not synced to
+    /// the profile. See DesignSystem/DistanceUnit.swift.
+    @AppStorage(DistanceUnit.storageKey) private var distanceUnit: DistanceUnit = .metres
 
     var body: some View {
         // Direct ScrollView child, same constraint as FeedView — see its comment.
@@ -163,7 +166,7 @@ struct MetresLeaderboardView: View {
                 .frame(width: 26)
             AvatarPlaceholder(diameter: 42)
             rowLabels(row)
-            Text(row.metres.formattedWithGrouping)
+            Text(row.metres.formattedDistance(unit: distanceUnit))
                 .font(.system(size: 19, weight: .bold))
                 .tabularNumerals()
                 .foregroundStyle(Tokens.Ink.primary)
@@ -185,7 +188,7 @@ struct MetresLeaderboardView: View {
                 .frame(width: 26)
             AvatarPlaceholder(diameter: 38)
             rowLabels(row)
-            Text(row.metres.formattedWithGrouping)
+            Text(row.metres.formattedDistance(unit: distanceUnit))
                 .font(.system(size: 17, weight: .semibold))
                 .tabularNumerals()
                 .foregroundStyle(Tokens.Ink.primary)
@@ -259,6 +262,9 @@ private struct TrackVisibility: ViewModifier {
 struct MetresPinnedRow: View {
     let row: MetresLeaderboardViewModel.Row
     let periodLabel: String
+    /// Redesign phase B — per-device display preference, not synced to
+    /// the profile. See DesignSystem/DistanceUnit.swift.
+    @AppStorage(DistanceUnit.storageKey) private var distanceUnit: DistanceUnit = .metres
 
     var body: some View {
         HStack(spacing: 12) {
@@ -278,7 +284,7 @@ struct MetresPinnedRow: View {
                     .lineLimit(1)
             }
             Spacer(minLength: 8)
-            Text("\(row.metres.formattedWithGrouping)m")
+            Text(row.metres.formattedDistance(unit: distanceUnit))
                 .font(.system(size: 18, weight: .bold))
                 .tabularNumerals()
                 .foregroundStyle(Tokens.Ink.primary)

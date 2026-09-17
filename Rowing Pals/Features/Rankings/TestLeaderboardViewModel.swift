@@ -179,8 +179,11 @@ final class TestLeaderboardViewModel {
                     rank: index + 1,
                     name: row.author.displayName,
                     club: row.author.club?.name,
-                    primaryValue: test.isDurationBased ? "\(row.distanceM.formattedWithGrouping)m" : row.timeMs.formattedDurationMs,
-                    splitValue: row.splitMs.formattedDurationMs,
+                    // Duration tests (e.g. 30'): the metric is distance covered, unit-aware.
+                    // Distance tests (e.g. 2k): the metric is total time taken to finish —
+                    // elapsed time, never watts, so this stays formattedDurationMs.
+                    primaryValue: test.isDurationBased ? row.distanceM.formattedDistance(unit: .current) : row.timeMs.formattedDurationMs,
+                    splitValue: row.splitMs.formattedPace(display: .current),
                     category: row.categoryAtTime,
                     dateLabel: formatter.string(from: row.setAt),
                     isRecentPB: row.setAt >= sevenDaysAgo
