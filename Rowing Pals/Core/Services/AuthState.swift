@@ -34,19 +34,36 @@ final class AuthState {
     /// Re-checks whether the signed-in user still needs onboarding. Called
     /// again by `ClubSearchView` once it writes a club_id, so the app
     /// transitions straight to `RootView` without a restart.
+    ///
+    /// Right after a fresh sign-up, this races `SignInViewModel`'s own
+    /// `ensureProfileExists()` — that one's *inserting* the profiles row at
+    /// the same moment this one's *reading* it, both fired independently
+    /// off the same auth event. Losing that race isn't "no profile exists",
+    /// it's "not yet" — a handful of retries with a short pause covers it;
+    /// nothing else would ever call this again to recover on its own, so
+    /// giving up on the first miss left `needsOnboarding` stuck at nil
+    /// forever (the app's own `ProgressView` fallback), a real bug found
+    /// via on-device testing, not a hypothetical.
     func refreshOnboardingStatus() async {
-        do {
-            let userId = try await SupabaseService.shared.auth.session.user.id
-            let profile: Profile = try await SupabaseService.shared
-                .from("profiles")
-                .select()
-                .eq("id", value: userId)
-                .single()
-                .execute()
-                .value
-            needsOnboarding = profile.clubId == nil
-        } catch {
-            needsOnboarding = nil
+        for attempt in 0..<5 {
+            do {
+                let userId = try await SupabaseService.shared.auth.session.user.id
+                let profile: Profile = try await SupabaseService.shared
+                    .from("profiles")
+                    .select()
+                    .eq("id", value: userId)
+                    .single()
+                    .execute()
+                    .value
+                needsOnboarding = profile.clubId == nil
+                return
+            } catch {
+                if attempt == 4 {
+                    needsOnboarding = nil
+                } else {
+                    try? await Task.sleep(for: .milliseconds(400))
+                }
+            }
         }
     }
 
