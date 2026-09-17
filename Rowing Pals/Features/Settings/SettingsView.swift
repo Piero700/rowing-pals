@@ -128,12 +128,12 @@ struct SettingsView: View {
                     ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity).background(.ultraThinMaterial)
                 }
             }
-            .confirmationDialog(
+            .alert(
                 "Delete your account?",
-                isPresented: $isShowingDeleteConfirmation,
-                titleVisibility: .visible
+                isPresented: $isShowingDeleteConfirmation
             ) {
-                Button("Delete Account", role: .destructive) {
+                Button("Cancel", role: .cancel) {}
+                Button("Delete", role: .destructive) {
                     Task { await viewModel.deleteAccount() }
                 }
             } message: {
