@@ -6,14 +6,16 @@
 import SwiftUI
 
 /// The app shell. Redesigned 2026-09-17 (phase A) to match
-/// docs/design/rowing-pals-redesign-handoff-v2.md §4 exactly: the bottom
-/// nav is two separate floating glass shapes, not one bar — a
+/// docs/design/rowing-pals-redesign-handoff-v2.md §4: the bottom nav is
+/// two separate floating glass shapes, not one bar — a
 /// Feed/Rankings/Profile pill plus a standalone circular Log button — so
 /// this hand-builds tab switching with a plain `ZStack` instead of a
 /// native `TabView` (which can only float one unified bar). See
 /// `FloatingTabBar` and `FloatingBarVisibility` for the bar itself and the
-/// scroll-linked shrink/expand behaviour that replaces
-/// `.tabBarMinimizeBehavior`.
+/// scroll-linked behaviour that replaces `.tabBarMinimizeBehavior`: the
+/// pill hides on scroll down and returns on scroll up, while Log only
+/// shrinks slightly and stays tappable throughout — real-device feedback,
+/// not the prototype's own spec (it's static, no scroll interaction).
 struct RootView: View {
     private enum RootTab: Hashable {
         case feed, rankings, profile
@@ -43,10 +45,12 @@ struct RootView: View {
                 FloatingTabBar(items: Self.items, selection: $selection) {
                     isShowingPostSheet = true
                 }
-                // Matches the prototype's own `bottom:max(14px,env(safe-area-inset-bottom))`
-                // exactly — never less than 14pt, but never less than the
-                // real home-indicator safe area either.
-                .padding(.bottom, max(14, geometry.safeAreaInsets.bottom))
+                // Real-device feedback: the prototype's own 14pt minimum
+                // (measured on a desktop-viewport mockup) read as too high
+                // up on an actual phone — sits closer to the safe-area
+                // edge now, with just enough of a floor to never touch the
+                // home indicator on a device with no safe-area inset at all.
+                .padding(.bottom, max(6, geometry.safeAreaInsets.bottom))
             }
         }
         .environment(barVisibility)
