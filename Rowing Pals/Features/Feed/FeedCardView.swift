@@ -133,11 +133,11 @@ struct FeedCardView: View {
                 Label("Photo-verified", systemImage: "checkmark")
                     .labelStyle(.titleAndIcon)
                     .font(.system(size: 11.5, weight: .semibold))
-                    .foregroundStyle(Tokens.Accent.signal)
+                    .foregroundStyle(Tokens.Accent.brand)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 5)
                     .background {
-                        Capsule().fill(Tokens.Accent.signal.opacity(0.18))
+                        Capsule().fill(Tokens.Accent.brand.opacity(0.18))
                     }
             } else if post.loggedLate {
                 Text("Logged later")

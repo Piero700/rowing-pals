@@ -5,12 +5,22 @@
 
 import SwiftUI
 
-/// The app shell: five tabs in a floating, glass tab bar that shrinks on scroll
+/// The app shell: four tabs in a floating, glass tab bar that shrinks on scroll
 /// down and expands on scroll up. This is native `TabView` behaviour — see
 /// `.tabBarMinimizeBehavior` below — not hand-built chrome.
+///
+/// Redesigned 2026-09-17 (phase A): Metres and Tests merged into one
+/// Rankings tab (`RankingsView`), and Post renamed Log to match the new
+/// design's language. The target look is two visually separate floating
+/// glass capsules (a Feed/Rankings/Profile pill + a standalone circular Log
+/// button) — see docs/design/rowing-pals-redesign-handoff-v2.md §4. Kept
+/// as one native `TabView` here instead: splitting it into two custom
+/// floating elements would mean hand-building the minimize-on-scroll
+/// behaviour this modifier already gives for free, for a purely visual
+/// difference. Flagged as a follow-up polish item, not done now.
 struct RootView: View {
     private enum RootTab: Hashable {
-        case feed, metres, post, tests, profile
+        case feed, rankings, log, profile
     }
 
     @State private var selection: RootTab = .feed
@@ -23,26 +33,22 @@ struct RootView: View {
                 FeedView()
             }
 
-            Tab("Metres", systemImage: "figure.rower", value: RootTab.metres) {
-                MetresLeaderboardView()
+            Tab("Rankings", systemImage: "trophy.fill", value: RootTab.rankings) {
+                RankingsView()
             }
 
-            Tab("Post", systemImage: "plus.circle.fill", value: RootTab.post) {
+            Tab("Log", systemImage: "plus.circle.fill", value: RootTab.log) {
                 Color.clear
-            }
-
-            Tab("Tests", systemImage: "stopwatch", value: RootTab.tests) {
-                TestsView()
             }
 
             Tab("Profile", systemImage: "person.fill", value: RootTab.profile) {
                 ProfileView()
             }
         }
-        .tint(Tokens.Accent.signal)
+        .tint(Tokens.Accent.brand)
         .tabBarMinimizeBehavior(.onScrollDown)
         .onChange(of: selection) { _, newValue in
-            if newValue == .post {
+            if newValue == .log {
                 selection = previousSelection
                 isShowingPostSheet = true
             } else {

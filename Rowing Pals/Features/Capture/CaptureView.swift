@@ -32,13 +32,6 @@ struct CaptureView: View {
         ZStack(alignment: .bottom) {
             cameraLayer
 
-            VStack {
-                countdownBanner
-                    .padding(.horizontal, 16)
-                    .padding(.top, 8)
-                Spacer()
-            }
-
             frontInset
 
             VStack(spacing: 24) {
@@ -116,7 +109,7 @@ struct CaptureView: View {
             VStack(spacing: 10) {
                 Text(message)
                     .textStyle(Typography.bodySecondary)
-                    .foregroundStyle(Tokens.Accent.live)
+                    .foregroundStyle(Tokens.System.error)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 24)
                 Button("Try again") {
@@ -144,39 +137,6 @@ struct CaptureView: View {
             Text(text)
                 .textStyle(Typography.bodySecondary)
                 .foregroundStyle(Tokens.Ink.secondary)
-        }
-    }
-
-    private var countdownBanner: some View {
-        VStack(spacing: 10) {
-            HStack {
-                Text("CAPTURE WINDOW OPEN")
-                    .font(.system(size: 11, weight: .bold))
-                    .tracking(1.1)
-                    .foregroundStyle(Tokens.Accent.live)
-                Spacer()
-                Text("8:42 left")
-                    .font(.system(size: 17, weight: .bold))
-                    .tabularNumerals()
-                    .foregroundStyle(Tokens.Accent.live)
-            }
-            GeometryReader { geometry in
-                ZStack(alignment: .leading) {
-                    Capsule().fill(Tokens.Ink.primary.opacity(0.16))
-                    Capsule().fill(Tokens.Accent.live).frame(width: geometry.size.width * 0.58)
-                }
-            }
-            .frame(height: 4)
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 14)
-        .background {
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .fill(Tokens.Accent.live.opacity(0.14))
-        }
-        .overlay {
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .strokeBorder(Tokens.Accent.live.opacity(0.3), lineWidth: 1)
         }
     }
 

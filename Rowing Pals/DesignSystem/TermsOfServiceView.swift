@@ -71,7 +71,7 @@ struct TermsOfServiceView: View {
                             dismiss()
                         }
                         .fontWeight(.bold)
-                        .foregroundStyle(Tokens.Accent.signal)
+                        .foregroundStyle(Tokens.Accent.brand)
                     }
                 } else {
                     ToolbarItem(placement: .cancellationAction) {

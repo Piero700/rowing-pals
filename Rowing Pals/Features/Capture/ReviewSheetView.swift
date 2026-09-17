@@ -77,7 +77,7 @@ struct ReviewSheetView: View {
                 if let postError = viewModel.postError {
                     Text(postError)
                         .textStyle(Typography.bodySecondary)
-                        .foregroundStyle(Tokens.Accent.live)
+                        .foregroundStyle(Tokens.System.error)
                 }
 
                 visibilityPicker
@@ -177,7 +177,7 @@ struct ReviewSheetView: View {
                     .padding(.horizontal, 16)
                     .padding(.vertical, 9)
                     .background {
-                        RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Tokens.Accent.signal)
+                        RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Tokens.Accent.brand)
                     }
             }
             Button {
@@ -196,11 +196,11 @@ struct ReviewSheetView: View {
         .padding(14)
         .background {
             RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .fill(Tokens.Accent.signal.opacity(0.14))
+                .fill(Tokens.Accent.brand.opacity(0.14))
         }
         .overlay {
             RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .strokeBorder(Tokens.Accent.signal.opacity(0.35), lineWidth: 1)
+                .strokeBorder(Tokens.Accent.brand.opacity(0.35), lineWidth: 1)
         }
         .buttonStyle(.plain)
     }
@@ -223,7 +223,7 @@ struct ReviewSheetView: View {
             .frame(width: 104, height: 52)
             .background {
                 RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .fill(Tokens.Accent.signal.opacity(viewModel.canPost ? 1 : 0.4))
+                    .fill(Tokens.Accent.brand.opacity(viewModel.canPost ? 1 : 0.4))
             }
         }
         .disabled(!viewModel.canPost)

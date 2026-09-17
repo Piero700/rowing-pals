@@ -14,15 +14,24 @@ struct MetresLeaderboardView: View {
     /// list — the pinned row below only shows once it scrolls out of view,
     /// so they never appear twice on screen at once.
     @State private var isOwnRowVisible = true
+    /// False when embedded under `RankingsView` (redesign, phase A) — this
+    /// screen's own title is replaced by `RankingsHeader` there instead.
+    var showsOwnTitle = true
+    /// Only used when `showsOwnTitle` is false — see `RankingsView`.
+    var mode: Binding<RankingsMode>?
 
     var body: some View {
         // Direct ScrollView child, same constraint as FeedView — see its comment.
         ScrollView {
             VStack(alignment: .leading, spacing: 12) {
-                Text("Metres")
-                    .font(.system(size: 30, weight: .bold))
-                    .foregroundStyle(Tokens.Ink.primary)
-                    .padding(.top, 8)
+                if showsOwnTitle {
+                    Text("Metres")
+                        .font(.system(size: 30, weight: .bold))
+                        .foregroundStyle(Tokens.Ink.primary)
+                        .padding(.top, 8)
+                } else if let mode {
+                    RankingsHeader(mode: mode)
+                }
 
                 PillSegmentedControl(options: MetresLeaderboardViewModel.Period.allCases.map(\.label), selection: periodSelection)
 
@@ -42,7 +51,7 @@ struct MetresLeaderboardView: View {
                     ForEach(SocialScope.allCases, id: \.self) { scope in
                         Text(scope.label)
                             .font(.system(size: 13, weight: scope == viewModel.scope ? .semibold : .regular))
-                            .foregroundStyle(scope == viewModel.scope ? Tokens.Accent.signal : Tokens.Ink.secondary)
+                            .foregroundStyle(scope == viewModel.scope ? Tokens.Accent.brand : Tokens.Ink.secondary)
                             .onTapGesture { viewModel.scope = scope }
                     }
                 }
@@ -148,7 +157,7 @@ struct MetresLeaderboardView: View {
             Text("\(row.rank)")
                 .font(.system(size: 26, weight: .bold))
                 .tabularNumerals()
-                .foregroundStyle(Tokens.Accent.pb)
+                .foregroundStyle(Tokens.Accent.records)
                 .frame(width: 26)
             AvatarPlaceholder(diameter: 42)
             rowLabels(row)
@@ -160,7 +169,7 @@ struct MetresLeaderboardView: View {
         .padding(13)
         .background {
             RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .fill(Tokens.Accent.pb.opacity(0.07))
+                .fill(Tokens.Accent.records.opacity(0.07))
         }
         .modifier(TrackVisibility(isTracked: row.isCurrentUser, isVisible: $isOwnRowVisible))
     }
@@ -254,7 +263,7 @@ struct MetresPinnedRow: View {
             Text("\(row.rank)")
                 .font(.system(size: 20, weight: .bold))
                 .tabularNumerals()
-                .foregroundStyle(row.rank <= 3 ? Tokens.Accent.pb : Tokens.Ink.primary)
+                .foregroundStyle(row.rank <= 3 ? Tokens.Accent.records : Tokens.Ink.primary)
                 .frame(width: 26)
             AvatarPlaceholder(diameter: 38)
             VStack(alignment: .leading, spacing: 1) {

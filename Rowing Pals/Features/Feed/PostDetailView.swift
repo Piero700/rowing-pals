@@ -183,7 +183,7 @@ struct PostDetailView: View {
                 .padding(.horizontal, 9)
                 .padding(.vertical, 4)
                 .background {
-                    Capsule().fill(viewModel.isFollowingAuthor ? Tokens.Ink.primary.opacity(0.16) : Tokens.Accent.signal)
+                    Capsule().fill(viewModel.isFollowingAuthor ? Tokens.Ink.primary.opacity(0.16) : Tokens.Accent.brand)
                 }
         }
         .buttonStyle(.plain)
@@ -226,12 +226,12 @@ struct PostDetailView: View {
             Text("\(banner.distanceLabel.uppercased()) TEST")
                 .font(.system(size: 10, weight: .bold))
                 .tracking(1.2)
-                .foregroundStyle(Tokens.Accent.pb)
+                .foregroundStyle(Tokens.Accent.records)
             HStack(alignment: .lastTextBaseline, spacing: 10) {
                 Text(banner.valueLabel)
                     .font(.system(size: 32, weight: .bold))
                     .tabularNumerals()
-                    .foregroundStyle(Tokens.Accent.pb)
+                    .foregroundStyle(Tokens.Accent.records)
                 if banner.isPersonalBest {
                     Text("Personal best")
                         .textStyle(Typography.bodySecondary)
@@ -248,7 +248,7 @@ struct PostDetailView: View {
         .glassSurface(cornerRadius: 24)
         .overlay {
             RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .strokeBorder(Tokens.Accent.pb.opacity(0.32), lineWidth: 1)
+                .strokeBorder(Tokens.Accent.records.opacity(0.32), lineWidth: 1)
         }
     }
 
@@ -272,7 +272,7 @@ struct PostDetailView: View {
                     Label("Photo-verified", systemImage: "checkmark")
                         .labelStyle(.titleAndIcon)
                         .font(.system(size: 11.5, weight: .semibold))
-                        .foregroundStyle(Tokens.Accent.signal)
+                        .foregroundStyle(Tokens.Accent.brand)
                 } else if viewModel.loggedLate {
                     Text("Logged later")
                         .font(.system(size: 11.5, weight: .semibold))
@@ -377,13 +377,13 @@ struct PostDetailView: View {
                 Text("\(reaction.count)")
                     .tabularNumerals()
                     .fontWeight(reaction.reactedByMe ? .semibold : .regular)
-                    .foregroundStyle(reaction.reactedByMe ? Tokens.Accent.pb : Tokens.Ink.secondary)
+                    .foregroundStyle(reaction.reactedByMe ? Tokens.Accent.records : Tokens.Ink.secondary)
             }
             .font(.system(size: 14))
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
             .background {
-                Capsule().fill((reaction.reactedByMe ? Tokens.Accent.pb : Tokens.Ink.primary).opacity(reaction.reactedByMe ? 0.16 : 0.08))
+                Capsule().fill((reaction.reactedByMe ? Tokens.Accent.records : Tokens.Ink.primary).opacity(reaction.reactedByMe ? 0.16 : 0.08))
             }
         }
         .buttonStyle(.plain)
@@ -450,7 +450,7 @@ struct PostDetailView: View {
                     .foregroundStyle(Tokens.Base.dark)
                     .frame(width: 38, height: 38)
                     .background {
-                        Circle().fill(commentDraft.trimmingCharacters(in: .whitespaces).isEmpty ? Tokens.Accent.signal.opacity(0.4) : Tokens.Accent.signal)
+                        Circle().fill(commentDraft.trimmingCharacters(in: .whitespaces).isEmpty ? Tokens.Accent.brand.opacity(0.4) : Tokens.Accent.brand)
                     }
             }
             .buttonStyle(.plain)

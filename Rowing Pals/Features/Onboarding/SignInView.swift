@@ -47,7 +47,7 @@ struct SignInView: View {
                 if let errorMessage = viewModel.errorMessage {
                     Text(errorMessage)
                         .textStyle(Typography.bodySecondary)
-                        .foregroundStyle(Tokens.Accent.live)
+                        .foregroundStyle(Tokens.System.error)
                 }
 
                 Button {
@@ -68,7 +68,7 @@ struct SignInView: View {
                     .padding(.vertical, 15)
                     .background {
                         RoundedRectangle(cornerRadius: 18, style: .continuous)
-                            .fill(Tokens.Accent.signal)
+                            .fill(Tokens.Accent.brand)
                     }
                 }
                 .disabled(!canSubmit)
@@ -82,7 +82,7 @@ struct SignInView: View {
                         ? "Already have an account? Sign in"
                         : "New here? Create an account")
                         .textStyle(Typography.bodySecondary)
-                        .foregroundStyle(Tokens.Accent.signal)
+                        .foregroundStyle(Tokens.Accent.brand)
                         .frame(maxWidth: .infinity)
                 }
             }
@@ -102,7 +102,7 @@ struct SignInView: View {
             } label: {
                 Image(systemName: viewModel.hasAgreedToTerms ? "checkmark.square.fill" : "square")
                     .font(.system(size: 18))
-                    .foregroundStyle(viewModel.hasAgreedToTerms ? Tokens.Accent.signal : Tokens.Ink.secondary)
+                    .foregroundStyle(viewModel.hasAgreedToTerms ? Tokens.Accent.brand : Tokens.Ink.secondary)
             }
             .buttonStyle(.plain)
 
@@ -114,7 +114,7 @@ struct SignInView: View {
                 } label: {
                     Text("Terms of Service")
                         .underline()
-                        .foregroundStyle(Tokens.Accent.signal)
+                        .foregroundStyle(Tokens.Accent.brand)
                 }
                 .buttonStyle(.plain)
             }

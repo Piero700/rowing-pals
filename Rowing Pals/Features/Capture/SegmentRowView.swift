@@ -66,7 +66,7 @@ struct SegmentRowView: View {
             if !segment.lowConfidenceFields.isEmpty {
                 Text(lowConfidenceCaption)
                     .font(.system(size: 12.5))
-                    .foregroundStyle(Tokens.Accent.signal)
+                    .foregroundStyle(Tokens.Accent.brand)
             }
             HStack(spacing: 6) {
                 ForEach(SegmentLabel.allCases, id: \.self) { tag in
@@ -130,7 +130,7 @@ struct SegmentRowView: View {
                 .overlay(alignment: .bottom) {
                     if lowConfidence {
                         Rectangle()
-                            .fill(Tokens.Accent.signal.opacity(0.8))
+                            .fill(Tokens.Accent.brand.opacity(0.8))
                             .frame(height: 2)
                             .offset(y: 2)
                     }

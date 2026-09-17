@@ -38,7 +38,7 @@ struct PBProgressionView: View {
 
                     if let label = viewModel.currentBestLabel {
                         HStack(spacing: 6) {
-                            Circle().fill(Tokens.Accent.pb).frame(width: 8, height: 8)
+                            Circle().fill(Tokens.Accent.records).frame(width: 8, height: 8)
                             Text("Current PB: \(label)")
                                 .textStyle(Typography.bodySecondary)
                                 .tabularNumerals()
@@ -116,10 +116,10 @@ struct PBProgressionView: View {
     private var chart: some View {
         Chart(viewModel.points) { point in
             LineMark(x: .value("Date", point.date), y: .value("Value", point.value))
-                .foregroundStyle(Tokens.Accent.signal)
+                .foregroundStyle(Tokens.Accent.brand)
                 .interpolationMethod(.monotone)
             PointMark(x: .value("Date", point.date), y: .value("Value", point.value))
-                .foregroundStyle(point.isPB ? Tokens.Accent.pb : Tokens.Accent.signal)
+                .foregroundStyle(point.isPB ? Tokens.Accent.records : Tokens.Accent.brand)
                 .symbolSize(point.isPB ? 90 : 50)
         }
         .chartYScale(domain: yDomain)

@@ -50,7 +50,7 @@ struct SettingsView: View {
 
                     if let saveError = viewModel.saveError {
                         Text(saveError)
-                            .foregroundStyle(Tokens.Accent.live)
+                            .foregroundStyle(Tokens.System.error)
                     }
 
                     Button {
@@ -98,14 +98,14 @@ struct SettingsView: View {
                     Button("Sign out") {
                         Task { await viewModel.signOut() }
                     }
-                    .foregroundStyle(Tokens.Accent.live)
+                    .foregroundStyle(Tokens.System.error)
 
                     Button("Delete Account", role: .destructive) {
                         isShowingDeleteConfirmation = true
                     }
                     if let deleteError = viewModel.deleteError {
                         Text(deleteError)
-                            .foregroundStyle(Tokens.Accent.live)
+                            .foregroundStyle(Tokens.System.error)
                     }
                 } footer: {
                     Text("Deleting your account removes every session, photo and comment permanently. This can't be undone.")

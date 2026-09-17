@@ -34,15 +34,25 @@ leaderboards.
 
 ## Design system — binding
 
-Three accent colours, each with exactly one job. If a colour appears outside its role,
-that is a bug.
+**Redesigned 2026-09-17** — see `docs/design/rowing-pals-redesign-handoff-v2.md` for the full
+source spec ([[project_redesign_v2_handoff]] tracks status). Four accent colours now, each with
+exactly one job. If a colour appears outside its role, that is a bug.
 
-| Token | Value | Reserved for |
-|---|---|---|
-| `Accent.signal` | `#3AD7E5` | Interactive elements, active tab, links, the Post button |
-| `Accent.pb` | `#F5C542` | Personal bests and podium ranks 1–3. Nothing else. |
-| `Accent.live` | `#FF6B5A` | The live capture state and its countdown. Nothing else. |
-| `Ink` / `Base` | `#0A0C0F` dark, `#F6F6F7` light | Ground and primary text |
+| Token | Value (dark) | Value (light) | Reserved for |
+|---|---|---|---|
+| `Accent.brand` | `#91B8FF` | `#214FA3` | Interactive elements, active tab, links, the Log button |
+| `Accent.records` | `#C6ADFF` | `#67409B` | Personal bests, avatars, the rank-hero card. Nothing else. |
+| `Accent.rank` | `#EFC37C` | `#84500B` | The #1 leaderboard row and rank-movement indicators. Nothing else. |
+| `Accent.success` | `#78D7AC` | `#176A4A` | Success confirmation and "on" toggle states. Nothing else. |
+| `System.error` | `#FF766F` | `#C93C36` | Error/destructive text and controls — not one of the four accent roles above. |
+| `Ink.primary` | `#F7F8FC` | `#111723` | Primary text |
+| `Ink.secondary` | `#BBC0CE` | `#3E4C61` | Secondary text |
+| `Ink.faint` | `#A3ABBA` | `#4E5C70` | Tertiary text |
+| `Base` | `#101114` | `#EDF0F5` | Screen/card ground |
+| `Surface.card` / `.raised` / `.line` | `#1B1C21` / `#292C34` / `#464A56` | `#FFFFFF` / `#DCE2EC` / `#949EAE` | Flat card levels and borders |
+
+The old 3-colour cyan/gold/coral set (`Accent.signal`/`.pb`/`.live`) is retired — `.live`'s sole
+reason for existing (the capture countdown) was removed outright, not just recoloured.
 
 Dark mode is the primary design. Light mode must work but is secondary.
 

@@ -114,7 +114,7 @@ struct TestLeaderboardView: View {
             Text("\(row.rank)")
                 .font(.system(size: 19, weight: .bold))
                 .tabularNumerals()
-                .foregroundStyle(isPodium ? Tokens.Accent.pb : Tokens.Ink.secondary)
+                .foregroundStyle(isPodium ? Tokens.Accent.records : Tokens.Ink.secondary)
                 .frame(width: 24)
             AvatarPlaceholder(diameter: 40)
             VStack(alignment: .leading, spacing: 2) {
@@ -144,7 +144,7 @@ struct TestLeaderboardView: View {
                             .padding(.vertical, 2)
                             .background {
                                 RoundedRectangle(cornerRadius: 5, style: .continuous)
-                                    .fill(Tokens.Accent.pb)
+                                    .fill(Tokens.Accent.records)
                             }
                     }
                 }
@@ -168,7 +168,7 @@ struct TestLeaderboardView: View {
         .padding(12)
         .background {
             RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .fill(isPodium ? Tokens.Accent.pb.opacity(0.07) : Tokens.Ink.primary.opacity(0.05))
+                .fill(isPodium ? Tokens.Accent.records.opacity(0.07) : Tokens.Ink.primary.opacity(0.05))
         }
     }
 }

@@ -199,12 +199,12 @@ struct ProfileView: View {
                     Spacer(minLength: 0)
                     HStack(spacing: 4) {
                         if tile.isRecentPB {
-                            Circle().fill(Tokens.Accent.pb).frame(width: 5, height: 5)
+                            Circle().fill(Tokens.Accent.records).frame(width: 5, height: 5)
                         }
                         Text(tile.dateDisplay ?? "")
                             .font(.system(size: 10.5))
                             .tabularNumerals()
-                            .foregroundStyle(tile.isRecentPB ? Tokens.Accent.pb : Tokens.Ink.secondary.opacity(0.7))
+                            .foregroundStyle(tile.isRecentPB ? Tokens.Accent.records : Tokens.Ink.secondary.opacity(0.7))
                     }
                 }
                 .padding(.horizontal, 10)
@@ -212,12 +212,12 @@ struct ProfileView: View {
                 .frame(minHeight: 96, alignment: .topLeading)
                 .background {
                     RoundedRectangle(cornerRadius: 20, style: .continuous)
-                        .fill(tile.isRecentPB ? Tokens.Accent.pb.opacity(0.09) : Tokens.Ink.primary.opacity(0.07))
+                        .fill(tile.isRecentPB ? Tokens.Accent.records.opacity(0.09) : Tokens.Ink.primary.opacity(0.07))
                 }
                 .overlay {
                     if tile.isRecentPB {
                         RoundedRectangle(cornerRadius: 20, style: .continuous)
-                            .strokeBorder(Tokens.Accent.pb.opacity(0.3), lineWidth: 1)
+                            .strokeBorder(Tokens.Accent.records.opacity(0.3), lineWidth: 1)
                     }
                 }
             } else {
