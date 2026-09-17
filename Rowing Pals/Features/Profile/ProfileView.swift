@@ -65,7 +65,7 @@ struct ProfileView: View {
         .fullScreenCover(item: $expandedTest) { test in
             PBProgressionView(test: test)
         }
-        .sheet(isPresented: $isShowingSettings) {
+        .sheet(isPresented: $isShowingSettings, onDismiss: { Task { await viewModel.load() } }) {
             SettingsView()
         }
     }
