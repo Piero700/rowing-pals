@@ -46,6 +46,15 @@ enum Tokens {
         static let rank = Color(light: Color(hex: 0x84500B), dark: Color(hex: 0xEFC37C))
         /// Success confirmation and "on" toggle states. Nothing else.
         static let success = Color(light: Color(hex: 0x176A4A), dark: Color(hex: 0x78D7AC))
+
+        /// Tinted backgrounds for each role above — real per-theme alpha values from the
+        /// prototype's `--brandSoft`/`--accentSoft`/`--goldSoft`/`--goodSoft`, not a flat
+        /// `.opacity()` multiply (the light and dark alphas differ, e.g. brandSoft is 14% in
+        /// dark but 12% in light — a plain `.opacity()` call would get that wrong).
+        static let brandSoft = Color(light: Color(hex: 0x214FA3, opacity: 0.12), dark: Color(hex: 0x91B8FF, opacity: 0.14))
+        static let recordsSoft = Color(light: Color(hex: 0x67409B, opacity: 0.10), dark: Color(hex: 0xC6ADFF, opacity: 0.12))
+        static let rankSoft = Color(light: Color(hex: 0x84500B, opacity: 0.10), dark: Color(hex: 0xEFC37C, opacity: 0.12))
+        static let successSoft = Color(light: Color(hex: 0x176A4A, opacity: 0.10), dark: Color(hex: 0x78D7AC, opacity: 0.12))
     }
 
     /// Semantic system colour — not one of the four celebratory accent roles above. Used for

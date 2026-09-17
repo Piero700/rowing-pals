@@ -47,6 +47,7 @@ struct FeedView: View {
             }
         }
         .background(Tokens.Base.ground)
+        .tracksFloatingBar()
         .overlay(alignment: .top) {
             feedHeader
         }
