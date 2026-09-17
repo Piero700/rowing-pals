@@ -5,57 +5,55 @@
 
 import SwiftUI
 
-/// Screen 7 — profile, built in the design brief's order: (a) header, (b)
-/// streak, (c) season strip, (d) PB board, (e) weekly volume bars, (f)
-/// consistency calendar, (g) photo grid.
+/// Screen 7 — profile. Redesign phase C
+/// (docs/design/rowing-pals-redesign-handoff-v2.md §2 Screen 06, §3):
+/// header, a 4-up stats row (weekly volume/sessions/PBs/streak, replacing
+/// the old 3-up season strip), the existing streak-and-rest-pips block
+/// (kept — genuinely useful info the redesign doesn't ask to remove, not
+/// re-described in the prototype but not contradicted by it either),
+/// then an Overview/PBs/Posts toggle. Overview repositions the existing
+/// weekly volume chart and consistency calendar (task 15) above the old
+/// "Recent activity" position, plus the top two PB cards (2k, 5k); PBs
+/// shows the full board; Posts shows the photo grid.
 struct ProfileView: View {
+    private enum Tab: Int, CaseIterable {
+        case overview, pbs, posts
+        var label: String {
+            switch self {
+            case .overview: "Overview"
+            case .pbs: "PBs"
+            case .posts: "Posts"
+            }
+        }
+    }
+
     @State private var viewModel = ProfileViewModel()
     @State private var expandedTest: StandardTest?
     @State private var isShowingSettings = false
+    @State private var tab: Tab = .overview
     /// Redesign phase B — per-device display preference, not synced to
     /// the profile. See DesignSystem/DistanceUnit.swift.
     @AppStorage(DistanceUnit.storageKey) private var distanceUnit: DistanceUnit = .metres
+
+    private static let overviewPBKeys = ["2k", "5k"]
 
     var body: some View {
         // Direct ScrollView child, same constraint as FeedView — see its comment.
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
                 header
+                statsRow
                 streakBlock
-                seasonStrip
 
-                sectionLabel("PERSONAL BESTS")
-                LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 9), count: 3), spacing: 9) {
-                    ForEach(viewModel.pbTiles) { tile in
-                        pbTile(tile)
-                            .onTapGesture {
-                                guard tile.hasResult else { return }
-                                expandedTest = tile.test
-                            }
-                    }
-                }
+                PillSegmentedControl(
+                    options: Tab.allCases.map(\.label),
+                    selection: Binding(get: { tab.rawValue }, set: { tab = Tab(rawValue: $0) ?? .overview })
+                )
 
-                sectionLabel("WEEKLY VOLUME")
-                WeeklyVolumeChart(weeks: viewModel.weeklyVolumes, targetM: viewModel.weeklyTargetM)
-                    .padding(14)
-                    .background {
-                        RoundedRectangle(cornerRadius: 22, style: .continuous)
-                            .fill(Tokens.Ink.primary.opacity(0.05))
-                    }
-
-                sectionLabel("CONSISTENCY")
-                ConsistencyCalendarView(days: viewModel.consistencyDays)
-                    .padding(14)
-                    .background {
-                        RoundedRectangle(cornerRadius: 22, style: .continuous)
-                            .fill(Tokens.Ink.primary.opacity(0.05))
-                    }
-
-                sectionLabel("POSTS")
-                LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 5), count: 3), spacing: 5) {
-                    ForEach(viewModel.photos) { photo in
-                        photoTile(photo)
-                    }
+                switch tab {
+                case .overview: overviewContent
+                case .pbs: pbGrid
+                case .posts: postsGrid
                 }
 
                 Color.clear.frame(height: 100)
@@ -77,7 +75,7 @@ struct ProfileView: View {
 
     private var header: some View {
         HStack(spacing: 12) {
-            AvatarPlaceholder(diameter: 52)
+            AvatarPlaceholder(diameter: 52, streakDays: viewModel.streakDays)
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 7) {
                     Text(viewModel.displayName)
@@ -124,6 +122,45 @@ struct ProfileView: View {
         .padding(.top, 8)
     }
 
+    /// Weekly volume / sessions / PBs / streak — the redesign's 4-up stats
+    /// card (§2 Screen 06), replacing the old 3-up season strip (season
+    /// total distance / season sessions / longest streak, still available
+    /// via the weekly volume chart and streakBlock below, just not
+    /// duplicated up here). "Sessions" reads the season total, not a
+    /// weekly count — the app doesn't track a per-week session count
+    /// separately from per-week distance, and re-deriving one wasn't
+    /// worth a new query for a number the weekly volume chart already
+    /// contextualises properly just below.
+    private var statsRow: some View {
+        HStack {
+            StatColumn(label: weeklyVolumeLabel, value: currentWeekVolumeM.formattedDistance(unit: distanceUnit), alignment: .center)
+                .frame(maxWidth: .infinity)
+            StatColumn(label: "SESSIONS", value: "\(viewModel.seasonSessionCount)", alignment: .center)
+                .frame(maxWidth: .infinity)
+            StatColumn(label: "PBS", value: "\(pbCount)", alignment: .center)
+                .frame(maxWidth: .infinity)
+            StatColumn(label: "STREAK", value: "\(viewModel.streakDays)", alignment: .center)
+                .frame(maxWidth: .infinity)
+        }
+        .padding(.vertical, 14)
+        .background {
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                .fill(Tokens.Ink.primary.opacity(0.07))
+        }
+    }
+
+    private var weeklyVolumeLabel: String {
+        distanceUnit == .metres ? "WEEK'S METRES" : "WEEK'S KM"
+    }
+
+    private var currentWeekVolumeM: Int {
+        viewModel.weeklyVolumes.first(where: \.isCurrentWeek)?.distanceM ?? 0
+    }
+
+    private var pbCount: Int {
+        viewModel.pbTiles.filter(\.hasResult).count
+    }
+
     private var streakBlock: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .lastTextBaseline, spacing: 8) {
@@ -162,26 +199,69 @@ struct ProfileView: View {
         return "\(remaining) rest day\(remaining == 1 ? "" : "s") left this week"
     }
 
-    private var seasonStrip: some View {
-        HStack {
-            StatColumn(label: seasonDistanceLabel, value: viewModel.seasonTotalDistanceM.formattedDistance(unit: distanceUnit), alignment: .center)
-                .frame(maxWidth: .infinity)
-            StatColumn(label: "SESSIONS", value: "\(viewModel.seasonSessionCount)", alignment: .center)
-                .frame(maxWidth: .infinity)
-            StatColumn(label: "LONGEST STREAK", value: "\(viewModel.longestStreakDays)", alignment: .center)
-                .frame(maxWidth: .infinity)
-        }
-        .padding(.vertical, 14)
-        .background {
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .fill(Tokens.Ink.primary.opacity(0.07))
+    // MARK: - Overview tab
+
+    private var overviewContent: some View {
+        VStack(alignment: .leading, spacing: 18) {
+            sectionLabel("WEEKLY VOLUME")
+            WeeklyVolumeChart(weeks: viewModel.weeklyVolumes, targetM: viewModel.weeklyTargetM)
+                .padding(14)
+                .background {
+                    RoundedRectangle(cornerRadius: 22, style: .continuous)
+                        .fill(Tokens.Ink.primary.opacity(0.05))
+                }
+
+            sectionLabel("CONSISTENCY")
+            ConsistencyCalendarView(days: viewModel.consistencyDays)
+                .padding(14)
+                .background {
+                    RoundedRectangle(cornerRadius: 22, style: .continuous)
+                        .fill(Tokens.Ink.primary.opacity(0.05))
+                }
+
+            if !topPBTiles.isEmpty {
+                sectionLabel("PERSONAL BESTS")
+                LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 9), count: 2), spacing: 9) {
+                    ForEach(topPBTiles) { tile in
+                        pbTile(tile)
+                            .onTapGesture {
+                                guard tile.hasResult else { return }
+                                expandedTest = tile.test
+                            }
+                    }
+                }
+            }
         }
     }
 
-    /// "METRES" only describes the value while the preference is metres —
-    /// matches the season total's own unit once it's switched to km.
-    private var seasonDistanceLabel: String {
-        distanceUnit == .metres ? "METRES" : "KILOMETRES"
+    /// 2k and 5k specifically — the redesign's own choice of "top" bests
+    /// (§2 Screen 06), not just "however many fit."
+    private var topPBTiles: [ProfileViewModel.PBTile] {
+        viewModel.pbTiles.filter { Self.overviewPBKeys.contains($0.test.key) }
+    }
+
+    // MARK: - PBs tab
+
+    private var pbGrid: some View {
+        LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 9), count: 3), spacing: 9) {
+            ForEach(viewModel.pbTiles) { tile in
+                pbTile(tile)
+                    .onTapGesture {
+                        guard tile.hasResult else { return }
+                        expandedTest = tile.test
+                    }
+            }
+        }
+    }
+
+    // MARK: - Posts tab
+
+    private var postsGrid: some View {
+        LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 5), count: 3), spacing: 5) {
+            ForEach(viewModel.photos) { photo in
+                photoTile(photo)
+            }
+        }
     }
 
     private func sectionLabel(_ text: String) -> some View {
