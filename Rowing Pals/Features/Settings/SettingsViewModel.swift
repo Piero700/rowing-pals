@@ -78,11 +78,23 @@ final class SettingsViewModel {
         saveError = nil
         defer { isSaving = false }
         do {
-            try await SupabaseService.shared
+            // .select() after .update() asks PostgREST to hand back the
+            // rows it actually touched (Prefer: return=representation) —
+            // without it, an update matching zero rows (RLS filtered it
+            // out, or the profiles row plain doesn't exist) still reports
+            // success with nothing changed, which is exactly what silently
+            // greyed out Save here while never actually writing anything.
+            let updated: [Profile] = try await SupabaseService.shared
                 .from("profiles")
                 .update(ProfileEdit(displayName: displayName, gender: gender, category: category, weeklyTargetM: weeklyTargetM))
                 .eq("id", value: userId)
+                .select()
                 .execute()
+                .value
+            guard !updated.isEmpty else {
+                saveError = "Nothing was saved — this account may not have a profile row yet. Try signing out and back in."
+                return
+            }
             original = (displayName, gender, category, weeklyTargetM)
         } catch {
             saveError = error.localizedDescription
