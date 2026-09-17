@@ -118,7 +118,7 @@ The main tab. Vertically scrolling cards, edge-to-edge photos, glass everything 
 
 Piero's three segments, if you need the detail: Warmup **2,000m · 8:33.2 · 2:08.3 · r18** · Main **12,000m · 47:28.8 · 1:58.7 · r20** · Cooldown **2,000m · 8:48.0 · 2:12.0 · r17**.
 
-Header of the feed: a scoped title with a segmented glass control — **Following / My Club / Global**.
+Header of the feed: a scoped title with a segmented glass control — **Following / My Club**. (No Global tier — cancelled after the first round of testing; may return for a v2.)
 
 ### Screen 3 — Capture
 
@@ -148,7 +148,7 @@ Where the extracted data gets confirmed. A tall glass sheet over the dimmed capt
 
 - Title **Meters**, with a glass segmented control for **Week / Month / Year**
 - A second row of filter chips: **Male / Female** (the only split on this board), and a source toggle **All / Erg / Water**
-- A scope selector matching the feed: Following / My Club / Global
+- A scope selector matching the feed: Following / My Club
 - **Top three** get a distinct treatment — larger rows or a podium block, rank numerals in PB Gold
 - **Ranked rows:** rank numeral, avatar, name, club, and the metre total in large tabular numerals on the right, with a thin two-tone bar underneath each row showing the erg/water split of that total
 - **The user's own row is pinned above the tab bar as a persistent glass bar**, always visible however far they scroll — "You · 3rd · 116,250m"

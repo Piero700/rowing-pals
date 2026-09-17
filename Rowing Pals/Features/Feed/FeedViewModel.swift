@@ -6,7 +6,7 @@
 import Foundation
 import Supabase
 
-/// Owns the feed's paginated `sessions` query, its Following/My Club/Global
+/// Owns the feed's paginated `sessions` query, its Following/My Club
 /// scope, and the signed URLs for every post's photos.
 @Observable
 final class FeedViewModel {
@@ -21,7 +21,7 @@ final class FeedViewModel {
     segments(id, label, position, distance_m, monitor_photo_path)
     """
 
-    var scope: SocialScope = .global {
+    var scope: SocialScope = .myClub {
         didSet {
             guard oldValue != scope else { return }
             Task { await reload() }
@@ -89,15 +89,14 @@ final class FeedViewModel {
                 .from("sessions")
                 .select(Self.selectColumns)
 
-            if let userIds = try await scope.userIds() {
-                guard !userIds.isEmpty else {
-                    if replacing { posts = [] }
-                    hasMorePages = false
-                    errorMessage = nil
-                    return
-                }
-                query = query.in("user_id", values: userIds)
+            let userIds = try await scope.userIds()
+            guard !userIds.isEmpty else {
+                if replacing { posts = [] }
+                hasMorePages = false
+                errorMessage = nil
+                return
             }
+            query = query.in("user_id", values: userIds)
 
             let blocked = await resolvedBlockedUserIds()
             if !blocked.isEmpty {
@@ -196,14 +195,16 @@ final class FeedViewModel {
         return resolved
     }
 
-    /// The poster's own audience choice at post time (new feature, built
-    /// after task 18) — independent of, and ANDed with, the viewer's own
-    /// scope tab above. A 'club'-restricted post from someone the viewer
-    /// follows still shouldn't show up in the Following tab if the viewer
-    /// isn't actually in that club; every tab has to honour every post's
-    /// own restriction, not just its own. Same "no RLS, filter in the
-    /// query" approach as `resolvedBlockedUserIds()`, for the same reason
-    /// (see the NOTE in docs/schema.sql).
+    /// The poster's own audience choice at post time — independent of, and
+    /// ANDed with, the viewer's own scope tab above. A 'club'-restricted
+    /// post from someone the viewer follows still shouldn't show up in the
+    /// Following tab if the viewer isn't actually in that club; every tab
+    /// has to honour every post's own restriction, not just its own. Same
+    /// "no RLS, filter in the query" approach as `resolvedBlockedUserIds()`,
+    /// for the same reason (see the NOTE in docs/schema.sql).
+    ///
+    /// No Global case any more (`PostVisibility`, `SocialScope`) — just the
+    /// two remaining possibilities plus "it's your own post."
     ///
     /// Returns the raw `.or()` filter string PostgREST expects, or nil if
     /// the viewer can't be identified (session lost) — in that case the
@@ -220,7 +221,7 @@ final class FeedViewModel {
             followedIds = (try? await SocialScope.following.userIds()) ?? []
         }
 
-        var clauses = ["visibility.eq.global", "user_id.eq.\(userId.uuidString.lowercased())"]
+        var clauses = ["user_id.eq.\(userId.uuidString.lowercased())"]
         if let clubmateIds, !clubmateIds.isEmpty {
             let csv = clubmateIds.map { $0.uuidString.lowercased() }.joined(separator: ",")
             clauses.append("and(visibility.eq.club,user_id.in.(\(csv)))")

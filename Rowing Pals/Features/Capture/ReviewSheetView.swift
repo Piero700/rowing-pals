@@ -114,8 +114,8 @@ struct ReviewSheetView: View {
     }
 
     /// Who can see this post — a new choice at post time, added after
-    /// task 18. Defaults to Global (the app's original, only behaviour),
-    /// so nobody who's never touched this picker gets a surprise.
+    /// task 18. No Global option (`PostVisibility`), so this defaults to
+    /// My Club, the wider of the two remaining choices.
     private var visibilityPicker: some View {
         let selection = Binding<Int>(
             get: { PostVisibility.allCases.firstIndex(of: viewModel.visibility) ?? 0 },
