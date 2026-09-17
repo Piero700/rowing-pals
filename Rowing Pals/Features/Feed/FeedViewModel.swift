@@ -38,6 +38,12 @@ final class FeedViewModel {
     /// `CachedAsyncImage` caches by URL string, so a fresh URL for a photo
     /// it already has would defeat that cache and refetch for nothing.
     private var signedURLs: [String: URL] = [:]
+    /// Author user_id → current streak length, resolved once per author
+    /// encountered across pagination and reused — same caching rationale
+    /// as `signedURLs`. Computed client-side via `StreakCalculator` from a
+    /// batched `daily_totals` fetch, not one `current_streak(...)` RPC call
+    /// per avatar — see `fetchStreaks(for:)`.
+    private var streaks: [UUID: Int] = [:]
     private var hasMorePages = true
 
     /// Everyone blocked in either direction — resolved once and reused for
@@ -82,6 +88,13 @@ final class FeedViewModel {
         signedURLs[path]
     }
 
+    /// 0 (no badge) until that author's streak has been resolved by
+    /// `fetchStreaks(for:)` — same "batched lookup exposed as a method"
+    /// shape as `signedURL(forPath:)`.
+    func streakDays(forAuthor userId: UUID) -> Int {
+        streaks[userId] ?? 0
+    }
+
     @MainActor
     private func loadPage(offset: Int, replacing: Bool) async {
         do {
@@ -117,6 +130,7 @@ final class FeedViewModel {
             hasMorePages = page.count == Self.pageSize
             errorMessage = nil
             await fetchSignedURLs(for: page)
+            await fetchStreaks(for: page)
         } catch {
             // Per task 12: "Feed blanks after a few pages -> pagination
             // cursor bug; print the query being sent." Printing the actual
@@ -159,6 +173,47 @@ final class FeedViewModel {
             case .success(let path, let signedURL): (path, signedURL)
             case .failure: nil
             }
+        }
+    }
+
+    /// One batched `daily_totals` fetch for every author on this page whose
+    /// streak isn't already cached, then `StreakCalculator.streak(...)`
+    /// computes each one client-side — never a `current_streak(...)` RPC
+    /// call per avatar (see StreakCalculator's doc comment and
+    /// docs/schema.sql's `current_streak`, the source of truth this must
+    /// stay in lockstep with). Best-effort: a failure here just leaves
+    /// those authors' badges unresolved (streakDays reads back as 0) rather
+    /// than failing the whole feed page.
+    @MainActor
+    private func fetchStreaks(for page: [FeedPost]) async {
+        let authorIds = Array(Set(page.map(\.userId).filter { streaks[$0] == nil }))
+        guard !authorIds.isEmpty else { return }
+
+        struct Row: Decodable {
+            let userId: UUID
+            let day: String
+            let sessionCount: Int
+            enum CodingKeys: String, CodingKey {
+                case userId = "user_id"
+                case day
+                case sessionCount = "session_count"
+            }
+        }
+
+        guard let rows: [Row] = try? await SupabaseService.shared
+            .from("daily_totals")
+            .select("user_id, day, session_count")
+            .in("user_id", values: authorIds)
+            .execute()
+            .value
+        else { return }
+
+        var activeDaysByUser: [UUID: Set<String>] = [:]
+        for row in rows where row.sessionCount > 0 {
+            activeDaysByUser[row.userId, default: []].insert(row.day)
+        }
+        for authorId in authorIds {
+            streaks[authorId] = StreakCalculator.streak(activeDays: activeDaysByUser[authorId] ?? [])
         }
     }
 

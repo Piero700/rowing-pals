@@ -47,6 +47,9 @@ final class MetresLeaderboardViewModel {
         /// `source` currently ranks by.
         let ergFraction: Double
         let isCurrentUser: Bool
+        /// From a batched `daily_totals` fetch computed client-side via
+        /// `StreakCalculator`, not a `current_streak(...)` RPC call per row.
+        let streakDays: Int
     }
 
     var period: Period = .week {
@@ -77,6 +80,7 @@ final class MetresLeaderboardViewModel {
         var distanceM = 0
         var ergDistanceM = 0
         var waterDistanceM = 0
+        var streakDays = 0
     }
 
     private var aggregates: [UUID: Aggregate] = [:]
@@ -184,13 +188,43 @@ final class MetresLeaderboardViewModel {
                 }
             }
 
-            let totalRows: [TotalRow] = try await SupabaseService.shared
+            // Streak, per task's redesign handoff §3 — one row's worth of
+            // what `StreakCalculator` needs (day + whether a session was
+            // logged), unfiltered by period since the walk can legitimately
+            // reach back up to 730 days. Batched into the same `.in
+            // ("user_id", ...)` shape as `totalRows` below, fetched
+            // concurrently since the two are independent — never one
+            // `current_streak(...)` RPC call per row (see StreakCalculator's
+            // doc comment and docs/schema.sql's `current_streak`).
+            struct StreakRow: Decodable {
+                let userId: UUID
+                let day: String
+                let sessionCount: Int
+                enum CodingKeys: String, CodingKey {
+                    case userId = "user_id"
+                    case day
+                    case sessionCount = "session_count"
+                }
+            }
+
+            async let totalRowsTask: [TotalRow] = SupabaseService.shared
                 .from("daily_totals")
                 .select("user_id, distance_m, erg_distance_m, water_distance_m")
                 .in("user_id", values: profileRows.map(\.id))
                 .gte("day", value: Self.periodStartString(for: period))
                 .execute()
                 .value
+
+            // Best-effort: a failure here just leaves streak badges
+            // unresolved (0, no badge) rather than failing the whole board.
+            async let streakRowsTask: [StreakRow] = (try? await SupabaseService.shared
+                .from("daily_totals")
+                .select("user_id, day, session_count")
+                .in("user_id", values: profileRows.map(\.id))
+                .execute()
+                .value) ?? []
+
+            let (totalRows, streakRows) = try await (totalRowsTask, streakRowsTask)
             guard !Task.isCancelled else { return }
 
             var newAggregates: [UUID: Aggregate] = [:]
@@ -201,6 +235,14 @@ final class MetresLeaderboardViewModel {
                 newAggregates[row.userId]?.distanceM += row.distanceM
                 newAggregates[row.userId]?.ergDistanceM += row.ergDistanceM
                 newAggregates[row.userId]?.waterDistanceM += row.waterDistanceM
+            }
+
+            var activeDaysByUser: [UUID: Set<String>] = [:]
+            for row in streakRows where row.sessionCount > 0 {
+                activeDaysByUser[row.userId, default: []].insert(row.day)
+            }
+            for (userId, days) in activeDaysByUser {
+                newAggregates[userId]?.streakDays = StreakCalculator.streak(activeDays: days)
             }
 
             aggregates = newAggregates
@@ -237,7 +279,8 @@ final class MetresLeaderboardViewModel {
                     club: aggregate.club,
                     metres: metres(aggregate),
                     ergFraction: fraction,
-                    isCurrentUser: userId == currentUserId
+                    isCurrentUser: userId == currentUserId,
+                    streakDays: aggregate.streakDays
                 )
             }
     }

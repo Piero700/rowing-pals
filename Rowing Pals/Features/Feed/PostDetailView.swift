@@ -156,7 +156,7 @@ struct PostDetailView: View {
             }
 
             HStack(spacing: 9) {
-                AvatarPlaceholder(diameter: 24)
+                AvatarPlaceholder(diameter: 24, streakDays: viewModel.authorStreakDays)
                 Text(viewModel.author?.displayName ?? "")
                     .font(.system(size: 13.5, weight: .semibold))
                     .foregroundStyle(Tokens.Ink.primary)

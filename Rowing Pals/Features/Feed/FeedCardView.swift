@@ -14,6 +14,10 @@ struct FeedCardView: View {
     let post: FeedPost
     let monitorURL: URL?
     let selfieURL: URL?
+    /// The author's current streak, resolved by `FeedViewModel`'s batched
+    /// `daily_totals` fetch — 0 (no badge) until that resolves. See
+    /// `AvatarPlaceholder`'s doc comment.
+    var streakDays: Int = 0
 
     /// Tap-to-swap, BeReal-style — which photo is full-bleed right now.
     @State private var isSelfiePrimary = false
@@ -92,7 +96,7 @@ struct FeedCardView: View {
 
     private var header: some View {
         HStack(spacing: 10) {
-            AvatarPlaceholder(diameter: 36)
+            AvatarPlaceholder(diameter: 36, streakDays: streakDays)
             VStack(alignment: .leading, spacing: 1) {
                 HStack(spacing: 7) {
                     Text(post.author.displayName)

@@ -44,6 +44,9 @@ final class TestLeaderboardViewModel {
         let category: RowerCategory
         let dateLabel: String
         let isRecentPB: Bool
+        /// From a batched `daily_totals` fetch computed client-side via
+        /// `StreakCalculator`, not a `current_streak(...)` RPC call per row.
+        let streakDays: Int
     }
 
     let test: StandardTest
@@ -173,6 +176,34 @@ final class TestLeaderboardViewModel {
             formatter.dateFormat = "d MMM"
             let sevenDaysAgo = Date().addingTimeInterval(-7 * 86400)
 
+            // Streak, batched into one `daily_totals` query across every
+            // rower on this board rather than one `current_streak(...)`
+            // RPC call per row — see StreakCalculator's doc comment and
+            // docs/schema.sql's `current_streak`. Best-effort: a failure
+            // here just leaves streak badges unresolved, not the whole board.
+            struct StreakRow: Decodable {
+                let userId: UUID
+                let day: String
+                let sessionCount: Int
+                enum CodingKeys: String, CodingKey {
+                    case userId = "user_id"
+                    case day
+                    case sessionCount = "session_count"
+                }
+            }
+            var activeDaysByUser: [UUID: Set<String>] = [:]
+            if !sorted.isEmpty {
+                let streakRows: [StreakRow] = (try? await SupabaseService.shared
+                    .from("daily_totals")
+                    .select("user_id, day, session_count")
+                    .in("user_id", values: sorted.map(\.userId))
+                    .execute()
+                    .value) ?? []
+                for row in streakRows where row.sessionCount > 0 {
+                    activeDaysByUser[row.userId, default: []].insert(row.day)
+                }
+            }
+
             rows = sorted.enumerated().map { index, row in
                 Row(
                     id: row.userId,
@@ -186,7 +217,8 @@ final class TestLeaderboardViewModel {
                     splitValue: row.splitMs.formattedPace(display: .current),
                     category: row.categoryAtTime,
                     dateLabel: formatter.string(from: row.setAt),
-                    isRecentPB: row.setAt >= sevenDaysAgo
+                    isRecentPB: row.setAt >= sevenDaysAgo,
+                    streakDays: StreakCalculator.streak(activeDays: activeDaysByUser[row.userId] ?? [])
                 )
             }
             errorMessage = nil
