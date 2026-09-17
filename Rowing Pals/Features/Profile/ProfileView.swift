@@ -11,6 +11,7 @@ import SwiftUI
 struct ProfileView: View {
     @State private var viewModel = ProfileViewModel()
     @State private var expandedTest: StandardTest?
+    @State private var isShowingSettings = false
 
     var body: some View {
         // Direct ScrollView child, same constraint as FeedView — see its comment.
@@ -64,6 +65,9 @@ struct ProfileView: View {
         .fullScreenCover(item: $expandedTest) { test in
             PBProgressionView(test: test)
         }
+        .sheet(isPresented: $isShowingSettings) {
+            SettingsView()
+        }
     }
 
     private var header: some View {
@@ -94,17 +98,23 @@ struct ProfileView: View {
                 }
             }
             Spacer()
-            // Settings/edit-profile is task 18's — inert placeholder here,
-            // same treatment other not-yet-built screens get elsewhere.
-            Text("Edit")
-                .font(.system(size: 13.5, weight: .semibold))
-                .foregroundStyle(Tokens.Ink.primary)
-                .padding(.horizontal, 14)
-                .padding(.vertical, 8)
-                .background {
-                    RoundedRectangle(cornerRadius: 15, style: .continuous)
-                        .fill(Tokens.Ink.primary.opacity(0.09))
-                }
+            // Opens SettingsView (task 17: support contact + terms only —
+            // task 18 adds edit-profile, novice/senior, weekly target,
+            // sign out and Delete Account to the same screen).
+            Button {
+                isShowingSettings = true
+            } label: {
+                Text("Edit")
+                    .font(.system(size: 13.5, weight: .semibold))
+                    .foregroundStyle(Tokens.Ink.primary)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 8)
+                    .background {
+                        RoundedRectangle(cornerRadius: 15, style: .continuous)
+                            .fill(Tokens.Ink.primary.opacity(0.09))
+                    }
+            }
+            .buttonStyle(.plain)
         }
         .padding(.top, 8)
     }

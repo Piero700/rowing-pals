@@ -40,6 +40,11 @@ final class FeedViewModel {
     private var signedURLs: [String: URL] = [:]
     private var hasMorePages = true
 
+    /// Everyone blocked in either direction — resolved once and reused for
+    /// the life of this view model, since a block only ever happens from
+    /// `PostDetailView`, never mid-scroll of the feed itself.
+    private var blockedUserIds: [UUID]?
+
     @MainActor
     func loadInitial() async {
         guard posts.isEmpty else { return }
@@ -87,6 +92,11 @@ final class FeedViewModel {
                     return
                 }
                 query = query.in("user_id", values: userIds)
+            }
+
+            let blocked = await resolvedBlockedUserIds()
+            if !blocked.isEmpty {
+                query = query.notIn("user_id", values: blocked)
             }
 
             let page: [FeedPost] = try await query
@@ -142,6 +152,39 @@ final class FeedViewModel {
             case .failure: nil
             }
         }
+    }
+
+    /// Filtering, task 17 — blocking works both ways: rows the viewer
+    /// blocked, and rows blocked *by* someone whose posts would otherwise
+    /// show the viewer as an author. `sessions`' own RLS policy is
+    /// `read_all using (true)` (docs/schema.sql) — it doesn't know about
+    /// blocks at all, so this client-side filter is the only thing
+    /// enforcing it, not a belt-and-braces extra.
+    @MainActor
+    private func resolvedBlockedUserIds() async -> [UUID] {
+        if let blockedUserIds { return blockedUserIds }
+        guard let userId = try? await SupabaseService.shared.auth.session.user.id else { return [] }
+        struct BlockedByMe: Decodable { let blockedId: UUID
+            enum CodingKeys: String, CodingKey { case blockedId = "blocked_id" }
+        }
+        struct BlockedMe: Decodable { let blockerId: UUID
+            enum CodingKeys: String, CodingKey { case blockerId = "blocker_id" }
+        }
+        async let byMe: [BlockedByMe] = (try? await SupabaseService.shared
+            .from("blocks")
+            .select("blocked_id")
+            .eq("blocker_id", value: userId)
+            .execute()
+            .value) ?? []
+        async let ofMe: [BlockedMe] = (try? await SupabaseService.shared
+            .from("blocks")
+            .select("blocker_id")
+            .eq("blocked_id", value: userId)
+            .execute()
+            .value) ?? []
+        let resolved = Array(Set(await byMe.map(\.blockedId) + (await ofMe.map(\.blockerId))))
+        blockedUserIds = resolved
+        return resolved
     }
 
     /// The selfie's storage path is never stored in the DB — it's always at

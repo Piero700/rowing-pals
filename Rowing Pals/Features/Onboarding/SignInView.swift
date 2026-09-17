@@ -11,6 +11,7 @@ import SwiftUI
 struct SignInView: View {
     @State private var viewModel = SignInViewModel()
     @FocusState private var focusedField: Field?
+    @State private var isShowingTerms = false
 
     private enum Field {
         case email, password, displayName
@@ -37,6 +38,10 @@ struct SignInView: View {
                         .textInputAutocapitalization(.never)
                         .keyboardType(.emailAddress)
                     field("Password", text: $viewModel.password, field: .password, isSecure: true)
+                }
+
+                if viewModel.isSigningUp {
+                    termsAgreementRow
                 }
 
                 if let errorMessage = viewModel.errorMessage {
@@ -85,11 +90,45 @@ struct SignInView: View {
         }
         .background(Tokens.Base.ground)
         .dismissesKeyboardOnTap()
+        .sheet(isPresented: $isShowingTerms) {
+            TermsOfServiceView(onAgree: { viewModel.hasAgreedToTerms = true })
+        }
+    }
+
+    private var termsAgreementRow: some View {
+        HStack(alignment: .top, spacing: 10) {
+            Button {
+                viewModel.hasAgreedToTerms.toggle()
+            } label: {
+                Image(systemName: viewModel.hasAgreedToTerms ? "checkmark.square.fill" : "square")
+                    .font(.system(size: 18))
+                    .foregroundStyle(viewModel.hasAgreedToTerms ? Tokens.Accent.signal : Tokens.Ink.secondary)
+            }
+            .buttonStyle(.plain)
+
+            HStack(spacing: 0) {
+                Text("I agree to the ")
+                    .foregroundStyle(Tokens.Ink.primary)
+                Button {
+                    isShowingTerms = true
+                } label: {
+                    Text("Terms of Service")
+                        .underline()
+                        .foregroundStyle(Tokens.Accent.signal)
+                }
+                .buttonStyle(.plain)
+            }
+            .textStyle(Typography.bodySecondary)
+
+            Spacer()
+        }
     }
 
     private var canSubmit: Bool {
         guard !viewModel.email.isEmpty, !viewModel.password.isEmpty else { return false }
-        if viewModel.isSigningUp && viewModel.displayName.isEmpty { return false }
+        if viewModel.isSigningUp {
+            if viewModel.displayName.isEmpty || !viewModel.hasAgreedToTerms { return false }
+        }
         return !viewModel.isLoading
     }
 
