@@ -48,6 +48,7 @@ struct TestsView: View {
         }
         .background(Tokens.Base.ground)
         .tracksFloatingBar()
+        .ignoresSafeArea(edges: .bottom)
         .task { await viewModel.loadOwnPBs() }
         .refreshable { await viewModel.loadOwnPBs() }
         .fullScreenCover(item: $selectedTest) { test in

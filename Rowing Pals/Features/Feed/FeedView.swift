@@ -48,6 +48,7 @@ struct FeedView: View {
         }
         .background(Tokens.Base.ground)
         .tracksFloatingBar()
+        .ignoresSafeArea(edges: .bottom)
         .overlay(alignment: .top) {
             feedHeader
         }

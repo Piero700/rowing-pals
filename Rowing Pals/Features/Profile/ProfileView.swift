@@ -61,6 +61,7 @@ struct ProfileView: View {
         }
         .background(Tokens.Base.ground)
         .tracksFloatingBar()
+        .ignoresSafeArea(edges: .bottom)
         .task { await viewModel.load() }
         .refreshable { await viewModel.load() }
         .fullScreenCover(item: $expandedTest) { test in

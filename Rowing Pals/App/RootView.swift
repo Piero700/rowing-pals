@@ -9,13 +9,32 @@ import SwiftUI
 /// docs/design/rowing-pals-redesign-handoff-v2.md §4: the bottom nav is
 /// two separate floating glass shapes, not one bar — a
 /// Feed/Rankings/Profile pill plus a standalone circular Log button — so
-/// this hand-builds tab switching with a plain `ZStack` instead of a
-/// native `TabView` (which can only float one unified bar). See
-/// `FloatingTabBar` and `FloatingBarVisibility` for the bar itself and the
-/// scroll-linked behaviour that replaces `.tabBarMinimizeBehavior`: the
-/// pill hides on scroll down and returns on scroll up, while Log only
-/// shrinks slightly and stays tappable throughout — real-device feedback,
-/// not the prototype's own spec (it's static, no scroll interaction).
+/// this hand-builds tab switching instead of a native `TabView` (which can
+/// only float one unified bar). See `FloatingTabBar` and
+/// `FloatingBarVisibility` for the bar itself and the scroll-linked
+/// behaviour that replaces `.tabBarMinimizeBehavior`.
+///
+/// Real-device feedback (2026-09-17) fixed two structural issues here,
+/// not just tuning:
+///
+/// 1. All three tabs are instantiated once, up front, and shown/hidden
+///    with opacity + `allowsHitTesting` — **not** a `switch` that creates
+///    a fresh view every time you change tabs. A `switch`-built view loses
+///    identity on every switch: a brand-new `FeedViewModel` means a reset
+///    scroll position and a full reload each time you come back to a tab,
+///    which is exactly what read as "can't smoothly move between tabs" —
+///    native `TabView` keeps every tab alive for this reason, and losing
+///    that was a real regression, not a preference.
+/// 2. `FloatingTabBar` sits in `content`'s own `.overlay(alignment: .bottom)`
+///    rather than a sibling in a bespoke `ZStack` inside a `GeometryReader`
+///    — `.overlay` is the pattern already proven elsewhere in this codebase
+///    for floating UI on top of a `ScrollView` (e.g. `MetresLeaderboardView`'s
+///    pinned row) and composes hit-testing predictably; taps meant for the
+///    bar were occasionally reaching a feed card underneath instead with
+///    the old structure. No extra minimum bottom padding either — SwiftUI
+///    already keeps an `.overlay` clear of the safe area on its own, which
+///    also happens to sit the bar closer to the true bottom edge, matching
+///    the Instagram-style closeness asked for.
 struct RootView: View {
     private enum RootTab: Hashable {
         case feed, rankings, profile
@@ -36,39 +55,31 @@ struct RootView: View {
     ]
 
     var body: some View {
-        GeometryReader { geometry in
-            ZStack(alignment: .bottom) {
-                content
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .ignoresSafeArea(edges: .bottom)
-
+        content
+            .overlay(alignment: .bottom) {
                 FloatingTabBar(items: Self.items, selection: $selection) {
                     isShowingPostSheet = true
                 }
-                // Real-device feedback: the prototype's own 14pt minimum
-                // (measured on a desktop-viewport mockup) read as too high
-                // up on an actual phone — sits closer to the safe-area
-                // edge now, with just enough of a floor to never touch the
-                // home indicator on a device with no safe-area inset at all.
-                .padding(.bottom, max(6, geometry.safeAreaInsets.bottom))
             }
-        }
-        .environment(barVisibility)
-        .sheet(isPresented: $isShowingPostSheet) {
-            PostSheetView()
+            .environment(barVisibility)
+            .sheet(isPresented: $isShowingPostSheet) {
+                PostSheetView()
+            }
+    }
+
+    /// All three live simultaneously — see the doc comment above for why.
+    private var content: some View {
+        ZStack {
+            tab(.feed) { FeedView() }
+            tab(.rankings) { RankingsView() }
+            tab(.profile) { ProfileView() }
         }
     }
 
-    @ViewBuilder
-    private var content: some View {
-        switch selection {
-        case .feed:
-            FeedView()
-        case .rankings:
-            RankingsView()
-        case .profile:
-            ProfileView()
-        }
+    private func tab(_ tab: RootTab, @ViewBuilder content: () -> some View) -> some View {
+        content()
+            .opacity(selection == tab ? 1 : 0)
+            .allowsHitTesting(selection == tab)
     }
 }
 

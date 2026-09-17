@@ -84,6 +84,7 @@ struct MetresLeaderboardView: View {
         }
         .background(Tokens.Base.ground)
         .tracksFloatingBar()
+        .ignoresSafeArea(edges: .bottom)
         .overlay(alignment: .bottom) {
             if !isOwnRowVisible, let ownRow = viewModel.rankedRows.first(where: \.isCurrentUser) {
                 MetresPinnedRow(row: ownRow, periodLabel: viewModel.period.label.lowercased())
