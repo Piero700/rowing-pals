@@ -5,23 +5,19 @@
 
 import SwiftUI
 
-/// The app shell. Bottom nav rebuilt 2026-09-18 around a real reference:
-/// the user supplied a screen recording of Instagram's own bar and asked
-/// for that instead of the redesign prototype's two-separate-capsules
-/// spec (docs/design/rowing-pals-redesign-handoff-v2.md §4) — one
-/// unified floating pill holding every icon together, icon-only, sitting
-/// close to the bottom. See `FloatingTabBar` for the bar itself.
+/// The app shell. Redesigned 2026-09-17 (phase A) to match
+/// docs/design/rowing-pals-redesign-handoff-v2.md §4: the bottom nav is
+/// two separate floating glass shapes, not one bar — a
+/// Feed/Rankings/Profile pill plus a standalone circular Log button — so
+/// this hand-builds tab switching instead of a native `TabView` (which can
+/// only float one unified bar). See `FloatingTabBar` and
+/// `FloatingBarVisibility` for the bar itself and the scroll-linked
+/// behaviour that replaces `.tabBarMinimizeBehavior`.
 ///
-/// Still hand-built tab switching rather than a native `TabView`, since
-/// Log opens a sheet instead of actually becoming a selected tab (this
-/// app's long-standing "Post sits outside tab selection" pattern) — see
-/// `FloatingBarVisibility` for the scroll-linked shrink/expand behaviour
-/// that replaces `.tabBarMinimizeBehavior`.
+/// Real-device feedback (2026-09-17) fixed two structural issues here,
+/// not just tuning:
 ///
-/// Two structural fixes from real-device feedback on the earlier version,
-/// both still true here:
-///
-/// 1. All three real tabs are instantiated once, up front, and shown/hidden
+/// 1. All three tabs are instantiated once, up front, and shown/hidden
 ///    with opacity + `allowsHitTesting` — **not** a `switch` that creates
 ///    a fresh view every time you change tabs. A `switch`-built view loses
 ///    identity on every switch: a brand-new `FeedViewModel` means a reset
@@ -33,13 +29,15 @@ import SwiftUI
 ///    rather than a sibling in a bespoke `ZStack` inside a `GeometryReader`
 ///    — `.overlay` is the pattern already proven elsewhere in this codebase
 ///    for floating UI on top of a `ScrollView` (e.g. `MetresLeaderboardView`'s
-///    pinned row) and composes hit-testing predictably. No extra minimum
-///    bottom padding either — SwiftUI already keeps an `.overlay` clear of
-///    the safe area on its own, which also sits the bar closer to the true
-///    bottom edge, matching Instagram's own closeness.
+///    pinned row) and composes hit-testing predictably; taps meant for the
+///    bar were occasionally reaching a feed card underneath instead with
+///    the old structure. No extra minimum bottom padding either — SwiftUI
+///    already keeps an `.overlay` clear of the safe area on its own, which
+///    also happens to sit the bar closer to the true bottom edge, matching
+///    the Instagram-style closeness asked for.
 struct RootView: View {
     private enum RootTab: Hashable {
-        case feed, rankings, log, profile
+        case feed, rankings, profile
     }
 
     @State private var selection: RootTab = .feed
@@ -47,14 +45,13 @@ struct RootView: View {
     @State private var barVisibility = FloatingBarVisibility()
 
     /// House/bar-chart/person — matches the prototype's actual inline SVG
-    /// icon defs (`#home`/`#rank`/`#user`), confirmed against the
-    /// prototype file directly. Log sits third, between Rankings and
-    /// Profile, matching where Instagram places its own centre action.
+    /// icon defs (`#home`/`#rank`/`#user`), not a guess at "something
+    /// feed-like" — confirmed against the prototype file directly, not
+    /// just the earlier design summary.
     private static let items: [FloatingTabBar<RootTab>.Item] = [
-        .init(tab: .feed, systemImage: "house.fill"),
-        .init(tab: .rankings, systemImage: "chart.bar.fill"),
-        .init(tab: .log, systemImage: "plus.circle.fill", isLog: true),
-        .init(tab: .profile, systemImage: "person.fill")
+        .init(tab: .feed, label: "Feed", systemImage: "house.fill"),
+        .init(tab: .rankings, label: "Rankings", systemImage: "chart.bar.fill"),
+        .init(tab: .profile, label: "Profile", systemImage: "person.fill")
     ]
 
     var body: some View {
