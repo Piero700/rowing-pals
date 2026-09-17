@@ -7,7 +7,7 @@ import Foundation
 import Supabase
 
 /// Owns the metres leaderboard's Week/Month/Year period, Male/Female
-/// filter, All/Erg/Water source, and Following/My Club/Global scope.
+/// filter, All/Erg/Water source, and Following/My Club scope.
 /// Aggregates from `daily_totals` only, never `sessions`, per task 13.
 @Observable
 final class MetresLeaderboardViewModel {
@@ -58,7 +58,7 @@ final class MetresLeaderboardViewModel {
     var gender: RowerGender = .male {
         didSet { guard oldValue != gender else { return }; Task { await reload() } }
     }
-    var scope: SocialScope = .global {
+    var scope: SocialScope = .myClub {
         didSet { guard oldValue != scope else { return }; Task { await reload() } }
     }
     /// Re-sorting by a different source never needs a new query — every
@@ -134,7 +134,7 @@ final class MetresLeaderboardViewModel {
         do {
             let scopeIds = try await scope.userIds()
             guard !Task.isCancelled else { return }
-            if let scopeIds, scopeIds.isEmpty {
+            if scopeIds.isEmpty {
                 aggregates = [:]
                 rankedRows = []
                 errorMessage = nil
@@ -154,14 +154,13 @@ final class MetresLeaderboardViewModel {
                 }
             }
 
-            var profileQuery = SupabaseService.shared
+            let profileRows: [ProfileRow] = try await SupabaseService.shared
                 .from("profiles")
                 .select("id, display_name, clubs(name)")
                 .eq("gender", value: gender.rawValue)
-            if let scopeIds {
-                profileQuery = profileQuery.in("id", values: scopeIds)
-            }
-            let profileRows: [ProfileRow] = try await profileQuery.execute().value
+                .in("id", values: scopeIds)
+                .execute()
+                .value
             guard !Task.isCancelled else { return }
 
             guard !profileRows.isEmpty else {

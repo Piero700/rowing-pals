@@ -74,7 +74,7 @@ struct FeedView: View {
     private var scopeSelection: Binding<Int> {
         Binding(
             get: { viewModel.scope.rawValue },
-            set: { viewModel.scope = SocialScope(rawValue: $0) ?? .global }
+            set: { viewModel.scope = SocialScope(rawValue: $0) ?? .myClub }
         )
     }
 
@@ -107,7 +107,6 @@ struct FeedView: View {
         switch viewModel.scope {
         case .following: "Nobody to show yet"
         case .myClub: "No posts from your club yet"
-        case .global: "No posts yet"
         }
     }
 
@@ -115,7 +114,6 @@ struct FeedView: View {
         switch viewModel.scope {
         case .following: "Follow some rowers to see their sessions here."
         case .myClub: "Be the first to post a session."
-        case .global: "Be the first to post a session."
         }
     }
 }

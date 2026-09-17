@@ -6,7 +6,7 @@
 import Foundation
 import Supabase
 
-/// Owns the feed's paginated `sessions` query, its Following/My Club/Global
+/// Owns the feed's paginated `sessions` query, its Following/My Club
 /// scope, and the signed URLs for every post's photos.
 @Observable
 final class FeedViewModel {
@@ -21,7 +21,7 @@ final class FeedViewModel {
     segments(id, label, position, distance_m, monitor_photo_path)
     """
 
-    var scope: SocialScope = .global {
+    var scope: SocialScope = .myClub {
         didSet {
             guard oldValue != scope else { return }
             Task { await reload() }
@@ -44,6 +44,11 @@ final class FeedViewModel {
     /// the life of this view model, since a block only ever happens from
     /// `PostDetailView`, never mid-scroll of the feed itself.
     private var blockedUserIds: [UUID]?
+
+    /// Cached the same way as `blockedUserIds`, for the same reason — see
+    /// `resolvedVisibilityFilter()`.
+    private var clubmateIds: [UUID]?
+    private var followedIds: [UUID]?
 
     @MainActor
     func loadInitial() async {
@@ -84,19 +89,22 @@ final class FeedViewModel {
                 .from("sessions")
                 .select(Self.selectColumns)
 
-            if let userIds = try await scope.userIds() {
-                guard !userIds.isEmpty else {
-                    if replacing { posts = [] }
-                    hasMorePages = false
-                    errorMessage = nil
-                    return
-                }
-                query = query.in("user_id", values: userIds)
+            let userIds = try await scope.userIds()
+            guard !userIds.isEmpty else {
+                if replacing { posts = [] }
+                hasMorePages = false
+                errorMessage = nil
+                return
             }
+            query = query.in("user_id", values: userIds)
 
             let blocked = await resolvedBlockedUserIds()
             if !blocked.isEmpty {
                 query = query.notIn("user_id", values: blocked)
+            }
+
+            if let visibilityFilter = await resolvedVisibilityFilter() {
+                query = query.or(visibilityFilter)
             }
 
             let page: [FeedPost] = try await query
@@ -185,6 +193,55 @@ final class FeedViewModel {
         let resolved = Array(Set(await byMe.map(\.blockedId) + (await ofMe.map(\.blockerId))))
         blockedUserIds = resolved
         return resolved
+    }
+
+    /// The poster's own audience choice at post time — independent of, and
+    /// ANDed with, the viewer's own scope tab above. A 'club'-restricted
+    /// post from someone the viewer follows still shouldn't show up in the
+    /// Following tab if the viewer isn't actually in that club; every tab
+    /// has to honour every post's own restriction, not just its own. Same
+    /// "no RLS, filter in the query" approach as `resolvedBlockedUserIds()`,
+    /// for the same reason (see the NOTE in docs/schema.sql).
+    ///
+    /// No app-wide public case (`PostVisibility`, `SocialScope`) — just
+    /// club, following, their union ("everyone" — clubmates OR followers,
+    /// not every app user), and "it's your own post."
+    ///
+    /// Returns the raw `.or()` filter string PostgREST expects, or nil if
+    /// the viewer can't be identified (session lost) — in that case the
+    /// query just runs unfiltered by visibility, same fail-open posture as
+    /// `resolvedBlockedUserIds()` returning `[]`.
+    @MainActor
+    private func resolvedVisibilityFilter() async -> String? {
+        guard let userId = try? await SupabaseService.shared.auth.session.user.id else { return nil }
+
+        if clubmateIds == nil {
+            clubmateIds = (try? await SocialScope.myClub.userIds()) ?? []
+        }
+        if followedIds == nil {
+            followedIds = (try? await SocialScope.following.userIds()) ?? []
+        }
+        let clubmateCSV = clubmateIds.flatMap { $0.isEmpty ? nil : $0.map { $0.uuidString.lowercased() }.joined(separator: ",") }
+        let followedCSV = followedIds.flatMap { $0.isEmpty ? nil : $0.map { $0.uuidString.lowercased() }.joined(separator: ",") }
+
+        var clauses = ["user_id.eq.\(userId.uuidString.lowercased())"]
+        if let clubmateCSV {
+            clauses.append("and(visibility.eq.club,user_id.in.(\(clubmateCSV)))")
+        }
+        if let followedCSV {
+            clauses.append("and(visibility.eq.following,user_id.in.(\(followedCSV)))")
+        }
+        switch (clubmateCSV, followedCSV) {
+        case (nil, nil):
+            break
+        case (let club?, nil):
+            clauses.append("and(visibility.eq.everyone,user_id.in.(\(club)))")
+        case (nil, let following?):
+            clauses.append("and(visibility.eq.everyone,user_id.in.(\(following)))")
+        case (let club?, let following?):
+            clauses.append("and(visibility.eq.everyone,or(user_id.in.(\(club)),user_id.in.(\(following))))")
+        }
+        return clauses.joined(separator: ",")
     }
 
     /// The selfie's storage path is never stored in the DB — it's always at
