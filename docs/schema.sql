@@ -9,9 +9,11 @@ create type session_type   as enum ('erg', 'water');
 create type segment_label  as enum ('warmup', 'main', 'cooldown', 'extra');
 create type rower_category as enum ('novice', 'senior');
 create type rower_gender   as enum ('M', 'F');
--- Who can see a post, chosen at post time. No 'global' option for now —
--- cancelled after the first round of testing, may return for a v2.
-create type post_visibility as enum ('following', 'club');
+-- Who can see a post, chosen at post time. No app-wide public option for
+-- now — cancelled after the first round of testing, may return for a v2.
+-- 'everyone' is the union of the other two (clubmates OR followers), not
+-- every user of the app.
+create type post_visibility as enum ('following', 'club', 'everyone');
 
 -- ---------------------------------------------------------------
 -- Clubs and people
@@ -53,7 +55,7 @@ create table sessions (
   user_id          uuid not null references profiles on delete cascade,
   type             session_type not null,
   caption          text,
-  visibility       post_visibility not null default 'club',
+  visibility       post_visibility not null default 'everyone',
 
   -- Rolled up from segments. Kept on the row so the feed needs one query.
   total_distance_m int    not null,

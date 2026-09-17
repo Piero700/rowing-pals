@@ -203,8 +203,9 @@ final class FeedViewModel {
     /// "no RLS, filter in the query" approach as `resolvedBlockedUserIds()`,
     /// for the same reason (see the NOTE in docs/schema.sql).
     ///
-    /// No Global case any more (`PostVisibility`, `SocialScope`) — just the
-    /// two remaining possibilities plus "it's your own post."
+    /// No app-wide public case (`PostVisibility`, `SocialScope`) — just
+    /// club, following, their union ("everyone" — clubmates OR followers,
+    /// not every app user), and "it's your own post."
     ///
     /// Returns the raw `.or()` filter string PostgREST expects, or nil if
     /// the viewer can't be identified (session lost) — in that case the
@@ -220,15 +221,25 @@ final class FeedViewModel {
         if followedIds == nil {
             followedIds = (try? await SocialScope.following.userIds()) ?? []
         }
+        let clubmateCSV = clubmateIds.flatMap { $0.isEmpty ? nil : $0.map { $0.uuidString.lowercased() }.joined(separator: ",") }
+        let followedCSV = followedIds.flatMap { $0.isEmpty ? nil : $0.map { $0.uuidString.lowercased() }.joined(separator: ",") }
 
         var clauses = ["user_id.eq.\(userId.uuidString.lowercased())"]
-        if let clubmateIds, !clubmateIds.isEmpty {
-            let csv = clubmateIds.map { $0.uuidString.lowercased() }.joined(separator: ",")
-            clauses.append("and(visibility.eq.club,user_id.in.(\(csv)))")
+        if let clubmateCSV {
+            clauses.append("and(visibility.eq.club,user_id.in.(\(clubmateCSV)))")
         }
-        if let followedIds, !followedIds.isEmpty {
-            let csv = followedIds.map { $0.uuidString.lowercased() }.joined(separator: ",")
-            clauses.append("and(visibility.eq.following,user_id.in.(\(csv)))")
+        if let followedCSV {
+            clauses.append("and(visibility.eq.following,user_id.in.(\(followedCSV)))")
+        }
+        switch (clubmateCSV, followedCSV) {
+        case (nil, nil):
+            break
+        case (let club?, nil):
+            clauses.append("and(visibility.eq.everyone,user_id.in.(\(club)))")
+        case (nil, let following?):
+            clauses.append("and(visibility.eq.everyone,user_id.in.(\(following)))")
+        case (let club?, let following?):
+            clauses.append("and(visibility.eq.everyone,or(user_id.in.(\(club)),user_id.in.(\(following))))")
         }
         return clauses.joined(separator: ",")
     }

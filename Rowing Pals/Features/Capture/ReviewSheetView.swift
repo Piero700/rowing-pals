@@ -114,8 +114,8 @@ struct ReviewSheetView: View {
     }
 
     /// Who can see this post — a new choice at post time, added after
-    /// task 18. No Global option (`PostVisibility`), so this defaults to
-    /// My Club, the wider of the two remaining choices.
+    /// task 18. Defaults to Everyone (`PostVisibility`) — club and
+    /// followers combined, the widest of the three.
     private var visibilityPicker: some View {
         let selection = Binding<Int>(
             get: { PostVisibility.allCases.firstIndex(of: viewModel.visibility) ?? 0 },

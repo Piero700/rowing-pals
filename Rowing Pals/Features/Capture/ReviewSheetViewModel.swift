@@ -15,10 +15,10 @@ final class ReviewSheetViewModel {
     let selfieJPEG: Data
     var segments: [DraftSegment] = []
     var caption = ""
-    /// Who can see this post — a new choice at post time. No Global option
-    /// any more (see `PostVisibility`), so club is the default: the wider
-    /// of the two remaining choices.
-    var visibility: PostVisibility = .club
+    /// Who can see this post — a new choice at post time. `.everyone`
+    /// (club + followers, not an app-wide public option — see
+    /// `PostVisibility`) is the widest of the three, so it's the default.
+    var visibility: PostVisibility = .everyone
     var isProcessingPhoto = false
     var isPosting = false
     var postError: String?
