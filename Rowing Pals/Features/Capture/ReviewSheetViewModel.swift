@@ -15,6 +15,10 @@ final class ReviewSheetViewModel {
     let selfieJPEG: Data
     var segments: [DraftSegment] = []
     var caption = ""
+    /// Who can see this post — a new choice at post time, defaulting to
+    /// the app's original behaviour (everyone) so it never surprises
+    /// someone who's never touched the picker.
+    var visibility: PostVisibility = .global
     var isProcessingPhoto = false
     var isPosting = false
     var postError: String?
@@ -107,6 +111,7 @@ final class ReviewSheetViewModel {
         let userId: UUID
         let type: SessionType
         let caption: String?
+        let visibility: PostVisibility
         let totalDistanceM: Int
         let totalTimeMs: Int
         let avgSplitMs: Int?
@@ -119,7 +124,7 @@ final class ReviewSheetViewModel {
         enum CodingKeys: String, CodingKey {
             case id
             case userId = "user_id"
-            case type, caption
+            case type, caption, visibility
             case totalDistanceM = "total_distance_m"
             case totalTimeMs = "total_time_ms"
             case avgSplitMs = "avg_split_ms"
@@ -241,6 +246,7 @@ final class ReviewSheetViewModel {
                 userId: userId,
                 type: .erg,
                 caption: caption.isEmpty ? nil : caption,
+                visibility: visibility,
                 totalDistanceM: totalDistanceM,
                 totalTimeMs: totalTimeMs,
                 avgSplitMs: avgSplitMs,

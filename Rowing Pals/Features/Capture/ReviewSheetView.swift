@@ -80,6 +80,8 @@ struct ReviewSheetView: View {
                         .foregroundStyle(Tokens.Accent.live)
                 }
 
+                visibilityPicker
+
                 HStack(spacing: 10) {
                     TextField("Add a caption…", text: $viewModel.caption)
                         .textStyle(Typography.body)
@@ -108,6 +110,22 @@ struct ReviewSheetView: View {
                     Task { await viewModel.addSegment(from: data) }
                 }
             }
+        }
+    }
+
+    /// Who can see this post — a new choice at post time, added after
+    /// task 18. Defaults to Global (the app's original, only behaviour),
+    /// so nobody who's never touched this picker gets a surprise.
+    private var visibilityPicker: some View {
+        let selection = Binding<Int>(
+            get: { PostVisibility.allCases.firstIndex(of: viewModel.visibility) ?? 0 },
+            set: { viewModel.visibility = PostVisibility.allCases[$0] }
+        )
+        return VStack(alignment: .leading, spacing: 6) {
+            Text("WHO CAN SEE THIS")
+                .textStyle(Typography.label)
+                .foregroundStyle(Tokens.Ink.secondary)
+            PillSegmentedControl(options: PostVisibility.allCases.map(\.label), selection: selection)
         }
     }
 

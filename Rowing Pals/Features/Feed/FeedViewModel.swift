@@ -45,6 +45,11 @@ final class FeedViewModel {
     /// `PostDetailView`, never mid-scroll of the feed itself.
     private var blockedUserIds: [UUID]?
 
+    /// Cached the same way as `blockedUserIds`, for the same reason — see
+    /// `resolvedVisibilityFilter()`.
+    private var clubmateIds: [UUID]?
+    private var followedIds: [UUID]?
+
     @MainActor
     func loadInitial() async {
         guard posts.isEmpty else { return }
@@ -97,6 +102,10 @@ final class FeedViewModel {
             let blocked = await resolvedBlockedUserIds()
             if !blocked.isEmpty {
                 query = query.notIn("user_id", values: blocked)
+            }
+
+            if let visibilityFilter = await resolvedVisibilityFilter() {
+                query = query.or(visibilityFilter)
             }
 
             let page: [FeedPost] = try await query
@@ -185,6 +194,42 @@ final class FeedViewModel {
         let resolved = Array(Set(await byMe.map(\.blockedId) + (await ofMe.map(\.blockerId))))
         blockedUserIds = resolved
         return resolved
+    }
+
+    /// The poster's own audience choice at post time (new feature, built
+    /// after task 18) — independent of, and ANDed with, the viewer's own
+    /// scope tab above. A 'club'-restricted post from someone the viewer
+    /// follows still shouldn't show up in the Following tab if the viewer
+    /// isn't actually in that club; every tab has to honour every post's
+    /// own restriction, not just its own. Same "no RLS, filter in the
+    /// query" approach as `resolvedBlockedUserIds()`, for the same reason
+    /// (see the NOTE in docs/schema.sql).
+    ///
+    /// Returns the raw `.or()` filter string PostgREST expects, or nil if
+    /// the viewer can't be identified (session lost) — in that case the
+    /// query just runs unfiltered by visibility, same fail-open posture as
+    /// `resolvedBlockedUserIds()` returning `[]`.
+    @MainActor
+    private func resolvedVisibilityFilter() async -> String? {
+        guard let userId = try? await SupabaseService.shared.auth.session.user.id else { return nil }
+
+        if clubmateIds == nil {
+            clubmateIds = (try? await SocialScope.myClub.userIds()) ?? []
+        }
+        if followedIds == nil {
+            followedIds = (try? await SocialScope.following.userIds()) ?? []
+        }
+
+        var clauses = ["visibility.eq.global", "user_id.eq.\(userId.uuidString.lowercased())"]
+        if let clubmateIds, !clubmateIds.isEmpty {
+            let csv = clubmateIds.map { $0.uuidString.lowercased() }.joined(separator: ",")
+            clauses.append("and(visibility.eq.club,user_id.in.(\(csv)))")
+        }
+        if let followedIds, !followedIds.isEmpty {
+            let csv = followedIds.map { $0.uuidString.lowercased() }.joined(separator: ",")
+            clauses.append("and(visibility.eq.following,user_id.in.(\(csv)))")
+        }
+        return clauses.joined(separator: ",")
     }
 
     /// The selfie's storage path is never stored in the DB — it's always at
