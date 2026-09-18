@@ -18,6 +18,13 @@ struct CaptureView: View {
     let onPosted: () -> Void
     @State private var viewModel = CaptureViewModel()
     @State private var initialCapture: InitialCapture?
+    /// Which corner the front-camera inset preview sits in — genuinely
+    /// user-configurable per the redesign handoff (§3), set via the
+    /// corner-picker sheet below. A per-device display preference like
+    /// `DistanceUnit`/`PaceDisplay`, so `@AppStorage` rather than a
+    /// `profiles` column.
+    @AppStorage(InsetCorner.storageKey) private var insetCorner: InsetCorner = .defaultCorner
+    @State private var isShowingCornerPicker = false
 
     /// Identifies one completed rear+front capture, so `.navigationDestination(item:)`
     /// (which requires `Hashable`, not just `Identifiable`) can push the
@@ -34,6 +41,10 @@ struct CaptureView: View {
 
             frontInset
 
+            cornerPickerButton
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                .padding(.top, 60)
+
             VStack(spacing: 24) {
                 Spacer()
                 statusView
@@ -48,6 +59,9 @@ struct CaptureView: View {
         .onDisappear { viewModel.stop() }
         .navigationDestination(item: $initialCapture) { capture in
             ReviewSheetView(selfieJPEG: capture.frontJPEG, initialMonitorPhoto: capture.rearJPEG, onPosted: onPosted)
+        }
+        .sheet(isPresented: $isShowingCornerPicker) {
+            InsetCornerPickerView(selection: $insetCorner)
         }
     }
 
@@ -76,6 +90,12 @@ struct CaptureView: View {
     /// Live once the front camera is actually active — always true once
     /// ready in multi-cam mode; only true once the sequential fallback
     /// reaches its second shot. A static placeholder the rest of the time.
+    ///
+    /// Position is user-configurable (`insetCorner`, set via the
+    /// corner-picker sheet) rather than fixed — a top corner keeps clear of
+    /// the monitor-framing guide below it, a bottom corner keeps clear of
+    /// the shutter button, so the vertical margin flips with the corner
+    /// while the horizontal margin stays the same on either side.
     private var frontInset: some View {
         Group {
             if let frontLayer = viewModel.frontPreviewLayer {
@@ -86,9 +106,10 @@ struct CaptureView: View {
             }
         }
         .frame(width: 104, height: 140)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
-        .padding(.top, 150)
-        .padding(.trailing, 16)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: insetCorner.alignment)
+        .padding(.top, insetCorner.isTop ? 150 : 0)
+        .padding(.bottom, insetCorner.isTop ? 0 : 150)
+        .padding(.horizontal, 16)
     }
 
     @ViewBuilder
@@ -164,6 +185,27 @@ struct CaptureView: View {
                         .frame(width: 68, height: 68)
                 }
         }
+    }
+
+    /// Opens the 4-corner inset-position sheet. Pinned top-centre, clear of
+    /// every possible inset corner and of the monitor-framing guide below
+    /// it — unlike the shutter row, its position can't shift with
+    /// `insetCorner` without risking a collision with whichever corner the
+    /// inset itself is currently in. Separate control from any "swap
+    /// cameras" button (not yet built here) — this changes *where* the
+    /// inset sits, not *which* camera is in it.
+    private var cornerPickerButton: some View {
+        Button {
+            isShowingCornerPicker = true
+        } label: {
+            InsetCornerGlyph(corner: insetCorner, tint: Tokens.Ink.primary)
+                .frame(width: 18, height: 14)
+                .frame(width: 44, height: 44)
+        }
+        .buttonStyle(.plain)
+        .glassSurface(cornerRadius: 22)
+        .accessibilityLabel("Inset position")
+        .accessibilityHint("Choose which corner the front camera preview sits in")
     }
 }
 
