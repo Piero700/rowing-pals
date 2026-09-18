@@ -5,12 +5,18 @@
 
 import SwiftUI
 
-/// Screen 8 — one post, opened. Full segment breakdown, the gold
-/// test-result banner when it applies, reactions and a comment thread —
-/// both live via Realtime (task 16).
+/// Screen 8 — one post, opened. Redesign phase (docs/design/rowing-pals-redesign-handoff-v2.md
+/// §2 "post"/workout-detail, §3 "Workout-hero photo-first detail"): a full-bleed dual-camera
+/// photo up top with a floating back button and a glass "person pill", then the rest of the
+/// content scrolls up under a rounded sheet-lip edge — totals, a collapsible split breakdown,
+/// reactions, caption, an optional extra-photo gallery, up to 3 inline recent comments, and a
+/// sticky composer. The gold test-result banner (design-brief.md Screen 8) still renders first
+/// in the sheet when the post was a confirmed test. Reactions and comments still arrive live via
+/// Realtime (task 16) — this rebuild only restructures layout, `PostDetailViewModel` is untouched.
 struct PostDetailView: View {
     @State private var viewModel: PostDetailViewModel
     @State private var isSelfiePrimary = false
+    @State private var isSplitBreakdownExpanded = true
     @State private var commentDraft = ""
     @State private var isShowingMoreReactions = false
     @State private var isShowingReportReasons = false
@@ -29,6 +35,12 @@ struct PostDetailView: View {
         "muscle": "💪", "wow": "😮", "boat": "🚣"
     ]
     private static let reportReasons = ["Inappropriate content", "Spam", "Harassment", "Other"]
+    private static let heroHeight: CGFloat = 420
+    /// How far the rounded sheet-lip rides up over the hero photo's bottom
+    /// edge. An `.offset`, not extra padding, so it doesn't add a matching
+    /// empty gap to the scroll content — see `sheetLip`.
+    private static let lipOverlap: CGFloat = 28
+    private static let maxInlineComments = 3
 
     init(sessionId: UUID) {
         _viewModel = State(initialValue: PostDetailViewModel(sessionId: sessionId))
@@ -38,19 +50,7 @@ struct PostDetailView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 hero
-
-                VStack(alignment: .leading, spacing: 12) {
-                    if let banner = viewModel.testBanner {
-                        pbBanner(banner)
-                    }
-                    sessionTotalCard
-                    if !viewModel.reactions.isEmpty {
-                        reactionRow
-                    }
-                    commentThread
-                }
-                .padding(14)
-                .padding(.bottom, 80)
+                sheetLip
             }
         }
         .background(Tokens.Base.ground)
@@ -109,15 +109,19 @@ struct PostDetailView: View {
         return isSelfiePrimary ? monitorURL : viewModel.selfieURL
     }
 
+    // MARK: - Hero
+
     private var hero: some View {
         ZStack(alignment: .topLeading) {
             CachedAsyncImage(url: primaryURL) {
                 PhotoPlaceholder(cornerRadius: 0, caption: "MONITOR PHOTO")
             }
             .aspectRatio(contentMode: .fill)
-            .frame(height: 330)
+            .frame(height: Self.heroHeight)
             .clipped()
 
+            // Tap-to-swap, BeReal-style — unchanged from the pre-redesign
+            // screen, just repositioned under the back button.
             Button {
                 withAnimation(.snappy) { isSelfiePrimary.toggle() }
             } label: {
@@ -132,21 +136,9 @@ struct PostDetailView: View {
             .padding(.leading, 14)
             .padding(.top, 70)
 
-            Button {
-                dismiss()
-            } label: {
-                Image(systemName: "chevron.left")
-                    .font(.system(size: 16, weight: .bold))
-                    .foregroundStyle(.white)
-                    .frame(width: 36, height: 36)
-                    .background {
-                        Circle().fill(.ultraThinMaterial)
-                        Circle().fill(Color.black.opacity(0.28))
-                        Circle().strokeBorder(Color.white.opacity(0.18), lineWidth: 1)
-                    }
-            }
-            .padding(.leading, 14)
-            .padding(.top, 54)
+            backButton
+                .padding(.leading, 14)
+                .padding(.top, 54)
 
             if !viewModel.isOwnPost {
                 moreOptionsButton
@@ -155,42 +147,48 @@ struct PostDetailView: View {
                     .frame(maxWidth: .infinity, alignment: .trailing)
             }
 
-            HStack(spacing: 9) {
-                AvatarPlaceholder(diameter: 24, streakDays: viewModel.authorStreakDays)
-                Text(viewModel.author?.displayName ?? "")
-                    .font(.system(size: 13.5, weight: .semibold))
-                    .foregroundStyle(Tokens.Ink.primary)
-                if !viewModel.isOwnPost {
-                    followButton
+            VStack {
+                Spacer()
+                HStack(alignment: .bottom, spacing: 8) {
+                    personPill
+                    Spacer(minLength: 8)
+                    if !viewModel.isOwnPost {
+                        followButton
+                    }
                 }
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 6)
-            .background {
-                Capsule().fill(.ultraThinMaterial)
-            }
-            .padding(.top, 96)
-            .frame(maxWidth: .infinity, alignment: .trailing)
-            .padding(.trailing, 14)
+            .padding(.horizontal, 14)
+            // Clears the sheet-lip that rides up over the photo's bottom
+            // `Self.lipOverlap` points — otherwise the pill would sit half
+            // under the rounded card edge.
+            .padding(.bottom, Self.lipOverlap + 18)
         }
-        .frame(height: 330)
+        .frame(height: Self.heroHeight)
         .clipped()
     }
 
-    private var followButton: some View {
+    /// Shared look for the two floating circular glass icon buttons over
+    /// the photo (back, more-options) — a darkened, specular-rimmed circle
+    /// distinct from `glassSurface`'s flat card shape, since these sit
+    /// directly on photo content rather than the sheet background.
+    private func floatingIconStyle(_ systemImage: String) -> some View {
+        Image(systemName: systemImage)
+            .font(.system(size: 16, weight: .bold))
+            .foregroundStyle(.white)
+            .frame(width: 36, height: 36)
+            .background {
+                Circle().fill(.ultraThinMaterial)
+                Circle().fill(Color.black.opacity(0.28))
+                Circle().strokeBorder(Color.white.opacity(0.18), lineWidth: 1)
+            }
+    }
+
+    private var backButton: some View {
         Button {
-            Task { await viewModel.toggleFollow() }
+            dismiss()
         } label: {
-            Text(viewModel.isFollowingAuthor ? "Following" : "Follow")
-                .font(.system(size: 11.5, weight: .bold))
-                .foregroundStyle(viewModel.isFollowingAuthor ? Tokens.Ink.primary : Tokens.Base.dark)
-                .padding(.horizontal, 9)
-                .padding(.vertical, 4)
-                .background {
-                    Capsule().fill(viewModel.isFollowingAuthor ? Tokens.Ink.primary.opacity(0.16) : Tokens.Accent.brand)
-                }
+            floatingIconStyle("chevron.left")
         }
-        .buttonStyle(.plain)
     }
 
     /// App Store Guideline 1.2 — Reporting and Blocking, task 17. Hidden on
@@ -209,16 +207,99 @@ struct PostDetailView: View {
                 Label("Block \(viewModel.author?.displayName ?? "this rower")", systemImage: "hand.raised")
             }
         } label: {
-            Image(systemName: "ellipsis")
-                .font(.system(size: 16, weight: .bold))
-                .foregroundStyle(.white)
-                .frame(width: 36, height: 36)
+            floatingIconStyle("ellipsis")
+        }
+    }
+
+    /// Avatar + name + chevron, glass pill, tappable → that person's
+    /// profile — docs/design/rowing-pals-redesign-handoff-v2.md §3.
+    ///
+    /// The tap target itself is fully built and styled; the action is
+    /// currently a no-op. There is no "other rower's profile" screen
+    /// anywhere in this codebase yet (the handoff doc's §2 lists it as
+    /// Screen 08, not built), and CLAUDE.md's "no feature imports another
+    /// feature" rule means `Features/Feed` can't reach into
+    /// `Features/Profile` even for the viewer's own post — that needs
+    /// either Screen 08 built or a shared cross-feature router, neither of
+    /// which exists. Wiring that up is out of scope for this layout-only
+    /// rebuild; see `handlePersonPillTap()`.
+    private var personPill: some View {
+        Button(action: handlePersonPillTap) {
+            HStack(spacing: 8) {
+                AvatarPlaceholder(diameter: 28, streakDays: viewModel.authorStreakDays)
+                Text(viewModel.author?.displayName ?? "")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(Tokens.Ink.primary)
+                    .lineLimit(1)
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 11, weight: .bold))
+                    .foregroundStyle(Tokens.Ink.secondary)
+            }
+            .padding(.leading, 6)
+            .padding(.trailing, 12)
+            .padding(.vertical, 6)
+            .glassSurface(cornerRadius: 999)
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func handlePersonPillTap() {
+        // Intentionally a no-op — see the doc comment on `personPill`.
+    }
+
+    private var followButton: some View {
+        Button {
+            Task { await viewModel.toggleFollow() }
+        } label: {
+            Text(viewModel.isFollowingAuthor ? "Following" : "Follow")
+                .font(.system(size: 11.5, weight: .bold))
+                .foregroundStyle(viewModel.isFollowingAuthor ? Tokens.Ink.primary : Tokens.Base.dark)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
                 .background {
-                    Circle().fill(.ultraThinMaterial)
-                    Circle().fill(Color.black.opacity(0.28))
-                    Circle().strokeBorder(Color.white.opacity(0.18), lineWidth: 1)
+                    if viewModel.isFollowingAuthor {
+                        Capsule().fill(.ultraThinMaterial)
+                        Capsule().fill(Tokens.Ink.primary.opacity(0.16))
+                    } else {
+                        Capsule().fill(Tokens.Accent.brand)
+                    }
                 }
         }
+        .buttonStyle(.plain)
+    }
+
+    // MARK: - Sheet lip
+
+    /// Everything below the photo, on a rounded-top surface that rides up
+    /// `Self.lipOverlap` points over the hero's bottom edge — the
+    /// "sheet-lip" effect from the handoff doc. Uses `Tokens.Base.ground`
+    /// (the screen/card ground token), not `glassSurface`: this is the
+    /// primary content background, not a floating chip or bar over photo
+    /// content, so it stays consistent with how the rest of the app uses
+    /// that token rather than inventing a new translucent primitive.
+    private var sheetLip: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            if let banner = viewModel.testBanner {
+                pbBanner(banner)
+            }
+            totalsCard
+            splitBreakdownCard
+            if !viewModel.reactions.isEmpty {
+                reactionRow
+            }
+            captionText
+            extraPhotoGallery
+            commentThread
+        }
+        .padding(.horizontal, 14)
+        .padding(.top, Self.lipOverlap + 18)
+        .padding(.bottom, 120)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background {
+            UnevenRoundedRectangle(topLeadingRadius: 28, topTrailingRadius: 28, style: .continuous)
+                .fill(Tokens.Base.ground)
+        }
+        .offset(y: -Self.lipOverlap)
     }
 
     /// "2k test · 7:12.8 · Personal best · 3rd overall, 1st novice women" —
@@ -265,7 +346,9 @@ struct PostDetailView: View {
         return parts.isEmpty ? nil : parts.joined(separator: ", ")
     }
 
-    private var sessionTotalCard: some View {
+    // MARK: - Totals
+
+    private var totalsCard: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
                 Text("SESSION TOTAL")
@@ -293,16 +376,6 @@ struct PostDetailView: View {
                     .tabularNumerals()
                     .foregroundStyle(Tokens.Ink.secondary)
             }
-            if let caption = viewModel.caption, !caption.isEmpty {
-                Text(caption)
-                    .textStyle(Typography.bodySecondary)
-                    .foregroundStyle(Tokens.Ink.primary.opacity(0.85))
-            }
-            VStack(spacing: 8) {
-                ForEach(viewModel.segments) { segment in
-                    detailSegmentRow(segment)
-                }
-            }
         }
         .padding(14)
         .glassSurface(cornerRadius: 22)
@@ -314,6 +387,49 @@ struct PostDetailView: View {
         let split = viewModel.avgSplitMs?.formattedPace(display: paceDisplay) ?? "—"
         let time = viewModel.totalTimeMs.formattedDurationMs
         return paceDisplay == .split ? "\(time) · \(split) /500m" : "\(time) · \(split)"
+    }
+
+    // MARK: - Split breakdown (collapsible)
+
+    /// Was always-expanded pre-redesign; the handoff calls specifically for
+    /// a collapsible breakdown here. Defaults open so the information
+    /// people most often come to a post for (their splits) is still
+    /// visible without an extra tap — "collapsible" is about giving people
+    /// a way to declutter, not hiding the data by default.
+    private var splitBreakdownCard: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Button {
+                withAnimation(.snappy) { isSplitBreakdownExpanded.toggle() }
+            } label: {
+                HStack(spacing: 6) {
+                    Text("SPLIT BREAKDOWN")
+                        .textStyle(Typography.label)
+                        .foregroundStyle(Tokens.Ink.secondary)
+                    Text("\(viewModel.segments.count)")
+                        .textStyle(Typography.label)
+                        .tabularNumerals()
+                        .foregroundStyle(Tokens.Ink.faint)
+                    Spacer()
+                    Image(systemName: "chevron.down")
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundStyle(Tokens.Ink.secondary)
+                        .rotationEffect(.degrees(isSplitBreakdownExpanded ? 180 : 0))
+                }
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+
+            if isSplitBreakdownExpanded {
+                VStack(spacing: 8) {
+                    ForEach(viewModel.segments) { segment in
+                        detailSegmentRow(segment)
+                    }
+                }
+                .transition(.opacity.combined(with: .move(edge: .top)))
+            }
+        }
+        .padding(14)
+        .glassSurface(cornerRadius: 22)
     }
 
     private func detailSegmentRow(_ segment: PostDetailViewModel.DetailSegment) -> some View {
@@ -351,6 +467,8 @@ struct PostDetailView: View {
                 .frame(width: 30, alignment: .trailing)
         }
     }
+
+    // MARK: - Reactions
 
     private var reactionRow: some View {
         HStack(spacing: 7) {
@@ -401,14 +519,86 @@ struct PostDetailView: View {
         .buttonStyle(.plain)
     }
 
+    // MARK: - Caption
+
+    @ViewBuilder
+    private var captionText: some View {
+        if let caption = viewModel.caption, !caption.isEmpty {
+            Text(caption)
+                .textStyle(Typography.body)
+                .foregroundStyle(Tokens.Ink.primary.opacity(0.9))
+        }
+    }
+
+    // MARK: - Extra-photo gallery
+
+    /// "An optional extra-photo gallery, only if the session has extra
+    /// photos beyond the two dual-camera shots." The data model has no
+    /// separate photo-gallery field (see `Session`/`Segment` — one monitor
+    /// photo per segment, one selfie per session); the real equivalent
+    /// here is any *other* segment's monitor photo (warmup/cooldown/extra)
+    /// beyond the hero segment already shown full-bleed up top. Only
+    /// renders at all when at least one exists.
+    private var extraPhotoSegments: [PostDetailViewModel.DetailSegment] {
+        viewModel.segments.dropFirst().filter { $0.monitorPhotoPath != nil }
+    }
+
+    @ViewBuilder
+    private var extraPhotoGallery: some View {
+        if !extraPhotoSegments.isEmpty {
+            VStack(alignment: .leading, spacing: 10) {
+                Text("MORE PHOTOS")
+                    .textStyle(Typography.label)
+                    .foregroundStyle(Tokens.Ink.secondary)
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 10) {
+                        ForEach(extraPhotoSegments) { segment in
+                            CachedAsyncImage(url: segment.monitorPhotoPath.flatMap { viewModel.monitorURLs[$0] }) {
+                                PhotoPlaceholder(cornerRadius: 18, caption: segment.label.rawValue.uppercased())
+                            }
+                            .aspectRatio(contentMode: .fill)
+                            .frame(width: 150, height: 150)
+                            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // MARK: - Comments
+
+    /// Up to 3 inline, most recent first-in-thread order (the full thread
+    /// is chronological ascending already) — a dedicated full-thread
+    /// screen is its own view per the handoff (§2 `comments`) and isn't
+    /// part of this layout rebuild, so once there are more than 3 this
+    /// just surfaces the total count rather than linking anywhere.
+    private var recentComments: [PostDetailViewModel.CommentDisplay] {
+        Array(viewModel.comments.suffix(Self.maxInlineComments))
+    }
+
     private var commentThread: some View {
-        VStack(spacing: 8) {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Text("COMMENTS")
+                    .textStyle(Typography.label)
+                    .foregroundStyle(Tokens.Ink.secondary)
+                if viewModel.comments.count > Self.maxInlineComments {
+                    Spacer()
+                    Text("\(viewModel.comments.count) total")
+                        .textStyle(Typography.bodySecondary)
+                        .tabularNumerals()
+                        .foregroundStyle(Tokens.Ink.faint)
+                }
+            }
+
             if viewModel.comments.isEmpty {
                 Text("No comments yet.")
                     .textStyle(Typography.bodySecondary)
                     .foregroundStyle(Tokens.Ink.secondary)
             }
-            ForEach(viewModel.comments) { comment in
+
+            ForEach(recentComments) { comment in
                 HStack(alignment: .top, spacing: 10) {
                     AvatarPlaceholder(diameter: 30)
                     VStack(alignment: .leading, spacing: 1) {
@@ -444,6 +634,8 @@ struct PostDetailView: View {
             }
         }
     }
+
+    // MARK: - Composer
 
     private var composer: some View {
         HStack(spacing: 10) {
