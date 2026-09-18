@@ -18,6 +18,9 @@ struct TestLeaderboardView: View {
     /// there); this view only needs it to decide whether the hand-appended
     /// "/500m" suffix still applies (never shown for watts).
     @AppStorage(PaceDisplay.storageKey) private var paceDisplay: PaceDisplay = .split
+    /// Redesign phase D — single Filters sheet replacing the two stacked
+    /// inline segmented controls, see RankingsFilters.swift.
+    @State private var isShowingFilters = false
 
     init(test: StandardTest) {
         _viewModel = State(initialValue: TestLeaderboardViewModel(test: test))
@@ -39,12 +42,9 @@ struct TestLeaderboardView: View {
                 }
                 .padding(.top, 52)
 
-                PillSegmentedControl(options: ["Male", "Female"], selection: genderSelection)
-                PillSegmentedControl(options: TestLeaderboardViewModel.CategoryFilter.allCases.map(\.label), selection: categorySelection)
-
-                Text(scopeDescription)
-                    .textStyle(Typography.bodySecondary)
-                    .foregroundStyle(Tokens.Ink.secondary)
+                HStack(spacing: 10) {
+                    RankingsFiltersButton(filters: viewModel.filters) { isShowingFilters = true }
+                }
 
                 if viewModel.rows.isEmpty {
                     emptyState
@@ -64,28 +64,8 @@ struct TestLeaderboardView: View {
         .edgeSwipeToDismiss()
         .task { await viewModel.loadInitial() }
         .refreshable { await viewModel.reload() }
-    }
-
-    private var genderSelection: Binding<Int> {
-        Binding(
-            get: { viewModel.gender == .male ? 0 : 1 },
-            set: { viewModel.gender = $0 == 0 ? .male : .female }
-        )
-    }
-
-    private var categorySelection: Binding<Int> {
-        Binding(
-            get: { viewModel.category.rawValue },
-            set: { viewModel.category = TestLeaderboardViewModel.CategoryFilter(rawValue: $0) ?? .all }
-        )
-    }
-
-    private var scopeDescription: String {
-        let genderWord = viewModel.gender == .male ? "Men" : "Women"
-        return switch viewModel.category {
-        case .all: "\(genderWord) overall · best result per rower"
-        case .novice: "Novice \(genderWord.lowercased()) · best result per rower"
-        case .senior: "Senior \(genderWord.lowercased()) · best result per rower"
+        .sheet(isPresented: $isShowingFilters) {
+            RankingsFiltersSheet(filters: $viewModel.filters)
         }
     }
 
@@ -129,7 +109,7 @@ struct TestLeaderboardView: View {
                         .font(.system(size: 14.5, weight: .semibold))
                         .foregroundStyle(Tokens.Ink.primary)
                         .lineLimit(1)
-                    if viewModel.category == .all {
+                    if viewModel.filters.level == nil {
                         Text(row.category.rawValue.uppercased())
                             .font(.system(size: 9, weight: .semibold))
                             .tracking(0.5)

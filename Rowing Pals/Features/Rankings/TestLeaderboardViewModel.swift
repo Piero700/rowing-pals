@@ -6,32 +6,16 @@
 import Foundation
 import Supabase
 
-/// Owns one standard distance's leaderboard — Male/Female on top, All/
-/// Novice/Senior beneath, filtered on `test_results`' own snapshot columns
-/// (`gender_at_time`/`category_at_time`), never a live join to `profiles`.
-/// Only each rower's best result for this distance is shown.
+/// Owns one standard distance's leaderboard. Gender/Level filter on
+/// `test_results`' own snapshot columns (`gender_at_time`/
+/// `category_at_time`), never a live join to `profiles` — task 11's whole
+/// point. Scope (redesign phase D — see `RankingsFilters`) intersects
+/// against `SocialScope.userIds()` instead, same as the Volume board, since
+/// scope is about who's included today, not what a rower's level was when
+/// they set the result. Only each rower's best result for this distance is
+/// shown.
 @Observable
 final class TestLeaderboardViewModel {
-    enum CategoryFilter: Int, CaseIterable {
-        case all, novice, senior
-
-        var label: String {
-            switch self {
-            case .all: "All"
-            case .novice: "Novice"
-            case .senior: "Senior"
-            }
-        }
-
-        var rowerCategory: RowerCategory? {
-            switch self {
-            case .all: nil
-            case .novice: .novice
-            case .senior: .senior
-            }
-        }
-    }
-
     struct Row: Identifiable {
         let id: UUID // user_id — one row per rower, already reduced to their best
         let rank: Int
@@ -50,11 +34,8 @@ final class TestLeaderboardViewModel {
     }
 
     let test: StandardTest
-    var gender: RowerGender = .male {
-        didSet { guard oldValue != gender else { return }; Task { await reload() } }
-    }
-    var category: CategoryFilter = .all {
-        didSet { guard oldValue != category else { return }; Task { await reload() } }
+    var filters = RankingsFilters.initial {
+        didSet { guard oldValue != filters else { return }; Task { await reload() } }
     }
 
     var rows: [Row] = []
@@ -73,21 +54,8 @@ final class TestLeaderboardViewModel {
         guard !hasLoadedOnce else { return }
         hasLoadedOnce = true
 
-        // Best-effort default to the viewer's own gender, same as the
-        // metres leaderboard — so they land on the board that contains them.
-        if let userId = try? await SupabaseService.shared.auth.session.user.id {
-            let profile: Profile? = try? await SupabaseService.shared
-                .from("profiles")
-                .select()
-                .eq("id", value: userId)
-                .single()
-                .execute()
-                .value
-            if let ownGender = profile?.gender, ownGender != gender {
-                gender = ownGender // triggers reload() via didSet
-                return
-            }
-        }
+        // Gender/level default to All (redesign phase D) — no more
+        // best-effort defaulting to the viewer's own gender first.
         await reload()
     }
 
@@ -110,6 +78,14 @@ final class TestLeaderboardViewModel {
         defer { isLoading = false }
 
         do {
+            let scopeIds = try await filters.scope.userIds()
+            guard !Task.isCancelled else { return }
+            guard !scopeIds.isEmpty else {
+                rows = []
+                errorMessage = nil
+                return
+            }
+
             struct ResultRow: Decodable {
                 struct Author: Decodable {
                     struct Club: Decodable { let name: String }
@@ -147,9 +123,12 @@ final class TestLeaderboardViewModel {
                 profiles(display_name, clubs(name))
                 """)
                 .eq("distance_key", value: test.key)
-                .eq("gender_at_time", value: gender.rawValue)
-            if let categoryValue = category.rowerCategory {
-                query = query.eq("category_at_time", value: categoryValue.rawValue)
+                .in("user_id", values: scopeIds)
+            if let gender = filters.gender {
+                query = query.eq("gender_at_time", value: gender.rawValue)
+            }
+            if let level = filters.level {
+                query = query.eq("category_at_time", value: level.rawValue)
             }
 
             let resultRows: [ResultRow] = try await query.execute().value
@@ -224,7 +203,7 @@ final class TestLeaderboardViewModel {
             errorMessage = nil
         } catch {
             guard !Task.isCancelled else { return }
-            print("Test leaderboard query failed (\(test.key), gender \(gender), category \(category)): \(error)")
+            print("Test leaderboard query failed (\(test.key), filters \(filters)): \(error)")
             errorMessage = error.localizedDescription
         }
     }

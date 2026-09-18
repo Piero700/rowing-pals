@@ -55,14 +55,10 @@ final class MetresLeaderboardViewModel {
     var period: Period = .week {
         didSet { guard oldValue != period else { return }; Task { await reload() } }
     }
-    /// Defaults to Male until the viewer's own profile loads and corrects
-    /// it — see `loadInitial()` — so a female rower doesn't land on a board
-    /// that never contains her.
-    var gender: RowerGender = .male {
-        didSet { guard oldValue != gender else { return }; Task { await reload() } }
-    }
-    var scope: SocialScope = .myClub {
-        didSet { guard oldValue != scope else { return }; Task { await reload() } }
+    /// Redesign phase D — the Gender/Level/Scope axes, driven by the single
+    /// "Filters" sheet now (`RankingsFilters.swift`), not inline chips.
+    var filters = RankingsFilters.initial {
+        didSet { guard oldValue != filters else { return }; Task { await reload() } }
     }
     /// Re-sorting by a different source never needs a new query — every
     /// aggregate this view model holds already has all three figures.
@@ -99,22 +95,10 @@ final class MetresLeaderboardViewModel {
         guard !hasLoadedOnce else { return }
         hasLoadedOnce = true
 
-        // Best-effort: point the gender filter at the viewer's own before
-        // the first real query, so they see themselves by default.
-        if let userId = try? await SupabaseService.shared.auth.session.user.id {
-            ownUserId = userId
-            let profile: Profile? = try? await SupabaseService.shared
-                .from("profiles")
-                .select()
-                .eq("id", value: userId)
-                .single()
-                .execute()
-                .value
-            if let ownGender = profile?.gender, ownGender != gender {
-                gender = ownGender // triggers reload() via didSet
-                return
-            }
-        }
+        // Gender/level default to All now that the Filters sheet offers
+        // that option (redesign phase D) — no more best-effort defaulting
+        // to the viewer's own gender before the first query.
+        ownUserId = try? await SupabaseService.shared.auth.session.user.id
         await reload()
     }
 
@@ -136,7 +120,7 @@ final class MetresLeaderboardViewModel {
         defer { isLoading = false }
 
         do {
-            let scopeIds = try await scope.userIds()
+            let scopeIds = try await filters.scope.userIds()
             guard !Task.isCancelled else { return }
             if scopeIds.isEmpty {
                 aggregates = [:]
@@ -158,13 +142,13 @@ final class MetresLeaderboardViewModel {
                 }
             }
 
-            let profileRows: [ProfileRow] = try await SupabaseService.shared
+            var profileQuery = SupabaseService.shared
                 .from("profiles")
                 .select("id, display_name, clubs(name)")
-                .eq("gender", value: gender.rawValue)
                 .in("id", values: scopeIds)
-                .execute()
-                .value
+            if let gender = filters.gender { profileQuery = profileQuery.eq("gender", value: gender.rawValue) }
+            if let level = filters.level { profileQuery = profileQuery.eq("category", value: level.rawValue) }
+            let profileRows: [ProfileRow] = try await profileQuery.execute().value
             guard !Task.isCancelled else { return }
 
             guard !profileRows.isEmpty else {
@@ -249,7 +233,7 @@ final class MetresLeaderboardViewModel {
             rankedRows = Self.rank(newAggregates, source: source, currentUserId: ownUserId)
             errorMessage = nil
         } catch {
-            print("Metres leaderboard query failed (period \(period), gender \(gender), scope \(scope)): \(error)")
+            print("Metres leaderboard query failed (period \(period), filters \(filters)): \(error)")
             errorMessage = error.localizedDescription
         }
     }
