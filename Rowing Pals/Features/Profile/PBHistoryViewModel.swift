@@ -1,5 +1,5 @@
 //
-//  PBProgressionViewModel.swift
+//  PBHistoryViewModel.swift
 //  Rowing Pals
 //
 
@@ -12,7 +12,7 @@ import Supabase
 /// the single overall best) — a rower can set several PBs in a row before
 /// one that doesn't improve on the last.
 @Observable
-final class PBProgressionViewModel {
+final class PBHistoryViewModel {
     struct Point: Identifiable {
         let id: UUID
         let date: Date
@@ -22,11 +22,57 @@ final class PBProgressionViewModel {
         let isPB: Bool
     }
 
+    /// Redesign phase D — PB history screen (see
+    /// docs/design/rowing-pals-redesign-handoff-v2.md §2 Screen 10): a
+    /// 3-button period control over the same underlying history. PB flags
+    /// (`Point.isPB`) are always computed over the *full* history in
+    /// `load()`, never re-derived per window — whether a result was a PB is
+    /// a historical fact independent of which period is currently viewed.
+    enum Period: Int, CaseIterable {
+        case threeMonths, sixMonths, all
+
+        var label: String {
+            switch self {
+            case .threeMonths: "3 months"
+            case .sixMonths: "6 months"
+            case .all: "All time"
+            }
+        }
+
+        /// nil = no cutoff.
+        var months: Int? {
+            switch self {
+            case .threeMonths: 3
+            case .sixMonths: 6
+            case .all: nil
+            }
+        }
+    }
+
     let test: StandardTest
-    var points: [Point] = []
+    var period: Period = .all
+    /// Every result ever, PB-flagged — set once by `load()`. `points` below
+    /// is the period-filtered view apps actually render.
+    private(set) var allPoints: [Point] = []
     var currentBestLabel: String?
     var isLoading = false
     var errorMessage: String?
+
+    /// The period-filtered points the chart and list actually show.
+    var points: [Point] {
+        guard let months = period.months else { return allPoints }
+        guard let cutoff = Calendar.current.date(byAdding: .month, value: -months, to: Date()) else { return allPoints }
+        return allPoints.filter { $0.date >= cutoff }
+    }
+
+    /// The most recent PB strictly before the current one, for the "+N
+    /// faster/further" gain badge — nil when the current PB is the only
+    /// result, or the first result ever (nothing to compare against).
+    var previousBestValue: Double? {
+        let pbs = allPoints.filter(\.isPB)
+        guard pbs.count >= 2 else { return nil }
+        return pbs[pbs.count - 2].value
+    }
 
     init(test: StandardTest) {
         self.test = test
@@ -63,7 +109,7 @@ final class PBProgressionViewModel {
                 .value
 
             var runningBest: Double?
-            points = rows.map { row in
+            allPoints = rows.map { row in
                 let value = test.isDurationBased ? Double(row.distanceM) : Double(row.timeMs)
                 let isPB: Bool
                 if let runningBest {
@@ -75,7 +121,7 @@ final class PBProgressionViewModel {
                 return Point(id: row.id, date: row.setAt, value: value, isPB: isPB)
             }
 
-            let overallBest = test.isDurationBased ? points.map(\.value).max() : points.map(\.value).min()
+            let overallBest = test.isDurationBased ? allPoints.map(\.value).max() : allPoints.map(\.value).min()
             currentBestLabel = overallBest.map { Self.format($0, isDurationBased: test.isDurationBased, unit: .current) }
             errorMessage = nil
         } catch {

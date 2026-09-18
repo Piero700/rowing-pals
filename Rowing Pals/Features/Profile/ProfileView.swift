@@ -66,7 +66,7 @@ struct ProfileView: View {
         .task { await viewModel.load() }
         .refreshable { await viewModel.load() }
         .fullScreenCover(item: $expandedTest) { test in
-            PBProgressionView(test: test)
+            PBHistoryView(test: test)
         }
         .sheet(isPresented: $isShowingSettings, onDismiss: { Task { await viewModel.load() } }) {
             SettingsView()
@@ -220,7 +220,19 @@ struct ProfileView: View {
                 }
 
             if !topPBTiles.isEmpty {
-                sectionLabel("PERSONAL BESTS")
+                HStack {
+                    sectionLabel("PERSONAL BESTS")
+                    Spacer()
+                    // Redesign phase D — the handoff's "All personal bests"
+                    // screen (§2 Screen 11) would just be a near-duplicate
+                    // of the PBs tab below, which already shows every test
+                    // in a flat grid tappable into PB history. Rather than
+                    // build a second near-identical screen, "View all"
+                    // switches straight to that existing tab.
+                    Button("View all") { tab = .pbs }
+                        .font(.system(size: 12.5, weight: .semibold))
+                        .foregroundStyle(Tokens.Accent.brand)
+                }
                 LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 9), count: 2), spacing: 9) {
                     ForEach(topPBTiles) { tile in
                         pbTile(tile)
