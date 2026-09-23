@@ -42,6 +42,9 @@ enum SocialScope: Int, CaseIterable {
                 .from("follows")
                 .select("followee_id")
                 .eq("follower_id", value: userId)
+                // A pending follow request is not a follow: only approved
+                // follows put someone in the Following scope.
+                .eq("status", value: "accepted")
                 .execute()
                 .value
             return rows.map(\.followeeId)
