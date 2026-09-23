@@ -161,20 +161,5 @@ create trigger profiles_after_privacy_update
 
 commit;
 
--- ---------------------------------------------------------------
--- MANUAL STEP — photos (NOT part of the transaction above)
--- Photos live in the private buckets `monitors` and `selfies`, at
--- paths beginning `{user_id}/`. The database rules above do not cover
--- them: Storage has its own policies on storage.objects, which were set
--- in the dashboard and are not in this repo. Until they follow the same
--- rule, a private rower's photos can still be fetched by anyone who can
--- guess a path. In the dashboard: Storage > Policies. Delete any SELECT
--- policy on these two buckets that allows every signed-in user, then
--- run:
---
--- create policy read_visible_photos on storage.objects for select to authenticated
---   using (
---     bucket_id in ('monitors', 'selfies')
---     and can_view_user(((storage.foldername(name))[1])::uuid)
---   );
--- ---------------------------------------------------------------
+-- Photos are protected separately: after this succeeds, run
+-- 2026-09-23-private-photos.sql.
