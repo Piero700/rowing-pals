@@ -23,9 +23,6 @@ struct PBHistoryView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var viewModel: PBHistoryViewModel
     @State private var selectedID: UUID?
-    /// Redesign phase B — per-device display preference, not synced to
-    /// the profile. See DesignSystem/DistanceUnit.swift.
-    @AppStorage(DistanceUnit.storageKey) private var distanceUnit: DistanceUnit = .metres
 
     init(test: StandardTest) {
         _viewModel = State(initialValue: PBHistoryViewModel(test: test))
@@ -160,7 +157,7 @@ struct PBHistoryView: View {
         if viewModel.test.isDurationBased {
             let gainM = Int(current - previous)
             guard gainM > 0 else { return nil }
-            return "+\(gainM.formattedDistance(unit: distanceUnit)) further"
+            return "+\(gainM.formattedMetres) further"
         } else {
             let gainMs = Int(previous - current)
             guard gainMs > 0 else { return nil }
@@ -216,7 +213,7 @@ struct PBHistoryView: View {
                 AxisGridLine()
                 AxisValueLabel {
                     if let raw = value.as(Double.self) {
-                        Text(PBHistoryViewModel.format(raw, isDurationBased: viewModel.test.isDurationBased, unit: distanceUnit))
+                        Text(PBHistoryViewModel.format(raw, isDurationBased: viewModel.test.isDurationBased))
                             .tabularNumerals()
                     }
                 }
@@ -348,7 +345,7 @@ struct PBHistoryView: View {
                 }
             }
             Spacer()
-            Text(PBHistoryViewModel.format(point.value, isDurationBased: viewModel.test.isDurationBased, unit: distanceUnit))
+            Text(PBHistoryViewModel.format(point.value, isDurationBased: viewModel.test.isDurationBased))
                 .font(.system(size: 15, weight: .semibold))
                 .tabularNumerals()
                 .foregroundStyle(Tokens.Ink.primary)

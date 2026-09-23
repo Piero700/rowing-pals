@@ -63,7 +63,7 @@ final class TestsViewModel {
             // Duration tests show distance covered (unit-aware); distance
             // tests show total time taken — elapsed time, not a split, so
             // it stays formattedDurationMs regardless of paceDisplay.
-            let display = test.isDurationBased ? row.distanceM.formattedDistance(unit: .current) : row.timeMs.formattedDurationMs
+            let display = test.isDurationBased ? row.distanceM.formattedMetres : row.timeMs.formattedDurationMs
             return Tile(test: test, displayValue: display)
         }
     }

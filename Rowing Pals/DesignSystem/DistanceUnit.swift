@@ -12,9 +12,12 @@ import Foundation
 ///
 /// Storage stays metres everywhere (`distance_m` columns, CLAUDE.md's own
 /// "All distances stored as whole metres" rule) — this only changes what
-/// the display layer renders. Redesign phase B: the user explicitly chose
-/// a real km toggle over keeping the app metres-only, despite the
-/// original hard rule; see [[project_redesign_v2_handoff]].
+/// the display layer renders.
+///
+/// Scope (docs/design/v2-decisions.md #3): this preference applies to the
+/// **Volume leaderboard totals only**, where weekly/monthly/yearly sums
+/// get large. Every other distance — posts, sessions, profile, PBs, test
+/// results — always shows in metres via `formattedMetres`.
 enum DistanceUnit: String, CaseIterable {
     case metres, kilometres
 
@@ -38,6 +41,11 @@ enum DistanceUnit: String, CaseIterable {
 }
 
 extension Int {
+    /// This distance (whole metres) always in metres — `"16,000m"`. Used
+    /// everywhere except the Volume leaderboard, which honours the
+    /// user's `DistanceUnit` preference via `formattedDistance(unit:)`.
+    var formattedMetres: String { "\(formattedWithGrouping)m" }
+
     /// This distance (whole metres) formatted per the user's stored unit
     /// preference — `"16,000m"` or `"16.0km"`. A fixed one decimal place
     /// in km, not a trimmed variable-precision number: CLAUDE.md's tabular-
@@ -46,7 +54,7 @@ extension Int {
     func formattedDistance(unit: DistanceUnit) -> String {
         switch unit {
         case .metres:
-            return "\(formattedWithGrouping)m"
+            return formattedMetres
         case .kilometres:
             let km = Double(self) / 1000
             return String(format: "%.1fkm", km)

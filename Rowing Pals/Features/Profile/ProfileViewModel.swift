@@ -63,7 +63,7 @@ final class ProfileViewModel {
         /// struct, not a View, so it can't hold `@AppStorage` itself.
         var displayValue: String? {
             guard hasResult, let timeMs, let distanceM else { return nil }
-            return test.isDurationBased ? distanceM.formattedDistance(unit: .current) : timeMs.formattedDurationMs
+            return test.isDurationBased ? distanceM.formattedMetres : timeMs.formattedDurationMs
         }
 
         /// Same fresh-read approach for the pace-display preference. The

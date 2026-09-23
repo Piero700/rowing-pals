@@ -26,8 +26,7 @@ struct PostDetailView: View {
     @Environment(\.dismiss) private var dismiss
     @FocusState private var isComposerFocused: Bool
     /// Redesign phase B — per-device display preferences, not synced to
-    /// the profile. See DesignSystem/DistanceUnit.swift, PaceDisplay.swift.
-    @AppStorage(DistanceUnit.storageKey) private var distanceUnit: DistanceUnit = .metres
+    /// the profile. See DesignSystem/PaceDisplay.swift.
     @AppStorage(PaceDisplay.storageKey) private var paceDisplay: PaceDisplay = .split
 
     private static let emoji: [String: String] = [
@@ -367,7 +366,7 @@ struct PostDetailView: View {
                 }
             }
             HStack(alignment: .lastTextBaseline, spacing: 10) {
-                Text(viewModel.totalDistanceM.formattedDistance(unit: distanceUnit))
+                Text(viewModel.totalDistanceM.formattedMetres)
                     .font(.system(size: 24, weight: .bold))
                     .tabularNumerals()
                     .foregroundStyle(Tokens.Ink.primary)
@@ -446,7 +445,7 @@ struct PostDetailView: View {
                 .lineLimit(1)
                 .minimumScaleFactor(0.75)
                 .frame(width: 64, alignment: .leading)
-            Text(segment.distanceM.formattedDistance(unit: distanceUnit))
+            Text(segment.distanceM.formattedMetres)
                 .font(.system(size: 13.5, weight: .semibold))
                 .tabularNumerals()
                 .foregroundStyle(Tokens.Ink.primary)

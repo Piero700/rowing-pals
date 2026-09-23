@@ -15,7 +15,8 @@ struct SettingsView: View {
     @State private var isShowingDeleteConfirmation = false
     @FocusState private var isNameFocused: Bool
     /// Redesign phase B — per-device display preferences, not synced to
-    /// the profile. See DesignSystem/DistanceUnit.swift.
+    /// the profile. See DesignSystem/DistanceUnit.swift (leaderboards only)
+    /// and PaceDisplay.swift.
     @AppStorage(DistanceUnit.storageKey) private var distanceUnit: DistanceUnit = .metres
     @AppStorage(PaceDisplay.storageKey) private var paceDisplay: PaceDisplay = .split
 
@@ -46,7 +47,7 @@ struct SettingsView: View {
                         HStack {
                             Text("Weekly target")
                             Spacer()
-                            Text(viewModel.weeklyTargetM.formattedDistance(unit: distanceUnit))
+                            Text(viewModel.weeklyTargetM.formattedMetres)
                                 .tabularNumerals()
                                 .foregroundStyle(Tokens.Ink.secondary)
                         }
@@ -79,7 +80,7 @@ struct SettingsView: View {
                 }
 
                 Section {
-                    Picker("Distance", selection: $distanceUnit) {
+                    Picker("Leaderboard distance", selection: $distanceUnit) {
                         ForEach(DistanceUnit.allCases, id: \.self) { unit in
                             Text(unit.label).tag(unit)
                         }
@@ -92,7 +93,7 @@ struct SettingsView: View {
                 } header: {
                     Text("Units and display")
                 } footer: {
-                    Text("Changes apply everywhere a distance or pace is shown. Distances are still stored in metres either way.")
+                    Text("Leaderboard distance switches the Volume leaderboard between metres and kilometres. Everything else stays in metres. Pace applies everywhere a pace is shown.")
                 }
 
                 Section {

@@ -31,9 +31,6 @@ struct ProfileView: View {
     @State private var expandedTest: StandardTest?
     @State private var isShowingSettings = false
     @State private var tab: Tab = .overview
-    /// Redesign phase B — per-device display preference, not synced to
-    /// the profile. See DesignSystem/DistanceUnit.swift.
-    @AppStorage(DistanceUnit.storageKey) private var distanceUnit: DistanceUnit = .metres
 
     private static let overviewPBKeys = ["2k", "5k"]
 
@@ -133,7 +130,7 @@ struct ProfileView: View {
     /// contextualises properly just below.
     private var statsRow: some View {
         HStack {
-            StatColumn(label: weeklyVolumeLabel, value: currentWeekVolumeM.formattedDistance(unit: distanceUnit), alignment: .center)
+            StatColumn(label: "WEEK'S METRES", value: currentWeekVolumeM.formattedMetres, alignment: .center)
                 .frame(maxWidth: .infinity)
             StatColumn(label: "SESSIONS", value: "\(viewModel.seasonSessionCount)", alignment: .center)
                 .frame(maxWidth: .infinity)
@@ -147,10 +144,6 @@ struct ProfileView: View {
             RoundedRectangle(cornerRadius: 22, style: .continuous)
                 .fill(Tokens.Ink.primary.opacity(0.07))
         }
-    }
-
-    private var weeklyVolumeLabel: String {
-        distanceUnit == .metres ? "WEEK'S METRES" : "WEEK'S KM"
     }
 
     private var currentWeekVolumeM: Int {
@@ -355,7 +348,7 @@ struct ProfileView: View {
         .clipped()
         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         .overlay(alignment: .bottomLeading) {
-            Text(photo.distanceM.formattedDistance(unit: distanceUnit))
+            Text(photo.distanceM.formattedMetres)
                 .font(.system(size: 10, weight: .semibold))
                 .tabularNumerals()
                 .foregroundStyle(.white)

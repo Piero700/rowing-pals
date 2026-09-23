@@ -15,9 +15,6 @@ import SwiftUI
 struct WeeklyVolumeChart: View {
     let weeks: [ProfileViewModel.WeeklyVolume]
     let targetM: Int
-    /// Redesign phase B — per-device display preference, not synced to
-    /// the profile. See DesignSystem/DistanceUnit.swift.
-    @AppStorage(DistanceUnit.storageKey) private var distanceUnit: DistanceUnit = .metres
 
     var body: some View {
         Chart {
@@ -40,7 +37,7 @@ struct WeeklyVolumeChart: View {
                 AxisGridLine()
                 AxisValueLabel {
                     if let raw = value.as(Int.self) {
-                        Text(raw.formattedDistance(unit: distanceUnit))
+                        Text(raw.formattedMetres)
                             .tabularNumerals()
                     }
                 }

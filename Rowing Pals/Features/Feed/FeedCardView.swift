@@ -22,8 +22,7 @@ struct FeedCardView: View {
     /// Tap-to-swap, BeReal-style — which photo is full-bleed right now.
     @State private var isSelfiePrimary = false
     /// Redesign phase B — per-device display preferences, not synced to
-    /// the profile. See DesignSystem/DistanceUnit.swift, PaceDisplay.swift.
-    @AppStorage(DistanceUnit.storageKey) private var distanceUnit: DistanceUnit = .metres
+    /// the profile. See DesignSystem/PaceDisplay.swift.
     @AppStorage(PaceDisplay.storageKey) private var paceDisplay: PaceDisplay = .split
 
     private var primaryURL: URL? { isSelfiePrimary ? selfieURL : monitorURL }
@@ -80,7 +79,7 @@ struct FeedCardView: View {
                 HStack(spacing: 7) {
                     ForEach(post.segments.sorted { $0.position < $1.position }) { segment in
                         FilterChip(
-                            label: "\(segment.label.rawValue.uppercased()) \(segment.distanceM.formattedDistance(unit: distanceUnit))",
+                            label: "\(segment.label.rawValue.uppercased()) \(segment.distanceM.formattedMetres)",
                             isSelected: segment.label == .main
                         )
                     }
@@ -169,7 +168,7 @@ struct FeedCardView: View {
     private var dataStrip: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(alignment: .lastTextBaseline, spacing: 8) {
-                Text(post.totalDistanceM.formattedDistance(unit: distanceUnit))
+                Text(post.totalDistanceM.formattedMetres)
                     .font(.system(size: 34, weight: .bold))
                     .tabularNumerals()
                     .foregroundStyle(Tokens.Ink.primary)

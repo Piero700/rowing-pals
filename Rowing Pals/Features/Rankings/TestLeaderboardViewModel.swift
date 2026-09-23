@@ -192,7 +192,7 @@ final class TestLeaderboardViewModel {
                     // Duration tests (e.g. 30'): the metric is distance covered, unit-aware.
                     // Distance tests (e.g. 2k): the metric is total time taken to finish —
                     // elapsed time, never watts, so this stays formattedDurationMs.
-                    primaryValue: test.isDurationBased ? row.distanceM.formattedDistance(unit: .current) : row.timeMs.formattedDurationMs,
+                    primaryValue: test.isDurationBased ? row.distanceM.formattedMetres : row.timeMs.formattedDurationMs,
                     splitValue: row.splitMs.formattedPace(display: .current),
                     category: row.categoryAtTime,
                     dateLabel: formatter.string(from: row.setAt),
