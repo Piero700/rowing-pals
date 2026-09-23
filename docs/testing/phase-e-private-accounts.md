@@ -75,61 +75,72 @@ be your real account on your phone (or already have posts); B can be a simulator
 
 ## Part 2 — Prove the database enforces it (not just the app)
 
-This is the important part: it shows the rules hold even if someone bypasses the app. In the
-Supabase dashboard → **SQL Editor** → **+ New query**.
+This is the important part: it shows the rules hold even if someone bypasses the app. Each test
+below pretends to be one user, runs a query, then **ends on purpose with a red error box whose
+text is the answer** (`RESULT: ...`). That error also rolls everything back, so nothing here
+changes your data. A red box starting with `RESULT:` is success; any other error text is a
+problem — send it to Claude.
+
+In the Supabase dashboard: **SQL Editor** → **+ New query** → paste → **Run**.
 
 ### Get the two ids
 ```sql
 select id, display_name from profiles order by created_at desc limit 10;
 ```
-Copy A's id and B's id. Replace `A_ID` and `B_ID` below (keep the quotes).
+Copy A's id and B's id. In each test below, replace `A_ID` and `B_ID` (keep the quotes).
 
-### Test 1 — a stranger sees nothing (set A private, make sure B does not follow A)
+### Test 1 — a stranger sees nothing
+Set A private and make sure B does **not** follow A (unfollow if needed), then:
 ```sql
-begin;
-set local role authenticated;
-select set_config('request.jwt.claims', '{"sub":"B_ID","role":"authenticated"}', true);
-select
-  (select count(*) from sessions     where user_id = 'A_ID') as sessions_b_can_see,
-  (select count(*) from daily_totals where user_id = 'A_ID') as totals_b_can_see,
-  (select count(*) from test_results where user_id = 'A_ID') as results_b_can_see,
-  (select count(*) from storage.objects
-     where bucket_id in ('monitors','selfies')
-       and (storage.foldername(name))[1] = 'A_ID') as photos_b_can_see;
-rollback;
+do $$
+declare s int; d int; t int; p int;
+begin
+  set local role authenticated;
+  perform set_config('request.jwt.claims', '{"sub":"B_ID","role":"authenticated"}', true);
+  select count(*) into s from sessions     where user_id = 'A_ID';
+  select count(*) into d from daily_totals where user_id = 'A_ID';
+  select count(*) into t from test_results where user_id = 'A_ID';
+  select count(*) into p from storage.objects
+    where bucket_id in ('monitors','selfies') and (storage.foldername(name))[1] = 'A_ID';
+  raise exception 'RESULT: sessions=% totals=% results=% photos=%', s, d, t, p;
+end $$;
 ```
-- [ ] Expect: one row, **every number is 0**.
+- [ ] Expect: `RESULT: sessions=0 totals=0 results=0 photos=0`
 
 ### Test 2 — an approved follower sees everything
-Have A accept B's request (Part 1, step 4), then run the same script.
-- [ ] Expect: counts **greater than 0** (they match A's real data).
+Have A accept B's request (Part 1, step 4), then run the Test 1 script again.
+- [ ] Expect: the numbers are **greater than 0** (they match A's real data).
 
 ### Test 3 — B cannot approve their own request
-Make A private and B not a follower, have B send a request, then:
+A private, B not a follower, B has sent a request (button shows **Requested**). Then:
 ```sql
-begin;
-set local role authenticated;
-select set_config('request.jwt.claims', '{"sub":"B_ID","role":"authenticated"}', true);
-update follows set status = 'accepted' where follower_id = 'B_ID' and followee_id = 'A_ID';
-rollback;
+do $$
+declare n int;
+begin
+  set local role authenticated;
+  perform set_config('request.jwt.claims', '{"sub":"B_ID","role":"authenticated"}', true);
+  update follows set status = 'accepted' where follower_id = 'B_ID' and followee_id = 'A_ID';
+  get diagnostics n = row_count;
+  raise exception 'RESULT: rows changed = %', n;
+end $$;
 ```
-- [ ] Expect: **UPDATE 0** (no rows changed).
+- [ ] Expect: `RESULT: rows changed = 0`
 
 ### Test 4 — B cannot choose an "accepted" status
-With A private and no existing follow row from B:
+A private, and B has **no** follow row for A (unfollow or cancel first, otherwise you get a
+"duplicate key" error, which is not the test):
 ```sql
-begin;
-set local role authenticated;
-select set_config('request.jwt.claims', '{"sub":"B_ID","role":"authenticated"}', true);
-insert into follows (follower_id, followee_id, status) values ('B_ID', 'A_ID', 'accepted');
-select status from follows where follower_id = 'B_ID' and followee_id = 'A_ID';
-rollback;
+do $$
+declare st text;
+begin
+  set local role authenticated;
+  perform set_config('request.jwt.claims', '{"sub":"B_ID","role":"authenticated"}', true);
+  insert into follows (follower_id, followee_id, status) values ('B_ID', 'A_ID', 'accepted');
+  select status::text into st from follows where follower_id = 'B_ID' and followee_id = 'A_ID';
+  raise exception 'RESULT: status = %', st;
+end $$;
 ```
-- [ ] Expect: the result says **pending**, not accepted.
-
-`rollback;` undoes every test, so nothing here changes your data. The editor shows only the
-last statement's result, which is why Test 1 is a single query and Tests 3–4 end with their result
-before the `rollback;`.
+- [ ] Expect: `RESULT: status = pending`
 
 ## If something fails
 Note the step number, what you saw, and (for Part 2) the exact result or error text, and send
