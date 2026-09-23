@@ -31,7 +31,8 @@ struct FeedView: View {
                     FeedCardView(
                         post: post,
                         monitorURL: post.primarySegment?.monitorPhotoPath.flatMap { viewModel.signedURL(forPath: $0) },
-                        selfieURL: viewModel.signedURL(forPath: FeedViewModel.selfiePath(userId: post.userId, sessionId: post.id))
+                        selfieURL: viewModel.signedURL(forPath: FeedViewModel.selfiePath(userId: post.userId, sessionId: post.id)),
+                        streakDays: viewModel.streakDays(forAuthor: post.userId)
                     )
                     .padding(.horizontal, 12)
                     .contentShape(Rectangle())
@@ -47,6 +48,8 @@ struct FeedView: View {
             }
         }
         .background(Tokens.Base.ground)
+        .tracksFloatingBar()
+        .ignoresSafeArea(edges: .bottom)
         .overlay(alignment: .top) {
             feedHeader
         }

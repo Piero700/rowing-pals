@@ -6,32 +6,16 @@
 import Foundation
 import Supabase
 
-/// Owns one standard distance's leaderboard — Male/Female on top, All/
-/// Novice/Senior beneath, filtered on `test_results`' own snapshot columns
-/// (`gender_at_time`/`category_at_time`), never a live join to `profiles`.
-/// Only each rower's best result for this distance is shown.
+/// Owns one standard distance's leaderboard. Gender/Level filter on
+/// `test_results`' own snapshot columns (`gender_at_time`/
+/// `category_at_time`), never a live join to `profiles` — task 11's whole
+/// point. Scope (redesign phase D — see `RankingsFilters`) intersects
+/// against `SocialScope.userIds()` instead, same as the Volume board, since
+/// scope is about who's included today, not what a rower's level was when
+/// they set the result. Only each rower's best result for this distance is
+/// shown.
 @Observable
 final class TestLeaderboardViewModel {
-    enum CategoryFilter: Int, CaseIterable {
-        case all, novice, senior
-
-        var label: String {
-            switch self {
-            case .all: "All"
-            case .novice: "Novice"
-            case .senior: "Senior"
-            }
-        }
-
-        var rowerCategory: RowerCategory? {
-            switch self {
-            case .all: nil
-            case .novice: .novice
-            case .senior: .senior
-            }
-        }
-    }
-
     struct Row: Identifiable {
         let id: UUID // user_id — one row per rower, already reduced to their best
         let rank: Int
@@ -44,14 +28,14 @@ final class TestLeaderboardViewModel {
         let category: RowerCategory
         let dateLabel: String
         let isRecentPB: Bool
+        /// From a batched `daily_totals` fetch computed client-side via
+        /// `StreakCalculator`, not a `current_streak(...)` RPC call per row.
+        let streakDays: Int
     }
 
     let test: StandardTest
-    var gender: RowerGender = .male {
-        didSet { guard oldValue != gender else { return }; Task { await reload() } }
-    }
-    var category: CategoryFilter = .all {
-        didSet { guard oldValue != category else { return }; Task { await reload() } }
+    var filters = RankingsFilters.initial {
+        didSet { guard oldValue != filters else { return }; Task { await reload() } }
     }
 
     var rows: [Row] = []
@@ -70,21 +54,8 @@ final class TestLeaderboardViewModel {
         guard !hasLoadedOnce else { return }
         hasLoadedOnce = true
 
-        // Best-effort default to the viewer's own gender, same as the
-        // metres leaderboard — so they land on the board that contains them.
-        if let userId = try? await SupabaseService.shared.auth.session.user.id {
-            let profile: Profile? = try? await SupabaseService.shared
-                .from("profiles")
-                .select()
-                .eq("id", value: userId)
-                .single()
-                .execute()
-                .value
-            if let ownGender = profile?.gender, ownGender != gender {
-                gender = ownGender // triggers reload() via didSet
-                return
-            }
-        }
+        // Gender/level default to All (redesign phase D) — no more
+        // best-effort defaulting to the viewer's own gender first.
         await reload()
     }
 
@@ -107,6 +78,14 @@ final class TestLeaderboardViewModel {
         defer { isLoading = false }
 
         do {
+            let scopeIds = try await filters.scope.userIds()
+            guard !Task.isCancelled else { return }
+            guard !scopeIds.isEmpty else {
+                rows = []
+                errorMessage = nil
+                return
+            }
+
             struct ResultRow: Decodable {
                 struct Author: Decodable {
                     struct Club: Decodable { let name: String }
@@ -144,9 +123,12 @@ final class TestLeaderboardViewModel {
                 profiles(display_name, clubs(name))
                 """)
                 .eq("distance_key", value: test.key)
-                .eq("gender_at_time", value: gender.rawValue)
-            if let categoryValue = category.rowerCategory {
-                query = query.eq("category_at_time", value: categoryValue.rawValue)
+                .in("user_id", values: scopeIds)
+            if let gender = filters.gender {
+                query = query.eq("gender_at_time", value: gender.rawValue)
+            }
+            if let level = filters.level {
+                query = query.eq("category_at_time", value: level.rawValue)
             }
 
             let resultRows: [ResultRow] = try await query.execute().value
@@ -173,23 +155,55 @@ final class TestLeaderboardViewModel {
             formatter.dateFormat = "d MMM"
             let sevenDaysAgo = Date().addingTimeInterval(-7 * 86400)
 
+            // Streak, batched into one `daily_totals` query across every
+            // rower on this board rather than one `current_streak(...)`
+            // RPC call per row — see StreakCalculator's doc comment and
+            // docs/schema.sql's `current_streak`. Best-effort: a failure
+            // here just leaves streak badges unresolved, not the whole board.
+            struct StreakRow: Decodable {
+                let userId: UUID
+                let day: String
+                let sessionCount: Int
+                enum CodingKeys: String, CodingKey {
+                    case userId = "user_id"
+                    case day
+                    case sessionCount = "session_count"
+                }
+            }
+            var activeDaysByUser: [UUID: Set<String>] = [:]
+            if !sorted.isEmpty {
+                let streakRows: [StreakRow] = (try? await SupabaseService.shared
+                    .from("daily_totals")
+                    .select("user_id, day, session_count")
+                    .in("user_id", values: sorted.map(\.userId))
+                    .execute()
+                    .value) ?? []
+                for row in streakRows where row.sessionCount > 0 {
+                    activeDaysByUser[row.userId, default: []].insert(row.day)
+                }
+            }
+
             rows = sorted.enumerated().map { index, row in
                 Row(
                     id: row.userId,
                     rank: index + 1,
                     name: row.author.displayName,
                     club: row.author.club?.name,
-                    primaryValue: test.isDurationBased ? "\(row.distanceM.formattedWithGrouping)m" : row.timeMs.formattedDurationMs,
-                    splitValue: row.splitMs.formattedDurationMs,
+                    // Duration tests (e.g. 30'): the metric is distance covered, unit-aware.
+                    // Distance tests (e.g. 2k): the metric is total time taken to finish —
+                    // elapsed time, never watts, so this stays formattedDurationMs.
+                    primaryValue: test.isDurationBased ? row.distanceM.formattedMetres : row.timeMs.formattedDurationMs,
+                    splitValue: row.splitMs.formattedPace(display: .current),
                     category: row.categoryAtTime,
                     dateLabel: formatter.string(from: row.setAt),
-                    isRecentPB: row.setAt >= sevenDaysAgo
+                    isRecentPB: row.setAt >= sevenDaysAgo,
+                    streakDays: StreakCalculator.streak(activeDays: activeDaysByUser[row.userId] ?? [])
                 )
             }
             errorMessage = nil
         } catch {
             guard !Task.isCancelled else { return }
-            print("Test leaderboard query failed (\(test.key), gender \(gender), category \(category)): \(error)")
+            print("Test leaderboard query failed (\(test.key), filters \(filters)): \(error)")
             errorMessage = error.localizedDescription
         }
     }

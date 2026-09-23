@@ -14,6 +14,11 @@ struct SettingsView: View {
     @State private var isShowingTerms = false
     @State private var isShowingDeleteConfirmation = false
     @FocusState private var isNameFocused: Bool
+    /// Redesign phase B — per-device display preferences, not synced to
+    /// the profile. See DesignSystem/DistanceUnit.swift (leaderboards only)
+    /// and PaceDisplay.swift.
+    @AppStorage(DistanceUnit.storageKey) private var distanceUnit: DistanceUnit = .metres
+    @AppStorage(PaceDisplay.storageKey) private var paceDisplay: PaceDisplay = .split
 
     private static let supportEmail = "support@rowingpals.app"
     private static let supportMailtoURL = URL(string: "mailto:\(supportEmail)")
@@ -42,7 +47,7 @@ struct SettingsView: View {
                         HStack {
                             Text("Weekly target")
                             Spacer()
-                            Text("\(viewModel.weeklyTargetM.formattedWithGrouping)m")
+                            Text(viewModel.weeklyTargetM.formattedMetres)
                                 .tabularNumerals()
                                 .foregroundStyle(Tokens.Ink.secondary)
                         }
@@ -50,7 +55,7 @@ struct SettingsView: View {
 
                     if let saveError = viewModel.saveError {
                         Text(saveError)
-                            .foregroundStyle(Tokens.Accent.live)
+                            .foregroundStyle(Tokens.System.error)
                     }
 
                     Button {
@@ -72,6 +77,23 @@ struct SettingsView: View {
                     Text("Profile")
                 } footer: {
                     Text("Novice means you're in your first season. You can change this any time.")
+                }
+
+                Section {
+                    Picker("Leaderboard distance", selection: $distanceUnit) {
+                        ForEach(DistanceUnit.allCases, id: \.self) { unit in
+                            Text(unit.label).tag(unit)
+                        }
+                    }
+                    Picker("Pace shown as", selection: $paceDisplay) {
+                        ForEach(PaceDisplay.allCases, id: \.self) { display in
+                            Text(display.label).tag(display)
+                        }
+                    }
+                } header: {
+                    Text("Units and display")
+                } footer: {
+                    Text("Leaderboard distance switches the Volume leaderboard between metres and kilometres. Everything else stays in metres. Pace applies everywhere a pace is shown.")
                 }
 
                 Section {
@@ -98,14 +120,14 @@ struct SettingsView: View {
                     Button("Sign out") {
                         Task { await viewModel.signOut() }
                     }
-                    .foregroundStyle(Tokens.Accent.live)
+                    .foregroundStyle(Tokens.System.error)
 
                     Button("Delete Account", role: .destructive) {
                         isShowingDeleteConfirmation = true
                     }
                     if let deleteError = viewModel.deleteError {
                         Text(deleteError)
-                            .foregroundStyle(Tokens.Accent.live)
+                            .foregroundStyle(Tokens.System.error)
                     }
                 } footer: {
                     Text("Deleting your account removes every session, photo and comment permanently. This can't be undone.")

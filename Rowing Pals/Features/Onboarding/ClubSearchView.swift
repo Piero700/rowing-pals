@@ -47,7 +47,7 @@ struct ClubSearchView: View {
                 .glassSurface(cornerRadius: 18)
                 .overlay {
                     RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .strokeBorder(Tokens.Accent.signal.opacity(0.55), lineWidth: 1.5)
+                        .strokeBorder(Tokens.Accent.brand.opacity(0.55), lineWidth: 1.5)
                 }
 
                 clubResults
@@ -88,7 +88,7 @@ struct ClubSearchView: View {
                 if let saveError {
                     Text(saveError)
                         .textStyle(Typography.bodySecondary)
-                        .foregroundStyle(Tokens.Accent.live)
+                        .foregroundStyle(Tokens.System.error)
                 }
 
                 continueButton
@@ -108,7 +108,7 @@ struct ClubSearchView: View {
             } else if let errorMessage = viewModel.errorMessage {
                 Text(errorMessage)
                     .textStyle(Typography.bodySecondary)
-                    .foregroundStyle(Tokens.Accent.live)
+                    .foregroundStyle(Tokens.System.error)
             } else if viewModel.results.isEmpty {
                 Text("No clubs found.")
                     .textStyle(Typography.bodySecondary)
@@ -153,11 +153,11 @@ struct ClubSearchView: View {
             Spacer()
             Text(isSelected ? "Selected" : "Join")
                 .font(.system(size: 13, weight: .semibold))
-                .foregroundStyle(isSelected ? Tokens.Base.dark : Tokens.Accent.signal)
+                .foregroundStyle(isSelected ? Tokens.Base.dark : Tokens.Accent.brand)
                 .padding(.horizontal, 14)
                 .padding(.vertical, 7)
                 .background {
-                    Capsule().fill(isSelected ? Tokens.Accent.signal : Tokens.Accent.signal.opacity(0.16))
+                    Capsule().fill(isSelected ? Tokens.Accent.brand : Tokens.Accent.brand.opacity(0.16))
                 }
         }
         .padding(14)
@@ -186,7 +186,7 @@ struct ClubSearchView: View {
             .padding(.vertical, 15)
             .background {
                 RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .fill(Tokens.Accent.signal)
+                    .fill(Tokens.Accent.brand)
             }
         }
         .disabled(!canContinue)

@@ -14,43 +14,57 @@ struct MetresLeaderboardView: View {
     /// list — the pinned row below only shows once it scrolls out of view,
     /// so they never appear twice on screen at once.
     @State private var isOwnRowVisible = true
+    /// False when embedded under `RankingsView` (redesign, phase A) — this
+    /// screen's own title is replaced by `RankingsHeader` there instead.
+    var showsOwnTitle = true
+    /// Only used when `showsOwnTitle` is false — see `RankingsView`.
+    var mode: Binding<RankingsMode>?
+    /// Redesign phase B — per-device display preference, not synced to
+    /// the profile. See DesignSystem/DistanceUnit.swift.
+    @AppStorage(DistanceUnit.storageKey) private var distanceUnit: DistanceUnit = .metres
+    /// Redesign phase D — single Filters sheet replacing inline chips, see
+    /// RankingsFilters.swift.
+    @State private var isShowingFilters = false
 
     var body: some View {
         // Direct ScrollView child, same constraint as FeedView — see its comment.
         ScrollView {
             VStack(alignment: .leading, spacing: 12) {
-                Text("Metres")
-                    .font(.system(size: 30, weight: .bold))
-                    .foregroundStyle(Tokens.Ink.primary)
-                    .padding(.top, 8)
+                if showsOwnTitle {
+                    Text("Metres")
+                        .font(.system(size: 30, weight: .bold))
+                        .foregroundStyle(Tokens.Ink.primary)
+                        .padding(.top, 8)
+                } else if let mode {
+                    RankingsHeader(mode: mode)
+                }
 
                 PillSegmentedControl(options: MetresLeaderboardViewModel.Period.allCases.map(\.label), selection: periodSelection)
 
                 HStack(spacing: 7) {
-                    FilterChip(label: "Male", isSelected: viewModel.gender == .male)
-                        .onTapGesture { viewModel.gender = .male }
-                    FilterChip(label: "Female", isSelected: viewModel.gender == .female)
-                        .onTapGesture { viewModel.gender = .female }
-                    Divider().frame(height: 18)
                     ForEach(MetresLeaderboardViewModel.Source.allCases, id: \.self) { source in
                         FilterChip(label: source.label, isSelected: viewModel.source == source)
                             .onTapGesture { viewModel.source = source }
                     }
                 }
 
-                HStack(spacing: 16) {
-                    ForEach(SocialScope.allCases, id: \.self) { scope in
-                        Text(scope.label)
-                            .font(.system(size: 13, weight: scope == viewModel.scope ? .semibold : .regular))
-                            .foregroundStyle(scope == viewModel.scope ? Tokens.Accent.signal : Tokens.Ink.secondary)
-                            .onTapGesture { viewModel.scope = scope }
-                    }
+                // Redesign phase D — Gender/Level/Scope collapse into one
+                // "Filters" sheet with a caption stating the composed
+                // filter, replacing what used to be inline chips/text here.
+                // Source above stays inline: it picks *which figure* ranks
+                // rows, not *who* is included, so it isn't one of the three
+                // AND'd axes the sheet covers.
+                HStack(spacing: 10) {
+                    RankingsFiltersButton(filters: viewModel.filters) { isShowingFilters = true }
                 }
                 .padding(.top, 2)
 
                 if viewModel.rankedRows.isEmpty {
                     emptyState
                 } else {
+                    rankHeroCard
+                        .padding(.top, 4)
+
                     VStack(spacing: 8) {
                         ForEach(viewModel.rankedRows) { row in
                             if row.rank <= 3 {
@@ -74,6 +88,8 @@ struct MetresLeaderboardView: View {
             .padding(.horizontal, 14)
         }
         .background(Tokens.Base.ground)
+        .tracksFloatingBar()
+        .ignoresSafeArea(edges: .bottom)
         .overlay(alignment: .bottom) {
             if !isOwnRowVisible, let ownRow = viewModel.rankedRows.first(where: \.isCurrentUser) {
                 MetresPinnedRow(row: ownRow, periodLabel: viewModel.period.label.lowercased())
@@ -88,6 +104,9 @@ struct MetresLeaderboardView: View {
         // only additionally recognize a clearly horizontal drag anywhere
         // on the page, Safari-back/forward-swipe style.
         .simultaneousGesture(periodSwipeGesture)
+        .sheet(isPresented: $isShowingFilters) {
+            RankingsFiltersSheet(filters: $viewModel.filters)
+        }
     }
 
     private var periodSelection: Binding<Int> {
@@ -143,16 +162,66 @@ struct MetresLeaderboardView: View {
         .frame(maxWidth: .infinity)
     }
 
+    /// Redesign phase D — the rank-hero card atop the Volume ranked list,
+    /// per docs/design/rowing-pals-redesign-handoff-v2.md §2 Screen 03:
+    /// the viewer's own total for the selected period, a live sentence, and
+    /// the overall leader's name. Rendered in the lilac `.records` role,
+    /// same as every other PB/rank-hero surface in the app — never gold,
+    /// which is reserved for rank-movement only.
+    @ViewBuilder
+    private var rankHeroCard: some View {
+        let rows = viewModel.rankedRows
+        let ownIndex = rows.firstIndex(where: \.isCurrentUser)
+        let leader = rows.first
+
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .firstTextBaseline) {
+                Text("You")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(Tokens.Ink.secondary)
+                Spacer()
+                if let leader, !leader.isCurrentUser {
+                    Text("\(leader.name) leads")
+                        .font(.system(size: 12.5, weight: .medium))
+                        .foregroundStyle(Tokens.Ink.secondary)
+                        .lineLimit(1)
+                }
+            }
+            Text((ownIndex.map { rows[$0].metres } ?? 0).formattedDistance(unit: distanceUnit))
+                .font(.system(size: 32, weight: .bold))
+                .tabularNumerals()
+                .foregroundStyle(Tokens.Ink.primary)
+            Text(heroSentence(rows: rows, ownIndex: ownIndex))
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(Tokens.Accent.records)
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background {
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .fill(Tokens.Accent.records.opacity(0.1))
+        }
+    }
+
+    private func heroSentence(rows: [MetresLeaderboardViewModel.Row], ownIndex: Int?) -> String {
+        guard let ownIndex else { return "You are outside these filters" }
+        let ownRow = rows[ownIndex]
+        guard ownRow.rank > 1 else { return "You lead this group" }
+        let aboveRow = rows[ownIndex - 1]
+        let gap = max(aboveRow.metres - ownRow.metres, 0) + 1
+        return "\(gap.formattedDistance(unit: distanceUnit)) to move into #\(aboveRow.rank)"
+    }
+
     private func podiumRow(_ row: MetresLeaderboardViewModel.Row) -> some View {
         HStack(spacing: 12) {
             Text("\(row.rank)")
                 .font(.system(size: 26, weight: .bold))
                 .tabularNumerals()
-                .foregroundStyle(Tokens.Accent.pb)
+                .foregroundStyle(Tokens.Accent.records)
                 .frame(width: 26)
-            AvatarPlaceholder(diameter: 42)
+            AvatarPlaceholder(diameter: 42, streakDays: row.streakDays)
             rowLabels(row)
-            Text(row.metres.formattedWithGrouping)
+            Text(row.metres.formattedDistance(unit: distanceUnit))
                 .font(.system(size: 19, weight: .bold))
                 .tabularNumerals()
                 .foregroundStyle(Tokens.Ink.primary)
@@ -160,7 +229,7 @@ struct MetresLeaderboardView: View {
         .padding(13)
         .background {
             RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .fill(Tokens.Accent.pb.opacity(0.07))
+                .fill(Tokens.Accent.records.opacity(0.07))
         }
         .modifier(TrackVisibility(isTracked: row.isCurrentUser, isVisible: $isOwnRowVisible))
     }
@@ -172,9 +241,9 @@ struct MetresLeaderboardView: View {
                 .tabularNumerals()
                 .foregroundStyle(Tokens.Ink.secondary)
                 .frame(width: 26)
-            AvatarPlaceholder(diameter: 38)
+            AvatarPlaceholder(diameter: 38, streakDays: row.streakDays)
             rowLabels(row)
-            Text(row.metres.formattedWithGrouping)
+            Text(row.metres.formattedDistance(unit: distanceUnit))
                 .font(.system(size: 17, weight: .semibold))
                 .tabularNumerals()
                 .foregroundStyle(Tokens.Ink.primary)
@@ -248,15 +317,18 @@ private struct TrackVisibility: ViewModifier {
 struct MetresPinnedRow: View {
     let row: MetresLeaderboardViewModel.Row
     let periodLabel: String
+    /// Redesign phase B — per-device display preference, not synced to
+    /// the profile. See DesignSystem/DistanceUnit.swift.
+    @AppStorage(DistanceUnit.storageKey) private var distanceUnit: DistanceUnit = .metres
 
     var body: some View {
         HStack(spacing: 12) {
             Text("\(row.rank)")
                 .font(.system(size: 20, weight: .bold))
                 .tabularNumerals()
-                .foregroundStyle(row.rank <= 3 ? Tokens.Accent.pb : Tokens.Ink.primary)
+                .foregroundStyle(row.rank <= 3 ? Tokens.Accent.records : Tokens.Ink.primary)
                 .frame(width: 26)
-            AvatarPlaceholder(diameter: 38)
+            AvatarPlaceholder(diameter: 38, streakDays: row.streakDays)
             VStack(alignment: .leading, spacing: 1) {
                 Text("You")
                     .font(.system(size: 15, weight: .bold))
@@ -267,7 +339,7 @@ struct MetresPinnedRow: View {
                     .lineLimit(1)
             }
             Spacer(minLength: 8)
-            Text("\(row.metres.formattedWithGrouping)m")
+            Text(row.metres.formattedDistance(unit: distanceUnit))
                 .font(.system(size: 18, weight: .bold))
                 .tabularNumerals()
                 .foregroundStyle(Tokens.Ink.primary)

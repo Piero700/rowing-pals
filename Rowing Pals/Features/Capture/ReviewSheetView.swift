@@ -20,6 +20,13 @@ struct ReviewSheetView: View {
     @State private var viewModel: ReviewSheetViewModel
     @State private var isShowingAddPhoto = false
     @FocusState private var focusedField: ReviewField?
+    /// Redesign phase B — per-device display preferences, not synced to
+    /// the profile. See DesignSystem/PaceDisplay.swift.
+    /// The session-total card is a read-only recap (not an editable
+    /// field), so it's safe to make unit-aware — unlike the per-segment
+    /// editable fields in SegmentRowView, which are deliberately left in
+    /// plain metres/split; see that file's header comment.
+    @AppStorage(PaceDisplay.storageKey) private var paceDisplay: PaceDisplay = .split
 
     private let initialMonitorPhoto: Data
 
@@ -77,7 +84,7 @@ struct ReviewSheetView: View {
                 if let postError = viewModel.postError {
                     Text(postError)
                         .textStyle(Typography.bodySecondary)
-                        .foregroundStyle(Tokens.Accent.live)
+                        .foregroundStyle(Tokens.System.error)
                 }
 
                 visibilityPicker
@@ -129,23 +136,26 @@ struct ReviewSheetView: View {
         }
     }
 
+    /// "AVG /500M" only means something for a split value — once the
+    /// preference is watts, the label has to stop implying a distance unit.
+    private var avgSplitLabel: String {
+        paceDisplay == .split ? "AVG /500M" : "AVG WATTS"
+    }
+
     private var totalCard: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("SESSION TOTAL")
                 .textStyle(Typography.label)
                 .foregroundStyle(Tokens.Ink.secondary)
             HStack(alignment: .lastTextBaseline, spacing: 8) {
-                Text(viewModel.totalDistanceM.formattedWithGrouping)
+                Text(viewModel.totalDistanceM.formattedMetres)
                     .font(.system(size: 31, weight: .bold))
                     .tabularNumerals()
                     .foregroundStyle(Tokens.Ink.primary)
-                Text("m")
-                    .font(.system(size: 17, weight: .semibold))
-                    .foregroundStyle(Tokens.Ink.secondary)
             }
             HStack(spacing: 24) {
                 StatColumn(label: "TIME", value: viewModel.totalTimeMs.formattedDurationMs)
-                StatColumn(label: "AVG /500M", value: viewModel.avgSplitMs?.formattedDurationMs ?? "—")
+                StatColumn(label: avgSplitLabel, value: viewModel.avgSplitMs?.formattedPace(display: paceDisplay) ?? "—")
                 StatColumn(label: "RATE", value: viewModel.avgRate.map { "r\(Int($0.rounded()))" } ?? "—")
             }
         }
@@ -177,7 +187,7 @@ struct ReviewSheetView: View {
                     .padding(.horizontal, 16)
                     .padding(.vertical, 9)
                     .background {
-                        RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Tokens.Accent.signal)
+                        RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Tokens.Accent.brand)
                     }
             }
             Button {
@@ -196,11 +206,11 @@ struct ReviewSheetView: View {
         .padding(14)
         .background {
             RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .fill(Tokens.Accent.signal.opacity(0.14))
+                .fill(Tokens.Accent.brand.opacity(0.14))
         }
         .overlay {
             RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .strokeBorder(Tokens.Accent.signal.opacity(0.35), lineWidth: 1)
+                .strokeBorder(Tokens.Accent.brand.opacity(0.35), lineWidth: 1)
         }
         .buttonStyle(.plain)
     }
@@ -223,7 +233,7 @@ struct ReviewSheetView: View {
             .frame(width: 104, height: 52)
             .background {
                 RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .fill(Tokens.Accent.signal.opacity(viewModel.canPost ? 1 : 0.4))
+                    .fill(Tokens.Accent.brand.opacity(viewModel.canPost ? 1 : 0.4))
             }
         }
         .disabled(!viewModel.canPost)

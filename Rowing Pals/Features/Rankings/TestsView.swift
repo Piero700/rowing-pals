@@ -11,20 +11,29 @@ import SwiftUI
 struct TestsView: View {
     @State private var viewModel = TestsViewModel()
     @State private var selectedTest: StandardTest?
+    /// False when embedded under `RankingsView` (redesign, phase A) — this
+    /// screen's own title is replaced by `RankingsHeader` there instead.
+    var showsOwnTitle = true
+    /// Only used when `showsOwnTitle` is false — see `RankingsView`.
+    var mode: Binding<RankingsMode>?
 
     var body: some View {
         // Direct ScrollView child, same constraint as FeedView — see its comment.
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Tests")
-                        .font(.system(size: 30, weight: .bold))
-                        .foregroundStyle(Tokens.Ink.primary)
-                    Text("Your bests, and where they rank.")
-                        .textStyle(Typography.bodySecondary)
-                        .foregroundStyle(Tokens.Ink.secondary)
+                if showsOwnTitle {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Tests")
+                            .font(.system(size: 30, weight: .bold))
+                            .foregroundStyle(Tokens.Ink.primary)
+                        Text("Your bests, and where they rank.")
+                            .textStyle(Typography.bodySecondary)
+                            .foregroundStyle(Tokens.Ink.secondary)
+                    }
+                    .padding(.top, 8)
+                } else if let mode {
+                    RankingsHeader(mode: mode)
                 }
-                .padding(.top, 8)
 
                 LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 3), spacing: 10) {
                     ForEach(viewModel.tiles) { tile in
@@ -38,6 +47,8 @@ struct TestsView: View {
             .padding(.horizontal, 16)
         }
         .background(Tokens.Base.ground)
+        .tracksFloatingBar()
+        .ignoresSafeArea(edges: .bottom)
         .task { await viewModel.loadOwnPBs() }
         .refreshable { await viewModel.loadOwnPBs() }
         .fullScreenCover(item: $selectedTest) { test in

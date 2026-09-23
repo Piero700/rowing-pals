@@ -41,19 +41,28 @@ Show the bar in both its expanded and shrunk states across your screens so the b
 
 Design **dark mode as the hero** — rowers train at 6am and in dim gyms, monitor photos read better against dark, and glass materials are at their best over dark ground. Provide light mode as a second pass on at least the feed and one leaderboard.
 
-| Role | Value | Use |
-|---|---|---|
-| Base (dark) | `#0A0C0F` graphite | App background |
-| Base (light) | `#F6F6F7` | Light mode background |
-| Glass fill | white 10–16%, blur 40–60 | Bars, sheets, chips |
-| Glass edge | white 22% top rim, black 30% outer | Specular + darkened edge |
-| Primary text | `#FFFFFF` / `#0A0C0F` | — |
-| Secondary text | 60% opacity of primary | Metadata, labels |
-| **Accent — Signal Cyan** | `#3AD7E5` | Interactive elements, active tab, links, the Post button |
-| **Accent — PB Gold** | `#F5C542` | *Reserved exclusively* for personal bests and podium ranks 1–3 |
-| **Accent — Live Coral** | `#FF6B5A` | *Reserved exclusively* for the live capture state and the countdown window |
+**Redesigned 2026-09-17** — see `docs/design/rowing-pals-redesign-handoff-v2.md` §1 for the source
+values. Replaces the original 3-colour cyan/gold/coral set with four accent roles, dropping the
+capture countdown along with the coral it was reserved for (the new capture screen has no
+countdown at all — see Screen 3, updated separately as that phase lands).
 
-Three accents, each with one job. Nothing else is saturated. If a colour appears somewhere its role doesn't cover, that is a bug.
+| Role | Value (dark) | Value (light) | Use |
+|---|---|---|---|
+| Base | `#101114` | `#EDF0F5` | Screen/card ground |
+| Surface — card | `#1B1C21` | `#FFFFFF` | Flat (non-glass) card surface |
+| Surface — raised | `#292C34` | `#DCE2EC` | Hover/raised surface |
+| Surface — line | `#464A56` | `#949EAE` | Borders |
+| Glass fill | `rgba(43,46,55,.86)` | `rgba(255,255,255,.94)` | Floating nav bar, floating icon buttons |
+| Primary text | `#F7F8FC` | `#111723` | — |
+| Secondary text | `#BBC0CE` | `#3E4C61` | Metadata, labels |
+| Tertiary text | `#A3ABBA` | `#4E5C70` | Least prominent captions |
+| **Accent — Brand (blue)** | `#91B8FF` | `#214FA3` | Interactive elements, active tab, links, the Log button |
+| **Accent — Records (lilac)** | `#C6ADFF` | `#67409B` | Personal bests, avatars, the rank-hero card |
+| **Accent — Rank (amber)** | `#EFC37C` | `#84500B` | *Reserved exclusively* for the #1 leaderboard row and rank-movement indicators |
+| **Accent — Success (green)** | `#78D7AC` | `#176A4A` | *Reserved exclusively* for success confirmation and "on" toggle states |
+| System — error | `#FF766F` | `#C93C36` | Error/destructive text and controls (not one of the four accent roles above) |
+
+Four accent roles, each with one job. Nothing else is saturated. If a colour appears somewhere its role doesn't cover, that is a bug.
 
 ### Typography
 
@@ -83,11 +92,25 @@ Categories: **Novice** and **Senior** are experience levels in UK university row
 
 ## 4. Navigation
 
-Five tabs: **Feed · Meters · [Post] · Tests · Profile**
+**Redesigned 2026-09-17.** Not a single unified tab bar: a floating pill grouping **Feed ·
+Rankings · Profile**, plus a separate circular **Log** button beside it (brand-blue, jumps
+straight to capture) — extends the app's existing "Post sits outside tab selection" pattern into
+two distinct glass capsules. **Meters and Tests merge into one Rankings tab** with an internal
+Volume / Test-results toggle. See `docs/design/rowing-pals-redesign-handoff-v2.md` §4.
+
+~~Five tabs: Feed · Meters · [Post] · Tests · Profile~~ (superseded, kept struck through so old
+references to "five tabs" elsewhere aren't mistaken for a fresh description)
 
 ---
 
 ## 5. The screens
+
+**Mid-redesign note (2026-09-17):** these screen descriptions are being updated progressively as
+each redesign phase actually lands, not all at once — see `docs/design/rowing-pals-redesign-handoff-v2.md`
+for the full target spec and phase list, and [[project_redesign_v2_handoff]] for current status. A
+screen section below that hasn't been touched yet still describes the pre-redesign screen
+accurately (nothing here is stale by omission) — only the palette (§2) and navigation (§4) above
+have been updated ahead of their own phases, since every later phase depends on both.
 
 ### Screen 1 — Onboarding: find your club
 
@@ -126,7 +149,9 @@ The live dual-camera screen. This is the app's signature moment, so treat it as 
 
 - Full-bleed rear camera viewfinder framed on an erg monitor
 - Front camera inset preview in the corner
-- **A capture window countdown in Live Coral** at the top — a slim progress arc or bar with remaining time, e.g. "8:42 left to post"
+- ~~A capture window countdown in Live Coral at the top~~ — **removed 2026-09-17**, the redesign
+  drops the on-screen countdown entirely (no timer shown at all); see
+  `docs/design/rowing-pals-redesign-handoff-v2.md` Screen 04
 - Single large capture button, centred, glass ring around a solid core
 - A small caption under the shutter: "Both cameras fire at once"
 - **No gallery access affordance anywhere** — its absence is the point, and the design should make that feel intentional rather than missing

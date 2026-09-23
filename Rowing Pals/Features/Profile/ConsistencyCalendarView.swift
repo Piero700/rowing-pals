@@ -65,9 +65,9 @@ struct ConsistencyCalendarView: View {
         switch shadeLevel {
         case nil: .clear // outside the logged range entirely (a future day)
         case 0: Tokens.Ink.primary.opacity(0.06) // logged range, nothing that day
-        case 1: Tokens.Accent.signal.opacity(0.3)
-        case 2: Tokens.Accent.signal.opacity(0.6)
-        default: Tokens.Accent.signal
+        case 1: Tokens.Accent.brand.opacity(0.3)
+        case 2: Tokens.Accent.brand.opacity(0.6)
+        default: Tokens.Accent.brand
         }
     }
 

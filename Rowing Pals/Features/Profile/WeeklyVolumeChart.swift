@@ -23,7 +23,7 @@ struct WeeklyVolumeChart: View {
                     x: .value("Week", week.weekStart, unit: .weekOfYear),
                     y: .value("Metres", week.distanceM)
                 )
-                .foregroundStyle(week.isCurrentWeek ? Tokens.Accent.signal : Tokens.Ink.primary.opacity(0.22))
+                .foregroundStyle(week.isCurrentWeek ? Tokens.Accent.brand : Tokens.Ink.primary.opacity(0.22))
                 .cornerRadius(3)
             }
             if targetM > 0 {
@@ -37,7 +37,7 @@ struct WeeklyVolumeChart: View {
                 AxisGridLine()
                 AxisValueLabel {
                     if let raw = value.as(Int.self) {
-                        Text(raw.formattedWithGrouping)
+                        Text(raw.formattedMetres)
                             .tabularNumerals()
                     }
                 }

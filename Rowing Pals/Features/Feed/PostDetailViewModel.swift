@@ -80,6 +80,12 @@ final class PostDetailViewModel {
     var segments: [DetailSegment] = []
     var monitorURLs: [String: URL] = [:]
     var selfieURL: URL?
+    /// The author's current streak — a single user here, so this computes
+    /// `StreakCalculator.streak(...)` directly from their own `daily_totals`
+    /// rows rather than going through a batched multi-author fetch (see
+    /// FeedViewModel/leaderboard view models for that pattern, used where
+    /// several authors are on screen at once).
+    var authorStreakDays = 0
 
     var testBanner: TestBanner?
     var reactions: [ReactionSummary] = []
@@ -205,13 +211,15 @@ final class PostDetailViewModel {
             async let commentList = Self.loadComments(sessionId: sessionId)
             async let following: Bool = row.userId == userId ? false : Self.isFollowing(follower: userId, followee: row.userId)
             async let ownName: String = row.userId == userId ? row.author.displayName : Self.fetchDisplayName(userId: userId)
+            async let authorStreak: Int = Self.fetchStreak(userId: row.userId)
 
-            let (_, bannerResult, reactionsResult, commentsResult, followingResult, ownNameResult) = try await (photos, banner, reactionSummaries, commentList, following, ownName)
+            let (_, bannerResult, reactionsResult, commentsResult, followingResult, ownNameResult, authorStreakResult) = try await (photos, banner, reactionSummaries, commentList, following, ownName, authorStreak)
             testBanner = bannerResult
             reactions = reactionsResult
             comments = commentsResult
             isFollowingAuthor = followingResult
             ownDisplayName = ownNameResult
+            authorStreakDays = authorStreakResult
 
             subscribeRealtime()
             errorMessage = nil
@@ -247,6 +255,29 @@ final class PostDetailViewModel {
             case .failure: nil
             }
         }
+    }
+
+    // MARK: - Streak
+
+    /// One user's `daily_totals`, unfiltered — the walk can legitimately
+    /// reach back up to 730 days — fed into `StreakCalculator.streak(...)`.
+    /// Best-effort: an empty result (network hiccup) just reads back as no
+    /// streak rather than failing the whole post load.
+    private static func fetchStreak(userId: UUID) async -> Int {
+        struct Row: Decodable {
+            let day: String
+            let sessionCount: Int
+            enum CodingKeys: String, CodingKey { case day; case sessionCount = "session_count" }
+        }
+        guard let rows: [Row] = try? await SupabaseService.shared
+            .from("daily_totals")
+            .select("day, session_count")
+            .eq("user_id", value: userId)
+            .execute()
+            .value
+        else { return 0 }
+        let activeDays = Set(rows.filter { $0.sessionCount > 0 }.map(\.day))
+        return StreakCalculator.streak(activeDays: activeDays)
     }
 
     // MARK: - Gold test-result banner
@@ -299,7 +330,9 @@ final class PostDetailViewModel {
 
         return TestBanner(
             distanceLabel: test.label,
-            valueLabel: test.isDurationBased ? "\(thisResult.distanceM.formattedWithGrouping)m" : thisResult.timeMs.formattedDurationMs,
+            // Duration tests: distance covered, unit-aware. Distance tests:
+            // total time taken to finish — elapsed time, not a split.
+            valueLabel: test.isDurationBased ? thisResult.distanceM.formattedMetres : thisResult.timeMs.formattedDurationMs,
             isPersonalBest: isPersonalBest,
             overallRank: overall,
             categoryLabel: categoryLabel,

@@ -57,7 +57,7 @@ struct MonitorPhotoCaptureView: View {
             VStack(spacing: 10) {
                 Text(message)
                     .textStyle(Typography.bodySecondary)
-                    .foregroundStyle(Tokens.Accent.live)
+                    .foregroundStyle(Tokens.System.error)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 24)
                 Button("Try again") {

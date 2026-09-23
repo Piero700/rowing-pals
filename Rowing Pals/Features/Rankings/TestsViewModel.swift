@@ -60,7 +60,10 @@ final class TestsViewModel {
 
         tiles = StandardTest.all.map { test in
             guard let row = bestByKey[test.key] else { return Tile(test: test, displayValue: nil) }
-            let display = test.isDurationBased ? "\(row.distanceM.formattedWithGrouping)m" : row.timeMs.formattedDurationMs
+            // Duration tests show distance covered (unit-aware); distance
+            // tests show total time taken — elapsed time, not a split, so
+            // it stays formattedDurationMs regardless of paceDisplay.
+            let display = test.isDurationBased ? row.distanceM.formattedMetres : row.timeMs.formattedDurationMs
             return Tile(test: test, displayValue: display)
         }
     }

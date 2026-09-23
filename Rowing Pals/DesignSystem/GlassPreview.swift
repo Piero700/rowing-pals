@@ -30,7 +30,7 @@ struct GlassPreview: View {
 
                         Button("Post") {}
                             .buttonStyle(.glassProminent)
-                            .tint(Tokens.Accent.signal)
+                            .tint(Tokens.Accent.brand)
                     }
                 }
                 .padding(20)

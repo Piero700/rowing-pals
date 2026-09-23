@@ -24,22 +24,29 @@ struct DesignSystemPreview: View {
     private var accentSection: some View {
         section("Accent") {
             HStack(spacing: 16) {
-                swatch("Signal", Tokens.Accent.signal)
-                swatch("PB Gold", Tokens.Accent.pb)
-                swatch("Live Coral", Tokens.Accent.live)
+                swatch("Brand", Tokens.Accent.brand)
+                swatch("Records", Tokens.Accent.records)
+                swatch("Rank", Tokens.Accent.rank)
+                swatch("Success", Tokens.Accent.success)
+            }
+            HStack(spacing: 16) {
+                swatch("Error", Tokens.System.error)
             }
         }
     }
 
     private var groundAndTextSection: some View {
-        section("Ground & Ink") {
+        section("Ground, surface & ink") {
             HStack(spacing: 16) {
                 swatch("Base dark", Tokens.Base.dark)
                 swatch("Base light", Tokens.Base.light)
+                swatch("Card", Tokens.Surface.card)
+                swatch("Raised", Tokens.Surface.raised)
             }
             VStack(alignment: .leading, spacing: 6) {
                 Text("Primary text").textStyle(Typography.body).foregroundStyle(Tokens.Ink.primary)
                 Text("Secondary text").textStyle(Typography.body).foregroundStyle(Tokens.Ink.secondary)
+                Text("Tertiary text").textStyle(Typography.body).foregroundStyle(Tokens.Ink.faint)
             }
         }
     }
@@ -80,7 +87,7 @@ struct DesignSystemPreview: View {
                         Spacer()
                         Text("Photo-verified")
                             .textStyle(Typography.label)
-                            .foregroundStyle(Tokens.Accent.signal)
+                            .foregroundStyle(Tokens.Accent.brand)
                             .padding(.horizontal, 10)
                             .padding(.vertical, 5)
                             .glassSurface(cornerRadius: 12)
