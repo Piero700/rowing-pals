@@ -94,9 +94,32 @@ final class ProfileViewModel {
         }
     }
 
+    /// Redesign phase E: the same view model drives your own profile and
+    /// another rower's. `nil` means "the signed-in user".
+    private let viewingId: UUID?
+
+    init(userId: UUID? = nil) {
+        viewingId = userId
+    }
+
+    var profileUserId: UUID?
+    var isOwnProfile = true
     var displayName = ""
     var categoryLabel = ""
     var clubName: String?
+
+    /// This profile's own privacy flag (used for the follow-requests row on
+    /// your profile) and, for someone else's, whether it is hidden from the
+    /// viewer: private and not approved. The database already returns no
+    /// rows in that case; this flag decides what to show instead.
+    var isPrivateAccount = false
+    var isLocked = false
+    var followState: FollowState = .notFollowing
+    var followsYou = false
+    var isFollowBusy = false
+    var followerCount = 0
+    var followingCount = 0
+    var pendingRequestCount = 0
 
     var streakDays = 0
     var restDaysUsedThisWeek = 0
@@ -129,7 +152,10 @@ final class ProfileViewModel {
         defer { isLoading = false }
 
         do {
-            let userId = try await SupabaseService.shared.auth.session.user.id
+            let viewerId = try await SupabaseService.shared.auth.session.user.id
+            let userId = viewingId ?? viewerId
+            profileUserId = userId
+            isOwnProfile = userId == viewerId
 
             struct ProfileRow: Decodable {
                 struct Club: Decodable { let name: String }
@@ -137,16 +163,18 @@ final class ProfileViewModel {
                 let category: RowerCategory
                 let club: Club?
                 let weeklyTargetM: Int
+                let isPrivate: Bool
                 enum CodingKeys: String, CodingKey {
                     case displayName = "display_name"
                     case category
                     case club = "clubs"
                     case weeklyTargetM = "weekly_target_m"
+                    case isPrivate = "is_private"
                 }
             }
             let profile: ProfileRow = try await SupabaseService.shared
                 .from("profiles")
-                .select("display_name, category, clubs(name), weekly_target_m")
+                .select("display_name, category, clubs(name), weekly_target_m, is_private")
                 .eq("id", value: userId)
                 .single()
                 .execute()
@@ -155,6 +183,31 @@ final class ProfileViewModel {
             categoryLabel = profile.category.rawValue.uppercased()
             clubName = profile.club?.name
             weeklyTargetM = profile.weeklyTargetM
+            isPrivateAccount = profile.isPrivate
+
+            if isOwnProfile {
+                followState = .notFollowing
+                followsYou = false
+                pendingRequestCount = (try? await FollowService.pendingRequestCount()) ?? 0
+            } else {
+                async let state = FollowService.state(to: userId)
+                async let back = FollowService.isFollowedBy(userId)
+                (followState, followsYou) = try await (state, back)
+            }
+
+            // Private and not approved: show who they are and nothing else.
+            // Nothing below is fetched — the database would return empty
+            // rows anyway, but the lock card is the honest thing to show.
+            isLocked = !isOwnProfile && profile.isPrivate && followState != .following
+            if isLocked {
+                resetStats()
+                errorMessage = nil
+                return
+            }
+
+            let counts = try await FollowService.counts(for: userId)
+            followerCount = counts.followers
+            followingCount = counts.following
 
             async let streak = Self.fetchStreak(userId: userId)
             async let dailyTotals = Self.fetchDailyTotals(userId: userId)
@@ -181,6 +234,42 @@ final class ProfileViewModel {
             errorMessage = nil
         } catch {
             print("Profile load failed: \(error)")
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    private func resetStats() {
+        streakDays = 0
+        restDaysUsedThisWeek = 0
+        seasonTotalDistanceM = 0
+        seasonSessionCount = 0
+        longestStreakDays = 0
+        pbTiles = StandardTest.all.map { PBTile(test: $0, distanceM: nil, timeMs: nil, splitMs: nil, setAt: nil) }
+        weeklyVolumes = []
+        consistencyDays = []
+        photos = []
+        followerCount = 0
+        followingCount = 0
+    }
+
+    /// Follow, request, unfollow or cancel a request. Reloads afterwards:
+    /// following a public rower unlocks nothing new, but unfollowing a
+    /// private one must lock the profile again straight away.
+    @MainActor
+    func toggleFollow() async {
+        guard !isOwnProfile, let target = profileUserId, !isFollowBusy else { return }
+        isFollowBusy = true
+        defer { isFollowBusy = false }
+        do {
+            switch followState {
+            case .notFollowing:
+                followState = try await FollowService.follow(target)
+            case .following, .requested:
+                try await FollowService.unfollow(target)
+                followState = .notFollowing
+            }
+            await load()
+        } catch {
             errorMessage = error.localizedDescription
         }
     }

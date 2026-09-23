@@ -74,7 +74,12 @@ final class PBHistoryViewModel {
         return pbs[pbs.count - 2].value
     }
 
-    init(test: StandardTest) {
+    /// `nil` means the signed-in user's own history; another rower's PB
+    /// history (opened from their profile) passes their id.
+    private let viewingId: UUID?
+
+    init(test: StandardTest, userId: UUID? = nil) {
+        viewingId = userId
         self.test = test
     }
 
@@ -84,7 +89,12 @@ final class PBHistoryViewModel {
         defer { isLoading = false }
 
         do {
-            let userId = try await SupabaseService.shared.auth.session.user.id
+            let userId: UUID
+            if let viewingId {
+                userId = viewingId
+            } else {
+                userId = try await SupabaseService.shared.auth.session.user.id
+            }
 
             struct Row: Decodable {
                 let id: UUID

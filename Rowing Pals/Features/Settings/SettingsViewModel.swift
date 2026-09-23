@@ -15,6 +15,10 @@ final class SettingsViewModel {
     var gender: RowerGender = .male
     var category: RowerCategory = .novice
     var weeklyTargetM = 20_000
+    /// Redesign phase E. Saved the moment it's toggled, not with the Save
+    /// button — the prototype's privacy sheet acts immediately.
+    var isPrivate = false
+    var isSavingPrivacy = false
 
     var isLoading = false
     var isSaving = false
@@ -53,6 +57,7 @@ final class SettingsViewModel {
             gender = profile.gender ?? .male
             category = profile.category
             weeklyTargetM = profile.weeklyTargetM
+            isPrivate = profile.isPrivate
             original = (profile.displayName, gender, profile.category, profile.weeklyTargetM)
         } catch {
             saveError = error.localizedDescription
@@ -97,6 +102,41 @@ final class SettingsViewModel {
             }
             original = (displayName, gender, category, weeklyTargetM)
         } catch {
+            saveError = error.localizedDescription
+        }
+    }
+
+    /// Switches the account private or public. Turning private hides your
+    /// sessions and stats from everyone but approved followers; turning it
+    /// public approves anyone waiting (both enforced by the database — see
+    /// docs/migrations/2026-09-23-private-accounts.sql). Reverts the switch
+    /// if the save fails, so the toggle never claims a state that isn't real.
+    @MainActor
+    func setPrivate(_ value: Bool) async {
+        guard let userId, value != isPrivate, !isSavingPrivacy else { return }
+        let previous = isPrivate
+        isPrivate = value
+        isSavingPrivacy = true
+        defer { isSavingPrivacy = false }
+        struct PrivacyEdit: Encodable {
+            let isPrivate: Bool
+            enum CodingKeys: String, CodingKey { case isPrivate = "is_private" }
+        }
+        do {
+            let updated: [Profile] = try await SupabaseService.shared
+                .from("profiles")
+                .update(PrivacyEdit(isPrivate: value))
+                .eq("id", value: userId)
+                .select()
+                .execute()
+                .value
+            guard !updated.isEmpty else {
+                isPrivate = previous
+                saveError = "Couldn't change your privacy setting. Try signing out and back in."
+                return
+            }
+        } catch {
+            isPrivate = previous
             saveError = error.localizedDescription
         }
     }

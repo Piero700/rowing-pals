@@ -91,7 +91,11 @@ final class PostDetailViewModel {
     var reactions: [ReactionSummary] = []
     var comments: [CommentDisplay] = []
 
-    var isFollowingAuthor = false
+    /// Redesign phase E: not just following/not — a private author turns a
+    /// follow into a pending request. The database decides which.
+    var followState: FollowState = .notFollowing
+    var authorFollowsViewer = false
+    var isFollowBusy = false
     var isOwnPost = false
     var isBlocked = false
 
@@ -209,15 +213,17 @@ final class PostDetailViewModel {
             async let banner = Self.loadTestBanner(sessionId: sessionId, authorId: row.userId)
             async let reactionSummaries = Self.loadReactions(sessionId: sessionId, viewerId: userId)
             async let commentList = Self.loadComments(sessionId: sessionId)
-            async let following: Bool = row.userId == userId ? false : Self.isFollowing(follower: userId, followee: row.userId)
+            async let following: FollowState = row.userId == userId ? .notFollowing : FollowService.state(to: row.userId)
+            async let followsBack: Bool = row.userId == userId ? false : FollowService.isFollowedBy(row.userId)
             async let ownName: String = row.userId == userId ? row.author.displayName : Self.fetchDisplayName(userId: userId)
             async let authorStreak: Int = Self.fetchStreak(userId: row.userId)
 
-            let (_, bannerResult, reactionsResult, commentsResult, followingResult, ownNameResult, authorStreakResult) = try await (photos, banner, reactionSummaries, commentList, following, ownName, authorStreak)
+            let (_, bannerResult, reactionsResult, commentsResult, followingResult, followsBackResult, ownNameResult, authorStreakResult) = try await (photos, banner, reactionSummaries, commentList, following, followsBack, ownName, authorStreak)
             testBanner = bannerResult
             reactions = reactionsResult
             comments = commentsResult
-            isFollowingAuthor = followingResult
+            followState = followingResult
+            authorFollowsViewer = followsBackResult
             ownDisplayName = ownNameResult
             authorStreakDays = authorStreakResult
 
@@ -515,46 +521,24 @@ final class PostDetailViewModel {
 
     // MARK: - Follow
 
-    private static func isFollowing(follower: UUID, followee: UUID) async throws -> Bool {
-        struct Row: Decodable { let followerId: UUID
-            enum CodingKeys: String, CodingKey { case followerId = "follower_id" }
-        }
-        let rows: [Row] = try await SupabaseService.shared
-            .from("follows")
-            .select("follower_id")
-            .eq("follower_id", value: follower)
-            .eq("followee_id", value: followee)
-            .execute()
-            .value
-        return !rows.isEmpty
-    }
-
+    /// Follow, request, unfollow or cancel a request — one tap, whichever
+    /// applies to the current state. Not optimistic: for a private author
+    /// the result is `requested`, not `following`, and only the database
+    /// knows which, so the button shows the real outcome.
     @MainActor
     func toggleFollow() async {
-        guard let userId = ownUserId, let authorId = author?.id, !isOwnPost else { return }
-        let wasFollowing = isFollowingAuthor
-        isFollowingAuthor.toggle()
+        guard let authorId = author?.id, !isOwnPost, !isFollowBusy else { return }
+        isFollowBusy = true
+        defer { isFollowBusy = false }
         do {
-            if wasFollowing {
-                try await SupabaseService.shared
-                    .from("follows")
-                    .delete()
-                    .eq("follower_id", value: userId)
-                    .eq("followee_id", value: authorId)
-                    .execute()
-            } else {
-                struct NewFollow: Encodable {
-                    let followerId: UUID
-                    let followeeId: UUID
-                    enum CodingKeys: String, CodingKey { case followerId = "follower_id"; case followeeId = "followee_id" }
-                }
-                try await SupabaseService.shared
-                    .from("follows")
-                    .insert(NewFollow(followerId: userId, followeeId: authorId))
-                    .execute()
+            switch followState {
+            case .notFollowing:
+                followState = try await FollowService.follow(authorId)
+            case .following, .requested:
+                try await FollowService.unfollow(authorId)
+                followState = .notFollowing
             }
         } catch {
-            isFollowingAuthor = wasFollowing
             errorMessage = error.localizedDescription
         }
     }

@@ -24,8 +24,8 @@ struct PBHistoryView: View {
     @State private var viewModel: PBHistoryViewModel
     @State private var selectedID: UUID?
 
-    init(test: StandardTest) {
-        _viewModel = State(initialValue: PBHistoryViewModel(test: test))
+    init(test: StandardTest, userId: UUID? = nil) {
+        _viewModel = State(initialValue: PBHistoryViewModel(test: test, userId: userId))
     }
 
     var body: some View {
