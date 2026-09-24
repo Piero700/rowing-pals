@@ -27,7 +27,18 @@ struct ProfileView: View {
         }
     }
 
-    @State private var viewModel = ProfileViewModel()
+    /// Redesign phase E: `nil` is your own profile (the Profile tab); an id
+    /// shows that rower's profile read-only (docs/design/
+    /// rowing-pals-redesign-handoff-v2.md §2 Screen 08).
+    private let viewing: UUID?
+    @State private var viewModel: ProfileViewModel
+    @Environment(\.navigate) private var navigate
+
+    init(viewing: UUID? = nil) {
+        self.viewing = viewing
+        _viewModel = State(initialValue: ProfileViewModel(userId: viewing))
+    }
+
     @State private var expandedTest: StandardTest?
     @State private var isShowingSettings = false
     @State private var tab: Tab = .overview
@@ -39,18 +50,24 @@ struct ProfileView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
                 header
-                statsRow
-                streakBlock
+                socialRow
 
-                PillSegmentedControl(
-                    options: Tab.allCases.map(\.label),
-                    selection: Binding(get: { tab.rawValue }, set: { tab = Tab(rawValue: $0) ?? .overview })
-                )
+                if viewModel.isLocked {
+                    privateCard
+                } else {
+                    statsRow
+                    streakBlock
 
-                switch tab {
-                case .overview: overviewContent
-                case .pbs: pbGrid
-                case .posts: postsGrid
+                    PillSegmentedControl(
+                        options: Tab.allCases.map(\.label),
+                        selection: Binding(get: { tab.rawValue }, set: { tab = Tab(rawValue: $0) ?? .overview })
+                    )
+
+                    switch tab {
+                    case .overview: overviewContent
+                    case .pbs: pbGrid
+                    case .posts: postsGrid
+                    }
                 }
 
                 Color.clear.frame(height: 100)
@@ -63,7 +80,7 @@ struct ProfileView: View {
         .task { await viewModel.load() }
         .refreshable { await viewModel.load() }
         .fullScreenCover(item: $expandedTest) { test in
-            PBHistoryView(test: test)
+            PBHistoryView(test: test, userId: viewing)
         }
         .sheet(isPresented: $isShowingSettings, onDismiss: { Task { await viewModel.load() } }) {
             SettingsView()
@@ -98,25 +115,124 @@ struct ProfileView: View {
                 }
             }
             Spacer()
-            // Opens SettingsView (task 17: support contact + terms only —
-            // task 18 adds edit-profile, novice/senior, weekly target,
-            // sign out and Delete Account to the same screen).
-            Button {
-                isShowingSettings = true
-            } label: {
-                Text("Edit")
-                    .font(.system(size: 13.5, weight: .semibold))
-                    .foregroundStyle(Tokens.Ink.primary)
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 8)
-                    .background {
-                        RoundedRectangle(cornerRadius: 15, style: .continuous)
-                            .fill(Tokens.Ink.primary.opacity(0.09))
-                    }
+            if viewModel.isOwnProfile {
+                // Opens SettingsView (task 17: support contact + terms only —
+                // task 18 adds edit-profile, novice/senior, weekly target,
+                // sign out and Delete Account to the same screen).
+                Button {
+                    isShowingSettings = true
+                } label: {
+                    Text("Edit")
+                        .font(.system(size: 13.5, weight: .semibold))
+                        .foregroundStyle(Tokens.Ink.primary)
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 8)
+                        .background {
+                            RoundedRectangle(cornerRadius: 15, style: .continuous)
+                                .fill(Tokens.Ink.primary.opacity(0.09))
+                        }
+                }
+                .buttonStyle(.plain)
+            } else {
+                FollowButton(
+                    state: viewModel.followState,
+                    followsYou: viewModel.followsYou,
+                    isBusy: viewModel.isFollowBusy
+                ) {
+                    Task { await viewModel.toggleFollow() }
+                }
             }
-            .buttonStyle(.plain)
         }
         .padding(.top, 8)
+    }
+
+    // MARK: - Social
+
+    /// Followers / Following counts (each opens its list), Find rowers, and
+    /// — on your own profile, when someone is waiting — Follow requests.
+    /// Hidden for a locked profile: a private account's lists are private.
+    private var socialRow: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            if !viewModel.isLocked, let userId = viewModel.profileUserId {
+                HStack(spacing: 8) {
+                    countPill(value: viewModel.followerCount, label: "Followers") {
+                        navigate(.people(.followers(userId)))
+                    }
+                    countPill(value: viewModel.followingCount, label: "Following") {
+                        navigate(.people(.following(userId)))
+                    }
+                    Spacer()
+                    if viewModel.isOwnProfile {
+                        Button("Find rowers") { navigate(.people(.find)) }
+                            .font(.system(size: 13.5, weight: .semibold))
+                            .foregroundStyle(Tokens.Accent.brand)
+                    }
+                }
+            }
+            if viewModel.isOwnProfile, viewModel.pendingRequestCount > 0 {
+                Button {
+                    navigate(.followRequests)
+                } label: {
+                    HStack {
+                        Text("Follow requests · \(viewModel.pendingRequestCount)")
+                            .font(.system(size: 14, weight: .semibold))
+                            .tabularNumerals()
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 11, weight: .bold))
+                    }
+                    .foregroundStyle(Tokens.Ink.primary)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 12)
+                    .glassSurface(cornerRadius: 18)
+                }
+                .buttonStyle(.plain)
+            }
+        }
+    }
+
+    private func countPill(value: Int, label: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack(spacing: 5) {
+                Text("\(value)")
+                    .font(.system(size: 14, weight: .bold))
+                    .tabularNumerals()
+                Text(label)
+                    .font(.system(size: 13.5))
+                    .foregroundStyle(Tokens.Ink.secondary)
+            }
+            .foregroundStyle(Tokens.Ink.primary)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background {
+                Capsule().fill(Tokens.Ink.primary.opacity(0.08))
+            }
+        }
+        .buttonStyle(.plain)
+    }
+
+    /// Shown in place of every stat for a private account the viewer is not
+    /// approved to see. Copy is the prototype's own (§2 Screen 08).
+    private var privateCard: some View {
+        VStack(spacing: 10) {
+            Image(systemName: "lock.fill")
+                .font(.system(size: 26, weight: .semibold))
+                .foregroundStyle(Tokens.Ink.secondary)
+            Text("This profile is private")
+                .font(.system(size: 17, weight: .bold))
+                .foregroundStyle(Tokens.Ink.primary)
+            Text("Send a follow request to see their stats, personal bests, followers and following.")
+                .font(.system(size: 14))
+                .multilineTextAlignment(.center)
+                .foregroundStyle(Tokens.Ink.secondary)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 30)
+        .padding(.horizontal, 20)
+        .background {
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                .fill(Tokens.Ink.primary.opacity(0.05))
+        }
     }
 
     /// Weekly volume / sessions / PBs / streak — the redesign's 4-up stats

@@ -43,6 +43,11 @@ struct RootView: View {
     @State private var selection: RootTab = .feed
     @State private var isShowingPostSheet = false
     @State private var barVisibility = FloatingBarVisibility()
+    /// Redesign phase E: a rower's profile (and the people lists reached from
+    /// it) opens over the tabs. Features raise an `AppRoute` through the
+    /// `navigate` environment action; this is the one place that turns it
+    /// into a screen.
+    @State private var presentedRoute: AppRoute?
 
     /// House/bar-chart/person — matches the prototype's actual inline SVG
     /// icon defs (`#home`/`#rank`/`#user`), not a guess at "something
@@ -62,8 +67,12 @@ struct RootView: View {
                 }
             }
             .environment(barVisibility)
+            .environment(\.navigate, NavigateAction { presentedRoute = $0 })
             .sheet(isPresented: $isShowingPostSheet) {
                 PostSheetView()
+            }
+            .fullScreenCover(item: $presentedRoute) { route in
+                RouteHost(root: route)
             }
     }
 

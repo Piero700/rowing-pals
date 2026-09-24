@@ -21,6 +21,7 @@ struct FeedCardView: View {
 
     /// Tap-to-swap, BeReal-style — which photo is full-bleed right now.
     @State private var isSelfiePrimary = false
+    @Environment(\.navigate) private var navigate
     /// Redesign phase B — per-device display preferences, not synced to
     /// the profile. See DesignSystem/PaceDisplay.swift.
     @AppStorage(PaceDisplay.storageKey) private var paceDisplay: PaceDisplay = .split
@@ -95,6 +96,9 @@ struct FeedCardView: View {
 
     private var header: some View {
         HStack(spacing: 10) {
+            // Avatar + name open the author's profile (a route, not a direct
+            // reference — see `AppRoute`).
+            HStack(spacing: 10) {
             AvatarPlaceholder(diameter: 36, streakDays: streakDays)
             VStack(alignment: .leading, spacing: 1) {
                 HStack(spacing: 7) {
@@ -118,6 +122,9 @@ struct FeedCardView: View {
                         .foregroundStyle(Tokens.Ink.secondary)
                 }
             }
+            }
+            .contentShape(Rectangle())
+            .onTapGesture { navigate(.profile(post.userId)) }
             Spacer()
             Text(post.postedAt.postedAgoLabel)
                 .textStyle(Typography.bodySecondary)

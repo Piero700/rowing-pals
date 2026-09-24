@@ -22,12 +22,27 @@ that they match the prototype.
 1. **Branch hygiene (do first).** Commit the km narrowing, fast-forward `t21-redesign-foundation`
    or work only on `worktree-t21-redesign-continue`, merge to `main` once verified. Two branches
    currently carry the redesign; keep one.
-2. **E — Private accounts + follow requests.** Schema is absent today (`docs/schema.sql` has no
-   `is_private`, no follow-request status). Needs: `profiles.is_private`, follow-request state on
-   `follows` (or a new table), RLS changes, and a review of every place `follows` is read (feed
-   scope, post visibility, profile). Includes Followers/Following lists, Find rowers, other-rower
-   profile with the private-card, and the Privacy settings sheet. Verify first whether an
-   other-rower profile and people list already exist.
+2. **E — Private accounts + follow requests. BUILT (branch `t22-private-accounts`), not yet
+   exercised against a database.** Decisions: private means only approved followers see anything —
+   no clubmate access, and a private account drops off leaderboards for non-followers.
+   - Database: `docs/migrations/2026-09-23-private-accounts.sql` (also folded into
+     `docs/schema.sql`): `profiles.is_private`, `follows.status`, `can_view_user()` /
+     `can_view_session()`, visibility-aware read policies on sessions, segments, test results,
+     daily totals, reactions and comments, and triggers so a client can never choose its own follow
+     status. **Must be run in Supabase (staging first) before the app works.** Photo buckets need
+     a separate manual storage policy (see the end of the migration file).
+   - App: `FollowService`, `AppRoute` + `navigate` environment action + `RouteHost`, other-rower
+     profile (`ProfileView(viewing:)`, with the private-card), Followers / Following / Find rowers
+     (`Features/People`), Follow requests screen, `FollowButton` (Follow / Follow back / Requested /
+     Following), Privacy sheet in Settings, avatar taps on feed cards and the post-detail pill,
+     Following scope limited to accepted follows.
+   - **Database rules verified 2026-09-24** against staging with the SQL tests in
+     `docs/testing/phase-e-private-accounts.md` Part 2 (stranger sees nothing; can't self-approve;
+     can't choose status; approved follower sees data). The in-app checks (Part 1) are still to do.
+   - Still to do in E: the "Overall rankings" mini-card on another rower's profile (volume / 2k / 5k
+     rank); a follow-request badge on the Profile tab; testing against a real database, including
+     two accounts (one private) to prove the privacy rules; unit tests for `FollowService` state
+     logic.
 3. **F — Review session.** Main-workout label (UT2/UT1/Threshold/Intervals/Test/Recovery); read-only
    auto-computed average split; stroke-rate inline Confirm; session-type dropdown with 2k/5k
    validation that updates PB and the test board; extra-photo strip; "Enter session manually"

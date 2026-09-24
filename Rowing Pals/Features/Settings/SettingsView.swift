@@ -12,6 +12,7 @@ struct SettingsView: View {
     @State private var viewModel = SettingsViewModel()
     @Environment(\.dismiss) private var dismiss
     @State private var isShowingTerms = false
+    @State private var isShowingPrivacy = false
     @State private var isShowingDeleteConfirmation = false
     @FocusState private var isNameFocused: Bool
     /// Redesign phase B — per-device display preferences, not synced to
@@ -97,6 +98,25 @@ struct SettingsView: View {
                 }
 
                 Section {
+                    Button {
+                        isShowingPrivacy = true
+                    } label: {
+                        HStack {
+                            Label("Profile visibility", systemImage: "lock")
+                            Spacer()
+                            Text(viewModel.isPrivate ? "Private" : "Public")
+                                .foregroundStyle(Tokens.Ink.secondary)
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: 12, weight: .semibold))
+                                .foregroundStyle(Tokens.Ink.faint)
+                        }
+                    }
+                    .foregroundStyle(Tokens.Ink.primary)
+                } header: {
+                    Text("Privacy")
+                }
+
+                Section {
                     if let supportMailtoURL = Self.supportMailtoURL {
                         Link(destination: supportMailtoURL) {
                             Label(Self.supportEmail, systemImage: "envelope")
@@ -144,6 +164,10 @@ struct SettingsView: View {
             .sheet(isPresented: $isShowingTerms) {
                 TermsOfServiceView()
             }
+            .sheet(isPresented: $isShowingPrivacy) {
+                privacySheet
+                    .presentationDetents([.medium])
+            }
             .disabled(viewModel.isDeletingAccount)
             .overlay {
                 if viewModel.isDeletingAccount {
@@ -160,6 +184,41 @@ struct SettingsView: View {
                 }
             } message: {
                 Text("This permanently deletes your account and everything you've posted. This can't be undone.")
+            }
+        }
+    }
+
+    /// The prototype's privacy sheet (docs/design/
+    /// rowing-pals-redesign-handoff-v2.md §2 Screen 07): one switch, with
+    /// copy that says exactly what each state means.
+    private var privacySheet: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    Toggle("Private account", isOn: Binding(
+                        get: { viewModel.isPrivate },
+                        set: { newValue in Task { await viewModel.setPrivate(newValue) } }
+                    ))
+                    .disabled(viewModel.isSavingPrivacy)
+                } footer: {
+                    if viewModel.isPrivate {
+                        Text("Only people you approve can see your sessions, stats, personal bests, followers and following. Anyone can still send a request. People who already follow you keep following. Your sessions won't appear on leaderboards for anyone who doesn't follow you, and being in the same club doesn't give anyone access.")
+                    } else {
+                        Text("Anyone can see your sessions and stats, and follow you without asking. Switching to private later means new followers need your approval.")
+                    }
+                }
+                if let error = viewModel.saveError {
+                    Section {
+                        Text(error).foregroundStyle(Tokens.System.error)
+                    }
+                }
+            }
+            .navigationTitle("Profile visibility")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") { isShowingPrivacy = false }
+                }
             }
         }
     }

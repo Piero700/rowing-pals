@@ -14,6 +14,8 @@ create type rower_gender   as enum ('M', 'F');
 -- 'everyone' is the union of the other two (clubmates OR followers), not
 -- every user of the app.
 create type post_visibility as enum ('following', 'club', 'everyone');
+-- Redesign phase E: a follow of a private account waits as 'pending'.
+create type follow_status as enum ('pending', 'accepted');
 
 -- ---------------------------------------------------------------
 -- Clubs and people
@@ -39,6 +41,9 @@ create table profiles (
   -- separate figure from weekly_target_sessions, since a session count
   -- can't be plotted as a dashed line on a metres-scaled bar chart.
   weekly_target_m        int not null default 20000,
+  -- Redesign phase E. A private account's data is visible only to its
+  -- owner and approved followers; enforced by can_view_user() below.
+  is_private             boolean not null default false,
   -- Set once, at signup, when the user agrees to the terms of service
   -- (task 17) - never updated after. Null means "never agreed", which
   -- shouldn't happen for any real account created after this column
@@ -134,6 +139,8 @@ create table follows (
   follower_id uuid not null references profiles on delete cascade,
   followee_id uuid not null references profiles on delete cascade,
   created_at  timestamptz not null default now(),
+  -- Set by the follows_before_insert trigger, never by the client.
+  status      follow_status not null default 'accepted',
   primary key (follower_id, followee_id),
   check (follower_id <> followee_id)
 );
@@ -258,16 +265,38 @@ alter table comments     enable row level security;
 alter table blocks       enable row level security;
 alter table reports      enable row level security;
 
--- Readable by any signed-in user.
+-- Who may see whose data (phase E). security definer so the helpers can read
+-- profiles/follows unimpeded; auth.uid() is still the calling user.
+create or replace function can_view_user(target uuid)
+returns boolean
+language sql stable security definer set search_path = public as $$
+  select target = auth.uid()
+    or not coalesce((select p.is_private from profiles p where p.id = target), false)
+    or exists (
+      select 1 from follows f
+      where f.follower_id = auth.uid()
+        and f.followee_id = target
+        and f.status = 'accepted'
+    );
+$$;
+
+create or replace function can_view_session(sid uuid)
+returns boolean
+language sql stable security definer set search_path = public as $$
+  select coalesce((select can_view_user(s.user_id) from sessions s where s.id = sid), false);
+$$;
+
+-- Readable by any signed-in user (profiles and clubs). Everything a private
+-- account owns is instead readable only per can_view_user(), defined above.
 create policy read_all on profiles     for select to authenticated using (true);
 create policy read_all on clubs        for select to authenticated using (true);
-create policy read_all on sessions     for select to authenticated using (true);
-create policy read_all on segments     for select to authenticated using (true);
-create policy read_all on test_results for select to authenticated using (true);
-create policy read_all on daily_totals for select to authenticated using (true);
-create policy read_all on follows      for select to authenticated using (true);
-create policy read_all on reactions    for select to authenticated using (true);
-create policy read_all on comments     for select to authenticated using (true);
+create policy read_visible on sessions for select to authenticated using (can_view_user(user_id));
+create policy read_visible on segments for select to authenticated using (can_view_session(session_id));
+create policy read_visible on test_results for select to authenticated using (can_view_user(user_id));
+create policy read_visible on daily_totals for select to authenticated using (can_view_user(user_id));
+-- follows read/insert/update/delete policies: see the phase E section at the end.
+create policy read_visible on reactions for select to authenticated using (can_view_session(session_id));
+create policy read_visible on comments for select to authenticated using (can_view_session(session_id));
 
 -- Writable only by the person it belongs to.
 -- Named differently from the update policy below — Postgres requires policy
@@ -293,9 +322,6 @@ create policy own_row on daily_totals for all to authenticated
 
 create policy own_row on comments for all to authenticated
   using (user_id = auth.uid()) with check (user_id = auth.uid());
-
-create policy own_row on follows for all to authenticated
-  using (follower_id = auth.uid()) with check (follower_id = auth.uid());
 
 -- Segments follow their session's owner.
 create policy own_via_session on segments for all to authenticated
@@ -325,4 +351,109 @@ create policy delete_own on blocks for delete to authenticated
 -- query, not in RLS — keep the policies simple enough to reason about.
 -- Post-level visibility (the `visibility` column on sessions) follows the
 -- same approach for the same reason: FeedViewModel checks it against the
--- viewer's own club and follows, `sessions`' own RLS stays `read_all`.
+-- viewer's own club and follows. Separately (phase E), a *private account's*
+-- data is enforced in RLS via can_view_user(), because hiding it in the client
+-- alone would not stop anyone querying the API directly.
+
+-- ---------------------------------------------------------------
+-- Redesign phase E — private accounts and follow requests
+-- Canonical copy; an existing project gets it via
+-- docs/migrations/2026-09-23-private-accounts.sql. The can_view_user() and
+-- can_view_session() helpers it relies on are defined above the read
+-- policies.
+-- ---------------------------------------------------------------
+-- follows: pending rows are seen only by the two people involved.
+create policy read_follows on follows for select to authenticated
+  using (
+    follower_id = auth.uid()
+    or followee_id = auth.uid()
+    or (status = 'accepted' and (can_view_user(follower_id) or can_view_user(followee_id)))
+  );
+
+create policy follow_insert on follows for insert to authenticated
+  with check (follower_id = auth.uid());
+
+-- Only the person being followed may approve a request.
+create policy follow_update on follows for update to authenticated
+  using (followee_id = auth.uid()) with check (followee_id = auth.uid());
+
+-- The follower can unfollow or cancel a request; the followee can
+-- decline a request or remove a follower.
+create policy follow_delete on follows for delete to authenticated
+  using (follower_id = auth.uid() or followee_id = auth.uid());
+
+-- The client can never choose its own status: a follow of a private
+-- account is always 'pending', of a public account always 'accepted'.
+create or replace function follows_set_status()
+returns trigger
+language plpgsql security definer set search_path = public as $$
+begin
+  new.status := case
+    when coalesce((select p.is_private from profiles p where p.id = new.followee_id), false)
+      then 'pending'::follow_status
+    else 'accepted'::follow_status
+  end;
+  return new;
+end $$;
+
+create trigger follows_before_insert
+  before insert on follows
+  for each row execute function follows_set_status();
+
+-- An approver may change only `status`, and only pending -> accepted.
+-- Without this, the update policy would let a followee rewrite
+-- follower_id and force other people to follow them.
+create or replace function follows_guard_update()
+returns trigger
+language plpgsql as $$
+begin
+  if new.follower_id <> old.follower_id
+     or new.followee_id <> old.followee_id
+     or new.created_at <> old.created_at then
+    raise exception 'only follows.status may be changed';
+  end if;
+  if old.status = 'accepted' and new.status = 'pending' then
+    raise exception 'an accepted follow cannot go back to pending';
+  end if;
+  return new;
+end $$;
+
+create trigger follows_before_update
+  before update on follows
+  for each row execute function follows_guard_update();
+
+-- Switching an account from private to public approves everything
+-- waiting on it, as there is no longer anything to approve.
+create or replace function profiles_privacy_changed()
+returns trigger
+language plpgsql security definer set search_path = public as $$
+begin
+  if old.is_private and not new.is_private then
+    update follows set status = 'accepted'
+    where followee_id = new.id and status = 'pending';
+  end if;
+  return new;
+end $$;
+
+create trigger profiles_after_privacy_update
+  after update of is_private on profiles
+  for each row execute function profiles_privacy_changed();
+
+
+-- ---------------------------------------------------------------
+-- MANUAL STEP — photos (NOT part of the transaction above)
+-- Photos live in the private buckets `monitors` and `selfies`, at
+-- paths beginning `{user_id}/`. The database rules above do not cover
+-- them: Storage has its own policies on storage.objects, which were set
+-- in the dashboard and are not in this repo. Until they follow the same
+-- rule, a private rower's photos can still be fetched by anyone who can
+-- guess a path. In the dashboard: Storage > Policies. Delete any SELECT
+-- policy on these two buckets that allows every signed-in user, then
+-- run:
+--
+-- create policy read_visible_photos on storage.objects for select to authenticated
+--   using (
+--     bucket_id in ('monitors', 'selfies')
+--     and can_view_user(((storage.foldername(name))[1])::uuid)
+--   );
+-- ---------------------------------------------------------------

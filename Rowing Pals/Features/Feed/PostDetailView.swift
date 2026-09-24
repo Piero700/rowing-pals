@@ -24,6 +24,7 @@ struct PostDetailView: View {
     @State private var isShowingBlockConfirmation = false
     @State private var commentBeingReported: UUID?
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.navigate) private var navigate
     @FocusState private var isComposerFocused: Bool
     /// Redesign phase B — per-device display preferences, not synced to
     /// the profile. See DesignSystem/PaceDisplay.swift.
@@ -211,17 +212,9 @@ struct PostDetailView: View {
     }
 
     /// Avatar + name + chevron, glass pill, tappable → that person's
-    /// profile — docs/design/rowing-pals-redesign-handoff-v2.md §3.
-    ///
-    /// The tap target itself is fully built and styled; the action is
-    /// currently a no-op. There is no "other rower's profile" screen
-    /// anywhere in this codebase yet (the handoff doc's §2 lists it as
-    /// Screen 08, not built), and CLAUDE.md's "no feature imports another
-    /// feature" rule means `Features/Feed` can't reach into
-    /// `Features/Profile` even for the viewer's own post — that needs
-    /// either Screen 08 built or a shared cross-feature router, neither of
-    /// which exists. Wiring that up is out of scope for this layout-only
-    /// rebuild; see `handlePersonPillTap()`.
+    /// profile — docs/design/rowing-pals-redesign-handoff-v2.md §3. Raises a
+    /// route rather than naming the profile screen, since a feature can't
+    /// import another feature (see `AppRoute`).
     private var personPill: some View {
         Button(action: handlePersonPillTap) {
             HStack(spacing: 8) {
@@ -243,28 +236,19 @@ struct PostDetailView: View {
     }
 
     private func handlePersonPillTap() {
-        // Intentionally a no-op — see the doc comment on `personPill`.
+        guard let authorId = viewModel.author?.id else { return }
+        navigate(.profile(authorId))
     }
 
     private var followButton: some View {
-        Button {
+        FollowButton(
+            state: viewModel.followState,
+            followsYou: viewModel.authorFollowsViewer,
+            isBusy: viewModel.isFollowBusy,
+            compact: true
+        ) {
             Task { await viewModel.toggleFollow() }
-        } label: {
-            Text(viewModel.isFollowingAuthor ? "Following" : "Follow")
-                .font(.system(size: 11.5, weight: .bold))
-                .foregroundStyle(viewModel.isFollowingAuthor ? Tokens.Ink.primary : Tokens.Base.dark)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 8)
-                .background {
-                    if viewModel.isFollowingAuthor {
-                        Capsule().fill(.ultraThinMaterial)
-                        Capsule().fill(Tokens.Ink.primary.opacity(0.16))
-                    } else {
-                        Capsule().fill(Tokens.Accent.brand)
-                    }
-                }
         }
-        .buttonStyle(.plain)
     }
 
     // MARK: - Sheet lip
