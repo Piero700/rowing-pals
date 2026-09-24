@@ -95,10 +95,26 @@ final class CaptureViewModel: NSObject {
         observeRuntimeErrors()
     }
 
+    /// Set the first time the session is configured. Setting up twice fails
+    /// ("Both cameras aren't available") because the inputs are already on
+    /// the session — and the screen *does* appear more than once: when the
+    /// first-run permission pop-up dismisses, and when the rower comes back
+    /// from the review screen. So setup happens once; every later start just
+    /// resumes the running session.
+    @ObservationIgnored
+    private var hasStarted = false
+
     func start() {
+        if hasStarted {
+            resumeSession()
+            return
+        }
+        hasStarted = true
         Task {
             let authorized = await requestCameraAccess()
             guard authorized else {
+                // Allow a retry once access is granted in Settings.
+                hasStarted = false
                 phase = .failed(CaptureError.permissionDenied.localizedDescription)
                 return
             }
@@ -107,6 +123,13 @@ final class CaptureViewModel: NSObject {
             } else {
                 configureSequentialRear()
             }
+        }
+    }
+
+    /// Restarts an already-configured session that `stop()` paused.
+    private func resumeSession() {
+        sessionQueue.async { [session] in
+            if !session.isRunning { session.startRunning() }
         }
     }
 
