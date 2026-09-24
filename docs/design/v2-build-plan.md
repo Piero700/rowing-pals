@@ -36,6 +36,9 @@ that they match the prototype.
      (`Features/People`), Follow requests screen, `FollowButton` (Follow / Follow back / Requested /
      Following), Privacy sheet in Settings, avatar taps on feed cards and the post-detail pill,
      Following scope limited to accepted follows.
+   - **Database rules verified 2026-09-24** against staging with the SQL tests in
+     `docs/testing/phase-e-private-accounts.md` Part 2 (stranger sees nothing; can't self-approve;
+     can't choose status; approved follower sees data). The in-app checks (Part 1) are still to do.
    - Still to do in E: the "Overall rankings" mini-card on another rower's profile (volume / 2k / 5k
      rank); a follow-request badge on the Profile tab; testing against a real database, including
      two accounts (one private) to prove the privacy rules; unit tests for `FollowService` state
