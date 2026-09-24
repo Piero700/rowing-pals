@@ -423,7 +423,7 @@ struct PostDetailView: View {
             .aspectRatio(contentMode: .fill)
             .frame(width: 38, height: 38)
             .clipShape(RoundedRectangle(cornerRadius: 11, style: .continuous))
-            Text(segment.label.rawValue.uppercased())
+            Text(viewModel.badgeText(for: segment))
                 .textStyle(Typography.label)
                 .foregroundStyle(Tokens.Ink.secondary)
                 .lineLimit(1)
@@ -528,13 +528,23 @@ struct PostDetailView: View {
 
     @ViewBuilder
     private var extraPhotoGallery: some View {
-        if !extraPhotoSegments.isEmpty {
+        if !extraPhotoSegments.isEmpty || !viewModel.galleryPaths.isEmpty {
             VStack(alignment: .leading, spacing: 10) {
                 Text("MORE PHOTOS")
                     .textStyle(Typography.label)
                     .foregroundStyle(Tokens.Ink.secondary)
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 10) {
+                        // Photos the rower added in the review screen's photo
+                        // strip come first, then other pieces' monitor photos.
+                        ForEach(viewModel.galleryPaths, id: \.self) { path in
+                            CachedAsyncImage(url: viewModel.monitorURLs[path]) {
+                                PhotoPlaceholder(cornerRadius: 18, caption: nil)
+                            }
+                            .aspectRatio(contentMode: .fill)
+                            .frame(width: 150, height: 150)
+                            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                        }
                         ForEach(extraPhotoSegments) { segment in
                             CachedAsyncImage(url: segment.monitorPhotoPath.flatMap { viewModel.monitorURLs[$0] }) {
                                 PhotoPlaceholder(cornerRadius: 18, caption: segment.label.rawValue.uppercased())

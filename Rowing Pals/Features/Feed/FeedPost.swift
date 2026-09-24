@@ -47,6 +47,9 @@ struct FeedPost: Decodable, Identifiable {
     let userId: UUID
     let type: SessionType
     let caption: String?
+    /// Badge text for the Main piece ("UT2", "2k test"…). Nil on posts made
+    /// before redesign phase F.
+    let workoutLabel: String?
     let totalDistanceM: Int
     let totalTimeMs: Int
     let avgSplitMs: Int?
@@ -68,6 +71,7 @@ struct FeedPost: Decodable, Identifiable {
         case id
         case userId = "user_id"
         case type, caption
+        case workoutLabel = "workout_label"
         case totalDistanceM = "total_distance_m"
         case totalTimeMs = "total_time_ms"
         case avgSplitMs = "avg_split_ms"

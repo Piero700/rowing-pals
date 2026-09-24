@@ -11,13 +11,13 @@ import Foundation
 /// segment against this list) and the test leaderboards' distance picker
 /// (task 14, shows one tile per entry) — the two need the exact same
 /// catalog, not two copies of it.
-nonisolated struct StandardTest: Identifiable, Equatable {
+nonisolated struct StandardTest: Identifiable, Hashable {
     /// '500m','1k','2k','5k','6k','10k','4min','30min','60min' — matches
     /// `test_results.distance_key` in docs/schema.sql exactly.
     let key: String
     let label: String
 
-    enum Target: Equatable {
+    enum Target: Hashable {
         case distance(m: Int)
         case duration(ms: Int)
     }
@@ -46,6 +46,20 @@ nonisolated struct StandardTest: Identifiable, Equatable {
         StandardTest(key: "30min", label: "30min", target: .duration(ms: 30 * 60 * 1000)),
         StandardTest(key: "60min", label: "60min", target: .duration(ms: 60 * 60 * 1000))
     ]
+
+    /// Whether a piece of this exact distance/time counts as this test when
+    /// the rower has chosen it deliberately. A distance test needs the exact
+    /// distance (a PM5 stops on it); a timed test allows the same small
+    /// finish-line tolerance `match` uses. Stricter than `match`, which only
+    /// suggests a test.
+    func accepts(distanceM: Int, timeMs: Int) -> Bool {
+        switch target {
+        case .distance(let target):
+            return distanceM == target
+        case .duration(let target):
+            return abs(timeMs - target) <= max(2000, Int(Double(target) * 0.01))
+        }
+    }
 
     /// Finds the standard test a segment's distance/time matches, within a
     /// tolerance — a PM5 piece programmed as "2k" stops exactly at 2000m,

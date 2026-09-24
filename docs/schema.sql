@@ -61,6 +61,8 @@ create table sessions (
   type             session_type not null,
   caption          text,
   visibility       post_visibility not null default 'everyone',
+  -- Redesign phase F: the badge on the main split ('UT2', 'Threshold', '2k test'...).
+  workout_label    text check (workout_label is null or char_length(workout_label) between 1 and 24),
 
   -- Rolled up from segments. Kept on the row so the feed needs one query.
   total_distance_m int    not null,
@@ -129,7 +131,24 @@ create table daily_totals (
   erg_distance_m   int not null default 0,
   water_distance_m int not null default 0,
   session_count    int not null default 0,
+  -- Redesign phase F: what the leaderboards read. A session left off
+  -- "Include on leaderboards", and every manual entry, adds to the personal
+  -- columns above (profile, streak) but not to these.
+  ranked_distance_m       int not null default 0,
+  ranked_erg_distance_m   int not null default 0,
+  ranked_water_distance_m int not null default 0,
   primary key (user_id, day)
+);
+
+-- Redesign phase F: the review screen's extra-photo strip. Files live in the
+-- `monitors` bucket under the owner's folder; this lists them in order.
+create table session_photos (
+  id         uuid primary key default gen_random_uuid(),
+  session_id uuid not null references sessions on delete cascade,
+  position   int  not null,
+  path       text not null,
+  created_at timestamptz not null default now(),
+  unique (session_id, position)
 );
 
 -- ---------------------------------------------------------------
@@ -257,6 +276,7 @@ alter table profiles     enable row level security;
 alter table clubs        enable row level security;
 alter table sessions     enable row level security;
 alter table segments     enable row level security;
+alter table session_photos enable row level security;
 alter table test_results enable row level security;
 alter table daily_totals enable row level security;
 alter table follows      enable row level security;
@@ -292,6 +312,7 @@ create policy read_all on profiles     for select to authenticated using (true);
 create policy read_all on clubs        for select to authenticated using (true);
 create policy read_visible on sessions for select to authenticated using (can_view_user(user_id));
 create policy read_visible on segments for select to authenticated using (can_view_session(session_id));
+create policy read_visible on session_photos for select to authenticated using (can_view_session(session_id));
 create policy read_visible on test_results for select to authenticated using (can_view_user(user_id));
 create policy read_visible on daily_totals for select to authenticated using (can_view_user(user_id));
 -- follows read/insert/update/delete policies: see the phase E section at the end.
@@ -330,6 +351,14 @@ create policy own_via_session on segments for all to authenticated
   ))
   with check (exists (
     select 1 from sessions s where s.id = segments.session_id and s.user_id = auth.uid()
+  ));
+
+create policy own_via_session on session_photos for all to authenticated
+  using (exists (
+    select 1 from sessions s where s.id = session_photos.session_id and s.user_id = auth.uid()
+  ))
+  with check (exists (
+    select 1 from sessions s where s.id = session_photos.session_id and s.user_id = auth.uid()
   ));
 
 -- Reports are private to the person who made them.

@@ -22,8 +22,8 @@ that they match the prototype.
 1. **Branch hygiene (do first).** Commit the km narrowing, fast-forward `t21-redesign-foundation`
    or work only on `worktree-t21-redesign-continue`, merge to `main` once verified. Two branches
    currently carry the redesign; keep one.
-2. **E — Private accounts + follow requests. BUILT (branch `t22-private-accounts`), not yet
-   exercised against a database.** Decisions: private means only approved followers see anything —
+2. **E — Private accounts + follow requests. MERGED to `main` 2026-09-24 (database rules verified
+   on staging; in-app checks pending).** Decisions: private means only approved followers see anything —
    no clubmate access, and a private account drops off leaderboards for non-followers.
    - Database: `docs/migrations/2026-09-23-private-accounts.sql` (also folded into
      `docs/schema.sql`): `profiles.is_private`, `follows.status`, `can_view_user()` /
@@ -43,10 +43,23 @@ that they match the prototype.
      rank); a follow-request badge on the Profile tab; testing against a real database, including
      two accounts (one private) to prove the privacy rules; unit tests for `FollowService` state
      logic.
-3. **F — Review session.** Main-workout label (UT2/UT1/Threshold/Intervals/Test/Recovery); read-only
-   auto-computed average split; stroke-rate inline Confirm; session-type dropdown with 2k/5k
-   validation that updates PB and the test board; extra-photo strip; "Enter session manually"
-   from Capture. Verify against `ReviewSheetView` first — some may already exist.
+3. **F — Review session. BUILT (branch `t23-review-session`); needs the 2026-09-24 migration and
+   a real-device check.** Decisions: a manual entry is personal-only (never on leaderboards, never
+   a test result, stored `photo_verified = false`).
+   - Database: `docs/migrations/2026-09-24-review-session.sql` (also in `docs/schema.sql`):
+     `sessions.workout_label`, `daily_totals.ranked_*` (what leaderboards now read),
+     `session_photos` (+ RLS). **Run in Supabase, staging first, before running this build.**
+   - App: main-workout label dropdown (UT2 / UT1 / Threshold / Intervals / Test / Recovery) shown
+     as the Main split's badge in the feed and post detail; average /500m read-only and derived
+     from distance and time; stroke rate with an inline Confirm, required before posting and
+     cleared by any edit; Session type dropdown (Training + every standard test) with exact-match
+     validation, keeping the "this looks like a test" suggestion; "Include on leaderboards"
+     switch; extra-photo strip (photo library, up to 6, removable) shown in the post detail
+     gallery; "Enter session manually" on Capture; Volume leaderboard reads the ranked columns.
+   - Verified: build passes; 21 unit tests in `ReviewSessionTests` pass. NOT yet run on a device
+     (the camera path needs a real phone) or against the migrated database.
+   - Not done: manual-entry posts show a "MANUAL ENTRY" placeholder where the photo would be —
+     confirm that's the look you want.
 4. **G — Clubs.** Create club, join policy (open / approval / invite), roles
    (owner / co-owner / admin / member), join requests, owner-only management, onboarding policy
    tags and "Join request pending". Needs schema (roles, policy, requests). Existing base:

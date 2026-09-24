@@ -35,7 +35,7 @@ struct FeedCardView: View {
 
             ZStack(alignment: .topLeading) {
                 CachedAsyncImage(url: primaryURL) {
-                    PhotoPlaceholder(cornerRadius: 0, caption: "MONITOR PHOTO")
+                    PhotoPlaceholder(cornerRadius: 0, caption: post.photoVerified ? "MONITOR PHOTO" : "MANUAL ENTRY")
                 }
                 .aspectRatio(contentMode: .fill)
                 .frame(height: 300)
@@ -80,7 +80,7 @@ struct FeedCardView: View {
                 HStack(spacing: 7) {
                     ForEach(post.segments.sorted { $0.position < $1.position }) { segment in
                         FilterChip(
-                            label: "\(segment.label.rawValue.uppercased()) \(segment.distanceM.formattedMetres)",
+                            label: "\(chipName(for: segment)) \(segment.distanceM.formattedMetres)",
                             isSelected: segment.label == .main
                         )
                     }
@@ -133,6 +133,16 @@ struct FeedCardView: View {
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 12)
+    }
+
+    /// The Main piece wears the session's workout label ("UT2", "2k test")
+    /// instead of "MAIN", as in the prototype; every other piece keeps its
+    /// own tag.
+    private func chipName(for segment: FeedPost.Segment) -> String {
+        if segment.label == .main, let workoutLabel = post.workoutLabel {
+            return workoutLabel.uppercased()
+        }
+        return segment.label.rawValue.uppercased()
     }
 
     private var categoryTag: String {

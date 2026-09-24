@@ -164,11 +164,15 @@ final class MetresLeaderboardViewModel {
                 let ergDistanceM: Int
                 let waterDistanceM: Int
 
+                // The leaderboards read the `ranked_*` columns, not the
+                // personal ones: a session left off "Include on leaderboards"
+                // (and every manual entry) counts for its owner's own totals
+                // and streak but never here (redesign phase F).
                 enum CodingKeys: String, CodingKey {
                     case userId = "user_id"
-                    case distanceM = "distance_m"
-                    case ergDistanceM = "erg_distance_m"
-                    case waterDistanceM = "water_distance_m"
+                    case distanceM = "ranked_distance_m"
+                    case ergDistanceM = "ranked_erg_distance_m"
+                    case waterDistanceM = "ranked_water_distance_m"
                 }
             }
 
@@ -193,7 +197,7 @@ final class MetresLeaderboardViewModel {
 
             async let totalRowsTask: [TotalRow] = SupabaseService.shared
                 .from("daily_totals")
-                .select("user_id, distance_m, erg_distance_m, water_distance_m")
+                .select("user_id, ranked_distance_m, ranked_erg_distance_m, ranked_water_distance_m")
                 .in("user_id", values: profileRows.map(\.id))
                 .gte("day", value: Self.periodStartString(for: period))
                 .execute()

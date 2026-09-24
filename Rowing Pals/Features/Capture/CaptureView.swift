@@ -25,6 +25,9 @@ struct CaptureView: View {
     /// `profiles` column.
     @AppStorage(InsetCorner.storageKey) private var insetCorner: InsetCorner = .defaultCorner
     @State private var isShowingCornerPicker = false
+    /// "Enter session manually" — skips the camera and opens a blank review
+    /// (redesign phase F). Such a session is unverified and stays personal.
+    @State private var isManualEntry = false
 
     /// Identifies one completed rear+front capture, so `.navigationDestination(item:)`
     /// (which requires `Hashable`, not just `Identifiable`) can push the
@@ -48,6 +51,17 @@ struct CaptureView: View {
             VStack(spacing: 24) {
                 Spacer()
                 statusView
+                Button {
+                    isManualEntry = true
+                } label: {
+                    Label("Enter session manually", systemImage: "plus")
+                        .font(.system(size: 14.5, weight: .semibold))
+                        .foregroundStyle(Tokens.Ink.primary)
+                        .padding(.horizontal, 18)
+                        .padding(.vertical, 11)
+                        .glassSurface(cornerRadius: 999)
+                }
+                .buttonStyle(.plain)
                 Text("Log a water session instead")
                     .textStyle(Typography.bodySecondary)
                     .foregroundStyle(Tokens.Ink.secondary)
@@ -59,6 +73,9 @@ struct CaptureView: View {
         .onDisappear { viewModel.stop() }
         .navigationDestination(item: $initialCapture) { capture in
             ReviewSheetView(selfieJPEG: capture.frontJPEG, initialMonitorPhoto: capture.rearJPEG, onPosted: onPosted)
+        }
+        .navigationDestination(isPresented: $isManualEntry) {
+            ReviewSheetView(selfieJPEG: nil, initialMonitorPhoto: nil, onPosted: onPosted)
         }
         .sheet(isPresented: $isShowingCornerPicker) {
             InsetCornerPickerView(selection: $insetCorner)
