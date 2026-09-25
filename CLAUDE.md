@@ -19,9 +19,13 @@ leaderboards.
 
 ## Read these first
 
-- `docs/design/` — the current design. Start with `rowing-pals-redesign-handoff-v2.md`
-  (written spec) and `rowing-pals-design-v2.html` (interactive prototype, the visual source
-  of truth). **Read the relevant section before building any UI.**
+- `docs/design/rowing-pals-v3-spec.md` + `docs/design/v3/` — **the current design (v3,
+  2026-09-25), the visual source of truth for look, sizing and layout.** Exact per-screen
+  values are in `docs/design/v3/RP Screen.dc.html`. **Read the relevant section before
+  building any UI.**
+- `docs/design/v2-decisions.md` — product decisions; they win over any prototype.
+- `docs/design/rowing-pals-redesign-handoff-v2.md` — v2 spec, still the reference for
+  features and behaviour v3 doesn't redraw.
 - `docs/design-brief.md` — older screen-by-screen brief. Where it disagrees with the v2
   handoff, the handoff wins.
 - `docs/build-plan.md` — sequencing, environments, App Store requirements.
