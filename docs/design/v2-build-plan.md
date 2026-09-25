@@ -60,6 +60,12 @@ that they match the prototype.
      (the camera path needs a real phone) or against the migrated database.
    - Not done: manual-entry posts show a "MANUAL ENTRY" placeholder where the photo would be —
      confirm that's the look you want.
+   - **Step 1 of the 2026-09-25 plan, BUILT on the same branch** (`39ce605`, `dc0c7b1`): one
+     "Add photo" (camera or library), automatic monitor/environment detection with corrections,
+     lead piece (`segments.is_lead`), new-PB flag (`sessions.is_new_pb`). Needs
+     `docs/migrations/2026-09-25-lead-piece-and-pb.sql`. 32 unit tests pass; checked in the
+     simulator via manual entry + library photos. Next: step 2 (v3 foundation + tap fixes), then v3
+     screens (feed carousel, lead-piece numbers and PB glow are built with the v3 feed).
 4. **G — Clubs.** Create club, join policy (open / approval / invite), roles
    (owner / co-owner / admin / member), join requests, owner-only management, onboarding policy
    tags and "Join request pending". Needs schema (roles, policy, requests). Existing base:
