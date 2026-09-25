@@ -30,10 +30,10 @@ struct PostDetailView: View {
     /// the profile. See DesignSystem/PaceDisplay.swift.
     @AppStorage(PaceDisplay.storageKey) private var paceDisplay: PaceDisplay = .split
 
-    private static let emoji: [String: String] = [
-        "fire": "🔥", "grimace": "😬", "clap": "👏", "eyes": "👀",
-        "muscle": "💪", "wow": "😮", "boat": "🚣"
-    ]
+    /// Emoji for any stored reaction kind, including those added from the feed's v3 picker.
+    private static var emoji: [String: String] {
+        Dictionary(uniqueKeysWithValues: (ReactionCatalog.picker + ReactionCatalog.legacy).map { ($0.key, $0.emoji) })
+    }
     private static let reportReasons = ["Inappropriate content", "Spam", "Harassment", "Other"]
     private static let heroHeight: CGFloat = 420
     /// How far the rounded sheet-lip rides up over the hero photo's bottom

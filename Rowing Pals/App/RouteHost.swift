@@ -40,7 +40,11 @@ struct RouteHost: View {
         }
         .tint(Tokens.Accent.brand)
         .environment(barVisibility)
-        .environment(\.navigate, NavigateAction { path.append($0) })
+        .environment(\.navigate, NavigateAction { route in
+            // Log belongs to the tab screens; it can't be pushed here.
+            guard route != .log else { return }
+            path.append(route)
+        })
     }
 
     @ViewBuilder
@@ -52,6 +56,8 @@ struct RouteHost: View {
             PeopleListView(kind: kind)
         case .followRequests:
             FollowRequestsView()
+        case .log:
+            EmptyView()
         }
     }
 }

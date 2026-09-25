@@ -46,33 +46,50 @@ struct PhotoPlaceholder: View {
 struct AvatarPlaceholder: View {
     var diameter: CGFloat = 36
     var streakDays: Int? = nil
+    /// When given, the avatar shows the rower's initials, as in v3.
+    var name: String? = nil
 
+    /// v3 avatar: a circle with a 145° gradient from `recordsSoft` to `raised`, initials in the
+    /// records colour at heavy weight, and a 🔥 streak badge in a card-coloured circle at the
+    /// top-right (23 pt at the 41 pt feed size, scaled for other sizes).
     var body: some View {
         Circle()
-            .fill(Tokens.Ink.primary.opacity(0.1))
+            .fill(
+                LinearGradient(
+                    colors: [Tokens.Accent.recordsSoft, Tokens.Surface.raised],
+                    startPoint: UnitPoint(x: 0.15, y: 0.1),
+                    endPoint: UnitPoint(x: 0.85, y: 0.9)
+                )
+            )
             .overlay {
-                Circle().strokeBorder(Tokens.Ink.primary.opacity(0.18), lineWidth: 1)
+                if let initials {
+                    Text(initials)
+                        .font(.system(size: diameter * 0.36, weight: .heavy))
+                        .foregroundStyle(Tokens.Accent.records)
+                        .minimumScaleFactor(0.6)
+                        .lineLimit(1)
+                }
             }
             .frame(width: diameter, height: diameter)
             .overlay(alignment: .topTrailing) {
                 if let streakDays, streakDays > 0 {
-                    let badgeDiameter = max(14, diameter * 0.42)
+                    let badgeDiameter = diameter * 23 / 41
                     Text("🔥")
-                        .font(.system(size: badgeDiameter * 0.62))
+                        .font(.system(size: badgeDiameter * 0.65))
                         .frame(width: badgeDiameter, height: badgeDiameter)
-                        .background {
-                            // Matches the prototype's own choice of --card
-                            // (not the page background) as the badge's
-                            // backdrop — a reasonable one-size-fits-most
-                            // pick given this avatar renders over many
-                            // different surfaces (feed cards, leaderboard
-                            // rows, the profile header), not a value tuned
-                            // per call site.
-                            Circle().fill(Tokens.Surface.card)
-                        }
-                        .offset(x: badgeDiameter * 0.18, y: -badgeDiameter * 0.18)
+                        .background { Circle().fill(Tokens.Surface.card) }
+                        .offset(x: diameter * 5 / 41, y: -diameter * 5 / 41)
+                        .accessibilityLabel("\(streakDays)-day streak")
                 }
             }
+            .accessibilityElement(children: .combine)
+    }
+
+    /// First letters of the first two words: "Piero Ciobanu" → "PC", "Joe" → "J".
+    private var initials: String? {
+        guard let name else { return nil }
+        let letters = name.split(separator: " ").prefix(2).compactMap(\.first)
+        return letters.isEmpty ? nil : String(letters).uppercased()
     }
 }
 

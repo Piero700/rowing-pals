@@ -156,6 +156,20 @@ enum Tokens {
         static let iconButton: CGFloat = 44
     }
 
+    /// The new-PB celebration (docs/design/v2-decisions.md #12): an RGB-LED style glow that
+    /// runs around a post when its test result beat the rower's previous best. Its own palette on
+    /// purpose — no accent role means "celebrate", and borrowing one would blur that role.
+    enum Celebration {
+        static let glow: [Color] = [
+            Color(hex: 0xFF5F6D), Color(hex: 0xFFC371), Color(hex: 0x7CF5B0),
+            Color(hex: 0x5EC8FF), Color(hex: 0xB28BFF), Color(hex: 0xFF5F6D)
+        ]
+        static let lineWidth: CGFloat = 2.5
+        static let blur: CGFloat = 14
+        /// One full lap of the colours.
+        static let period: Double = 4
+    }
+
     /// v3 motion. Callers skip animation when Reduce Motion is on.
     enum Motion {
         /// Press feedback on every button.

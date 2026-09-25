@@ -75,7 +75,13 @@ struct RootView: View {
                 .ignoresSafeArea(.container, edges: .bottom)
             }
             .environment(barVisibility)
-            .environment(\.navigate, NavigateAction { presentedRoute = $0 })
+            .environment(\.navigate, NavigateAction { route in
+                if route == .log {
+                    isShowingPostSheet = true
+                } else {
+                    presentedRoute = route
+                }
+            })
             // v3: Log opens capture as a full-screen modal, no tab bar.
             .fullScreenCover(isPresented: $isShowingPostSheet) {
                 PostSheetView()

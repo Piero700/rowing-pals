@@ -5,53 +5,49 @@
 
 import SwiftUI
 
+/// Screen 02 — Activity feed, "Your crew" (docs/design/rowing-pals-v3-spec.md; exact values
+/// from `docs/design/v3/RP Screen.dc.html` §02): a large-title header with a glass search
+/// button, the Following / Club control with a caption naming the scope, and v3 post cards.
 struct FeedView: View {
-    /// `.fullScreenCover(item:)` requires `Identifiable` — `UUID` alone
-    /// doesn't conform.
+    /// `.fullScreenCover(item:)` requires `Identifiable` — `UUID` alone doesn't conform.
     private struct SelectedPost: Identifiable {
         let id: UUID
     }
 
     @State private var viewModel = FeedViewModel()
     @State private var selectedPost: SelectedPost?
+    @Environment(\.navigate) private var navigate
 
     var body: some View {
-        // The scroll view must be the direct descendant of the tab content for
-        // TabView's `.tabBarMinimizeBehavior` to see it scroll — a NavigationStack
-        // wrapper here breaks that and the bar never minimises.
+        // The scroll view stays the tab's root view so the floating bar can track it.
         ScrollView {
-            LazyVStack(spacing: 20) {
-                Color.clear.frame(height: 96) // room for the glass header overlay
+            LazyVStack(alignment: .leading, spacing: 0) {
+                PillSegmentedControl(options: ["Following", "Club"], selection: scopeSelection)
 
-                if viewModel.posts.isEmpty && !viewModel.isLoading {
-                    emptyState
-                }
+                Text(scopeCaption)
+                    .textStyle(Typography.meta)
+                    .foregroundStyle(Tokens.Ink.secondary)
+                    .padding(.horizontal, 2)
+                    .padding(.vertical, Tokens.Spacing.loose)
 
-                ForEach(viewModel.posts) { post in
-                    FeedCardView(
-                        post: post,
-                        monitorURL: post.primarySegment?.monitorPhotoPath.flatMap { viewModel.signedURL(forPath: $0) },
-                        selfieURL: viewModel.signedURL(forPath: FeedViewModel.selfiePath(userId: post.userId, sessionId: post.id)),
-                        streakDays: viewModel.streakDays(forAuthor: post.userId),
-                        onOpen: { selectedPost = SelectedPost(id: post.id) }
-                    )
-                    .padding(.horizontal, 12)
-                    .task { await viewModel.loadMoreIfNeeded(currentPost: post) }
-                }
+                content
 
                 if viewModel.isLoadingMore {
                     ProgressView()
                         .tint(Tokens.Ink.primary)
+                        .frame(maxWidth: .infinity)
                         .padding(.vertical, 20)
                 }
+
+                Color.clear.frame(height: Tokens.Spacing.tabScrollBottom)
             }
+            .padding(.horizontal, Tokens.Spacing.screen)
         }
+        .scrollIndicators(.hidden)
+        .safeAreaInset(edge: .top, spacing: 0) { header }
         .background(Tokens.Base.ground)
         .tracksFloatingBar()
         .ignoresSafeArea(edges: .bottom)
-        .overlay(alignment: .top) {
-            feedHeader
-        }
         .task { await viewModel.loadInitial() }
         .refreshable { await viewModel.reload() }
         .fullScreenCover(item: $selectedPost) { post in
@@ -59,18 +55,25 @@ struct FeedView: View {
         }
     }
 
-    private var feedHeader: some View {
-        PillSegmentedControl(
-            options: SocialScope.allCases.map(\.label),
-            selection: scopeSelection
-        )
-        .padding(.horizontal, 14)
-        .padding(.top, 8)
-        .padding(.bottom, 12)
-        .background {
-            Tokens.Base.ground.opacity(0.7)
-                .background(.ultraThinMaterial)
+    // MARK: - Header
+
+    /// Large title left, 44 pt glass search button right; min height 61, padding 8 / 18 / 14.
+    private var header: some View {
+        HStack(spacing: Tokens.Spacing.gap) {
+            Text("Your crew")
+                .textStyle(Typography.largeTitle)
+                .foregroundStyle(Tokens.Ink.primary)
+                .accessibilityAddTraits(.isHeader)
+            Spacer(minLength: 0)
+            GlassIconButton(systemImage: "magnifyingglass", accessibilityLabel: "Find rowers") {
+                navigate(.people(.find))
+            }
         }
+        .padding(.top, 8)
+        .padding(.horizontal, Tokens.Spacing.headerHorizontal)
+        .padding(.bottom, 14)
+        .frame(minHeight: Tokens.Size.headerMinHeight)
+        .background(Tokens.Base.ground)
     }
 
     private var scopeSelection: Binding<Int> {
@@ -80,42 +83,74 @@ struct FeedView: View {
         )
     }
 
+    /// v3: "You and people you follow"; on Club, the club's name, or a prompt with no club.
+    private var scopeCaption: String {
+        switch viewModel.scope {
+        case .following: "You and people you follow"
+        case .myClub: viewModel.viewerClubName ?? "Join a club to see your crew"
+        }
+    }
+
+    // MARK: - Posts
+
     @ViewBuilder
-    private var emptyState: some View {
-        VStack(spacing: 8) {
-            if let errorMessage = viewModel.errorMessage {
-                Text("Couldn't load the feed")
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(Tokens.Ink.primary)
-                Text(errorMessage)
-                    .textStyle(Typography.bodySecondary)
-                    .foregroundStyle(Tokens.Ink.secondary)
-                    .multilineTextAlignment(.center)
-            } else {
-                Text(emptyStateTitle)
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(Tokens.Ink.primary)
-                Text(emptyStateSubtitle)
-                    .textStyle(Typography.bodySecondary)
-                    .foregroundStyle(Tokens.Ink.secondary)
+    private var content: some View {
+        if let errorMessage = viewModel.errorMessage, viewModel.posts.isEmpty {
+            messageCard(title: "Couldn't load the feed", body: errorMessage, showsPostButton: false)
+        } else if viewModel.scope == .myClub, viewModel.viewerClubName == nil, !viewModel.isLoading {
+            messageCard(title: nil, body: "Find your crew or start a new one.", showsPostButton: false)
+        } else if viewModel.posts.isEmpty, !viewModel.isLoading {
+            messageCard(
+                title: "Your crew starts here",
+                body: viewModel.scope == .myClub
+                    ? "No workouts in this club yet."
+                    : "No workouts from you or people you follow yet.",
+                showsPostButton: true
+            )
+        } else {
+            ForEach(viewModel.posts) { post in
+                FeedCardView(
+                    post: post,
+                    photoURL: { viewModel.signedURL(forPath: $0) },
+                    selfieURL: viewModel.signedURL(forPath: FeedViewModel.selfiePath(userId: post.userId, sessionId: post.id)),
+                    streakDays: viewModel.streakDays(forAuthor: post.userId),
+                    reactions: viewModel.reactionSummaries(for: post),
+                    onOpen: { selectedPost = SelectedPost(id: post.id) },
+                    onToggleReaction: { kind in
+                        Task { await viewModel.toggleReaction(kind: kind, on: post.id) }
+                    }
+                )
+                .padding(.bottom, Tokens.Spacing.loose)
+                .task { await viewModel.loadMoreIfNeeded(currentPost: post) }
             }
         }
-        .padding(.horizontal, 32)
-        .padding(.top, 40)
-        .frame(maxWidth: .infinity)
     }
 
-    private var emptyStateTitle: String {
-        switch viewModel.scope {
-        case .following: "Nobody to show yet"
-        case .myClub: "No posts from your club yet"
+    /// The v3 empty-state card: card fill, 1 pt edge, radius 30, padding 15.
+    private func messageCard(title: String?, body: String, showsPostButton: Bool) -> some View {
+        VStack(alignment: .leading, spacing: Tokens.Spacing.gap) {
+            if let title {
+                Text(title)
+                    .font(.system(size: 20, weight: .bold))
+                    .foregroundStyle(Tokens.Ink.primary)
+            }
+            Text(body)
+                .textStyle(Typography.meta)
+                .foregroundStyle(Tokens.Ink.secondary)
+            if showsPostButton {
+                Button("Post a workout") { navigate(.log) }
+                    .buttonStyle(.rpPrimary)
+                    .padding(.top, 4)
+            }
         }
-    }
-
-    private var emptyStateSubtitle: String {
-        switch viewModel.scope {
-        case .following: "Follow some rowers to see their sessions here."
-        case .myClub: "Be the first to post a session."
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(Tokens.Spacing.card)
+        .background {
+            RoundedRectangle(cornerRadius: Tokens.Radius.card, style: .continuous).fill(Tokens.Surface.card)
+        }
+        .overlay {
+            RoundedRectangle(cornerRadius: Tokens.Radius.card, style: .continuous)
+                .strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1)
         }
     }
 }
