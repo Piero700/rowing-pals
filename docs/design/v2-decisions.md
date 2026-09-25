@@ -19,3 +19,13 @@ Decision 3 narrows it to leaderboard totals only, so the code needs to be brough
 
 Other prototype items are placeholders and need the user's go-ahead before building: quiet hours,
 "Who can comment", the demo-data seeding button (dev-only, never ship).
+
+## Photos, lead piece and PB posts (decided 2026-09-25)
+
+| # | Topic | Decision |
+|---|---|---|
+| 8 | Adding photos | One "Add photo" action offering **Take photo** or **Choose from library**. Every added photo is run through OCR. |
+| 9 | Monitor vs environment photo | **Detected automatically, never asked.** If OCR finds erg-monitor readings, the photo becomes a piece (editable row, metres added to the session total). Otherwise it is an environment photo (shown in the gallery, not read). The rower can correct a wrong guess without being prompted. |
+| 10 | Lead piece on the feed | The **most intense** piece leads the post — proposed rule: fastest average split among the session's pieces. Warm-up/cool-down never lead. 30/60-minute UT2 pieces are ordinary training, not "PB attempts". |
+| 11 | Feed photos | Swipeable, Instagram-style carousel: lead piece's monitor photo first, then the other pieces, then environment photos. |
+| 12 | New PB | Only an **actual** new PB (beats the previous best) is highlighted: the post gets an attention-grabbing animated glow (RGB-LED style). Needs its own design token(s) and a Reduce Motion fallback (static glow). |
