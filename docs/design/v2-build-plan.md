@@ -71,6 +71,13 @@ that they match the prototype.
      pixels, plus a card-wide feed tap. New: v3 tokens/type scale, v3 glass (app-wide), button
      family + `asButton`, sliding segmented control, v3 bottom nav (58 pt, 6 pt from bottom),
      full-screen Log. Verified by targeted simulator taps; 34 tests pass.
+   - **Step 3 — Feed screen, BUILT** on branch `t25-v3-feed` (`0734209`), stacked on
+     `t24-v3-foundation`: v3 header + search, Following/Club with caption, v3 card, carousel,
+     lead-piece numbers, reactions (12-emoji v3 picker, saved and removable — verified), share,
+     comments pill, PB glow (verified by snapshot test), empty states. "Explore clubs" for viewers
+     without a club waits for phase G (the onboarding club search can't be reused for it).
+     Next screens in order: Rankings, Profile, Log/Review, Settings, Other profile, Find rowers,
+     PB history, All PBs, Onboarding.
    - **Known for step 3:** profile consistency grid month labels wrap letter by letter ("M / ar").
      Note: the clickable prototype renders an 8 pt nav gap; `RP Screen.dc.html` and the README say
      4 pt — 4 pt is used.
