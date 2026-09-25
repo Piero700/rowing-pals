@@ -29,3 +29,12 @@ Other prototype items are placeholders and need the user's go-ahead before build
 | 10 | Lead piece on the feed | The **most intense** piece leads the post — proposed rule: fastest average split among the session's pieces. Warm-up/cool-down never lead. 30/60-minute UT2 pieces are ordinary training, not "PB attempts". |
 | 11 | Feed photos | Swipeable, Instagram-style carousel: lead piece's monitor photo first, then the other pieces, then environment photos. |
 | 12 | New PB | Only an **actual** new PB (beats the previous best) is highlighted: the post gets an attention-grabbing animated glow (RGB-LED style). Needs its own design token(s) and a Reduce Motion fallback (static glow). |
+
+## v3 design conflicts (decided 2026-09-25)
+
+| # | Topic | Decision |
+|---|---|---|
+| 13 | Font | **Keep SF Pro.** v3's Inter is not used; v3 sizes, weights and tracking still apply. |
+| 14 | App icon | **No app-icon section at all** in Settings for now — no icon changes. |
+| 15 | CSV export | Still **no export** (decision 4 stands over v3's "Export CSV" row). |
+| 16 | Feed numbers | The feed card's Distance / Time / /500m trio shows the **lead piece's own** numbers (decision 10's most intense piece), not the session totals. |

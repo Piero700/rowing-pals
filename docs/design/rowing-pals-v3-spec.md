@@ -185,18 +185,11 @@ pt raised ring + 2 pt white outer, flip/library 48 glass; profile 4-up stats; se
 - Motion: press scale 0.96; segmented thumb slides; screen enter fade + 4 pt translate, 0.2 s
   ease-out. Honour Reduce Motion and Reduce Transparency.
 
-## Conflicts with earlier decisions (must be settled before building)
-1. **Font: Inter vs SF Pro.** CLAUDE.md says SF Pro; the bundle uses Inter with SF Pro as fallback.
-   Using Inter means bundling the font file (free, OFL licence) in the app.
-2. **Custom app icon from a photo.** iOS only allows alternate icons that are compiled into the
-   app; an icon made from a photo picked at runtime is not possible. Lagoon / Midnight / Pearl are
-   possible.
-3. **Export CSV** is back in Settings; decision 4 says no CSV export. Decisions win until changed.
-4. **Settings "Metres | km"** — decision 3 limits km to leaderboard totals; the label should say
-   so.
-5. **Feed photo**: the bundle draws one dual-camera photo per card; decisions 10–11 (2026-09-25)
-   add a swipeable carousel with the most intense piece first, and decision 12 adds the PB glow.
-   The carousel reuses the bundle's 4:3 photo frame.
-6. **Feed metric trio vs lead piece**: the bundle shows session Distance / Time / /500m; decision
-   10 puts the lead piece first. Proposed: the trio shows the session totals, the workout-link row
-   names the lead piece.
+## Conflicts with earlier decisions — resolved 2026-09-25 (`v2-decisions.md` 13–16)
+1. **Font:** keep **SF Pro**; apply v3's sizes, weights and tracking to it.
+2. **App icon:** remove the whole app-icon section from Settings for now.
+3. **Export CSV:** not built (decision 4).
+4. **Settings "Metres | km":** applies to leaderboard totals only (decision 3); label it so.
+5. **Feed photo:** swipeable carousel in the bundle's 4:3 frame, lead piece first (decisions
+   10–11); a new PB gets the animated glow (decision 12).
+6. **Feed metric trio:** shows the **lead piece's** distance, time and /500m (decision 16).
