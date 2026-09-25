@@ -74,16 +74,20 @@ struct SegmentRowView: View {
                 thumbnail
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], alignment: .leading, spacing: 3) {
                     editableField(
-                        "Distance", text: $distanceText, keyboard: .numberPad,
+                        "Distance", placeholder: "metres", text: $distanceText, keyboard: .numberPad,
                         field: .distance, onCommit: commitDistance
                     )
                     editableField(
-                        "Time", text: $timeText, keyboard: .numbersAndPunctuation,
+                        "Time", placeholder: "m:ss.t", text: $timeText, keyboard: .numbersAndPunctuation,
                         field: .time, onCommit: commitTime
                     )
                     averageField
                     rateField
                 }
+                // Use the row's full width: left to size itself the grid
+                // shrinks, and the rate column is too narrow for its value
+                // plus the Confirm button.
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
             if !segment.lowConfidenceFields.isEmpty {
                 Text(lowConfidenceCaption)
@@ -170,7 +174,7 @@ struct SegmentRowView: View {
     /// A labelled field. Low-confidence fields get a cyan underline — never
     /// red, per CLAUDE.md: this is expected, not an error.
     private func editableField(
-        _ label: String, text: Binding<String>, keyboard: UIKeyboardType,
+        _ label: String, placeholder: String, text: Binding<String>, keyboard: UIKeyboardType,
         field: DraftSegment.Field, onCommit: @escaping () -> Void
     ) -> some View {
         let lowConfidence = segment.lowConfidenceFields.contains(field)
@@ -178,7 +182,7 @@ struct SegmentRowView: View {
             Text(label)
                 .textStyle(Typography.label)
                 .foregroundStyle(Tokens.Ink.secondary)
-            TextField("", text: text, onEditingChanged: { isEditing in
+            TextField(placeholder, text: text, onEditingChanged: { isEditing in
                 if !isEditing { onCommit() }
             })
                 .font(.system(size: 15, weight: .semibold))
@@ -187,14 +191,7 @@ struct SegmentRowView: View {
                 .keyboardType(keyboard)
                 .focused(focusedField, equals: .field(segmentId: segment.id, field: field))
                 .onSubmit(onCommit)
-                .overlay(alignment: .bottom) {
-                    if lowConfidence {
-                        Rectangle()
-                            .fill(Tokens.Accent.brand.opacity(0.8))
-                            .frame(height: 2)
-                            .offset(y: 2)
-                    }
-                }
+                .overlay(alignment: .bottom) { fieldUnderline(lowConfidence: lowConfidence) }
         }
     }
 
@@ -222,13 +219,14 @@ struct SegmentRowView: View {
                 .textStyle(Typography.label)
                 .foregroundStyle(Tokens.Ink.secondary)
             HStack(spacing: 6) {
-                TextField("", text: $rateText, onEditingChanged: { isEditing in
+                TextField("spm", text: $rateText, onEditingChanged: { isEditing in
                     if !isEditing { commitRate() }
                 })
                     .font(.system(size: 15, weight: .semibold))
                     .tabularNumerals()
                     .foregroundStyle(Tokens.Ink.primary)
                     .keyboardType(.decimalPad)
+                    .frame(minWidth: 36)
                     .focused(focusedField, equals: .field(segmentId: segment.id, field: .rate))
                     .onSubmit(commitRate)
                     // Any real edit un-confirms. Compared to the stored rate,
@@ -239,12 +237,7 @@ struct SegmentRowView: View {
                         if Double(newValue) != segment.rate { segment.isRateConfirmed = false }
                     }
                     .overlay(alignment: .bottom) {
-                        if segment.lowConfidenceFields.contains(.rate) {
-                            Rectangle()
-                                .fill(Tokens.Accent.brand.opacity(0.8))
-                                .frame(height: 2)
-                                .offset(y: 2)
-                        }
+                        fieldUnderline(lowConfidence: segment.lowConfidenceFields.contains(.rate))
                     }
                 if !segment.isManual {
                     confirmButton
@@ -261,6 +254,8 @@ struct SegmentRowView: View {
         } label: {
             Text(segment.isRateConfirmed ? "Checked" : "Confirm")
                 .font(.system(size: 11.5, weight: .bold))
+                .lineLimit(1)
+                .fixedSize()
                 .foregroundStyle(segment.isRateConfirmed ? Tokens.Accent.success : Tokens.Base.dark)
                 .padding(.horizontal, 9)
                 .padding(.vertical, 5)
@@ -271,7 +266,18 @@ struct SegmentRowView: View {
                 }
         }
         .buttonStyle(.plain)
+        .layoutPriority(1)
         .accessibilityLabel(segment.isRateConfirmed ? "Stroke rate checked" : "Confirm stroke rate")
+    }
+
+    /// Every editable field sits on a line so it reads as a field even when
+    /// empty; a low-confidence reading gets a thicker brand line instead —
+    /// never red (CLAUDE.md: this is expected, not an error).
+    private func fieldUnderline(lowConfidence: Bool) -> some View {
+        Rectangle()
+            .fill(lowConfidence ? Tokens.Accent.brand.opacity(0.8) : Tokens.Surface.line)
+            .frame(height: lowConfidence ? 2 : 1)
+            .offset(y: 3)
     }
 
     private func commitDistance() {

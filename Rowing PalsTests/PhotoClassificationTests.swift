@@ -77,6 +77,10 @@ struct PhotoClassificationTests {
         #expect(vm.galleryPhotos.isEmpty)
         #expect(vm.segments.count == 2)
         #expect(vm.segments[1].label == .extra)
+        // Numbers survive the round trip.
+        #expect(vm.segments[1].distanceM == 2000)
+        #expect(vm.segments[1].timeMs == 480_000)
+        #expect(vm.totalDistanceM == 7000)
     }
 
     @Test func environmentPhotosAreCapped() {

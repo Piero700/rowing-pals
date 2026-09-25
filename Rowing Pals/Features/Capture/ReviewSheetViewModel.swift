@@ -227,8 +227,15 @@ final class ReviewSheetViewModel {
               let jpeg = segments[index].photoJPEG,
               galleryPhotos.count < Self.maxGalleryPhotos
         else { return }
-        segments.remove(at: index)
-        galleryPhotos.append(GalleryPhoto(jpeg: jpeg, fields: nil))
+        let segment = segments.remove(at: index)
+        // Keep the piece's numbers so moving it back is lossless.
+        let kept = ParsedMonitorFields(
+            elapsedTimeMs: MonitorField(value: segment.timeMs > 0 ? segment.timeMs : nil, confidence: 1),
+            distanceM: MonitorField(value: segment.distanceM > 0 ? segment.distanceM : nil, confidence: 1),
+            splitMs: MonitorField(value: segment.splitMs > 0 ? segment.splitMs : nil, confidence: 1),
+            rate: MonitorField(value: segment.rate > 0 ? segment.rate : nil, confidence: 1)
+        )
+        galleryPhotos.append(GalleryPhoto(jpeg: jpeg, fields: kept))
     }
 
     /// Correction the other way: an environment photo that is a monitor
