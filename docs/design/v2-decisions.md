@@ -14,8 +14,8 @@ if they do, update this file.
 | 6 | Private accounts and follow requests | Build them, as an **early phase** (schema: `profiles.is_private` plus follow-request status; review every place `follows` is read). |
 | 7 | Clubs | Build as in the prototype: create club, join policy (open / approval / invite), roles (owner / co-owner / admin / member), join requests, owner-only management. Supersedes the "club model open question" note. |
 
-**Known conflict:** redesign Phase B (commit `e47755c`) built the metres/km toggle app-wide.
-Decision 3 narrows it to leaderboard totals only, so the code needs to be brought back in line.
+**Resolved:** redesign Phase B (commit `e47755c`) built the metres/km toggle app-wide; commit
+`903698c` narrowed it to the Volume leaderboard only, per decision 3.
 
 Other prototype items are placeholders and need the user's go-ahead before building: quiet hours,
 "Who can comment", the demo-data seeding button (dev-only, never ship).
