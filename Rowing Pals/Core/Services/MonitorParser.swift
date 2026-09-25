@@ -28,6 +28,17 @@ nonisolated struct ParsedMonitorFields {
     var hasAllFields: Bool {
         elapsedTimeMs.value != nil && distanceM.value != nil && splitMs.value != nil && rate.value != nil
     }
+
+    /// Whether this photo shows an erg monitor at all — decides, without
+    /// asking, if an added photo becomes a piece or an environment photo
+    /// (docs/design/v2-decisions.md #9). Two of the four readings is enough:
+    /// the parser only returns values once it has found the monitor's table
+    /// header, so a non-monitor photo yields none, while glare on one or two
+    /// digits shouldn't demote a real monitor photo.
+    var looksLikeMonitor: Bool {
+        [elapsedTimeMs.value != nil, distanceM.value != nil, splitMs.value != nil, rate.value != nil]
+            .filter { $0 }.count >= 2
+    }
 }
 
 /// Maps OCR observations to the four PM5 fields using the real "View

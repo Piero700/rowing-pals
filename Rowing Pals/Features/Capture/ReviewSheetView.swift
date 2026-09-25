@@ -23,7 +23,10 @@ struct ReviewSheetView: View {
     /// sheet, leaving a stale, already-used capture session behind.
     let onPosted: () -> Void
     @State private var viewModel: ReviewSheetViewModel
-    @State private var isShowingAddPiece = false
+    /// "Add photo" → Take photo / Choose from library.
+    @State private var isShowingAddPhotoChoice = false
+    @State private var isShowingCamera = false
+    @State private var isShowingLibrary = false
     @State private var pickedItems: [PhotosPickerItem] = []
     @FocusState private var focusedField: ReviewField?
     /// Redesign phase B — per-device display preferences, not synced to
@@ -33,10 +36,6 @@ struct ReviewSheetView: View {
     @AppStorage(PaceDisplay.storageKey) private var paceDisplay: PaceDisplay = .split
 
     private let initialMonitorPhoto: Data?
-
-    /// Most extra photos one session can carry — keeps upload size and
-    /// storage cost bounded.
-    private static let maxGalleryPhotos = 6
 
     /// A photographed session passes both photos; a manual entry passes nil
     /// for both.
@@ -61,7 +60,10 @@ struct ReviewSheetView: View {
                         SegmentRowView(
                             segment: $segment,
                             focusedField: $focusedField,
-                            onRemove: viewModel.segments.count > 1 ? { viewModel.removeSegment(segment.id) } : nil
+                            isLead: viewModel.segments.count > 1 && segment.id == viewModel.leadSegmentID,
+                            onRemove: viewModel.segments.count > 1 ? { viewModel.removeSegment(segment.id) } : nil,
+                            onNotMonitor: segment.photoJPEG != nil && viewModel.segments.count > 1
+                                ? { viewModel.moveSegmentToGallery(segment.id) } : nil
                         )
                     }
                 }
@@ -69,7 +71,7 @@ struct ReviewSheetView: View {
                 if viewModel.isProcessingPhoto {
                     HStack(spacing: 10) {
                         ProgressView()
-                        Text("Reading monitor…")
+                        Text("Reading photo…")
                             .textStyle(Typography.bodySecondary)
                             .foregroundStyle(Tokens.Ink.secondary)
                     }
@@ -77,9 +79,12 @@ struct ReviewSheetView: View {
                     .padding(.vertical, 12)
                 }
 
-                addPieceButton
+                if viewModel.isManual {
+                    addPieceButton
+                }
+                addPhotoButton
 
-                photoStrip
+                environmentPhotoStrip
 
                 sessionTypeSection
 
@@ -126,13 +131,20 @@ struct ReviewSheetView: View {
             await viewModel.addSegment(from: initialMonitorPhoto)
             focusFirstLowConfidenceField()
         }
-        .sheet(isPresented: $isShowingAddPiece) {
+        .confirmationDialog("Add photo", isPresented: $isShowingAddPhotoChoice) {
+            Button("Take photo") { isShowingCamera = true }
+            Button("Choose from library") { isShowingLibrary = true }
+        } message: {
+            Text("A photo of the erg monitor is read and added as a piece. Any other photo is added to the post's photos.")
+        }
+        .sheet(isPresented: $isShowingCamera) {
             NavigationStack {
                 MonitorPhotoCaptureView { data in
-                    Task { await viewModel.addSegment(from: data) }
+                    Task { await viewModel.addPhoto(data) }
                 }
             }
         }
+        .photosPicker(isPresented: $isShowingLibrary, selection: $pickedItems, maxSelectionCount: 10, matching: .images)
         .onChange(of: pickedItems) { _, items in
             guard !items.isEmpty else { return }
             Task { await loadPickedPhotos(items) }
@@ -188,23 +200,17 @@ struct ReviewSheetView: View {
         }
     }
 
-    // MARK: - Pieces
+    // MARK: - Pieces and photos
 
-    /// A photographed session adds another piece by photographing the
-    /// monitor again; a manual one just adds a blank row.
+    /// A manual entry adds a blank piece to type into.
     private var addPieceButton: some View {
         Button {
-            if viewModel.isManual {
-                viewModel.addManualSegment()
-            } else {
-                isShowingAddPiece = true
-            }
+            viewModel.addManualSegment()
         } label: {
-            Text(viewModel.isManual ? "+ Add another piece" : "+ Add another piece (photo of the monitor)")
+            Text("+ Add another piece")
                 .textStyle(Typography.body)
                 .foregroundStyle(Tokens.Ink.secondary)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 12)
+                .frame(maxWidth: .infinity, minHeight: 44)
                 .background {
                     RoundedRectangle(cornerRadius: 20, style: .continuous)
                         .fill(Tokens.Ink.primary.opacity(0.05))
@@ -213,17 +219,35 @@ struct ReviewSheetView: View {
         .buttonStyle(.plain)
     }
 
-    // MARK: - Extra photos
+    /// One way to add any photo — camera or library. Each is read: a monitor
+    /// becomes a piece, anything else an environment photo
+    /// (docs/design/v2-decisions.md #8–9).
+    private var addPhotoButton: some View {
+        Button {
+            isShowingAddPhotoChoice = true
+        } label: {
+            Label("Add photo", systemImage: "camera")
+                .textStyle(Typography.body)
+                .foregroundStyle(Tokens.Accent.brand)
+                .frame(maxWidth: .infinity, minHeight: 44)
+                .background {
+                    RoundedRectangle(cornerRadius: 20, style: .continuous)
+                        .fill(Tokens.Ink.primary.opacity(0.05))
+                }
+        }
+        .buttonStyle(.plain)
+        .disabled(viewModel.isProcessingPhoto)
+    }
 
-    /// "Photos" strip: gallery images beyond the two dual-camera shots, each
-    /// removable. No numbers are read from them.
-    private var photoStrip: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("PHOTOS")
-                .textStyle(Typography.label)
-                .foregroundStyle(Tokens.Ink.secondary)
-
-            if !viewModel.galleryPhotos.isEmpty {
+    /// Environment photos — no monitor found. Each can be removed, or turned
+    /// into a piece if the guess was wrong.
+    @ViewBuilder
+    private var environmentPhotoStrip: some View {
+        if !viewModel.galleryPhotos.isEmpty {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("PHOTOS")
+                    .textStyle(Typography.label)
+                    .foregroundStyle(Tokens.Ink.secondary)
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 8) {
                         ForEach(viewModel.galleryPhotos) { photo in
@@ -231,23 +255,7 @@ struct ReviewSheetView: View {
                         }
                     }
                 }
-            }
-
-            let remaining = Self.maxGalleryPhotos - viewModel.galleryPhotos.count
-            if remaining > 0 {
-                PhotosPicker(selection: $pickedItems, maxSelectionCount: remaining, matching: .images) {
-                    Text("Add another photo")
-                        .textStyle(Typography.body)
-                        .foregroundStyle(Tokens.Ink.secondary)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 12)
-                        .background {
-                            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                                .fill(Tokens.Ink.primary.opacity(0.05))
-                        }
-                }
-            } else {
-                Text("You can add up to \(Self.maxGalleryPhotos) photos.")
+                Text("Press and hold a photo if it's actually a monitor photo.")
                     .textStyle(Typography.bodySecondary)
                     .foregroundStyle(Tokens.Ink.secondary)
             }
@@ -262,38 +270,52 @@ struct ReviewSheetView: View {
                     .scaledToFill()
                     .frame(width: 84, height: 84)
                     .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                    .contextMenu {
+                        Button {
+                            viewModel.readGalleryPhotoAsMonitor(photo.id)
+                        } label: {
+                            Label("Read as monitor photo", systemImage: "text.viewfinder")
+                        }
+                        Button(role: .destructive) {
+                            viewModel.removeGalleryPhoto(photo.id)
+                        } label: {
+                            Label("Remove photo", systemImage: "trash")
+                        }
+                    }
             }
             Button {
                 viewModel.removeGalleryPhoto(photo.id)
             } label: {
                 Image(systemName: "xmark")
-                    .font(.system(size: 10, weight: .bold))
+                    .font(.system(size: 11, weight: .bold))
                     .foregroundStyle(.white)
-                    .frame(width: 22, height: 22)
+                    .frame(width: 24, height: 24)
                     .background(Circle().fill(Color.black.opacity(0.6)))
+                    // 44-pt tap area around the small visible circle.
+                    .frame(width: 44, height: 44, alignment: .topTrailing)
+                    .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .padding(4)
             .accessibilityLabel("Remove photo")
         }
     }
 
-    /// Loads the picker's selections, shrinks them (a library photo can be
-    /// 10+ MB) and adds them to the strip. Clears the picker so the same
-    /// photo can be chosen again after removing it.
+    /// Loads the picker's selections one by one (each is read in turn),
+    /// shrinking them first — a library photo can be 10+ MB. Clears the
+    /// picker so the same photo can be chosen again after removing it.
     @MainActor
     private func loadPickedPhotos(_ items: [PhotosPickerItem]) async {
-        for item in items where viewModel.galleryPhotos.count < Self.maxGalleryPhotos {
+        for item in items {
             guard
                 let data = try? await item.loadTransferable(type: Data.self),
                 let jpeg = Self.downscaledJPEG(from: data)
             else { continue }
-            viewModel.addGalleryPhoto(jpeg)
+            await viewModel.addPhoto(jpeg)
         }
         pickedItems = []
     }
 
-    /// JPEG at 80% quality, longest side capped at 1600 pt-pixels.
+    /// JPEG at 80% quality, longest side capped at 1600 pixels.
     private static func downscaledJPEG(from data: Data, maxSide: CGFloat = 1600) -> Data? {
         guard let image = UIImage(data: data) else { return nil }
         let longest = max(image.size.width, image.size.height)

@@ -33,8 +33,13 @@ enum ReviewField: Hashable {
 struct SegmentRowView: View {
     @Binding var segment: DraftSegment
     var focusedField: FocusState<ReviewField?>.Binding
+    /// Marks the piece that will lead the post on the feed.
+    var isLead = false
     /// Shown as a Remove button when the session has more than one piece.
     var onRemove: (() -> Void)?
+    /// Shown when this piece's photo might not really be a monitor: moves it
+    /// to the environment photos (docs/design/v2-decisions.md #9).
+    var onNotMonitor: (() -> Void)?
 
     @State private var distanceText: String
     @State private var timeText: String
@@ -46,11 +51,15 @@ struct SegmentRowView: View {
     init(
         segment: Binding<DraftSegment>,
         focusedField: FocusState<ReviewField?>.Binding,
-        onRemove: (() -> Void)? = nil
+        isLead: Bool = false,
+        onRemove: (() -> Void)? = nil,
+        onNotMonitor: (() -> Void)? = nil
     ) {
         self._segment = segment
         self.focusedField = focusedField
+        self.isLead = isLead
         self.onRemove = onRemove
+        self.onNotMonitor = onNotMonitor
         let value = segment.wrappedValue
         // A manual piece starts blank — "0" and "0:00.0" would have to be
         // deleted before typing.
@@ -96,11 +105,26 @@ struct SegmentRowView: View {
                     .frame(maxWidth: .infinity)
                 }
             }
-            if let onRemove {
-                Button(role: .destructive, action: onRemove) {
-                    Text("Remove piece")
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundStyle(Tokens.System.error)
+            if isLead {
+                Label("Shown first on the feed", systemImage: "star")
+                    .font(.system(size: 12.5, weight: .semibold))
+                    .foregroundStyle(Tokens.Ink.secondary)
+            }
+            if onRemove != nil || onNotMonitor != nil {
+                HStack(spacing: 16) {
+                    if let onNotMonitor {
+                        Button("Not a monitor photo", action: onNotMonitor)
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(Tokens.Accent.brand)
+                            .frame(minHeight: 44)
+                    }
+                    Spacer()
+                    if let onRemove {
+                        Button("Remove piece", role: .destructive, action: onRemove)
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(Tokens.System.error)
+                            .frame(minHeight: 44)
+                    }
                 }
                 .buttonStyle(.plain)
             }

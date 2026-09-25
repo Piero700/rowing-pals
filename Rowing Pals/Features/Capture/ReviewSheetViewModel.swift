@@ -20,12 +20,19 @@ import UIKit
 /// 2026-09-24).
 @Observable
 final class ReviewSheetViewModel {
-    /// One extra photo in the strip — a gallery image beyond the two
-    /// dual-camera shots, with no OCR and no numbers.
+    /// An environment photo — one with no erg monitor in it (the crew, the
+    /// boathouse). Shown in the post's gallery; no numbers are taken from it.
+    /// Keeps whatever the reader found, so "Read as monitor photo" can turn
+    /// it into a piece if the automatic guess was wrong.
     struct GalleryPhoto: Identifiable {
         let id = UUID()
         let jpeg: Data
+        var fields: ParsedMonitorFields?
     }
+
+    /// Most environment photos one session can carry — keeps upload size and
+    /// storage cost bounded.
+    static let maxGalleryPhotos = 6
 
     /// Nil for a manual entry: no camera was used.
     let selfieJPEG: Data?
@@ -129,6 +136,38 @@ final class ReviewSheetViewModel {
         }
     }
 
+    /// The piece that leads the post on the feed (docs/design/v2-decisions.md
+    /// #10): for a test, the Main piece; otherwise the fastest average split
+    /// among pieces that aren't warm-up or cool-down, earliest on a tie. Falls
+    /// back to Main, then the first piece, when nothing qualifies.
+    var leadSegmentID: DraftSegment.ID? {
+        Self.leadSegmentID(in: segments, isTest: sessionKind.test != nil)
+    }
+
+    static func leadSegmentID(in segments: [DraftSegment], isTest: Bool) -> DraftSegment.ID? {
+        let main = segments.first { $0.label == .main }
+        if isTest, let main { return main.id }
+        let candidates = segments.filter { $0.label != .warmup && $0.label != .cooldown && $0.splitMs > 0 }
+        if let fastest = candidates.min(by: { $0.splitMs < $1.splitMs }) {
+            return fastest.id
+        }
+        return main?.id ?? segments.first?.id
+    }
+
+    /// Whether a new test result beats the rower's previous best for that
+    /// test: faster for a distance test, further for a timed one. With no
+    /// earlier result, the first one is the best so far and counts.
+    static func isNewBest(
+        test: StandardTest, distanceM: Int, timeMs: Int,
+        previous: [(distanceM: Int, timeMs: Int)]
+    ) -> Bool {
+        guard !previous.isEmpty else { return true }
+        if test.isDurationBased {
+            return distanceM > previous.map(\.distanceM).max() ?? 0
+        }
+        return timeMs < previous.map(\.timeMs).min() ?? Int.max
+    }
+
     /// Answers the suggestion. Yes picks that test in the Session type
     /// dropdown; No hides the suggestion for that test. Nothing is written
     /// until Post.
@@ -163,8 +202,48 @@ final class ReviewSheetViewModel {
         segments.removeAll { $0.id == id }
     }
 
+    /// Adds a photo from the camera or the library and decides, without
+    /// asking, what it is: a monitor photo becomes a piece (its numbers read,
+    /// editable, added to the total); anything else is an environment photo
+    /// (docs/design/v2-decisions.md #8–9).
+    @MainActor
+    func addPhoto(_ jpeg: Data) async {
+        isProcessingPhoto = true
+        defer { isProcessingPhoto = false }
+
+        let fields = await Self.extractFields(from: jpeg)
+        if fields.looksLikeMonitor {
+            let label: SegmentLabel = segments.isEmpty ? .main : .extra
+            segments.append(DraftSegment(label: label, photoJPEG: jpeg, fields: fields))
+        } else if galleryPhotos.count < Self.maxGalleryPhotos {
+            galleryPhotos.append(GalleryPhoto(jpeg: jpeg, fields: fields))
+        }
+    }
+
+    /// Correction when a piece's photo isn't really a monitor: it moves to
+    /// the environment photos and its numbers leave the total.
+    func moveSegmentToGallery(_ id: DraftSegment.ID) {
+        guard let index = segments.firstIndex(where: { $0.id == id }),
+              let jpeg = segments[index].photoJPEG,
+              galleryPhotos.count < Self.maxGalleryPhotos
+        else { return }
+        segments.remove(at: index)
+        galleryPhotos.append(GalleryPhoto(jpeg: jpeg, fields: nil))
+    }
+
+    /// Correction the other way: an environment photo that is a monitor
+    /// becomes a piece, pre-filled with whatever the reader managed (often
+    /// nothing, so the rower types the numbers).
+    func readGalleryPhotoAsMonitor(_ id: GalleryPhoto.ID) {
+        guard let index = galleryPhotos.firstIndex(where: { $0.id == id }) else { return }
+        let photo = galleryPhotos.remove(at: index)
+        let empty = ParsedMonitorFields(elapsedTimeMs: .empty, distanceM: .empty, splitMs: .empty, rate: .empty)
+        let label: SegmentLabel = segments.isEmpty ? .main : .extra
+        segments.append(DraftSegment(label: label, photoJPEG: photo.jpeg, fields: photo.fields ?? empty))
+    }
+
     func addGalleryPhoto(_ jpeg: Data) {
-        galleryPhotos.append(GalleryPhoto(jpeg: jpeg))
+        galleryPhotos.append(GalleryPhoto(jpeg: jpeg, fields: nil))
     }
 
     func removeGalleryPhoto(_ id: GalleryPhoto.ID) {
@@ -202,11 +281,13 @@ final class ReviewSheetViewModel {
         let loggedLate: Bool
         let capturedAt: Date
         let sessionDate: String
+        let isNewPB: Bool
 
         enum CodingKeys: String, CodingKey {
             case id
             case userId = "user_id"
             case type, caption, visibility
+            case isNewPB = "is_new_pb"
             case workoutLabel = "workout_label"
             case totalDistanceM = "total_distance_m"
             case totalTimeMs = "total_time_ms"
@@ -237,9 +318,11 @@ final class ReviewSheetViewModel {
         /// confidence to record (`segments.ocr_confidence` is nullable).
         let ocrConfidence: Double?
         let wasEdited: Bool
+        let isLead: Bool
 
         enum CodingKeys: String, CodingKey {
             case id
+            case isLead = "is_lead"
             case sessionId = "session_id"
             case label, position
             case distanceM = "distance_m"
@@ -354,6 +437,32 @@ final class ReviewSheetViewModel {
             formatter.dateFormat = "yyyy-MM-dd"
             let sessionDate = formatter.string(from: Date())
 
+            // A new PB is only possible on a photographed test session, and is
+            // judged against the rower's earlier results for that test before
+            // this one is recorded (docs/design/v2-decisions.md #12).
+            var isNewPB = false
+            if !isManual, case .test(let test) = sessionKind, let main = mainSegment {
+                struct PreviousResult: Decodable {
+                    let distanceM: Int
+                    let timeMs: Int
+                    enum CodingKeys: String, CodingKey {
+                        case distanceM = "distance_m"
+                        case timeMs = "time_ms"
+                    }
+                }
+                let previous: [PreviousResult] = try await SupabaseService.shared
+                    .from("test_results")
+                    .select("distance_m, time_ms")
+                    .eq("user_id", value: userId)
+                    .eq("distance_key", value: test.key)
+                    .execute()
+                    .value
+                isNewPB = Self.isNewBest(
+                    test: test, distanceM: main.distanceM, timeMs: main.timeMs,
+                    previous: previous.map { ($0.distanceM, $0.timeMs) }
+                )
+            }
+
             let newSession = NewSession(
                 id: sessionId,
                 userId: userId,
@@ -368,10 +477,12 @@ final class ReviewSheetViewModel {
                 photoVerified: !isManual,
                 loggedLate: false,
                 capturedAt: Date(),
-                sessionDate: sessionDate
+                sessionDate: sessionDate,
+                isNewPB: isNewPB
             )
             try await SupabaseService.shared.from("sessions").insert(newSession).execute()
 
+            let leadID = leadSegmentID
             let newSegments = segments.enumerated().map { index, segment in
                 NewSegment(
                     id: segment.id,
@@ -384,7 +495,8 @@ final class ReviewSheetViewModel {
                     rate: segment.rate,
                     monitorPhotoPath: monitorPaths[index],
                     ocrConfidence: segment.isManual ? nil : segment.ocrConfidence,
-                    wasEdited: segment.wasEdited
+                    wasEdited: segment.wasEdited,
+                    isLead: segment.id == leadID
                 )
             }
             try await SupabaseService.shared.from("segments").insert(newSegments).execute()

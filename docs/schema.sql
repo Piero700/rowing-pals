@@ -62,6 +62,8 @@ create table sessions (
   caption          text,
   visibility       post_visibility not null default 'everyone',
   -- Redesign phase F: the badge on the main split ('UT2', 'Threshold', '2k test'...).
+  -- Decision 12: this session's test result beat the rower's previous best.
+  is_new_pb        boolean not null default false,
   workout_label    text check (workout_label is null or char_length(workout_label) between 1 and 24),
 
   -- Rolled up from segments. Kept on the row so the feed needs one query.
@@ -95,8 +97,11 @@ create table segments (
   rate               numeric(4,1),
   monitor_photo_path text,
   ocr_confidence     numeric(3,2),          -- 0.00–1.00, null for manual entry
-  was_edited         boolean not null default false
+  was_edited         boolean not null default false,
+  -- Decision 10: the piece that leads the post on the feed. One per session.
+  is_lead            boolean not null default false
 );
+create unique index segments_one_lead_per_session on segments (session_id) where is_lead;
 
 -- A test result is created only when the user confirms the prompt.
 create table test_results (
