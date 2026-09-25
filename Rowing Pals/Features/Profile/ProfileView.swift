@@ -345,7 +345,7 @@ struct ProfileView: View {
                 LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 9), count: 2), spacing: 9) {
                     ForEach(topPBTiles) { tile in
                         pbTile(tile)
-                            .onTapGesture {
+                            .asButton {
                                 guard tile.hasResult else { return }
                                 expandedTest = tile.test
                             }
@@ -367,7 +367,7 @@ struct ProfileView: View {
         LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 9), count: 3), spacing: 9) {
             ForEach(viewModel.pbTiles) { tile in
                 pbTile(tile)
-                    .onTapGesture {
+                    .asButton {
                         guard tile.hasResult else { return }
                         expandedTest = tile.test
                     }

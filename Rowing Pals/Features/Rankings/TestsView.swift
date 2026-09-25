@@ -38,7 +38,7 @@ struct TestsView: View {
                 LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 3), spacing: 10) {
                     ForEach(viewModel.tiles) { tile in
                         distanceTile(tile)
-                            .onTapGesture { selectedTest = tile.test }
+                            .asButton { selectedTest = tile.test }
                     }
                 }
 

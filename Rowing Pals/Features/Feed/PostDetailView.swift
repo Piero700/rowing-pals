@@ -181,6 +181,9 @@ struct PostDetailView: View {
                 Circle().fill(Color.black.opacity(0.28))
                 Circle().strokeBorder(Color.white.opacity(0.18), lineWidth: 1)
             }
+            // 36 pt to look at, 44 pt to tap.
+            .frame(width: Tokens.Size.minTap, height: Tokens.Size.minTap)
+            .contentShape(Circle())
     }
 
     private var backButton: some View {
@@ -469,7 +472,10 @@ struct PostDetailView: View {
                     .background {
                         Circle().fill(Tokens.Ink.primary.opacity(0.08))
                     }
+                    .frame(width: Tokens.Size.minTap, height: Tokens.Size.minTap)
+                .contentShape(Circle())
             }
+            .accessibilityLabel("More reactions")
             .buttonStyle(.plain)
             .confirmationDialog("Add a reaction", isPresented: $isShowingMoreReactions, titleVisibility: .visible) {
                 ForEach(PostDetailViewModel.extraReactionKinds, id: \.self) { kind in
@@ -649,7 +655,10 @@ struct PostDetailView: View {
                     .background {
                         Circle().fill(commentDraft.trimmingCharacters(in: .whitespaces).isEmpty ? Tokens.Accent.brand.opacity(0.4) : Tokens.Accent.brand)
                     }
+                    .frame(width: Tokens.Size.minTap, height: Tokens.Size.minTap)
+                .contentShape(Circle())
             }
+            .accessibilityLabel("Send comment")
             .buttonStyle(.plain)
             .disabled(commentDraft.trimmingCharacters(in: .whitespaces).isEmpty)
         }

@@ -18,6 +18,10 @@ struct FeedCardView: View {
     /// `daily_totals` fetch — 0 (no badge) until that resolves. See
     /// `AvatarPlaceholder`'s doc comment.
     var streakDays: Int = 0
+    /// Opens the post's detail screen. Wired to the photo, caption and piece chips only — never
+    /// the whole card — so the name, the selfie swap and anything floating over the card (the
+    /// tab bar) each get their own taps.
+    var onOpen: () -> Void = {}
 
     /// Tap-to-swap, BeReal-style — which photo is full-bleed right now.
     @State private var isSelfiePrimary = false
@@ -34,12 +38,18 @@ struct FeedCardView: View {
             header
 
             ZStack(alignment: .topLeading) {
-                CachedAsyncImage(url: primaryURL) {
-                    PhotoPlaceholder(cornerRadius: 0, caption: post.photoVerified ? "MONITOR PHOTO" : "MANUAL ENTRY")
+                Button(action: onOpen) {
+                    CachedAsyncImage(url: primaryURL) {
+                        PhotoPlaceholder(cornerRadius: 0, caption: post.photoVerified ? "MONITOR PHOTO" : "MANUAL ENTRY")
+                    }
+                    .aspectRatio(contentMode: .fill)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 300)
+                    .clipped()
+                    .contentShape(Rectangle())
                 }
-                .aspectRatio(contentMode: .fill)
-                .frame(height: 300)
-                .clipped()
+                .buttonStyle(.plain)
+                .accessibilityLabel("Open workout")
 
                 Button {
                     withAnimation(.snappy) { isSelfiePrimary.toggle() }
@@ -54,19 +64,24 @@ struct FeedCardView: View {
                 .buttonStyle(.plain)
                 .padding(12)
 
+                // Decoration over the photo: taps pass through to the photo button.
                 verificationBadge
                     .padding(12)
                     .frame(maxWidth: .infinity, alignment: .trailing)
+                    .allowsHitTesting(false)
 
                 VStack {
                     Spacer()
                     dataStrip
                         .padding(10)
                 }
+                .allowsHitTesting(false)
             }
             .frame(height: 300)
             .clipped()
 
+            Button(action: onOpen) {
+            VStack(alignment: .leading, spacing: 0) {
             if let caption = post.caption, !caption.isEmpty {
                 Text(caption)
                     .textStyle(Typography.bodySecondary)
@@ -89,6 +104,11 @@ struct FeedCardView: View {
                 .padding(.top, (post.caption?.isEmpty ?? true) ? 12 : 8)
                 .padding(.bottom, 14)
             }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
         }
         .background(Tokens.Ink.primary.opacity(0.02))
         .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
@@ -98,6 +118,9 @@ struct FeedCardView: View {
         HStack(spacing: 10) {
             // Avatar + name open the author's profile (a route, not a direct
             // reference — see `AppRoute`).
+            Button {
+                navigate(.profile(post.userId))
+            } label: {
             HStack(spacing: 10) {
             AvatarPlaceholder(diameter: 36, streakDays: streakDays)
             VStack(alignment: .leading, spacing: 1) {
@@ -123,8 +146,11 @@ struct FeedCardView: View {
                 }
             }
             }
+            .frame(minHeight: Tokens.Size.minTap)
             .contentShape(Rectangle())
-            .onTapGesture { navigate(.profile(post.userId)) }
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("\(post.author.displayName)'s profile")
             Spacer()
             Text(post.postedAt.postedAgoLabel)
                 .textStyle(Typography.bodySecondary)

@@ -54,21 +54,30 @@ struct RootView: View {
     /// feed-like" — confirmed against the prototype file directly, not
     /// just the earlier design summary.
     private static let items: [FloatingTabBar<RootTab>.Item] = [
-        .init(tab: .feed, label: "Feed", systemImage: "house.fill"),
-        .init(tab: .rankings, label: "Rankings", systemImage: "chart.bar.fill"),
-        .init(tab: .profile, label: "Profile", systemImage: "person.fill")
+        .init(tab: .feed, label: "Feed", systemImage: "house"),
+        .init(tab: .rankings, label: "Rankings", systemImage: "chart.bar"),
+        .init(tab: .profile, label: "Profile", systemImage: "person")
     ]
 
     var body: some View {
         content
-            .overlay(alignment: .bottom) {
-                FloatingTabBar(items: Self.items, selection: $selection) {
-                    isShowingPostSheet = true
+            .overlay {
+                // A full-height stack that runs under the bottom safe area, so the bar's own
+                // 6 pt bottom inset is measured from the screen edge, as in v3. Only the bar
+                // itself takes touches; the Spacer passes them through.
+                VStack(spacing: 0) {
+                    Spacer(minLength: 0)
+                        .allowsHitTesting(false)
+                    FloatingTabBar(items: Self.items, selection: $selection) {
+                        isShowingPostSheet = true
+                    }
                 }
+                .ignoresSafeArea(.container, edges: .bottom)
             }
             .environment(barVisibility)
             .environment(\.navigate, NavigateAction { presentedRoute = $0 })
-            .sheet(isPresented: $isShowingPostSheet) {
+            // v3: Log opens capture as a full-screen modal, no tab bar.
+            .fullScreenCover(isPresented: $isShowingPostSheet) {
                 PostSheetView()
             }
             .fullScreenCover(item: $presentedRoute) { route in
@@ -83,6 +92,9 @@ struct RootView: View {
             tab(.rankings) { RankingsView() }
             tab(.profile) { ProfileView() }
         }
+        // Reaches the physical bottom edge so the nav can sit 6 pt above it, as in v3; each
+        // tab's scroll view already runs under the bottom safe area.
+        .ignoresSafeArea(.container, edges: .bottom)
     }
 
     private func tab(_ tab: RootTab, @ViewBuilder content: () -> some View) -> some View {

@@ -117,17 +117,23 @@ struct SegmentRowView: View {
             if onRemove != nil || onNotMonitor != nil {
                 HStack(spacing: 16) {
                     if let onNotMonitor {
-                        Button("Not a monitor photo", action: onNotMonitor)
-                            .font(.system(size: 13, weight: .semibold))
-                            .foregroundStyle(Tokens.Accent.brand)
-                            .frame(minHeight: 44)
+                        Button(action: onNotMonitor) {
+                            Text("Not a monitor photo")
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundStyle(Tokens.Accent.brand)
+                                .frame(minHeight: Tokens.Size.minTap)
+                                .contentShape(Rectangle())
+                        }
                     }
                     Spacer()
                     if let onRemove {
-                        Button("Remove piece", role: .destructive, action: onRemove)
-                            .font(.system(size: 13, weight: .semibold))
-                            .foregroundStyle(Tokens.System.error)
-                            .frame(minHeight: 44)
+                        Button(role: .destructive, action: onRemove) {
+                            Text("Remove piece")
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundStyle(Tokens.System.error)
+                                .frame(minHeight: Tokens.Size.minTap)
+                                .contentShape(Rectangle())
+                        }
                     }
                 }
                 .buttonStyle(.plain)

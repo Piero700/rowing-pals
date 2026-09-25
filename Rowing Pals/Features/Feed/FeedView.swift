@@ -32,11 +32,10 @@ struct FeedView: View {
                         post: post,
                         monitorURL: post.primarySegment?.monitorPhotoPath.flatMap { viewModel.signedURL(forPath: $0) },
                         selfieURL: viewModel.signedURL(forPath: FeedViewModel.selfiePath(userId: post.userId, sessionId: post.id)),
-                        streakDays: viewModel.streakDays(forAuthor: post.userId)
+                        streakDays: viewModel.streakDays(forAuthor: post.userId),
+                        onOpen: { selectedPost = SelectedPost(id: post.id) }
                     )
                     .padding(.horizontal, 12)
-                    .contentShape(Rectangle())
-                    .onTapGesture { selectedPost = SelectedPost(id: post.id) }
                     .task { await viewModel.loadMoreIfNeeded(currentPost: post) }
                 }
 

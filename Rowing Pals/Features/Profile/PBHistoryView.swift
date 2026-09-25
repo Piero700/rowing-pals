@@ -300,6 +300,9 @@ struct PBHistoryView: View {
                 .background {
                     Circle().fill(Tokens.Ink.primary.opacity(0.08))
                 }
+                // 30 pt to look at, 44 pt to tap.
+                .frame(width: Tokens.Size.minTap, height: Tokens.Size.minTap)
+                .contentShape(Circle())
         }
         .buttonStyle(.plain)
         .disabled(!enabled)
@@ -318,7 +321,7 @@ struct PBHistoryView: View {
 
             ForEach(Array(viewModel.points.reversed())) { point in
                 resultRow(point)
-                    .onTapGesture { selectedID = point.id }
+                    .asButton { selectedID = point.id }
             }
         }
     }

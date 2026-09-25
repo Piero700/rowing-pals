@@ -44,7 +44,8 @@ struct MetresLeaderboardView: View {
                 HStack(spacing: 7) {
                     ForEach(MetresLeaderboardViewModel.Source.allCases, id: \.self) { source in
                         FilterChip(label: source.label, isSelected: viewModel.source == source)
-                            .onTapGesture { viewModel.source = source }
+                            .frame(minHeight: Tokens.Size.minTap)
+                            .asButton { viewModel.source = source }
                     }
                 }
 

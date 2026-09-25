@@ -218,6 +218,7 @@ struct CaptureView: View {
             InsetCornerGlyph(corner: insetCorner, tint: Tokens.Ink.primary)
                 .frame(width: 18, height: 14)
                 .frame(width: 44, height: 44)
+                .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .glassSurface(cornerRadius: 22)

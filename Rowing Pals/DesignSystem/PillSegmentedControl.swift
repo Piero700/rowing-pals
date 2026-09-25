@@ -5,42 +5,61 @@
 
 import SwiftUI
 
-/// The capsule segmented control used throughout the app — Novice/Senior,
-/// Following/My Club/Global, Week/Month/Year, and similar small option sets.
+/// The v3 segmented control (docs/design/rowing-pals-v3-spec.md §Layout — Segmented control):
+/// a glass capsule, 4 pt padding, equal segments with no gap, each at least 44 pt tall, and a
+/// glass thumb that slides to the selected segment with a slight overshoot. Every segment is a
+/// real button whose whole capsule is tappable. Used for Following/Club, Volume/Test results,
+/// Overview/PBs/Posts and similar small option sets.
 struct PillSegmentedControl: View {
     let options: [String]
     @Binding var selection: Int
 
+    @Namespace private var thumb
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     var body: some View {
         HStack(spacing: 0) {
-            ForEach(Array(options.enumerated()), id: \.offset) { index, option in
-                let isSelected = index == selection
-                Text(option)
-                    .textStyle(Typography.bodySecondary)
-                    .fontWeight(isSelected ? .semibold : .medium)
-                    .foregroundStyle(isSelected ? Tokens.Ink.primary : Tokens.Ink.secondary)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 9)
-                    .background {
-                        if isSelected {
-                            RoundedRectangle(cornerRadius: 13, style: .continuous)
-                                .fill(Tokens.Ink.primary.opacity(0.16))
-                        }
-                    }
-                    .contentShape(Rectangle())
-                    .onTapGesture { selection = index }
+            ForEach(options.indices, id: \.self) { index in
+                segment(index)
             }
         }
-        .padding(3)
-        .background {
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(Tokens.Ink.primary.opacity(0.08))
+        .padding(4)
+        .glassSurface(in: Capsule())
+    }
+
+    private func segment(_ index: Int) -> some View {
+        let isSelected = index == selection
+        return Button {
+            guard index != selection else { return }
+            if reduceMotion {
+                selection = index
+            } else {
+                withAnimation(Tokens.Motion.thumb) { selection = index }
+            }
+        } label: {
+            Text(options[index])
+                .textStyle(Typography.segment)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+                .foregroundStyle(isSelected ? Tokens.Ink.primary : Tokens.Ink.secondary)
+                .frame(maxWidth: .infinity, minHeight: Tokens.Size.minTap)
+                .background {
+                    if isSelected {
+                        Color.clear
+                            .glassSurface(in: Capsule(), isSelected: true, usesNativeGlass: false)
+                            .matchedGeometryEffect(id: "thumb", in: thumb)
+                    }
+                }
+                .contentShape(Capsule())
         }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 }
 
 #Preview {
-    PillSegmentedControl(options: ["Novice", "Senior"], selection: .constant(0))
-        .padding()
+    @Previewable @State var selection = 0
+    PillSegmentedControl(options: ["Following", "Club"], selection: $selection)
+        .padding(15)
         .background(Tokens.Base.ground)
 }
