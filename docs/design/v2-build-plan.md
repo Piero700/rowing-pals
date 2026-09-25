@@ -66,6 +66,14 @@ that they match the prototype.
      `docs/migrations/2026-09-25-lead-piece-and-pb.sql`. 32 unit tests pass; checked in the
      simulator via manual entry + library photos. Next: step 2 (v3 foundation + tap fixes), then v3
      screens (feed carousel, lead-piece numbers and PB glow are built with the v3 feed).
+   - **Step 2 (v3 foundation + tap reliability), BUILT** on branch `t24-v3-foundation` (`4921566`),
+     stacked on `t23-review-session`. Root cause of mis-taps: `.plain` tab items only hit on drawn
+     pixels, plus a card-wide feed tap. New: v3 tokens/type scale, v3 glass (app-wide), button
+     family + `asButton`, sliding segmented control, v3 bottom nav (58 pt, 6 pt from bottom),
+     full-screen Log. Verified by targeted simulator taps; 34 tests pass.
+   - **Known for step 3:** profile consistency grid month labels wrap letter by letter ("M / ar").
+     Note: the clickable prototype renders an 8 pt nav gap; `RP Screen.dc.html` and the README say
+     4 pt — 4 pt is used.
 4. **G — Clubs.** Create club, join policy (open / approval / invite), roles
    (owner / co-owner / admin / member), join requests, owner-only management, onboarding policy
    tags and "Join request pending". Needs schema (roles, policy, requests). Existing base:
