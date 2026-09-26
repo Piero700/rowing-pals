@@ -70,11 +70,11 @@ struct SegmentRowView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 12) {
-                thumbnail
-                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], alignment: .leading, spacing: 3) {
+            thumbnail
+            VStack(spacing: 0) {
+                LazyVGrid(columns: [GridItem(.flexible(), spacing: Tokens.Spacing.gap), GridItem(.flexible())], alignment: .leading, spacing: 14) {
                     editableField(
-                        "Distance", placeholder: "metres", text: $distanceText, keyboard: .numberPad,
+                        "Distance (m)", placeholder: "metres", text: $distanceText, keyboard: .numberPad,
                         field: .distance, onCommit: commitDistance
                     )
                     editableField(
@@ -139,10 +139,13 @@ struct SegmentRowView: View {
                 .buttonStyle(.plain)
             }
         }
-        .padding(12)
+        .padding(Tokens.Spacing.loose)
         .background {
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .fill(Tokens.Ink.primary.opacity(0.05))
+            RoundedRectangle(cornerRadius: Tokens.Radius.card, style: .continuous).fill(Tokens.Surface.card)
+        }
+        .overlay {
+            RoundedRectangle(cornerRadius: Tokens.Radius.card, style: .continuous)
+                .strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1)
         }
     }
 
@@ -157,7 +160,10 @@ struct SegmentRowView: View {
             : "Check the stroke rate against your monitor, then tap Confirm."
     }
 
+    @ViewBuilder
     private var thumbnail: some View {
+        // A manual piece has no photo, so no strip at all.
+        if segment.photoJPEG != nil {
         Group {
             if let data = segment.photoJPEG, let uiImage = UIImage(data: data) {
                 Image(uiImage: uiImage)
@@ -173,8 +179,10 @@ struct SegmentRowView: View {
                     }
             }
         }
-        .frame(width: 44, height: 44)
-        .clipShape(RoundedRectangle(cornerRadius: 13, style: .continuous))
+        .frame(maxWidth: .infinity)
+        .frame(height: 64)
+        .clipShape(RoundedRectangle(cornerRadius: Tokens.Radius.select, style: .continuous))
+        }
     }
 
     /// A labelled field. Low-confidence fields get a cyan underline — never
@@ -184,34 +192,31 @@ struct SegmentRowView: View {
         field: DraftSegment.Field, onCommit: @escaping () -> Void
     ) -> some View {
         let lowConfidence = segment.lowConfidenceFields.contains(field)
-        return VStack(alignment: .leading, spacing: 1) {
-            Text(label)
-                .textStyle(Typography.label)
-                .foregroundStyle(Tokens.Ink.secondary)
+        return VStack(alignment: .leading, spacing: 6) {
+            fieldLabel(label)
             TextField(placeholder, text: text, onEditingChanged: { isEditing in
                 if !isEditing { onCommit() }
             })
-                .font(.system(size: 15, weight: .semibold))
+                .font(.system(size: 16))
                 .tabularNumerals()
                 .foregroundStyle(Tokens.Ink.primary)
                 .keyboardType(keyboard)
                 .focused(focusedField, equals: .field(segmentId: segment.id, field: field))
                 .onSubmit(onCommit)
-                .overlay(alignment: .bottom) { fieldUnderline(lowConfidence: lowConfidence) }
+                .fieldBox(highlighted: lowConfidence)
         }
     }
 
     /// Average pace, derived from distance and time — not a field. Shows a
     /// dash until both are known.
     private var averageField: some View {
-        VStack(alignment: .leading, spacing: 1) {
-            Text(paceDisplay == .split ? "AVG /500M" : "AVG WATTS")
-                .textStyle(Typography.label)
-                .foregroundStyle(Tokens.Ink.secondary)
+        VStack(alignment: .leading, spacing: 6) {
+            fieldLabel(paceDisplay == .split ? "Average /500m" : "Average watts")
             Text(segment.splitMs > 0 ? segment.splitMs.formattedPace(display: paceDisplay) : "—")
-                .font(.system(size: 15, weight: .semibold))
+                .font(.system(size: 16))
                 .tabularNumerals()
-                .foregroundStyle(Tokens.Ink.primary)
+                .foregroundStyle(Tokens.Ink.secondary)
+                .fieldBox(highlighted: false)
                 .accessibilityLabel("Average pace, calculated from distance and time")
         }
     }
@@ -220,38 +225,35 @@ struct SegmentRowView: View {
     /// piece. Tapping Confirm commits any pending edit first, so what is
     /// confirmed is what is shown.
     private var rateField: some View {
-        VStack(alignment: .leading, spacing: 1) {
-            Text("Rate")
-                .textStyle(Typography.label)
-                .foregroundStyle(Tokens.Ink.secondary)
+        VStack(alignment: .leading, spacing: 6) {
+            fieldLabel("Stroke rate")
             HStack(spacing: 6) {
                 TextField("spm", text: $rateText, onEditingChanged: { isEditing in
                     if !isEditing { commitRate() }
                 })
-                    .font(.system(size: 15, weight: .semibold))
+                    .font(.system(size: 16))
                     .tabularNumerals()
                     .foregroundStyle(Tokens.Ink.primary)
                     .keyboardType(.decimalPad)
-                    .frame(minWidth: 36)
+                    .frame(minWidth: 30)
                     .focused(focusedField, equals: .field(segmentId: segment.id, field: .rate))
                     .onSubmit(commitRate)
-                    // Any real edit un-confirms. Compared to the stored rate,
-                    // so the reformat that follows a commit ("19" → "19.0")
-                    // doesn't cancel a confirmation that was just given.
+                    // Any real edit un-confirms. Compared to the stored rate, so the reformat
+                    // that follows a commit ("19" → "19.0") doesn't cancel a confirmation.
                     .onChange(of: rateText) { _, newValue in
                         guard !segment.isManual else { return }
                         if Double(newValue) != segment.rate { segment.isRateConfirmed = false }
-                    }
-                    .overlay(alignment: .bottom) {
-                        fieldUnderline(lowConfidence: segment.lowConfidenceFields.contains(.rate))
                     }
                 if !segment.isManual {
                     confirmButton
                 }
             }
+            .padding(.trailing, segment.isManual ? 0 : -7)
+            .fieldBox(highlighted: segment.lowConfidenceFields.contains(.rate))
         }
     }
 
+    /// v3: a 40 pt glass pill inside the field, brand "Confirm" → "Checked" in the success colour.
     private var confirmButton: some View {
         Button {
             commitRate()
@@ -259,31 +261,29 @@ struct SegmentRowView: View {
             segment.isRateConfirmed = true
         } label: {
             Text(segment.isRateConfirmed ? "Checked" : "Confirm")
-                .font(.system(size: 11.5, weight: .bold))
+                .font(.system(size: 13, weight: .bold))
                 .lineLimit(1)
                 .fixedSize()
-                .foregroundStyle(segment.isRateConfirmed ? Tokens.Accent.success : Tokens.Base.dark)
-                .padding(.horizontal, 9)
-                .padding(.vertical, 5)
+                .foregroundStyle(segment.isRateConfirmed ? Tokens.Accent.success : Tokens.Accent.brand)
+                .padding(.horizontal, 12)
+                .frame(minWidth: 80, minHeight: 40)
                 .background {
-                    Capsule().fill(segment.isRateConfirmed
-                        ? Tokens.Accent.success.opacity(0.16)
-                        : Tokens.Accent.brand)
+                    if segment.isRateConfirmed { Capsule().fill(Tokens.Accent.successSoft) }
                 }
+                .glassSurface(in: Capsule())
+                .contentShape(Capsule())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(IconPressStyle())
         .layoutPriority(1)
         .accessibilityLabel(segment.isRateConfirmed ? "Stroke rate checked" : "Confirm stroke rate")
     }
 
-    /// Every editable field sits on a line so it reads as a field even when
-    /// empty; a low-confidence reading gets a thicker brand line instead —
-    /// never red (CLAUDE.md: this is expected, not an error).
-    private func fieldUnderline(lowConfidence: Bool) -> some View {
-        Rectangle()
-            .fill(lowConfidence ? Tokens.Accent.brand.opacity(0.8) : Tokens.Surface.line)
-            .frame(height: lowConfidence ? 2 : 1)
-            .offset(y: 3)
+    /// v3 field label: 12.5 pt, bold, muted.
+    private func fieldLabel(_ text: String) -> some View {
+        Text(text)
+            .font(.system(size: 12.5, weight: .bold))
+            .foregroundStyle(Tokens.Ink.secondary)
+            .lineLimit(1)
     }
 
     private func commitDistance() {
@@ -320,5 +320,18 @@ struct SegmentRowView: View {
         segment.rate = parsed
         segment.wasEdited = true
         if !segment.isManual { segment.isRateConfirmed = false }
+    }
+}
+
+private extension View {
+    /// v3 input box: 54 pt tall, card fill, 1 pt line, radius 24, 14 pt side padding. A value
+    /// the reader wasn't sure of gets a 2 pt brand border — never red (CLAUDE.md: expected, not
+    /// an error).
+    func fieldBox(highlighted: Bool) -> some View {
+        let shape = RoundedRectangle(cornerRadius: Tokens.Radius.input, style: .continuous)
+        return padding(.horizontal, 14)
+            .frame(maxWidth: .infinity, minHeight: 54, alignment: .leading)
+            .background(shape.fill(Tokens.Surface.card))
+            .overlay { shape.strokeBorder(highlighted ? Tokens.Accent.brand : Tokens.Surface.line, lineWidth: highlighted ? 2 : 1) }
     }
 }

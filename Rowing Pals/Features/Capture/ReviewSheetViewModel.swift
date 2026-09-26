@@ -129,9 +129,11 @@ final class ReviewSheetViewModel {
 
     /// A photographed session starts with the selfie; a manual one with a
     /// single blank piece to type into.
-    init(selfieJPEG: Data?) {
+    /// `startsBlank` is false when a session without a selfie begins from a library photo: that
+    /// photo becomes the first piece instead of a blank one.
+    init(selfieJPEG: Data?, startsBlank: Bool = true) {
         self.selfieJPEG = selfieJPEG
-        if selfieJPEG == nil {
+        if selfieJPEG == nil && startsBlank {
             segments = [DraftSegment(manualLabel: .main)]
         }
     }

@@ -33,17 +33,22 @@ struct PrimaryButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .textStyle(Typography.button)
-            .foregroundStyle(Tokens.Ink.onBrand)
+            .foregroundStyle(isEnabled ? Tokens.Ink.onBrand : Tokens.Ink.faint)
             .frame(maxWidth: .infinity, minHeight: Tokens.Size.primaryButton)
             .padding(.horizontal, 18)
             .background {
-                Capsule().fill(
-                    LinearGradient(
-                        colors: [Tokens.Accent.brand.mix(with: .white, by: 0.12), Tokens.Accent.brand],
-                        startPoint: .top,
-                        endPoint: .bottom
+                if isEnabled {
+                    Capsule().fill(
+                        LinearGradient(
+                            colors: [Tokens.Accent.brand.mix(with: .white, by: 0.12), Tokens.Accent.brand],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
                     )
-                )
+                } else {
+                    // Solid when disabled — a faded button lets content show through it.
+                    Capsule().fill(Tokens.Surface.raised)
+                }
             }
             .overlay {
                 ZStack {
@@ -56,7 +61,6 @@ struct PrimaryButtonStyle: ButtonStyle {
                 .allowsHitTesting(false)
             }
             .shadow(color: Tokens.Accent.brand.opacity(isEnabled ? 0.3 : 0), radius: 11, y: 8)
-            .opacity(isEnabled ? 1 : 0.45)
             .contentShape(Capsule())
             .modifier(PressEffect(isPressed: configuration.isPressed))
     }

@@ -42,20 +42,19 @@ struct ReviewSheetView: View {
     init(selfieJPEG: Data?, initialMonitorPhoto: Data?, onPosted: @escaping () -> Void) {
         self.initialMonitorPhoto = initialMonitorPhoto
         self.onPosted = onPosted
-        _viewModel = State(initialValue: ReviewSheetViewModel(selfieJPEG: selfieJPEG))
+        _viewModel = State(initialValue: ReviewSheetViewModel(selfieJPEG: selfieJPEG, startsBlank: initialMonitorPhoto == nil))
     }
+
+    @Environment(\.dismiss) private var dismissScreen
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
-                Text(viewModel.isManual ? "Enter your session" : "Check your numbers")
-                    .font(.system(size: 22, weight: .bold))
-                    .foregroundStyle(Tokens.Ink.primary)
-
+            VStack(alignment: .leading, spacing: 0) {
                 totalCard
-                workoutLabelPicker
 
-                VStack(spacing: 8) {
+                // "Check" when any number was read from a photo; "Enter" when all were typed.
+                sectionTitle(viewModel.segments.contains { $0.photoJPEG != nil } ? "Check the numbers" : "Enter the numbers")
+                VStack(spacing: Tokens.Spacing.loose) {
                     ForEach($viewModel.segments) { $segment in
                         SegmentRowView(
                             segment: $segment,
@@ -72,60 +71,55 @@ struct ReviewSheetView: View {
                     HStack(spacing: 10) {
                         ProgressView()
                         Text("Reading photo…")
-                            .textStyle(Typography.bodySecondary)
+                            .textStyle(Typography.meta)
                             .foregroundStyle(Tokens.Ink.secondary)
                     }
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 12)
+                    .padding(.vertical, Tokens.Spacing.loose)
                 }
 
                 if viewModel.isManual {
                     addPieceButton
+                        .padding(.top, Tokens.Spacing.loose)
                 }
+
+                sectionTitle("Splits")
+                workoutLabelPicker
+                splitsSummary
+                    .padding(.top, Tokens.Spacing.loose)
+
+                sectionTitle("Caption")
+                captionField
+
+                sectionTitle("Photos")
+                environmentPhotoStrip
                 addPhotoButton
 
-                environmentPhotoStrip
-
                 sessionTypeSection
+                    .padding(.vertical, Tokens.Spacing.loose)
 
                 if viewModel.isManual {
                     Text("Manual sessions count toward your own totals and streak, but never appear on leaderboards or set test results — the numbers can't be checked against a monitor photo.")
-                        .textStyle(Typography.bodySecondary)
+                        .textStyle(Typography.meta)
                         .foregroundStyle(Tokens.Ink.secondary)
                 } else {
                     leaderboardToggle
                 }
 
+                sectionTitle("Who can see this")
                 visibilityPicker
 
-                if let blocker = viewModel.postBlocker {
-                    Text(blocker)
-                        .textStyle(Typography.bodySecondary)
-                        .foregroundStyle(Tokens.Ink.secondary)
-                }
-                if let postError = viewModel.postError {
-                    Text(postError)
-                        .textStyle(Typography.bodySecondary)
-                        .foregroundStyle(Tokens.System.error)
-                }
-
-                HStack(spacing: 10) {
-                    TextField("Add a caption…", text: $viewModel.caption)
-                        .textStyle(Typography.body)
-                        .foregroundStyle(Tokens.Ink.primary)
-                        .padding(.horizontal, 16)
-                        .frame(height: 52)
-                        .glassSurface(cornerRadius: 18)
-
-                    postButton
-                }
+                Color.clear.frame(height: 24)
             }
-            .padding(16)
+            .padding(.horizontal, Tokens.Spacing.screen)
+            .padding(.top, Tokens.Spacing.loose)
         }
+        .scrollIndicators(.hidden)
+        .safeAreaInset(edge: .top, spacing: 0) { header }
+        .safeAreaInset(edge: .bottom, spacing: 0) { postBar }
         .background(Tokens.Base.ground)
+        .toolbar(.hidden, for: .navigationBar)
         .dismissesKeyboardOnTap()
-        .navigationTitle("")
-        .navigationBarTitleDisplayMode(.inline)
         .task {
             guard viewModel.segments.isEmpty, let initialMonitorPhoto else { return }
             await viewModel.addSegment(from: initialMonitorPhoto)
@@ -151,6 +145,112 @@ struct ReviewSheetView: View {
         }
     }
 
+    // MARK: - v3 chrome
+
+    /// Pushed-screen header: glass back button and "Review session".
+    private var header: some View {
+        HStack(spacing: Tokens.Spacing.gap) {
+            GlassIconButton(systemImage: "chevron.left", accessibilityLabel: "Back") { dismissScreen() }
+            Text("Review session")
+                .textStyle(Typography.navTitle)
+                .foregroundStyle(Tokens.Ink.primary)
+                .accessibilityAddTraits(.isHeader)
+            Spacer(minLength: 0)
+        }
+        .padding(.top, 8)
+        .padding(.horizontal, Tokens.Spacing.headerHorizontal)
+        .padding(.bottom, 14)
+        .frame(minHeight: 58)
+        .background(Tokens.Base.ground)
+    }
+
+    private func sectionTitle(_ text: String) -> some View {
+        Text(text)
+            .textStyle(Typography.sectionTitle)
+            .foregroundStyle(Tokens.Ink.secondary)
+            .padding(.horizontal, 2)
+            .padding(.top, Tokens.Spacing.sectionTop)
+            .padding(.bottom, Tokens.Spacing.sectionBottom)
+            .accessibilityAddTraits(.isHeader)
+    }
+
+    /// v3 split rows: a badge (the Main piece wears the workout label in brand), "distance ·
+    /// time", and the pace — one per piece, in order.
+    private var splitsSummary: some View {
+        VStack(spacing: 7) {
+            ForEach(viewModel.segments) { segment in
+                let isMain = segment.label == .main
+                let shape = RoundedRectangle(cornerRadius: Tokens.Radius.input, style: .continuous)
+                HStack(spacing: 8) {
+                    Text(isMain ? (viewModel.sessionKind.testLabel ?? viewModel.workoutLabel.rawValue) : segment.label.rawValue.capitalized)
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundStyle(isMain ? Tokens.Accent.brand : Tokens.Ink.secondary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
+                        .padding(.horizontal, 8)
+                        .frame(minWidth: 72, minHeight: 27)
+                        .background(Capsule().fill(isMain ? Tokens.Accent.brandSoft : Tokens.Surface.raised))
+                    Text("\(segment.distanceM.formattedMetres) · \(segment.timeMs.formattedDurationMs)")
+                        .textStyle(Typography.meta)
+                        .tabularNumerals()
+                        .foregroundStyle(Tokens.Ink.secondary)
+                    Spacer(minLength: 0)
+                    Text(segment.splitMs > 0 ? segment.splitMs.formattedPace(display: paceDisplay) : "—")
+                        .font(.system(size: 13, weight: .bold))
+                        .tabularNumerals()
+                        .foregroundStyle(Tokens.Ink.primary)
+                }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 8)
+                .frame(minHeight: 62)
+                .background(shape.fill(Tokens.Surface.card))
+                .overlay { shape.strokeBorder(Tokens.Surface.line, lineWidth: 1) }
+                .accessibilityElement(children: .combine)
+            }
+        }
+    }
+
+    /// v3 caption box: at least 82 pt tall, card fill, 1 pt line, radius 24.
+    private var captionField: some View {
+        let shape = RoundedRectangle(cornerRadius: Tokens.Radius.input, style: .continuous)
+        return TextField("How did it feel?", text: $viewModel.caption, axis: .vertical)
+            .textStyle(Typography.bodyV3)
+            .foregroundStyle(Tokens.Ink.primary)
+            .lineLimit(3...8)
+            .padding(.horizontal, 14)
+            .padding(.vertical, Tokens.Spacing.loose)
+            .frame(maxWidth: .infinity, minHeight: 82, alignment: .topLeading)
+            .background(shape.fill(Tokens.Surface.card))
+            .overlay { shape.strokeBorder(Tokens.Surface.line, lineWidth: 1) }
+    }
+
+    /// Sticky "Post session" over a fade of the screen colour, with the reason it's unavailable.
+    private var postBar: some View {
+        VStack(spacing: 6) {
+            if let postError = viewModel.postError {
+                Text(postError)
+                    .textStyle(Typography.meta)
+                    .foregroundStyle(Tokens.System.error)
+            } else if let blocker = viewModel.postBlocker {
+                Text(blocker)
+                    .textStyle(Typography.meta)
+                    .foregroundStyle(Tokens.Ink.secondary)
+            }
+            postButton
+        }
+        .padding(.horizontal, Tokens.Spacing.screen)
+        .padding(.top, 10)
+        .padding(.bottom, 8)
+        .background(Tokens.Base.ground.ignoresSafeArea())
+        // Content fades out just above the bar rather than stopping at a hard edge.
+        .overlay(alignment: .top) {
+            LinearGradient(colors: [Tokens.Base.ground.opacity(0), Tokens.Base.ground], startPoint: .top, endPoint: .bottom)
+                .frame(height: 24)
+                .offset(y: -24)
+                .allowsHitTesting(false)
+        }
+    }
+
     // MARK: - Main workout label
 
     /// "Main workout label" — the badge on the main split. A test replaces
@@ -158,9 +258,7 @@ struct ReviewSheetView: View {
     @ViewBuilder
     private var workoutLabelPicker: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text("MAIN WORKOUT LABEL")
-                .textStyle(Typography.label)
-                .foregroundStyle(Tokens.Ink.secondary)
+            fieldLabel("Main workout label")
             if let testLabel = viewModel.sessionKind.testLabel {
                 menuRow(text: testLabel)
                     .opacity(0.6)
@@ -185,19 +283,30 @@ struct ReviewSheetView: View {
     private func menuRow(text: String) -> some View {
         HStack {
             Text(text)
-                .font(.system(size: 15.5, weight: .semibold))
+                .font(.system(size: 15))
                 .foregroundStyle(Tokens.Ink.primary)
             Spacer()
             Image(systemName: "chevron.up.chevron.down")
                 .font(.system(size: 12, weight: .semibold))
                 .foregroundStyle(Tokens.Ink.secondary)
         }
-        .padding(.horizontal, 16)
-        .frame(height: 48)
+        .padding(Tokens.Spacing.loose)
+        .frame(minHeight: Tokens.Size.minTap)
         .background {
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(Tokens.Ink.primary.opacity(0.07))
+            RoundedRectangle(cornerRadius: Tokens.Radius.select, style: .continuous).fill(Tokens.Surface.raised)
         }
+        .overlay {
+            RoundedRectangle(cornerRadius: Tokens.Radius.select, style: .continuous)
+                .strokeBorder(Tokens.Surface.line, lineWidth: 1)
+        }
+        .contentShape(RoundedRectangle(cornerRadius: Tokens.Radius.select, style: .continuous))
+    }
+
+    /// v3 field label: 12.5 pt, bold, muted.
+    private func fieldLabel(_ text: String) -> some View {
+        Text(text)
+            .font(.system(size: 12.5, weight: .bold))
+            .foregroundStyle(Tokens.Ink.secondary)
     }
 
     // MARK: - Pieces and photos
@@ -207,35 +316,20 @@ struct ReviewSheetView: View {
         Button {
             viewModel.addManualSegment()
         } label: {
-            Text("+ Add another piece")
-                .textStyle(Typography.body)
-                .foregroundStyle(Tokens.Ink.secondary)
-                .frame(maxWidth: .infinity, minHeight: 44)
-                .background {
-                    RoundedRectangle(cornerRadius: 20, style: .continuous)
-                        .fill(Tokens.Ink.primary.opacity(0.05))
-                }
+            Label("Add another piece", systemImage: "plus")
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.rpGlass)
     }
 
-    /// One way to add any photo — camera or library. Each is read: a monitor
-    /// becomes a piece, anything else an environment photo
-    /// (docs/design/v2-decisions.md #8–9).
+    /// One way to add any photo — camera or library. Each is read: a monitor becomes a piece,
+    /// anything else an environment photo (docs/design/v2-decisions.md #8–9).
     private var addPhotoButton: some View {
         Button {
             isShowingAddPhotoChoice = true
         } label: {
-            Label("Add photo", systemImage: "camera")
-                .textStyle(Typography.body)
-                .foregroundStyle(Tokens.Accent.brand)
-                .frame(maxWidth: .infinity, minHeight: 44)
-                .background {
-                    RoundedRectangle(cornerRadius: 20, style: .continuous)
-                        .fill(Tokens.Ink.primary.opacity(0.05))
-                }
+            Text("Add another photo")
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.rpGlass)
         .disabled(viewModel.isProcessingPhoto)
     }
 
@@ -245,9 +339,6 @@ struct ReviewSheetView: View {
     private var environmentPhotoStrip: some View {
         if !viewModel.galleryPhotos.isEmpty {
             VStack(alignment: .leading, spacing: 8) {
-                Text("PHOTOS")
-                    .textStyle(Typography.label)
-                    .foregroundStyle(Tokens.Ink.secondary)
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 8) {
                         ForEach(viewModel.galleryPhotos) { photo in
@@ -256,8 +347,9 @@ struct ReviewSheetView: View {
                     }
                 }
                 Text("Press and hold a photo if it's actually a monitor photo.")
-                    .textStyle(Typography.bodySecondary)
+                    .textStyle(Typography.meta)
                     .foregroundStyle(Tokens.Ink.secondary)
+                    .padding(.bottom, Tokens.Spacing.loose)
             }
         }
     }
@@ -343,9 +435,7 @@ struct ReviewSheetView: View {
 
             if !viewModel.isManual {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("SESSION TYPE")
-                        .textStyle(Typography.label)
-                        .foregroundStyle(Tokens.Ink.secondary)
+                    fieldLabel("Session type")
                     Menu {
                         Picker("Session type", selection: $viewModel.sessionKind) {
                             ForEach(viewModel.availableKinds) { kind in
@@ -369,22 +459,23 @@ struct ReviewSheetView: View {
     /// volume on the leaderboards. Off still counts it in your own profile
     /// and streak.
     private var leaderboardToggle: some View {
-        Toggle(isOn: $viewModel.includeOnLeaderboards) {
+        let shape = RoundedRectangle(cornerRadius: Tokens.Radius.card, style: .continuous)
+        return Toggle(isOn: $viewModel.includeOnLeaderboards) {
             VStack(alignment: .leading, spacing: 2) {
                 Text("Include on leaderboards")
-                    .font(.system(size: 15, weight: .semibold))
+                    .font(.system(size: 14, weight: .bold))
                     .foregroundStyle(Tokens.Ink.primary)
                 Text("Include this session in your volume totals.")
-                    .textStyle(Typography.bodySecondary)
+                    .textStyle(Typography.meta)
                     .foregroundStyle(Tokens.Ink.secondary)
             }
         }
         .tint(Tokens.Accent.success)
-        .padding(14)
-        .background {
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .fill(Tokens.Ink.primary.opacity(0.05))
-        }
+        .padding(.horizontal, Tokens.Spacing.loose)
+        .padding(.vertical, 9)
+        .frame(minHeight: 66)
+        .background(shape.fill(Tokens.Surface.card))
+        .overlay { shape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
     }
 
     /// Who can see this post — a new choice at post time, added after
@@ -396,9 +487,6 @@ struct ReviewSheetView: View {
             set: { viewModel.visibility = PostVisibility.allCases[$0] }
         )
         return VStack(alignment: .leading, spacing: 6) {
-            Text("WHO CAN SEE THIS")
-                .textStyle(Typography.label)
-                .foregroundStyle(Tokens.Ink.secondary)
             PillSegmentedControl(options: PostVisibility.allCases.map(\.label), selection: selection)
         }
     }
@@ -409,25 +497,24 @@ struct ReviewSheetView: View {
         paceDisplay == .split ? "AVG /500M" : "AVG WATTS"
     }
 
+    /// v3 "Workout total" card: overline, 29 pt heavy number with a small muted unit.
     private var totalCard: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("SESSION TOTAL")
-                .textStyle(Typography.label)
+        let shape = RoundedRectangle(cornerRadius: Tokens.Radius.card, style: .continuous)
+        return VStack(alignment: .leading, spacing: 6) {
+            Text("Workout total")
+                .textStyle(Typography.overline)
                 .foregroundStyle(Tokens.Ink.secondary)
-            HStack(alignment: .lastTextBaseline, spacing: 8) {
-                Text(viewModel.totalDistanceM > 0 ? viewModel.totalDistanceM.formattedMetres : "—")
-                    .font(.system(size: 31, weight: .bold))
-                    .tabularNumerals()
-                    .foregroundStyle(Tokens.Ink.primary)
-            }
-            HStack(spacing: 24) {
-                StatColumn(label: "TIME", value: viewModel.totalTimeMs > 0 ? viewModel.totalTimeMs.formattedDurationMs : "—")
-                StatColumn(label: avgSplitLabel, value: viewModel.avgSplitMs?.formattedPace(display: paceDisplay) ?? "—")
-                StatColumn(label: "RATE", value: viewModel.avgRate.map { "r\(Int($0.rounded()))" } ?? "—")
-            }
+            (Text(viewModel.totalDistanceM > 0 ? viewModel.totalDistanceM.formattedWithGrouping : "—")
+                + Text(viewModel.totalDistanceM > 0 ? " m" : "").font(.system(size: 15)).foregroundColor(Tokens.Ink.secondary))
+                .textStyle(Typography.reviewResult)
+                .tabularNumerals()
+                .foregroundStyle(Tokens.Ink.primary)
         }
-        .padding(14)
-        .glassSurface(cornerRadius: 24)
+        .padding(Tokens.Spacing.card)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(shape.fill(Tokens.Surface.card))
+        .overlay { shape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+        .accessibilityElement(children: .combine)
     }
 
     /// "Nothing enters the rankings without this choice" (design brief) —
@@ -488,21 +575,13 @@ struct ReviewSheetView: View {
                 if await viewModel.post() { onPosted() }
             }
         } label: {
-            Group {
-                if viewModel.isPosting {
-                    ProgressView().tint(Tokens.Base.dark)
-                } else {
-                    Text("Post")
-                        .font(.system(size: 16, weight: .bold))
-                        .foregroundStyle(Tokens.Base.dark)
-                }
-            }
-            .frame(width: 104, height: 52)
-            .background {
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .fill(Tokens.Accent.brand.opacity(viewModel.canPost ? 1 : 0.4))
+            if viewModel.isPosting {
+                ProgressView().tint(Tokens.Ink.onBrand)
+            } else {
+                Text("Post session")
             }
         }
+        .buttonStyle(.rpPrimary)
         .disabled(!viewModel.canPost)
     }
 
