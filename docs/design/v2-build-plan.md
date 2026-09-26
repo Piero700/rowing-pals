@@ -85,8 +85,10 @@ that they match the prototype.
      its total), 7×12 consistency grid (fixes the wrapping month labels), recent activity →
      workout (new `.post` route). "Your club" button waits for phase G. Other-rower mode keeps
      phase E behaviour with v3 styling; the full §08 layout (rank mini-cards) is still to do.
-   - Remaining v3 screens: Log/Review, Settings, Other profile (§08 details), Find rowers,
-     PB history, All PBs, Onboarding, Clubs (with phase G).
+   - **Log + Review BUILT** (`f864f86`): v3 §04/§05; library start = personal-only session; Help
+     sheet; inset corner moved by press-and-hold (v3 has no corner button).
+   - Remaining v3 screens: Settings, Other profile (§08 details), Find rowers, PB history,
+     All PBs, Onboarding, Clubs (with phase G).
    - **Known for step 3:** profile consistency grid month labels wrap letter by letter ("M / ar").
      Note: the clickable prototype renders an 8 pt nav gap; `RP Screen.dc.html` and the README say
      4 pt — 4 pt is used.
