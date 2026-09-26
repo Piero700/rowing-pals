@@ -9,6 +9,8 @@ import SwiftUI
 
 @main
 struct Rowing_PalsApp: App {
+    /// Push notifications' device-token and alert-tap callbacks (see `AppDelegate`).
+    @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @State private var authState = AuthState()
 
     /// Settings → Appearance; dark is the primary design.

@@ -14,6 +14,11 @@ struct SettingsView: View {
     @State private var isShowingTerms = false
     @State private var isShowingPrivacy = false
     @State private var isShowingDeleteConfirmation = false
+    @State private var isShowingQuietHours = false
+    /// Whether iOS allows alerts, re-read on return from the iOS Settings app.
+    @State private var push = PushNotificationService.shared
+    @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.openURL) private var openURL
     /// Redesign phase B — per-device display preferences, not synced to
     /// the profile. See DesignSystem/DistanceUnit.swift (leaderboards only)
     /// and PaceDisplay.swift.
@@ -28,9 +33,9 @@ struct SettingsView: View {
     private static let cardShape = RoundedRectangle(cornerRadius: Tokens.Radius.card, style: .continuous)
 
     /// v3 Settings (`docs/design/v3/RP Screen.dc.html` §07): grouped cards of 66 pt rows —
-    /// Appearance, Units and display, Privacy, Account — then Delete account and the version.
-    /// Left out by decision: the app-icon section (14) and CSV export (15). Notifications, quiet
-    /// hours and "Who can comment" wait until the app sends notifications / the user confirms them.
+    /// Appearance, Units and display, Notifications, Privacy, Account — then Delete account and
+    /// the version. Left out by decision: the app-icon section (14) and CSV export (15).
+    /// "Who can comment" waits for the user's go-ahead.
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -62,6 +67,8 @@ struct SettingsView: View {
                             .frame(width: 145)
                         }
                     }
+
+                    notificationsGroup
 
                     group("Privacy") {
                         row(title: "Profile visibility", subtitle: nil) {
@@ -127,6 +134,15 @@ struct SettingsView: View {
             .sheet(isPresented: $isShowingPrivacy) {
                 privacySheet
                     .presentationDetents([.medium])
+            }
+            .sheet(isPresented: $isShowingQuietHours) {
+                quietHoursSheet
+                    .presentationDetents([.medium])
+            }
+            .onChange(of: scenePhase) { _, phase in
+                if phase == .active {
+                    Task { await push.refreshAuthorizationStatus() }
+                }
             }
             .disabled(viewModel.isDeletingAccount)
             .overlay {
@@ -195,7 +211,7 @@ struct SettingsView: View {
         HStack(spacing: Tokens.Spacing.gap) {
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
-                    .font(.system(size: 14, weight: .bold))
+                    .textStyle(Typography.rowTitle)
                     .foregroundStyle(Tokens.Ink.primary)
                 if let subtitle {
                     Text(subtitle)
@@ -257,6 +273,120 @@ struct SettingsView: View {
         let version = info?["CFBundleShortVersionString"] as? String ?? "1.0"
         let build = info?["CFBundleVersion"] as? String ?? "1"
         return "Rowing Pals \(version) (\(build))"
+    }
+
+    // MARK: - Notifications
+
+    /// v3 §07: three switches, then Quiet hours (docs/design/v2-decisions.md #19). If iOS has
+    /// alerts turned off for the app, a first row says so and opens the page in the iOS
+    /// Settings app where they're turned back on — the switches alone can't override iOS.
+    private var notificationsGroup: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            group("Notifications") {
+                if push.authorizationStatus == .denied {
+                    row(title: "Notifications are off", subtitle: "Allow them in iOS Settings to get alerts.") {
+                        chevron
+                    } action: {
+                        if let url = URL(string: UIApplication.openNotificationSettingsURLString) {
+                            openURL(url)
+                        }
+                    }
+                    divider
+                }
+                if let settings = viewModel.notificationSettings {
+                    toggleRow(title: "Comments and replies", subtitle: "Including your own threads", \.comments)
+                    divider
+                    toggleRow(title: "Personal bests", subtitle: "When you or a friend beats one", \.personalBests)
+                    divider
+                    toggleRow(
+                        title: "Club activity",
+                        subtitle: "New posts from \(viewModel.clubName ?? "your club")",
+                        \.clubActivity
+                    )
+                    divider
+                    row(title: "Quiet hours", subtitle: settings.quietHoursLabel) { chevron } action: {
+                        isShowingQuietHours = true
+                    }
+                } else {
+                    rowContent(title: "Notifications", subtitle: "Loading…") { ProgressView() }
+                }
+            }
+            if let error = viewModel.notificationError {
+                Text(error)
+                    .textStyle(Typography.meta)
+                    .foregroundStyle(Tokens.System.error)
+                    .padding(.top, 6)
+            }
+        }
+    }
+
+    /// A 66 pt row whose trailing control is a switch; on = the success colour, as v3's
+    /// `.switch` and the Review screen's "Include on leaderboards".
+    private func toggleRow(
+        title: String, subtitle: String, _ keyPath: WritableKeyPath<NotificationSettings, Bool>
+    ) -> some View {
+        Toggle(isOn: Binding(
+            get: { viewModel.notificationSettings?[keyPath: keyPath] ?? false },
+            set: { value in Task { await viewModel.updateNotifications { $0[keyPath: keyPath] = value } } }
+        )) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .textStyle(Typography.rowTitle)
+                    .foregroundStyle(Tokens.Ink.primary)
+                Text(subtitle)
+                    .textStyle(Typography.meta)
+                    .foregroundStyle(Tokens.Ink.secondary)
+            }
+        }
+        .tint(Tokens.Accent.success)
+        .padding(.horizontal, Tokens.Spacing.loose)
+        .padding(.vertical, 9)
+        .frame(minHeight: 66)
+    }
+
+    /// Opened from the Quiet hours row. The design shows only the row; this sheet follows
+    /// the privacy sheet's pattern. Times are on the 24-hour clock, as the row shows them.
+    private var quietHoursSheet: some View {
+        NavigationStack {
+            Form {
+                if let settings = viewModel.notificationSettings {
+                    Section {
+                        Toggle("Quiet hours", isOn: Binding(
+                            get: { settings.quietHoursEnabled },
+                            set: { value in Task { await viewModel.updateNotifications { $0.quietHoursEnabled = value } } }
+                        ))
+                        .tint(Tokens.Accent.success)
+                        if settings.quietHoursEnabled {
+                            DatePicker("From", selection: Binding(
+                                get: { settings.quietStart.date() },
+                                set: { date in Task { await viewModel.updateNotifications { $0.quietStart = ClockTime(date: date) } } }
+                            ), displayedComponents: .hourAndMinute)
+                            DatePicker("Until", selection: Binding(
+                                get: { settings.quietEnd.date() },
+                                set: { date in Task { await viewModel.updateNotifications { $0.quietEnd = ClockTime(date: date) } } }
+                            ), displayedComponents: .hourAndMinute)
+                        }
+                    } footer: {
+                        Text("Alerts that arrive during quiet hours make no sound and leave your screen dark. They wait in Notification Centre. Times follow your phone's clock.")
+                    }
+                    if let error = viewModel.notificationError {
+                        Section {
+                            Text(error).foregroundStyle(Tokens.System.error)
+                        }
+                    }
+                }
+            }
+            .environment(\.locale, Locale(identifier: "en_GB"))
+            .monospacedDigit()
+            .navigationTitle("Quiet hours")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") { isShowingQuietHours = false }
+                }
+            }
+        }
+        .preferredColorScheme(appearance.colorScheme)
     }
 
     /// The prototype's privacy sheet (docs/design/

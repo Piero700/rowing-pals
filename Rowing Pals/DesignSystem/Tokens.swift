@@ -210,6 +210,8 @@ enum Typography {
     static let heroNumber = Style(size: 32, weight: .bold, trackingEm: -0.031, uppercase: false)
     static let bodyV3 = Style(size: 16, weight: .regular, trackingEm: 0, uppercase: false)
     static let name = Style(size: 15, weight: .bold, trackingEm: 0, uppercase: false)
+    /// The title of a settings row or switch row.
+    static let rowTitle = Style(size: 14, weight: .bold, trackingEm: 0, uppercase: false)
     static let meta = Style(size: 12.8, weight: .regular, trackingEm: 0, uppercase: false)
     static let sectionTitle = Style(size: 12, weight: .heavy, trackingEm: 0.09, uppercase: true)
     static let overline = Style(size: 12, weight: .bold, trackingEm: 0.1, uppercase: true)

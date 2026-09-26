@@ -48,6 +48,9 @@ struct RootView: View {
     /// `navigate` environment action; this is the one place that turns it
     /// into a screen.
     @State private var presentedRoute: AppRoute?
+    /// A tapped push alert's post arrives here (docs/design/v2-decisions.md #19).
+    @State private var push = PushNotificationService.shared
+    @AppStorage(Appearance.storageKey) private var appearance: Appearance = .dark
 
     /// House/bar-chart/person — matches the prototype's actual inline SVG
     /// icon defs (`#home`/`#rank`/`#user`), not a guess at "something
@@ -89,6 +92,18 @@ struct RootView: View {
             .fullScreenCover(item: $presentedRoute) { route in
                 RouteHost(root: route)
             }
+            .task { await push.start() }
+            .onChange(of: push.pendingRoute, initial: true) {
+                // Next run loop: on a launch from an alert, the window is still being set up.
+                Task { openPendingRoute() }
+            }
+    }
+
+    /// Opens a tapped alert's post over whatever is showing (see `AlertRoutePresenter`).
+    private func openPendingRoute() {
+        guard let route = push.pendingRoute,
+              AlertRoutePresenter.present(route, colorScheme: appearance.colorScheme) else { return }
+        push.pendingRoute = nil
     }
 
     /// All three live simultaneously — see the doc comment above for why.

@@ -45,3 +45,9 @@ Other prototype items are placeholders and need the user's go-ahead before build
 |---|---|---|
 | 17 | Rankings scope | **My club / Following only** — v3's "All" (app-wide) is not added; the global-scope cancellation stands. |
 | 18 | Rankings period and source | Keep **Week / Month / Year** and **All / Erg / Water** alongside v3's layout; the hero card names the chosen period. |
+
+## Push notifications (decided 2026-09-26)
+
+| # | Topic | Decision |
+|---|---|---|
+| 19 | Notifications | **Built now, delivered once the paid Apple Developer Program is joined** (free accounts can't use push; the user chose "build now, enrol later"). v3 Settings' three switches plus Quiet hours, saved per rower in `notification_settings`. **Comments and replies**: a comment on your post, or on a post you've commented on (comments have no separate reply). **Personal bests**: your own new PB, and a new PB by someone you follow ("you or a friend"). **Club activity**: a clubmate posts; off by default, as in v3. Every alert obeys the feed's rules (blocks, private accounts, post visibility). **Quiet hours** (default 22:00–06:30, on the rower's own clock, editable in a sheet): alerts still arrive but silently, no sound and screen stays dark, waiting in Notification Centre. Tapping an alert opens the post above whatever is on screen. Server: triggers in `docs/migrations/2026-09-26-notifications.sql`, the `send-push` Edge Function, one database webhook; setup and tests in `docs/testing/notifications.md`. |

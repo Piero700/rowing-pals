@@ -90,8 +90,12 @@ that they match the prototype.
    - **Settings BUILT**: v3 §07 grouped cards; real Dark/Light appearance (app-wide, remembered);
      compact Metres|km (leaderboards) and Split|Watts; Privacy row → sheet; Edit profile screen;
      Log out; Contact + Terms (App Store requirement); Delete account; version. Left out: app icon
-     (14), CSV (15); Notifications / Quiet hours / Who can comment need the user's go-ahead (no
-     push notifications exist yet).
+     (14), CSV (15); "Who can comment" needs the user's go-ahead.
+   - **Notifications BUILT** (branch `t26-notifications`, decision 19): Settings switches + Quiet
+     hours sheet, permission prompt, device registration, alert tap opens the post over anything.
+     Server: migration `2026-09-26-notifications.sql`, `send-push` Edge Function (deployed to
+     staging), database webhook. **Alerts reach a phone only after the paid Apple Developer Program
+     is joined** and the push key is added — steps in `docs/testing/notifications.md` Part 3.
    - Remaining v3 screens: Other profile (§08 details), Find rowers, PB history, All PBs,
      Onboarding, Clubs (with phase G).
    - **Known for step 3:** profile consistency grid month labels wrap letter by letter ("M / ar").
@@ -118,4 +122,6 @@ that they match the prototype.
 
 - The prediction algorithm (phase K).
 - Concrete description of what is still wrong with the tab bar (phase L).
-- Go-ahead on placeholders: quiet hours, "Who can comment".
+- Go-ahead on the placeholder "Who can comment".
+- Joining the paid Apple Developer Program, so push notifications can be delivered (and for
+  TestFlight). Then the push key + capability (`docs/testing/notifications.md` Part 3).
