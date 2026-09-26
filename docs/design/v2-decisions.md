@@ -38,3 +38,10 @@ Other prototype items are placeholders and need the user's go-ahead before build
 | 14 | App icon | **No app-icon section at all** in Settings for now — no icon changes. |
 | 15 | CSV export | Still **no export** (decision 4 stands over v3's "Export CSV" row). |
 | 16 | Feed numbers | The feed card's Distance / Time / /500m trio shows the **lead piece's own** numbers (decision 10's most intense piece), not the session totals. |
+
+## v3 Rankings (decided 2026-09-26)
+
+| # | Topic | Decision |
+|---|---|---|
+| 17 | Rankings scope | **My club / Following only** — v3's "All" (app-wide) is not added; the global-scope cancellation stands. |
+| 18 | Rankings period and source | Keep **Week / Month / Year** and **All / Erg / Water** alongside v3's layout; the hero card names the chosen period. |
