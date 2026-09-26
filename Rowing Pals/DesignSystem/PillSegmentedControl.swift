@@ -13,6 +13,8 @@ import SwiftUI
 struct PillSegmentedControl: View {
     let options: [String]
     @Binding var selection: Int
+    /// v3's settings-row variant: 38 pt segments, 3 pt padding, 13 pt labels.
+    var compact = false
 
     @Namespace private var thumb
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -23,7 +25,7 @@ struct PillSegmentedControl: View {
                 segment(index)
             }
         }
-        .padding(4)
+        .padding(compact ? 3 : 4)
         .glassSurface(in: Capsule())
     }
 
@@ -38,11 +40,12 @@ struct PillSegmentedControl: View {
             }
         } label: {
             Text(options[index])
-                .textStyle(Typography.segment)
+                .font(.system(size: compact ? 13 : 14, weight: .bold))
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
                 .foregroundStyle(isSelected ? Tokens.Ink.primary : Tokens.Ink.secondary)
-                .frame(maxWidth: .infinity, minHeight: Tokens.Size.minTap)
+                // A compact segment draws 38 pt but still takes taps across 44 pt.
+                .frame(maxWidth: .infinity, minHeight: compact ? 38 : Tokens.Size.minTap)
                 .background {
                     if isSelected {
                         Color.clear
@@ -50,7 +53,7 @@ struct PillSegmentedControl: View {
                             .matchedGeometryEffect(id: "thumb", in: thumb)
                     }
                 }
-                .contentShape(Capsule())
+                .contentShape(Capsule().inset(by: compact ? -3 : 0))
         }
         .buttonStyle(.plain)
         .accessibilityAddTraits(isSelected ? .isSelected : [])

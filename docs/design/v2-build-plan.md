@@ -87,8 +87,13 @@ that they match the prototype.
      phase E behaviour with v3 styling; the full §08 layout (rank mini-cards) is still to do.
    - **Log + Review BUILT** (`f864f86`): v3 §04/§05; library start = personal-only session; Help
      sheet; inset corner moved by press-and-hold (v3 has no corner button).
-   - Remaining v3 screens: Settings, Other profile (§08 details), Find rowers, PB history,
-     All PBs, Onboarding, Clubs (with phase G).
+   - **Settings BUILT**: v3 §07 grouped cards; real Dark/Light appearance (app-wide, remembered);
+     compact Metres|km (leaderboards) and Split|Watts; Privacy row → sheet; Edit profile screen;
+     Log out; Contact + Terms (App Store requirement); Delete account; version. Left out: app icon
+     (14), CSV (15); Notifications / Quiet hours / Who can comment need the user's go-ahead (no
+     push notifications exist yet).
+   - Remaining v3 screens: Other profile (§08 details), Find rowers, PB history, All PBs,
+     Onboarding, Clubs (with phase G).
    - **Known for step 3:** profile consistency grid month labels wrap letter by letter ("M / ar").
      Note: the clickable prototype renders an 8 pt nav gap; `RP Screen.dc.html` and the README say
      4 pt — 4 pt is used.

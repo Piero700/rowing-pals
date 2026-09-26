@@ -11,8 +11,12 @@ import SwiftUI
 struct Rowing_PalsApp: App {
     @State private var authState = AuthState()
 
+    /// Settings → Appearance; dark is the primary design.
+    @AppStorage(Appearance.storageKey) private var appearance: Appearance = .dark
+
     var body: some Scene {
         WindowGroup {
+            Group {
             if !authState.isSignedIn {
                 SignInView()
             } else if authState.needsOnboarding == nil {
@@ -24,6 +28,8 @@ struct Rowing_PalsApp: App {
             } else {
                 RootView()
             }
+            }
+            .preferredColorScheme(appearance.colorScheme)
         }
         .environment(authState)
     }
