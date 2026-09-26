@@ -41,6 +41,7 @@ final class MetresLeaderboardViewModel {
         let rank: Int
         let name: String
         let club: String?
+        let level: RowerCategory?
         let metres: Int
         /// Fraction of `metres` that's erg, for the two-tone bar — always
         /// the row's true erg/water mix, regardless of which figure
@@ -67,12 +68,20 @@ final class MetresLeaderboardViewModel {
     }
 
     var rankedRows: [Row] = []
+
+    /// Whether the viewer is in the group these filters select, whether or not they have
+    /// logged metres in the period — tells "no metres yet" apart from "not in this group".
+    var viewerMatchesFilters: Bool {
+        guard let ownUserId else { return false }
+        return aggregates[ownUserId] != nil
+    }
     var isLoading = false
     var errorMessage: String?
 
     private struct Aggregate {
         let name: String
         let club: String?
+        var level: RowerCategory? = nil
         var distanceM = 0
         var ergDistanceM = 0
         var waterDistanceM = 0
@@ -133,18 +142,20 @@ final class MetresLeaderboardViewModel {
                 struct Club: Decodable { let name: String }
                 let id: UUID
                 let displayName: String
+                let category: RowerCategory?
                 let club: Club?
 
                 enum CodingKeys: String, CodingKey {
                     case id
                     case displayName = "display_name"
+                    case category
                     case club = "clubs"
                 }
             }
 
             var profileQuery = SupabaseService.shared
                 .from("profiles")
-                .select("id, display_name, clubs(name)")
+                .select("id, display_name, category, clubs(name)")
                 .in("id", values: scopeIds)
             if let gender = filters.gender { profileQuery = profileQuery.eq("gender", value: gender.rawValue) }
             if let level = filters.level { profileQuery = profileQuery.eq("category", value: level.rawValue) }
@@ -217,7 +228,7 @@ final class MetresLeaderboardViewModel {
 
             var newAggregates: [UUID: Aggregate] = [:]
             for row in profileRows {
-                newAggregates[row.id] = Aggregate(name: row.displayName, club: row.club?.name)
+                newAggregates[row.id] = Aggregate(name: row.displayName, club: row.club?.name, level: row.category)
             }
             for row in totalRows {
                 newAggregates[row.userId]?.distanceM += row.distanceM
@@ -265,6 +276,7 @@ final class MetresLeaderboardViewModel {
                     rank: index + 1,
                     name: aggregate.name,
                     club: aggregate.club,
+                    level: aggregate.level,
                     metres: metres(aggregate),
                     ergFraction: fraction,
                     isCurrentUser: userId == currentUserId,
