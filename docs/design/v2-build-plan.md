@@ -78,6 +78,15 @@ that they match the prototype.
      without a club waits for phase G (the onboarding club search can't be reused for it).
      Next screens in order: Rankings, Profile, Log/Review, Settings, Other profile, Find rowers,
      PB history, All PBs, Onboarding.
+   - **Rankings (Volume) BUILT** (`7a97110`): v3 layout; decisions 17–18 keep My club / Following
+     only, Week / Month / Year and All / Erg / Water. v3 lists 7 tests; the app keeps its 9.
+   - **Profile BUILT**: v3 header + Settings gear, centred identity, counts, 4-up stats, top PBs,
+     estimate cards (dash until the algorithm arrives — decision 2), v3 weekly chart (tap a bar for
+     its total), 7×12 consistency grid (fixes the wrapping month labels), recent activity →
+     workout (new `.post` route). "Your club" button waits for phase G. Other-rower mode keeps
+     phase E behaviour with v3 styling; the full §08 layout (rank mini-cards) is still to do.
+   - Remaining v3 screens: Log/Review, Settings, Other profile (§08 details), Find rowers,
+     PB history, All PBs, Onboarding, Clubs (with phase G).
    - **Known for step 3:** profile consistency grid month labels wrap letter by letter ("M / ar").
      Note: the clickable prototype renders an 8 pt nav gap; `RP Screen.dc.html` and the README say
      4 pt — 4 pt is used.

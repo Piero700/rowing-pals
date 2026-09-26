@@ -23,6 +23,8 @@ struct RouteHost: View {
     var body: some View {
         NavigationStack(path: $path) {
             destination(root)
+                // The workout screen draws its own back button over its photo.
+                .toolbar(Self.drawsOwnChrome(root) ? .hidden : .visible, for: .navigationBar)
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) {
                         Button {
@@ -47,6 +49,11 @@ struct RouteHost: View {
         })
     }
 
+    private static func drawsOwnChrome(_ route: AppRoute) -> Bool {
+        if case .post = route { return true }
+        return false
+    }
+
     @ViewBuilder
     private func destination(_ route: AppRoute) -> some View {
         switch route {
@@ -58,6 +65,9 @@ struct RouteHost: View {
             FollowRequestsView()
         case .log:
             EmptyView()
+        case .post(let sessionId):
+            PostDetailView(sessionId: sessionId)
+                .toolbar(.hidden, for: .navigationBar)
         }
     }
 }
