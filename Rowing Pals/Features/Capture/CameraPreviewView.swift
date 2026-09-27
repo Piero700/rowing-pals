@@ -31,12 +31,19 @@ struct CameraPreviewView: UIViewRepresentable {
     final class PreviewUIView: UIView {
         private var hostedLayer: AVCaptureVideoPreviewLayer?
 
+        /// "Flip camera" swaps layers between the big preview and the inset. A layer lives in
+        /// one place only — adding it here silently takes it from the other view — so this view
+        /// removes its old layer only if it still holds it, and takes back its own if the other
+        /// view has it. Removing unconditionally tore the big view's new layer back out, leaving
+        /// the big preview blank for good.
         func host(_ layer: AVCaptureVideoPreviewLayer) {
-            guard hostedLayer !== layer else {
+            if hostedLayer === layer, layer.superlayer === self.layer {
                 layer.frame = bounds
                 return
             }
-            hostedLayer?.removeFromSuperlayer()
+            if let hostedLayer, hostedLayer !== layer, hostedLayer.superlayer === self.layer {
+                hostedLayer.removeFromSuperlayer()
+            }
             layer.videoGravity = .resizeAspectFill
             layer.frame = bounds
             self.layer.addSublayer(layer)
