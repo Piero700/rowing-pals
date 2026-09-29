@@ -31,6 +31,7 @@ struct ProfileView: View {
     @State private var viewModel: ProfileViewModel
     @State private var expandedTest: StandardTest?
     @State private var isShowingSettings = false
+    @State private var isShowingAllPBs = false
     @State private var tab: Tab = .overview
     @Environment(\.navigate) private var navigate
     @Environment(\.dismiss) private var dismiss
@@ -89,6 +90,9 @@ struct ProfileView: View {
         .refreshable { await viewModel.load() }
         .fullScreenCover(item: $expandedTest) { test in
             PBHistoryView(test: test, userId: viewing)
+        }
+        .fullScreenCover(isPresented: $isShowingAllPBs) {
+            AllPersonalBestsView(tiles: viewModel.pbTiles)
         }
         .sheet(isPresented: $isShowingSettings, onDismiss: { Task { await viewModel.load() } }) {
             SettingsView()
@@ -324,7 +328,7 @@ struct ProfileView: View {
             LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: Tokens.Spacing.tight), count: 2), spacing: Tokens.Spacing.tight) {
                 ForEach(viewModel.pbTiles.filter { Self.rowerPBKeys.contains($0.test.key) }) { tile in
                     // Decision 21: their all-time best, not a season best.
-                    pbTile(tile, label: Self.longLabel(tile.test), footnote: "Personal best")
+                    PBTileView(tile: tile, label: tile.test.longTitle, footnote: "Personal best") { expandedTest = tile.test }
                 }
             }
 
@@ -375,32 +379,24 @@ struct ProfileView: View {
         rank.map { "#\($0)" } ?? "—"
     }
 
-    /// v3 §08's tile labels: "2,000 METRES", "30 MINUTES".
-    private static func longLabel(_ test: StandardTest) -> String {
-        switch test.target {
-        case .distance(let metres): "\(metres.formattedWithGrouping) METRES"
-        case .duration(let ms): "\(ms / 60_000) MINUTES"
-        }
-    }
-
     // MARK: - Overview
 
     private var overview: some View {
         VStack(alignment: .leading, spacing: 0) {
             sectionHeader("Top personal bests") {
-                Button("View all ›") { tab = .pbs }
+                Button("View all ›") { isShowingAllPBs = true }
                     .buttonStyle(.rpText)
             }
             LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: Tokens.Spacing.tight), count: 2), spacing: Tokens.Spacing.tight) {
                 ForEach(topPBTiles) { tile in
-                    pbTile(tile)
+                    PBTileView(tile: tile) { expandedTest = tile.test }
                 }
             }
 
             if viewModel.isOwnProfile {
                 VStack(spacing: Tokens.Spacing.gap) {
-                    estimateCard(label: "2k · Estimated today")
-                    estimateCard(label: "5k · Estimated today")
+                    EstimateCard(label: "2k · Estimated today")
+                    EstimateCard(label: "5k · Estimated today")
                 }
                 .padding(.top, Tokens.Spacing.loose)
             }
@@ -480,36 +476,6 @@ struct ProfileView: View {
 
     /// Placeholder until the rower's own prediction algorithm is added (decision 2): the v3
     /// card, with no number invented.
-    private func estimateCard(label: String) -> some View {
-        let shape = RoundedRectangle(cornerRadius: Tokens.Radius.estimate, style: .continuous)
-        return VStack(alignment: .leading, spacing: 0) {
-            HStack {
-                Text(label)
-                    .font(.system(size: 10, weight: .bold))
-                    .tracking(1)
-                    .textCase(.uppercase)
-                    .foregroundStyle(Tokens.Ink.secondary)
-                Spacer()
-                Image(systemName: "info.circle")
-                    .foregroundStyle(Tokens.Accent.records)
-                    .frame(width: 36, height: 36)
-                    .accessibilityHidden(true)
-            }
-            Text("—")
-                .font(.system(size: 29, weight: .bold))
-                .foregroundStyle(Tokens.Accent.records)
-            Text("Your estimate will appear here once the prediction algorithm is added.")
-                .textStyle(Typography.meta)
-                .foregroundStyle(Tokens.Ink.secondary)
-                .padding(.vertical, 6)
-        }
-        .padding(.vertical, 14)
-        .padding(.horizontal, 16)
-        .background(shape.fill(Tokens.Accent.recordsSoft))
-        .overlay { shape.strokeBorder(Tokens.Accent.records.opacity(0.3), lineWidth: 1) }
-        .accessibilityElement(children: .combine)
-    }
-
     private func recentActivity(_ session: ProfileViewModel.ProfilePhoto) -> some View {
         let shape = RoundedRectangle(cornerRadius: Tokens.Radius.workoutLink, style: .continuous)
         return Button {
@@ -545,49 +511,10 @@ struct ProfileView: View {
     private var allPBs: some View {
         LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: Tokens.Spacing.tight), count: 2), spacing: Tokens.Spacing.tight) {
             ForEach(viewModel.pbTiles) { tile in
-                pbTile(tile)
+                PBTileView(tile: tile) { expandedTest = tile.test }
             }
         }
         .padding(.top, Tokens.Spacing.sectionTop)
-    }
-
-    /// v3 PB tile: card fill, 1 pt line, radius 24, min height 90 — label, value in the records
-    /// colour, "View PB history ›". Empty tests invite a first attempt.
-    private func pbTile(_ tile: ProfileViewModel.PBTile, label: String? = nil, footnote: String? = nil) -> some View {
-        let shape = RoundedRectangle(cornerRadius: Tokens.Radius.input, style: .continuous)
-        return VStack(alignment: .leading, spacing: 0) {
-            Text(label ?? tile.test.label.uppercased())
-                .font(.system(size: 12, weight: .bold))
-                .foregroundStyle(Tokens.Ink.secondary)
-            Text(tile.displayValue ?? "—")
-                .font(.system(size: 17, weight: .bold))
-                .tabularNumerals()
-                .foregroundStyle(tile.hasResult ? Tokens.Accent.records : Tokens.Ink.secondary)
-                .padding(.top, 5)
-                .padding(.bottom, 2)
-            Text(tile.hasResult ? (footnote ?? "View PB history ›") : "No result yet")
-                .font(.system(size: 12))
-                .foregroundStyle(Tokens.Ink.faint)
-        }
-        .padding(.vertical, 13)
-        .padding(.leading, 13)
-        .padding(.trailing, 24)
-        .frame(maxWidth: .infinity, minHeight: 90, alignment: .topLeading)
-        .overlay(alignment: .topTrailing) {
-            if tile.hasResult {
-                Text("›")
-                    .foregroundStyle(Tokens.Ink.secondary)
-                    .padding(.top, 12)
-                    .padding(.trailing, 11)
-            }
-        }
-        .background(shape.fill(Tokens.Surface.card))
-        .overlay { shape.strokeBorder(Tokens.Surface.line, lineWidth: 1) }
-        .asButton {
-            guard tile.hasResult else { return }
-            expandedTest = tile.test
-        }
-        .accessibilityLabel("\(tile.test.label) personal best, \(tile.displayValue ?? "none")")
     }
 
     // MARK: - Posts tab

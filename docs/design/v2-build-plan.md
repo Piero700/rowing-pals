@@ -101,7 +101,10 @@ that they match the prototype.
    - **Find rowers BUILT** (v3 §09): header, search, one card of rows with glass follow pills
      and "Follow back"; Followers / Following lists share the layout. Shared `ScreenHeader`
      (Settings, Rower profile, people lists) and a `FollowButton.Variant`.
-   - Remaining v3 screens: PB history, All PBs, Onboarding, Clubs (with phase G).
+   - **PB history + All personal bests BUILT** (v3 §10–11, decision 23): shared `PBTileView`,
+     `EstimateCard`, `StandardTest` titles. Fixes the chart's stray fill panel and the page not
+     scrolling over the chart.
+   - Remaining v3 screens: Onboarding, Clubs (with phase G).
    - **Known for step 3:** profile consistency grid month labels wrap letter by letter ("M / ar").
      Note: the clickable prototype renders an 8 pt nav gap; `RP Screen.dc.html` and the README say
      4 pt — 4 pt is used.

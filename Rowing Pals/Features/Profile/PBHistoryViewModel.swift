@@ -65,14 +65,22 @@ final class PBHistoryViewModel {
         return allPoints.filter { $0.date >= cutoff }
     }
 
-    /// The most recent PB strictly before the current one, for the "+N
-    /// faster/further" gain badge — nil when the current PB is the only
-    /// result, or the first result ever (nothing to compare against).
-    var previousBestValue: Double? {
+    /// v3 §10's "PB progression": only the results that were a personal best when set, in
+    /// the chosen period, oldest first.
+    var pbPoints: [Point] { points.filter(\.isPB) }
+
+    /// The current personal best — the last PB ever, whatever the period.
+    var currentPB: Point? { allPoints.last(where: \.isPB) }
+
+    /// v3's "1:34.5 faster" pill: the current PB against the first one ever. Nil with only one.
+    var gainSinceFirstPB: Double? {
         let pbs = allPoints.filter(\.isPB)
-        guard pbs.count >= 2 else { return nil }
-        return pbs[pbs.count - 2].value
+        guard let first = pbs.first, let current = pbs.last, pbs.count >= 2 else { return nil }
+        return abs(current.value - first.value)
     }
+
+    /// Whose history this is — shown under the header.
+    var rowerName: String?
 
     /// `nil` means the signed-in user's own history; another rower's PB
     /// history (opened from their profile) passes their id.
@@ -108,6 +116,19 @@ final class PBHistoryViewModel {
                     case setAt = "set_at"
                 }
             }
+
+            struct NameRow: Decodable {
+                let displayName: String
+                enum CodingKeys: String, CodingKey { case displayName = "display_name" }
+            }
+            let name: NameRow? = try? await SupabaseService.shared
+                .from("profiles")
+                .select("display_name")
+                .eq("id", value: userId)
+                .single()
+                .execute()
+                .value
+            rowerName = name?.displayName
 
             let rows: [Row] = try await SupabaseService.shared
                 .from("test_results")

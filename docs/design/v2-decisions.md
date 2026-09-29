@@ -59,3 +59,9 @@ Other prototype items are placeholders and need the user's go-ahead before build
 | 20 | Their ranks | v3's "Overall rankings" and "volume ranking" become their place **within their own club**: this week's ranked metres, best 2k and best 5k, every gender and level — the same rules as the Rankings screen's club board. The card is titled **"Club rankings"** (not "Overall", as app-wide rankings are dropped — decision 17). Equal results share a place; no result shows a dash; rowers with no club show no rankings card. |
 | 21 | Their PB tiles | **All-time bests**, labelled "Personal best" — not v3's "Season best". Tiles are v3's 2,000 METRES and 30 MINUTES; tapping opens their PB history. |
 | 22 | Layout | **v3 §08 exactly**: header, identity (club, then Public/Private profile), full-width Follow, counts, "Volume · This week" (metres, volume ranking, sessions, streak days), personal bests, club rankings. No tabs, weekly chart, consistency grid or posts grid for other rowers; their posts are reached from the feed. |
+
+## PB history and All personal bests, v3 §10–11 (built 2026-09-29)
+
+| # | Topic | Decision |
+|---|---|---|
+| 23 | PB history chart and list | Follows v3 §10: the chart is **"PB progression"** and the list **"Personal best history"** — only results that were a PB when set (the old screen charted and listed every result). The axis runs as v3 draws it, **bigger values higher up**: a time chart reads "Lower is faster" (faster 2ks sit lower), a timed test "Higher is further". This replaces task 15's flipped time axis. The chart is tapped, not dragged, so the page still scrolls over it; the slider and prev/next step through results. The "1:34.5 faster" pill is the current PB against the **first** PB. The estimate card shows on your own 2k/5k only (decision 2 placeholder). "View all ›" on your profile opens v3 §11's All personal bests screen; the PBs tab stays. |
