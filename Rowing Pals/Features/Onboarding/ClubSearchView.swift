@@ -41,6 +41,8 @@ struct ClubSearchView: View {
     @State private var joinedByCodeName: String?
     /// Joining later sent a request to an approval club; the alert says so, then closes.
     @State private var requestedClubName: String?
+    /// Onboarding's back button: the account exists by now, so going back means signing out.
+    @State private var isConfirmingSignOut = false
 
     private let genders: [RowerGender] = [.male, .female]
     private let categories: [RowerCategory] = [.novice, .senior]
@@ -110,7 +112,26 @@ struct ClubSearchView: View {
         .safeAreaInset(edge: .top, spacing: 0) {
             if mode == .joinLater {
                 ScreenHeader(title: "Your club") { dismiss() }
+            } else {
+                HStack {
+                    GlassIconButton(systemImage: "chevron.left", accessibilityLabel: "Back to sign in") {
+                        isConfirmingSignOut = true
+                    }
+                    Spacer()
+                }
+                .padding(.top, 8)
+                .padding(.horizontal, Tokens.Spacing.headerHorizontal)
+                .padding(.bottom, 6)
+                .background(Tokens.Base.ground)
             }
+        }
+        .alert("Back to sign in?", isPresented: $isConfirmingSignOut) {
+            Button("Sign out") {
+                Task { try? await SupabaseService.shared.auth.signOut() }
+            }
+            Button("Stay", role: .cancel) {}
+        } message: {
+            Text("You'll be signed out. Your account is kept, so sign in again any time to finish setting up.")
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
             stickyButton(clubButtonTitle, isEnabled: viewModel.selectedClub.map { $0.joinPolicy != .invite } ?? false) {
@@ -186,7 +207,6 @@ struct ClubSearchView: View {
                 .foregroundStyle(Tokens.Ink.secondary)
                 .padding(.bottom, 18)
         }
-        .padding(.top, mode == .onboarding ? Tokens.Spacing.loose : 0)
     }
 
     /// 52 pt, card fill, 1 pt line, radius 24; a 20 pt search icon inset 14.

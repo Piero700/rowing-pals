@@ -20,6 +20,14 @@ struct SignInView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
+                // Creating an account is a step on from Sign in, so it gets a way back.
+                if viewModel.isSigningUp {
+                    GlassIconButton(systemImage: "chevron.left", accessibilityLabel: "Back to sign in") {
+                        focusedField = nil
+                        viewModel.isSigningUp = false
+                        viewModel.errorMessage = nil
+                    }
+                }
                 VStack(alignment: .leading, spacing: 8) {
                     Text(viewModel.isSigningUp ? "Create your account" : "Sign in")
                         .font(.system(size: 34, weight: .bold))
@@ -28,7 +36,7 @@ struct SignInView: View {
                         .textStyle(Typography.bodySecondary)
                         .foregroundStyle(Tokens.Ink.secondary)
                 }
-                .padding(.top, 32)
+                .padding(.top, viewModel.isSigningUp ? 0 : 32)
 
                 VStack(spacing: 10) {
                     if viewModel.isSigningUp {
@@ -89,6 +97,7 @@ struct SignInView: View {
             .padding(24)
         }
         .background(Tokens.Base.ground)
+        .animation(.snappy, value: viewModel.isSigningUp)
         .dismissesKeyboardOnTap()
         .sheet(isPresented: $isShowingTerms) {
             TermsOfServiceView(onAgree: { viewModel.hasAgreedToTerms = true })
