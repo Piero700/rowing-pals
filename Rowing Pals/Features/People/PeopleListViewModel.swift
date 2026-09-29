@@ -17,6 +17,8 @@ final class PeopleListViewModel {
     var people: [PersonSummary] = []
     var states: [UUID: FollowState] = [:]
     var busyIds: Set<UUID> = []
+    /// Rowers who follow the viewer, so their button reads "Follow back" (v3 §09).
+    var followsViewer: Set<UUID> = []
     var viewerId: UUID?
     var isLoading = false
     var errorMessage: String?
@@ -53,7 +55,10 @@ final class PeopleListViewModel {
         isLoading = true
         defer { isLoading = false }
         do {
-            viewerId = try await SupabaseService.shared.auth.session.user.id
+            let viewer = try await SupabaseService.shared.auth.session.user.id
+            viewerId = viewer
+            // Best-effort: without it, rows simply say "Follow" instead of "Follow back".
+            followsViewer = Set(((try? await FollowService.followers(of: viewer)) ?? []).map(\.id))
             switch kind {
             case .followers(let userId):
                 people = try await FollowService.followers(of: userId)

@@ -11,14 +11,24 @@ import SwiftUI
 /// reacts to relationship state". Holds no logic; the caller owns the
 /// request and passes the state in, so it stays a plain DesignSystem view.
 struct FollowButton: View {
+    /// Where the button sits, which sets its size and style.
+    enum Variant {
+        /// Post detail header: a small capsule, brand-filled for Follow.
+        case pill
+        /// The same, smaller.
+        case compactPill
+        /// v3 §08 profile: full width, primary for Follow, glass otherwise.
+        case fullWidth
+        /// v3 §09 people rows: a 44 pt glass pill in every state.
+        case row
+    }
+
     let state: FollowState
     /// True when the other rower already follows the viewer, which turns
     /// "Follow" into "Follow back".
     var followsYou = false
     var isBusy = false
-    var compact = false
-    /// v3 §08's profile button: full width, primary for Follow, glass for Following/Requested.
-    var fullWidth = false
+    var variant: Variant = .pill
     let action: () -> Void
 
     private var label: String {
@@ -34,23 +44,28 @@ struct FollowButton: View {
     private var isProminent: Bool { state == .notFollowing }
 
     var body: some View {
-        if fullWidth {
-            Group {
+        Group {
+            switch variant {
+            case .pill: capsule(compact: false)
+            case .compactPill: capsule(compact: true)
+            case .fullWidth:
                 if isProminent {
                     Button(label, action: action).buttonStyle(.rpPrimary)
                 } else {
                     Button(label, action: action).buttonStyle(.rpGlass)
                 }
+            case .row:
+                Button(label, action: action)
+                    .buttonStyle(.rpPill(isOn: false))
+                    .fixedSize()
             }
-            .opacity(isBusy ? 0.6 : 1)
-            .disabled(isBusy)
-            .accessibilityLabel(label)
-        } else {
-            pill
         }
+        .opacity(isBusy ? 0.6 : 1)
+        .disabled(isBusy)
+        .accessibilityLabel(label)
     }
 
-    private var pill: some View {
+    private func capsule(compact: Bool) -> some View {
         Button(action: action) {
             Text(label)
                 .font(.system(size: compact ? 11.5 : 13.5, weight: .bold))
@@ -65,11 +80,8 @@ struct FollowButton: View {
                         Capsule().fill(Tokens.Ink.primary.opacity(0.16))
                     }
                 }
-                .opacity(isBusy ? 0.6 : 1)
         }
         .buttonStyle(.plain)
-        .disabled(isBusy)
-        .accessibilityLabel(label)
     }
 }
 
@@ -77,8 +89,9 @@ struct FollowButton: View {
     VStack(spacing: 12) {
         FollowButton(state: .notFollowing) {}
         FollowButton(state: .notFollowing, followsYou: true) {}
-        FollowButton(state: .requested) {}
-        FollowButton(state: .following) {}
+        FollowButton(state: .requested, variant: .compactPill) {}
+        FollowButton(state: .following, variant: .row) {}
+        FollowButton(state: .notFollowing, variant: .fullWidth) {}
     }
     .padding()
     .background(Tokens.Base.ground)

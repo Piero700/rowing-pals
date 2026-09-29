@@ -78,7 +78,7 @@ struct ProfileView: View {
             if viewing == nil {
                 header
             } else {
-                rowerHeader
+                ScreenHeader(title: "Rower profile") { dismiss() }
             }
         }
         .toolbar(.hidden, for: .navigationBar)
@@ -168,7 +168,7 @@ struct ProfileView: View {
                 state: viewModel.followState,
                 followsYou: viewModel.followsYou,
                 isBusy: viewModel.isFollowBusy,
-                fullWidth: true
+                variant: .fullWidth
             ) {
                 Task { await viewModel.toggleFollow() }
             }
@@ -302,24 +302,6 @@ struct ProfileView: View {
     }
 
     // MARK: - Another rower (v3 §08)
-
-    /// Glass back button and "Rower profile", as v3 §08's header. Back closes the profile when
-    /// it was opened on its own, or returns to the previous screen when it was pushed.
-    private var rowerHeader: some View {
-        HStack(spacing: Tokens.Spacing.gap) {
-            GlassIconButton(systemImage: "chevron.left", accessibilityLabel: "Back") { dismiss() }
-            Text("Rower profile")
-                .textStyle(Typography.navTitle)
-                .foregroundStyle(Tokens.Ink.primary)
-                .accessibilityAddTraits(.isHeader)
-            Spacer(minLength: 0)
-        }
-        .padding(.top, 8)
-        .padding(.horizontal, Tokens.Spacing.headerHorizontal)
-        .padding(.bottom, 14)
-        .frame(minHeight: Tokens.Size.navHeight)
-        .background(Tokens.Base.ground)
-    }
 
     /// v3 §08 exactly (decision 22): this week's volume, two personal bests and their place
     /// in their own club — no tabs, chart, grid or posts. A private account you aren't

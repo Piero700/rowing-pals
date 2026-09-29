@@ -98,7 +98,10 @@ that they match the prototype.
      is joined** and the push key is added — steps in `docs/testing/notifications.md` Part 3.
    - **Other rower's profile BUILT** (branch `t27-other-profile`, decisions 20–22): v3 §08
      exactly, with club rankings from `Core/Services/ClubRankService`.
-   - Remaining v3 screens: Find rowers, PB history, All PBs, Onboarding, Clubs (with phase G).
+   - **Find rowers BUILT** (v3 §09): header, search, one card of rows with glass follow pills
+     and "Follow back"; Followers / Following lists share the layout. Shared `ScreenHeader`
+     (Settings, Rower profile, people lists) and a `FollowButton.Variant`.
+   - Remaining v3 screens: PB history, All PBs, Onboarding, Clubs (with phase G).
    - **Known for step 3:** profile consistency grid month labels wrap letter by letter ("M / ar").
      Note: the clickable prototype renders an 8 pt nav gap; `RP Screen.dc.html` and the README say
      4 pt — 4 pt is used.

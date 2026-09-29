@@ -49,10 +49,10 @@ struct RouteHost: View {
         })
     }
 
-    /// The workout and rower profile screens draw their own v3 back button and title.
+    /// The workout, rower profile and people screens draw their own v3 back button and title.
     private static func drawsOwnChrome(_ route: AppRoute) -> Bool {
         switch route {
-        case .post, .profile: true
+        case .post, .profile, .people: true
         default: false
         }
     }

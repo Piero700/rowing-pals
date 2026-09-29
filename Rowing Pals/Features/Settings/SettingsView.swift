@@ -124,7 +124,7 @@ struct SettingsView: View {
                 .padding(.bottom, 22)
             }
             .scrollIndicators(.hidden)
-            .safeAreaInset(edge: .top, spacing: 0) { header }
+            .safeAreaInset(edge: .top, spacing: 0) { ScreenHeader(title: "Settings") { dismiss() } }
             .background(Tokens.Base.ground)
             .toolbar(.hidden, for: .navigationBar)
             .task { await viewModel.load() }
@@ -168,22 +168,6 @@ struct SettingsView: View {
     }
 
     // MARK: - v3 building blocks
-
-    private var header: some View {
-        HStack(spacing: Tokens.Spacing.gap) {
-            GlassIconButton(systemImage: "chevron.left", accessibilityLabel: "Back") { dismiss() }
-            Text("Settings")
-                .textStyle(Typography.navTitle)
-                .foregroundStyle(Tokens.Ink.primary)
-                .accessibilityAddTraits(.isHeader)
-            Spacer(minLength: 0)
-        }
-        .padding(.top, 8)
-        .padding(.horizontal, Tokens.Spacing.headerHorizontal)
-        .padding(.bottom, 14)
-        .frame(minHeight: 58)
-        .background(Tokens.Base.ground)
-    }
 
     /// Section title then one card (radius 30, card fill, card edge) of rows.
     private func group<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
