@@ -75,6 +75,8 @@ final class MetresLeaderboardViewModel {
         guard let ownUserId else { return false }
         return aggregates[ownUserId] != nil
     }
+    /// My club with no club (decision 24): the board offers "Find a club" instead.
+    var viewerHasNoClub = false
     var isLoading = false
     var errorMessage: String?
 
@@ -131,6 +133,8 @@ final class MetresLeaderboardViewModel {
         do {
             let scopeIds = try await filters.scope.userIds()
             guard !Task.isCancelled else { return }
+            // My club always includes the viewer, so an empty scope there means no club.
+            viewerHasNoClub = filters.scope == .myClub && scopeIds.isEmpty
             if scopeIds.isEmpty {
                 aggregates = [:]
                 rankedRows = []

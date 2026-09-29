@@ -13,7 +13,7 @@ import Supabase
 final class AuthState {
     var isSignedIn = false
     /// nil while unknown (still loading, or signed out). Once signed in,
-    /// true until the profile has a club_id, per task 06.
+    /// true until the profile has a club or has finished onboarding without one (decision 24).
     var needsOnboarding: Bool?
 
     private var watchTask: Task<Void, Never>?
@@ -55,7 +55,8 @@ final class AuthState {
                     .single()
                     .execute()
                     .value
-                needsOnboarding = profile.clubId == nil
+                // Decision 24: finished once they've a club or chose "I'm not in a club".
+                needsOnboarding = profile.clubId == nil && profile.onboardedAt == nil
                 return
             } catch {
                 if attempt == 4 {

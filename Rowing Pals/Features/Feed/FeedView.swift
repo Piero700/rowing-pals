@@ -50,6 +50,9 @@ struct FeedView: View {
         .ignoresSafeArea(edges: .bottom)
         .task { await viewModel.loadInitial() }
         .refreshable { await viewModel.reload() }
+        .onReceive(NotificationCenter.default.publisher(for: .rowerClubChanged)) { _ in
+            Task { await viewModel.clubChanged() }
+        }
         .fullScreenCover(item: $selectedPost) { post in
             PostDetailView(sessionId: post.id)
         }
@@ -98,7 +101,7 @@ struct FeedView: View {
         if let errorMessage = viewModel.errorMessage, viewModel.posts.isEmpty {
             messageCard(title: "Couldn't load the feed", body: errorMessage, showsPostButton: false)
         } else if viewModel.scope == .myClub, viewModel.viewerClubName == nil, !viewModel.isLoading {
-            messageCard(title: nil, body: "Find your crew or start a new one.", showsPostButton: false)
+            messageCard(title: "You're not in a club", body: "Find your crew to see their workouts here.", showsPostButton: false, showsFindClub: true)
         } else if viewModel.posts.isEmpty, !viewModel.isLoading {
             messageCard(
                 title: "Your crew starts here",
@@ -127,7 +130,7 @@ struct FeedView: View {
     }
 
     /// The v3 empty-state card: card fill, 1 pt edge, radius 30, padding 15.
-    private func messageCard(title: String?, body: String, showsPostButton: Bool) -> some View {
+    private func messageCard(title: String?, body: String, showsPostButton: Bool, showsFindClub: Bool = false) -> some View {
         VStack(alignment: .leading, spacing: Tokens.Spacing.gap) {
             if let title {
                 Text(title)
@@ -139,6 +142,11 @@ struct FeedView: View {
                 .foregroundStyle(Tokens.Ink.secondary)
             if showsPostButton {
                 Button("Post a workout") { navigate(.log) }
+                    .buttonStyle(.rpPrimary)
+                    .padding(.top, 4)
+            }
+            if showsFindClub {
+                Button("Find a club") { navigate(.findClub) }
                     .buttonStyle(.rpPrimary)
                     .padding(.top, 4)
             }

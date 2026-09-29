@@ -19,6 +19,17 @@ final class ClubSearchViewModel {
 
         var memberCount: Int { profiles.first?.count ?? 0 }
 
+        /// v3's crest text: a club name that starts with an acronym uses it ("UEA Boat Club" →
+        /// "UEA"); otherwise the first letters of up to three words ("Norwich Rowing Club" →
+        /// "NRC").
+        var crest: String {
+            let words = name.split(separator: " ")
+            if let first = words.first, (2...4).contains(first.count), first.allSatisfy(\.isUppercase) {
+                return String(first)
+            }
+            return String(words.prefix(3).compactMap(\.first)).uppercased()
+        }
+
         private struct CountWrapper: Decodable {
             let count: Int
         }

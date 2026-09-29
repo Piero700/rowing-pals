@@ -154,6 +154,17 @@ final class FeedViewModel {
         await loadPage(offset: 0, replacing: true)
     }
 
+    /// The viewer just joined a club (decision 24): forget the cached club and clubmates, then
+    /// load the Club tab afresh.
+    @MainActor
+    func clubChanged() async {
+        viewerId = nil
+        viewerClubName = nil
+        clubmateIds = nil
+        await loadViewer()
+        await reload()
+    }
+
     /// Called as each card appears — loads the next page once the user is
     /// within the last few rows of what's loaded so far.
     @MainActor

@@ -231,6 +231,8 @@ enum Typography {
     static let detail = Style(size: 14, weight: .regular, trackingEm: 0, uppercase: false)
     /// The chosen result under the PB chart.
     static let selectedValue = Style(size: 24, weight: .bold, trackingEm: 0, uppercase: false)
+    /// The small label over a form field ("Club name").
+    static let fieldLabel = Style(size: 12.5, weight: .bold, trackingEm: 0, uppercase: false)
     static let navLabel = Style(size: 11, weight: .bold, trackingEm: 0, uppercase: false)
     static let segment = Style(size: 14, weight: .bold, trackingEm: 0, uppercase: false)
     static let pill = Style(size: 13, weight: .bold, trackingEm: 0, uppercase: false)

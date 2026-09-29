@@ -82,6 +82,9 @@ struct MetresLeaderboardView: View {
         }
         .task { await viewModel.loadInitial() }
         .refreshable { await viewModel.reload() }
+        .onReceive(NotificationCenter.default.publisher(for: .rowerClubChanged)) { _ in
+            Task { await viewModel.reload() }
+        }
     }
 
     // MARK: - Controls
@@ -319,6 +322,16 @@ struct MetresLeaderboardView: View {
                 Text(errorMessage)
                     .textStyle(Typography.meta)
                     .foregroundStyle(Tokens.Ink.secondary)
+            } else if viewModel.viewerHasNoClub {
+                Text("You're not in a club")
+                    .font(.system(size: 17, weight: .bold))
+                    .foregroundStyle(Tokens.Ink.primary)
+                Text("Join one to see how your metres stack up against your crew.")
+                    .textStyle(Typography.meta)
+                    .foregroundStyle(Tokens.Ink.secondary)
+                Button("Find a club") { navigate(.findClub) }
+                    .buttonStyle(.rpPrimary)
+                    .padding(.top, 4)
             } else {
                 Text("Nobody's logged metres here yet")
                     .font(.system(size: 17, weight: .bold))

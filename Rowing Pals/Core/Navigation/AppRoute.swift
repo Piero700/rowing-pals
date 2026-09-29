@@ -26,6 +26,8 @@ enum AppRoute: Hashable, Identifiable {
     case post(UUID)
     /// Opens Log (capture) — handled by `RootView`, which owns that modal.
     case log
+    /// Pick a club after onboarding without one (decision 24).
+    case findClub
 
     var id: Self { self }
 }

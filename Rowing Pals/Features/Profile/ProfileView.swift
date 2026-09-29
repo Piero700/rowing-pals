@@ -88,6 +88,9 @@ struct ProfileView: View {
         .ignoresSafeArea(edges: .bottom)
         .task { await viewModel.load() }
         .refreshable { await viewModel.load() }
+        .onReceive(NotificationCenter.default.publisher(for: .rowerClubChanged)) { _ in
+            Task { await viewModel.load() }
+        }
         .fullScreenCover(item: $expandedTest) { test in
             PBHistoryView(test: test, userId: viewing)
         }

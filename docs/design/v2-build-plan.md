@@ -104,7 +104,9 @@ that they match the prototype.
    - **PB history + All personal bests BUILT** (v3 §10–11, decision 23): shared `PBTileView`,
      `EstimateCard`, `StandardTest` titles. Fixes the chart's stray fill panel and the page not
      scrolling over the chart.
-   - Remaining v3 screens: Onboarding, Clubs (with phase G).
+   - **Onboarding BUILT** (v3 §01 + "About you", decision 24): optional club; needs
+     `docs/migrations/2026-09-29-onboarding.sql` run on staging before a new rower can finish it.
+   - Remaining v3 screen: Clubs (§12, with phase G).
    - **Known for step 3:** profile consistency grid month labels wrap letter by letter ("M / ar").
      Note: the clickable prototype renders an 8 pt nav gap; `RP Screen.dc.html` and the README say
      4 pt — 4 pt is used.

@@ -65,3 +65,9 @@ Other prototype items are placeholders and need the user's go-ahead before build
 | # | Topic | Decision |
 |---|---|---|
 | 23 | PB history chart and list | Follows v3 §10: the chart is **"PB progression"** and the list **"Personal best history"** — only results that were a PB when set (the old screen charted and listed every result). The axis runs as v3 draws it, **bigger values higher up**: a time chart reads "Lower is faster" (faster 2ks sit lower), a timed test "Higher is further". This replaces task 15's flipped time axis. The chart is tapped, not dragged, so the page still scrolls over it; the slider and prev/next step through results. The "1:34.5 faster" pill is the current PB against the **first** PB. The estimate card shows on your own 2k/5k only (decision 2 placeholder). "View all ›" on your profile opens v3 §11's All personal bests screen; the PBs tab stays. |
+
+## Onboarding, v3 §01 (decided 2026-09-29)
+
+| # | Topic | Decision |
+|---|---|---|
+| 24 | Onboarding | Step one is v3 §01 exactly (crest rows, "I'm not in a club", sticky "Continue with <club>"; the join-policy text arrives with Clubs, phase G). Step two, **"About you"** (gender and level), follows it — v3 leaves them out but the test leaderboards need gender; the name comes from sign-up. **A club is optional**: "I'm not in a club" finishes onboarding without one (`profiles.onboarded_at`, `docs/migrations/2026-09-29-onboarding.sql`). A rower with no club sees "You're not in a club" with **Find a club** on the feed's Club tab and the My club rankings; picking one there saves it and reloads the feed, rankings and profile. The old "Create a club" / "Invite code" buttons are gone until phase G. |
