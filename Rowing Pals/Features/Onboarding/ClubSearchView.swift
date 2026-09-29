@@ -13,8 +13,9 @@ import Supabase
 /// but the test leaderboards need; the name was given at sign-up. Finishing writes the club (or none),
 /// gender, level and `onboarded_at` in one update.
 ///
-/// `.joinLater` is the club step alone, for a rower who onboarded without a club and now
-/// picks one from the feed or rankings: it saves the club and closes.
+/// `.joinLater` is for a rower who onboarded without a club and now picks one from the feed or
+/// rankings: the club step, then their level (skipped at onboarding without a club), then it
+/// saves both and closes.
 struct ClubSearchView: View {
     enum Mode {
         case onboarding
@@ -105,11 +106,7 @@ struct ClubSearchView: View {
                 isEnabled: viewModel.selectedClub != nil
             ) {
                 isWithoutClub = false
-                if mode == .joinLater {
-                    Task { await joinSelectedClub() }
-                } else {
-                    isAboutYou = true
-                }
+                isAboutYou = true
             }
         }
     }
@@ -236,25 +233,23 @@ struct ClubSearchView: View {
                 }
                 .padding(.bottom, Tokens.Spacing.loose)
 
-                intro(
-                    title: "About you",
-                    body: isWithoutClub
-                        ? "Tests are ranked by gender, so every rower is compared fairly. You can change this any time in Settings."
-                        : "Tests are ranked by gender and level, so every rower is compared fairly. You can change these any time in Settings."
-                )
+                intro(title: aboutYouTitle, body: aboutYouBody)
 
-                Text("Gender")
-                    .textStyle(Typography.fieldLabel)
-                    .foregroundStyle(Tokens.Ink.secondary)
-                    .padding(.bottom, 6)
-                PillSegmentedControl(options: ["Male", "Female"], selection: $genderSelection)
+                // Joining later: gender was given at onboarding; only the level is new.
+                if mode == .onboarding {
+                    Text("Gender")
+                        .textStyle(Typography.fieldLabel)
+                        .foregroundStyle(Tokens.Ink.secondary)
+                        .padding(.bottom, 6)
+                    PillSegmentedControl(options: ["Male", "Female"], selection: $genderSelection)
+                }
 
                 // Novice / senior only matters within a club (user, 2026-09-29).
                 if !isWithoutClub {
                     Text("Level")
                         .textStyle(Typography.fieldLabel)
                         .foregroundStyle(Tokens.Ink.secondary)
-                        .padding(.top, 18)
+                        .padding(.top, mode == .onboarding ? 18 : 0)
                         .padding(.bottom, 6)
                     PillSegmentedControl(options: ["Novice", "Senior"], selection: $categorySelection)
                     Text("Novice means you’re in your first season.")
@@ -276,13 +271,36 @@ struct ClubSearchView: View {
         }
         .scrollIndicators(.hidden)
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            stickyButton(
-                isWithoutClub ? "Start without a club" : "Start rowing",
-                isEnabled: !isSaving
-            ) {
-                Task { await finishOnboarding() }
+            stickyButton(aboutYouButtonTitle, isEnabled: !isSaving) {
+                Task {
+                    if mode == .joinLater {
+                        await joinSelectedClub()
+                    } else {
+                        await finishOnboarding()
+                    }
+                }
             }
         }
+    }
+
+    private var aboutYouTitle: String {
+        mode == .joinLater ? "Your level" : "About you"
+    }
+
+    private var aboutYouBody: String {
+        if mode == .joinLater {
+            return "In a club, you're ranked alongside rowers at your level. You can change this any time in Settings."
+        }
+        return isWithoutClub
+            ? "Tests are ranked by gender, so every rower is compared fairly. You can change this any time in Settings."
+            : "Tests are ranked by gender and level, so every rower is compared fairly. You can change these any time in Settings."
+    }
+
+    private var aboutYouButtonTitle: String {
+        if mode == .joinLater {
+            return viewModel.selectedClub.map { "Join \($0.name)" } ?? "Join club"
+        }
+        return isWithoutClub ? "Start without a club" : "Start rowing"
     }
 
     // MARK: - Sticky primary button
@@ -355,7 +373,7 @@ struct ClubSearchView: View {
         }
     }
 
-    /// `.joinLater`: save the chosen club, tell the feed and rankings, close.
+    /// `.joinLater`: save the chosen club and level, tell the feed and rankings, close.
     private func joinSelectedClub() async {
         guard let club = viewModel.selectedClub else { return }
         isSaving = true
@@ -364,13 +382,17 @@ struct ClubSearchView: View {
 
         struct ClubUpdate: Encodable {
             let clubId: UUID
-            enum CodingKeys: String, CodingKey { case clubId = "club_id" }
+            let category: RowerCategory
+            enum CodingKeys: String, CodingKey {
+                case clubId = "club_id"
+                case category
+            }
         }
         do {
             let userId = try await SupabaseService.shared.auth.session.user.id
             try await SupabaseService.shared
                 .from("profiles")
-                .update(ClubUpdate(clubId: club.id))
+                .update(ClubUpdate(clubId: club.id, category: categories[categorySelection]))
                 .eq("id", value: userId)
                 .execute()
             NotificationCenter.default.post(name: .rowerClubChanged, object: nil)
