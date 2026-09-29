@@ -106,7 +106,11 @@ that they match the prototype.
      scrolling over the chart.
    - **Onboarding BUILT** (v3 §01 + "About you", decision 24): optional club; needs
      `docs/migrations/2026-09-29-onboarding.sql` run on staging before a new rower can finish it.
-   - Remaining v3 screen: Clubs (§12, with phase G).
+   - **Clubs BUILT** (v3 §12 + phase G, decision 25, branch `t28-clubs`): Your crew hub, create/
+     edit club, Manage club (requests, invites + code, members and roles, hand over, delete),
+     Profile club entry, join rules in onboarding. Needs `2026-09-30-clubs.sql` then
+     `2026-09-30-club-directory.sql` on staging (`docs/testing/clubs.md`).
+   - All v3 screens are now built.
    - **Known for step 3:** profile consistency grid month labels wrap letter by letter ("M / ar").
      Note: the clickable prototype renders an 8 pt nav gap; `RP Screen.dc.html` and the README say
      4 pt — 4 pt is used.

@@ -423,6 +423,36 @@ struct ProfileView: View {
                 sectionTitle("Recent activity")
                 recentActivity(latest)
             }
+
+            if viewModel.isOwnProfile {
+                clubEntry
+            }
+        }
+    }
+
+    /// The v2 prototype's club entry (decision 25): admins and up manage the club; members see
+    /// Your crew; rowers without a club join or create one. A pending request shows beneath.
+    private var clubEntry: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            sectionTitle("Club")
+            Button(clubEntryTitle) {
+                navigate(viewModel.clubRole?.canManageMembers == true ? .manageClub : .clubHub)
+            }
+            .buttonStyle(.rpGlass)
+            if let pending = viewModel.pendingClubName {
+                Text("Join request pending · \(pending)")
+                    .textStyle(Typography.meta)
+                    .foregroundStyle(Tokens.Ink.secondary)
+                    .padding(.horizontal, 2)
+            }
+        }
+    }
+
+    private var clubEntryTitle: String {
+        switch viewModel.clubRole {
+        case .none: "Join or create a club"
+        case .member?: "Your club"
+        default: "Manage your club"
         }
     }
 

@@ -11,6 +11,8 @@ struct Profile: Codable, Identifiable {
     let id: UUID
     var displayName: String
     var clubId: UUID?
+    /// Their role in that club (decision 25).
+    var clubRole: ClubRole
     var gender: RowerGender?
     var category: RowerCategory
     var avatarPath: String?
@@ -28,6 +30,7 @@ struct Profile: Codable, Identifiable {
         case id
         case displayName = "display_name"
         case clubId = "club_id"
+        case clubRole = "club_role"
         case gender, category
         case avatarPath = "avatar_path"
         case weeklyTargetSessions = "weekly_target_sessions"
@@ -42,6 +45,8 @@ struct Profile: Codable, Identifiable {
         id = try c.decode(UUID.self, forKey: .id)
         displayName = try c.decode(String.self, forKey: .displayName)
         clubId = try c.decodeIfPresent(UUID.self, forKey: .clubId)
+        // Absent before docs/migrations/2026-09-30-clubs.sql has run.
+        clubRole = try c.decodeIfPresent(ClubRole.self, forKey: .clubRole) ?? .member
         gender = try c.decodeIfPresent(RowerGender.self, forKey: .gender)
         category = try c.decode(RowerCategory.self, forKey: .category)
         avatarPath = try c.decodeIfPresent(String.self, forKey: .avatarPath)

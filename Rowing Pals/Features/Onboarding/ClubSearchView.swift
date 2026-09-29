@@ -34,6 +34,13 @@ struct ClubSearchView: View {
     @State private var categorySelection = 0
     @State private var isSaving = false
     @State private var saveError: String?
+    /// "Have an invite code?" (decision 25).
+    @State private var isEnteringCode = false
+    @State private var inviteCode = ""
+    /// Set once a code has put the rower in a club, so finishing doesn't join again.
+    @State private var joinedByCodeName: String?
+    /// Joining later sent a request to an approval club; the alert says so, then closes.
+    @State private var requestedClubName: String?
 
     private let genders: [RowerGender] = [.male, .female]
     private let categories: [RowerCategory] = [.novice, .senior]
@@ -74,6 +81,11 @@ struct ClubSearchView: View {
                 clubResults
                     .padding(.top, Tokens.Spacing.loose + 12)
 
+                Button("Have an invite code?") { isEnteringCode = true }
+                    .buttonStyle(.rpText)
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, 8)
+
                 if mode == .onboarding {
                     Button("I’m not in a club") {
                         viewModel.selectedClub = nil
@@ -82,8 +94,8 @@ struct ClubSearchView: View {
                     }
                     .buttonStyle(.rpText)
                     .frame(maxWidth: .infinity)
-                    .padding(.top, 8)
-                } else if let saveError {
+                }
+                if let saveError {
                     Text(saveError)
                         .textStyle(Typography.meta)
                         .foregroundStyle(Tokens.System.error)
@@ -101,15 +113,62 @@ struct ClubSearchView: View {
             }
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            stickyButton(
-                viewModel.selectedClub.map { "Continue with \($0.name)" } ?? "Choose a club",
-                isEnabled: viewModel.selectedClub != nil
-            ) {
+            stickyButton(clubButtonTitle, isEnabled: viewModel.selectedClub.map { $0.joinPolicy != .invite } ?? false) {
                 isWithoutClub = false
+                joinedByCodeName = nil
                 isAboutYou = true
             }
         }
+        .alert("Have an invite code?", isPresented: $isEnteringCode) {
+            TextField("Invite code", text: $inviteCode)
+                .textInputAutocapitalization(.characters)
+                .autocorrectionDisabled()
+            Button("Join") { Task { await joinWithCode() } }
+            Button("Cancel", role: .cancel) { inviteCode = "" }
+        } message: {
+            Text("Enter the code a club admin shared with you.")
+        }
+        .alert("Request sent", isPresented: Binding(
+            get: { requestedClubName != nil },
+            set: { if !$0 { requestedClubName = nil; dismiss() } }
+        )) {
+            Button("OK") {}
+        } message: {
+            Text("\(requestedClubName ?? "The club") will let you in once an admin approves. You'll see it under Your club.")
+        }
     }
+
+    /// v3's sticky label, honest about what happens next for each kind of club.
+    private var clubButtonTitle: String {
+        guard let club = viewModel.selectedClub else { return "Choose a club" }
+        switch club.joinPolicy {
+        case .open: return "Continue with \(club.name)"
+        case .approval: return "Request to join \(club.name)"
+        case .invite: return "Invitation only — use a code"
+        }
+    }
+
+    /// "Have an invite code?": joins straight away, then asks the level (and, at onboarding,
+    /// the gender) as choosing a club does.
+    private func joinWithCode() async {
+        let code = inviteCode.trimmingCharacters(in: .whitespacesAndNewlines)
+        inviteCode = ""
+        guard !code.isEmpty else { return }
+        saveError = nil
+        do {
+            let clubId = try await ClubService.join(code: code)
+            let row: NameRow? = try? await SupabaseService.shared
+                .from("clubs").select("name").eq("id", value: clubId).single()
+                .execute().value
+            joinedByCodeName = row?.name ?? "your club"
+            isWithoutClub = false
+            isAboutYou = true
+        } catch {
+            saveError = error.localizedDescription
+        }
+    }
+
+    private struct NameRow: Decodable { let name: String }
 
     /// v3: "SET UP YOUR CREW" in the brand colour, a 33 pt title, then one muted line.
     private func intro(title: String, body: String) -> some View {
@@ -216,11 +275,12 @@ struct ClubSearchView: View {
         .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 
-    /// "48 members · Norwich". v3's join policy ("Open membership") comes with Clubs (phase G).
+    /// v3: "48 members · Norwich · Open membership".
     private func clubMeta(_ club: ClubSearchViewModel.ClubResult) -> String {
-        let members = "\(club.memberCount) member\(club.memberCount == 1 ? "" : "s")"
-        guard let location = club.location, !location.isEmpty else { return members }
-        return "\(members) · \(location)"
+        var parts = ["\(club.memberCount) member\(club.memberCount == 1 ? "" : "s")"]
+        if let location = club.location, !location.isEmpty { parts.append(location) }
+        parts.append(club.joinPolicy.tag)
+        return parts.joined(separator: " · ")
     }
 
     // MARK: - Step two: about you
@@ -298,7 +358,9 @@ struct ClubSearchView: View {
 
     private var aboutYouButtonTitle: String {
         if mode == .joinLater {
-            return viewModel.selectedClub.map { "Join \($0.name)" } ?? "Join club"
+            if joinedByCodeName != nil { return "Done" }
+            guard let club = viewModel.selectedClub else { return "Join club" }
+            return club.joinPolicy == .approval ? "Request to join \(club.name)" : "Join \(club.name)"
         }
         return isWithoutClub ? "Start without a club" : "Start rowing"
     }
@@ -335,29 +397,50 @@ struct ClubSearchView: View {
 
     // MARK: - Saving
 
-    /// The whole of onboarding in one update: club (or none), gender, level, finished.
+    /// Joins the chosen club through the server's rules (decision 25) — straight in for an
+    /// open club, a request for an approval club — unless a code already did; nil when there's
+    /// nothing to join. Throws for an invitation-only club, which needs its code.
+    private func joinChosenClub() async throws -> ClubService.JoinOutcome? {
+        guard !isWithoutClub, joinedByCodeName == nil, let club = viewModel.selectedClub else { return nil }
+        let outcome = try await ClubService.join(club.id)
+        if outcome == .inviteOnly {
+            throw ClubJoinError.inviteOnly(club.name)
+        }
+        return outcome
+    }
+
+    private enum ClubJoinError: LocalizedError {
+        case inviteOnly(String)
+        var errorDescription: String? {
+            switch self {
+            case .inviteOnly(let name): "\(name) is invitation only. Ask an admin for the club's code."
+            }
+        }
+    }
+
+    /// Onboarding: join (or ask to join) the club, then save gender, level and "finished".
+    /// An approval club's request stays pending; the rower goes on without a club until an
+    /// admin lets them in.
     private func finishOnboarding() async {
         isSaving = true
         saveError = nil
         defer { isSaving = false }
 
         struct ProfileUpdate: Encodable {
-            let clubId: UUID?
             let gender: RowerGender
             /// Nil without a club: level isn't asked, so the column keeps its default.
             let category: RowerCategory?
             let onboardedAt: Date
             enum CodingKeys: String, CodingKey {
-                case clubId = "club_id"
                 case gender, category
                 case onboardedAt = "onboarded_at"
             }
         }
 
         do {
+            _ = try await joinChosenClub()
             let userId = try await SupabaseService.shared.auth.session.user.id
             let update = ProfileUpdate(
-                clubId: isWithoutClub ? nil : viewModel.selectedClub?.id,
                 gender: genders[genderSelection],
                 category: isWithoutClub ? nil : categories[categorySelection],
                 onboardedAt: Date()
@@ -373,30 +456,30 @@ struct ClubSearchView: View {
         }
     }
 
-    /// `.joinLater`: save the chosen club and level, tell the feed and rankings, close.
+    /// `.joinLater`: join (or ask to join) the chosen club and save the level. A request says
+    /// so before closing; joining closes straight away (`ClubService` tells the feed,
+    /// rankings and profile).
     private func joinSelectedClub() async {
-        guard let club = viewModel.selectedClub else { return }
         isSaving = true
         saveError = nil
         defer { isSaving = false }
 
-        struct ClubUpdate: Encodable {
-            let clubId: UUID
+        struct LevelUpdate: Encodable {
             let category: RowerCategory
-            enum CodingKeys: String, CodingKey {
-                case clubId = "club_id"
-                case category
-            }
         }
         do {
+            let outcome = try await joinChosenClub()
             let userId = try await SupabaseService.shared.auth.session.user.id
             try await SupabaseService.shared
                 .from("profiles")
-                .update(ClubUpdate(clubId: club.id, category: categories[categorySelection]))
+                .update(LevelUpdate(category: categories[categorySelection]))
                 .eq("id", value: userId)
                 .execute()
-            NotificationCenter.default.post(name: .rowerClubChanged, object: nil)
-            dismiss()
+            if outcome == .requested {
+                requestedClubName = viewModel.selectedClub?.name
+            } else {
+                dismiss()
+            }
         } catch {
             saveError = error.localizedDescription
         }

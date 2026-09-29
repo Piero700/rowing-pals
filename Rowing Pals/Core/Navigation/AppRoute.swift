@@ -28,6 +28,13 @@ enum AppRoute: Hashable, Identifiable {
     case log
     /// Pick a club after onboarding without one (decision 24).
     case findClub
+    /// "Your crew": your club, pending request, invitations and club options (v3 §12).
+    case clubHub
+    /// Create a club (you become its owner), or edit yours.
+    case createClub
+    case editClub
+    /// Requests, invites, members, roles and ownership — admins and up (decision 25).
+    case manageClub
 
     var id: Self { self }
 }

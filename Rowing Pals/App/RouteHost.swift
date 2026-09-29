@@ -52,7 +52,7 @@ struct RouteHost: View {
     /// The workout, rower profile and people screens draw their own v3 back button and title.
     private static func drawsOwnChrome(_ route: AppRoute) -> Bool {
         switch route {
-        case .post, .profile, .people, .findClub: true
+        case .post, .profile, .people, .findClub, .clubHub, .createClub, .editClub, .manageClub: true
         default: false
         }
     }
@@ -70,6 +70,14 @@ struct RouteHost: View {
             EmptyView()
         case .findClub:
             ClubSearchView(mode: .joinLater)
+        case .clubHub:
+            ClubHubView()
+        case .createClub:
+            ClubFormView(mode: .create)
+        case .editClub:
+            ClubFormView(mode: .edit)
+        case .manageClub:
+            ManageClubView()
         case .post(let sessionId):
             PostDetailView(sessionId: sessionId)
                 .toolbar(.hidden, for: .navigationBar)
