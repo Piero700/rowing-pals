@@ -5,22 +5,18 @@
 
 import SwiftUI
 
-/// The redesign's bottom nav (docs/design/rowing-pals-redesign-handoff-v2.md
-/// §4): NOT one bar — two separate floating glass shapes side by side, a
-/// pill grouping the real tabs and a standalone circular button for Log.
-/// Replaces the native `TabView` bar entirely, so `RootView` hand-builds
-/// tab switching and this reacts to `FloatingBarVisibility` for the
-/// scroll-linked behaviour `.tabBarMinimizeBehavior` used to give for free.
+/// The v3 bottom navigation (docs/design/rowing-pals-v3-spec.md §Layout — Bottom navigation):
+/// a 58 pt glass pill holding Feed / Rankings / Profile (three equal columns, 4 pt padding) and,
+/// 4 pt to its right, a separate 58 × 58 glass circle for Log. 16 pt from the screen sides,
+/// 6 pt from the bottom. Selected item: the stronger glass thumb (sliding) and brand colour.
 ///
-/// Real-device feedback (2026-09-17) on the first cut: too large and sitting
-/// too high, and the two shapes shouldn't behave the same way on scroll —
-/// "the 3 buttons should disappear then the plus should get slightly
-/// smaller as you scroll down but it should stay on the page for easy
-/// access." So the pill fully hides (and stops accepting touches — a
-/// SwiftUI view scaled/faded to invisible still blocks touches at its
-/// *layout* frame unless hit-testing is explicitly turned off, which is
-/// exactly what made scrolling feel unresponsive on the first cut) while
-/// the Log button only shrinks a little and stays tappable throughout.
+/// Taps never pass through. Every item and the Log button are hittable across their whole
+/// shape, and the pill itself swallows taps that land in its padding. Before this, the items
+/// used the `.plain` button style, which only answers taps on drawn pixels — a tap between the
+/// icon and the label fell through to the feed card underneath and opened a post.
+///
+/// Scroll behaviour is unchanged from 2026-09-17 device feedback: scrolling down hides the pill
+/// (and stops it taking touches) while the Log button only shrinks and stays tappable.
 struct FloatingTabBar<Tab: Hashable>: View {
     struct Item {
         let tab: Tab
@@ -28,68 +24,98 @@ struct FloatingTabBar<Tab: Hashable>: View {
         let systemImage: String
     }
 
-    private static var barHeight: CGFloat { 60 }
-
     let items: [Item]
     @Binding var selection: Tab
     let onTapLog: () -> Void
 
     @Environment(FloatingBarVisibility.self) private var visibility
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Namespace private var thumb
 
     var body: some View {
-        HStack(spacing: 8) {
-            HStack(spacing: 0) {
-                ForEach(items, id: \.tab) { item in
-                    tabButton(item)
-                }
-            }
-            .padding(4)
-            .frame(height: Self.barHeight)
-            .glassSurface(cornerRadius: 999)
-            .opacity(visibility.isExpanded ? 1 : 0)
-            .scaleEffect(visibility.isExpanded ? 1 : 0.85, anchor: .bottom)
-            .allowsHitTesting(visibility.isExpanded)
+        HStack(spacing: Tokens.Size.navGap) {
+            pill
+                .opacity(visibility.isExpanded ? 1 : 0)
+                .scaleEffect(visibility.isExpanded ? 1 : 0.85, anchor: .bottom)
+                .allowsHitTesting(visibility.isExpanded)
 
-            Button(action: onTapLog) {
-                // The prototype's plus glyph has no circle in it — the
-                // circular look comes entirely from the container.
-                // `plus.circle.fill` would double up on that.
-                Image(systemName: "plus")
-                    .font(.system(size: 22, weight: .semibold))
-                    .foregroundStyle(Tokens.Accent.brand)
-                    .frame(width: Self.barHeight, height: Self.barHeight)
-            }
-            .buttonStyle(.plain)
-            .glassSurface(cornerRadius: 999)
-            // Stays visible and tappable at all times — this is the app's
-            // primary action, never hidden, only a visual cue that
-            // scrolling is happening.
-            .scaleEffect(visibility.isExpanded ? 1 : 0.86)
+            logButton
+                .scaleEffect(visibility.isExpanded ? 1 : 0.86)
         }
-        .padding(.horizontal, 12)
-        .animation(.easeOut(duration: 0.3), value: visibility.isExpanded)
+        // While the pill shows, the 4 pt gap between it and Log absorbs taps too, so nothing
+        // along the bar reaches the post underneath. Hidden, the pill's area lets taps through.
+        .background {
+            if visibility.isExpanded {
+                Color.clear
+                    .contentShape(Rectangle())
+                    .onTapGesture {}
+            }
+        }
+        .padding(.horizontal, Tokens.Size.navSideInset)
+        .padding(.bottom, Tokens.Size.navBottomInset)
+        .animation(reduceMotion ? nil : .easeOut(duration: 0.3), value: visibility.isExpanded)
+    }
+
+    private var pill: some View {
+        HStack(spacing: 0) {
+            ForEach(items, id: \.tab) { item in
+                tabButton(item)
+            }
+        }
+        .padding(4)
+        .frame(height: Tokens.Size.navHeight)
+        .glassSurface(in: Capsule())
+        // Taps on the pill's own padding stop here instead of reaching the screen below.
+        .contentShape(Capsule())
+        .onTapGesture {}
     }
 
     private func tabButton(_ item: Item) -> some View {
         let isSelected = item.tab == selection
         return Button {
-            selection = item.tab
+            guard item.tab != selection else { return }
+            if reduceMotion {
+                selection = item.tab
+            } else {
+                withAnimation(Tokens.Motion.thumb) { selection = item.tab }
+            }
         } label: {
-            VStack(spacing: 3) {
+            VStack(spacing: 2) {
+                // v3 icons sit in a 20 × 20 box drawn with a thin 1.9 stroke; SF Symbols at
+                // 17 pt regular fill that box at the same visual weight.
                 Image(systemName: item.systemImage)
-                    .font(.system(size: 19))
+                    .font(.system(size: 17, weight: .regular))
+                    .frame(width: 20, height: 20)
                 Text(item.label)
-                    .font(.system(size: 11, weight: .semibold))
+                    .textStyle(Typography.navLabel)
             }
             .foregroundStyle(isSelected ? Tokens.Accent.brand : Tokens.Ink.secondary)
-            .frame(maxWidth: .infinity)
-            .frame(height: Self.barHeight - 8)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background {
                 if isSelected {
-                    Capsule().fill(Tokens.Accent.brandSoft)
+                    Color.clear
+                        .glassSurface(in: Capsule(), isSelected: true, usesNativeGlass: false)
+                        .matchedGeometryEffect(id: "thumb", in: thumb)
                 }
             }
+            .contentShape(Capsule())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(IconPressStyle())
+        .accessibilityLabel(item.label)
+        .accessibilityAddTraits(isSelected ? [.isSelected, .isButton] : .isButton)
+    }
+
+    /// Icon only (plus, 24 pt, brand) — the circle comes from the glass container.
+    private var logButton: some View {
+        Button(action: onTapLog) {
+            Image(systemName: "plus")
+                .font(.system(size: 24, weight: .semibold))
+                .foregroundStyle(Tokens.Accent.brand)
+                .frame(width: Tokens.Size.navHeight, height: Tokens.Size.navHeight)
+                .glassSurface(in: Circle())
+                .contentShape(Circle())
+        }
+        .buttonStyle(IconPressStyle())
+        .accessibilityLabel("Log workout")
     }
 }

@@ -30,10 +30,10 @@ struct PostDetailView: View {
     /// the profile. See DesignSystem/PaceDisplay.swift.
     @AppStorage(PaceDisplay.storageKey) private var paceDisplay: PaceDisplay = .split
 
-    private static let emoji: [String: String] = [
-        "fire": "🔥", "grimace": "😬", "clap": "👏", "eyes": "👀",
-        "muscle": "💪", "wow": "😮", "boat": "🚣"
-    ]
+    /// Emoji for any stored reaction kind, including those added from the feed's v3 picker.
+    private static var emoji: [String: String] {
+        Dictionary(uniqueKeysWithValues: (ReactionCatalog.picker + ReactionCatalog.legacy).map { ($0.key, $0.emoji) })
+    }
     private static let reportReasons = ["Inappropriate content", "Spam", "Harassment", "Other"]
     private static let heroHeight: CGFloat = 420
     /// How far the rounded sheet-lip rides up over the hero photo's bottom
@@ -181,6 +181,9 @@ struct PostDetailView: View {
                 Circle().fill(Color.black.opacity(0.28))
                 Circle().strokeBorder(Color.white.opacity(0.18), lineWidth: 1)
             }
+            // 36 pt to look at, 44 pt to tap.
+            .frame(width: Tokens.Size.minTap, height: Tokens.Size.minTap)
+            .contentShape(Circle())
     }
 
     private var backButton: some View {
@@ -423,7 +426,7 @@ struct PostDetailView: View {
             .aspectRatio(contentMode: .fill)
             .frame(width: 38, height: 38)
             .clipShape(RoundedRectangle(cornerRadius: 11, style: .continuous))
-            Text(segment.label.rawValue.uppercased())
+            Text(viewModel.badgeText(for: segment))
                 .textStyle(Typography.label)
                 .foregroundStyle(Tokens.Ink.secondary)
                 .lineLimit(1)
@@ -469,7 +472,10 @@ struct PostDetailView: View {
                     .background {
                         Circle().fill(Tokens.Ink.primary.opacity(0.08))
                     }
+                    .frame(width: Tokens.Size.minTap, height: Tokens.Size.minTap)
+                .contentShape(Circle())
             }
+            .accessibilityLabel("More reactions")
             .buttonStyle(.plain)
             .confirmationDialog("Add a reaction", isPresented: $isShowingMoreReactions, titleVisibility: .visible) {
                 ForEach(PostDetailViewModel.extraReactionKinds, id: \.self) { kind in
@@ -528,13 +534,23 @@ struct PostDetailView: View {
 
     @ViewBuilder
     private var extraPhotoGallery: some View {
-        if !extraPhotoSegments.isEmpty {
+        if !extraPhotoSegments.isEmpty || !viewModel.galleryPaths.isEmpty {
             VStack(alignment: .leading, spacing: 10) {
                 Text("MORE PHOTOS")
                     .textStyle(Typography.label)
                     .foregroundStyle(Tokens.Ink.secondary)
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 10) {
+                        // Photos the rower added in the review screen's photo
+                        // strip come first, then other pieces' monitor photos.
+                        ForEach(viewModel.galleryPaths, id: \.self) { path in
+                            CachedAsyncImage(url: viewModel.monitorURLs[path]) {
+                                PhotoPlaceholder(cornerRadius: 18, caption: nil)
+                            }
+                            .aspectRatio(contentMode: .fill)
+                            .frame(width: 150, height: 150)
+                            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                        }
                         ForEach(extraPhotoSegments) { segment in
                             CachedAsyncImage(url: segment.monitorPhotoPath.flatMap { viewModel.monitorURLs[$0] }) {
                                 PhotoPlaceholder(cornerRadius: 18, caption: segment.label.rawValue.uppercased())
@@ -639,7 +655,10 @@ struct PostDetailView: View {
                     .background {
                         Circle().fill(commentDraft.trimmingCharacters(in: .whitespaces).isEmpty ? Tokens.Accent.brand.opacity(0.4) : Tokens.Accent.brand)
                     }
+                    .frame(width: Tokens.Size.minTap, height: Tokens.Size.minTap)
+                .contentShape(Circle())
             }
+            .accessibilityLabel("Send comment")
             .buttonStyle(.plain)
             .disabled(commentDraft.trimmingCharacters(in: .whitespaces).isEmpty)
         }

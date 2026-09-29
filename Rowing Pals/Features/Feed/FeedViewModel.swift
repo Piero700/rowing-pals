@@ -15,10 +15,13 @@ final class FeedViewModel {
     /// PostgREST returns nested resources with their parent, not as
     /// separate round trips.
     private static let selectColumns = """
-    id, user_id, type, caption, total_distance_m, total_time_ms, avg_split_ms, avg_rate, \
-    photo_verified, logged_late, posted_at, \
+    id, user_id, type, caption, workout_label, total_distance_m, total_time_ms, avg_split_ms, avg_rate, \
+    photo_verified, logged_late, is_new_pb, posted_at, \
     profiles!sessions_user_id_fkey(display_name, category, gender, avatar_path, clubs(name)), \
-    segments(id, label, position, distance_m, monitor_photo_path)
+    segments(id, label, position, distance_m, time_ms, split_ms, monitor_photo_path, is_lead), \
+    session_photos(position, path), \
+    reactions(kind, user_id), \
+    comments(count)
     """
 
     var scope: SocialScope = .myClub {
@@ -29,6 +32,10 @@ final class FeedViewModel {
     }
 
     var posts: [FeedPost] = []
+    /// The signed-in rower — to mark their own reactions and hide Follow on their own posts.
+    var viewerId: UUID?
+    /// The viewer's club, for the Club tab's caption; nil when they have none.
+    var viewerClubName: String?
     var isLoading = false
     var isLoadingMore = false
     var errorMessage: String?
@@ -60,6 +67,84 @@ final class FeedViewModel {
     func loadInitial() async {
         guard posts.isEmpty else { return }
         await reload()
+    }
+
+    /// Who is viewing and which club they belong to — loaded once.
+    @MainActor
+    private func loadViewer() async {
+        guard viewerId == nil, let id = try? await SupabaseService.shared.auth.session.user.id else { return }
+        viewerId = id
+        struct Row: Decodable {
+            struct Club: Decodable { let name: String }
+            let club: Club?
+            enum CodingKeys: String, CodingKey { case club = "clubs" }
+        }
+        let row: Row? = try? await SupabaseService.shared
+            .from("profiles")
+            .select("clubs(name)")
+            .eq("id", value: id)
+            .single()
+            .execute()
+            .value
+        viewerClubName = row?.club?.name
+    }
+
+    // MARK: - Reactions
+
+    /// The reactions on a post, grouped by kind in picker order, each with its count and
+    /// whether the viewer is one of them.
+    struct ReactionSummary: Identifiable {
+        let kind: String
+        let count: Int
+        let isMine: Bool
+        var id: String { kind }
+    }
+
+    func reactionSummaries(for post: FeedPost) -> [ReactionSummary] {
+        let grouped = Dictionary(grouping: post.reactions, by: \.kind)
+        return grouped
+            .map { kind, rows in
+                ReactionSummary(kind: kind, count: rows.count, isMine: rows.contains { $0.userId == viewerId })
+            }
+            .sorted { ReactionCatalog.sortIndex(for: $0.kind) < ReactionCatalog.sortIndex(for: $1.kind) }
+    }
+
+    /// Adds or removes the viewer's reaction of `kind`, showing it at once and undoing it if
+    /// the write fails.
+    @MainActor
+    func toggleReaction(kind: String, on postId: UUID) async {
+        guard let viewerId, let index = posts.firstIndex(where: { $0.id == postId }) else { return }
+        let mine = FeedPost.ReactionRow(kind: kind, userId: viewerId)
+        let wasOn = posts[index].reactions.contains(mine)
+        if wasOn {
+            posts[index].reactions.removeAll { $0 == mine }
+        } else {
+            posts[index].reactions.append(mine)
+        }
+        do {
+            if wasOn {
+                try await SupabaseService.shared
+                    .from("reactions")
+                    .delete()
+                    .eq("session_id", value: postId)
+                    .eq("user_id", value: viewerId)
+                    .eq("kind", value: kind)
+                    .execute()
+            } else {
+                try await SupabaseService.shared
+                    .from("reactions")
+                    .insert(Reaction(sessionId: postId, userId: viewerId, kind: kind, createdAt: Date()))
+                    .execute()
+            }
+        } catch {
+            guard let undoIndex = posts.firstIndex(where: { $0.id == postId }) else { return }
+            if wasOn {
+                posts[undoIndex].reactions.append(mine)
+            } else {
+                posts[undoIndex].reactions.removeAll { $0 == mine }
+            }
+            errorMessage = error.localizedDescription
+        }
     }
 
     @MainActor
@@ -97,6 +182,7 @@ final class FeedViewModel {
 
     @MainActor
     private func loadPage(offset: Int, replacing: Bool) async {
+        await loadViewer()
         do {
             var query = SupabaseService.shared
                 .from("sessions")
@@ -148,10 +234,11 @@ final class FeedViewModel {
         // `let`, not `var` built up in a loop — captured mutable state in an
         // `async let` initializer is a data-race warning today and a hard
         // error under strict Swift 6 concurrency.
-        let monitorPaths: [String] = page.compactMap { post in
-            guard let path = post.primarySegment?.monitorPhotoPath, signedURLs[path] == nil else { return nil }
-            return path
-        }
+        // Every carousel page: each piece's monitor photo and each environment photo — all
+        // live in the `monitors` bucket.
+        let monitorPaths: [String] = page
+            .flatMap { $0.pages.map(\.path) }
+            .filter { signedURLs[$0] == nil }
         let selfiePaths: [String] = page.compactMap { post in
             let path = Self.selfiePath(userId: post.userId, sessionId: post.id)
             return signedURLs[path] == nil ? path : nil

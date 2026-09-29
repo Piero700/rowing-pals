@@ -23,6 +23,8 @@ struct RouteHost: View {
     var body: some View {
         NavigationStack(path: $path) {
             destination(root)
+                // The workout screen draws its own back button over its photo.
+                .toolbar(Self.drawsOwnChrome(root) ? .hidden : .visible, for: .navigationBar)
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) {
                         Button {
@@ -40,7 +42,16 @@ struct RouteHost: View {
         }
         .tint(Tokens.Accent.brand)
         .environment(barVisibility)
-        .environment(\.navigate, NavigateAction { path.append($0) })
+        .environment(\.navigate, NavigateAction { route in
+            // Log belongs to the tab screens; it can't be pushed here.
+            guard route != .log else { return }
+            path.append(route)
+        })
+    }
+
+    private static func drawsOwnChrome(_ route: AppRoute) -> Bool {
+        if case .post = route { return true }
+        return false
     }
 
     @ViewBuilder
@@ -52,6 +63,11 @@ struct RouteHost: View {
             PeopleListView(kind: kind)
         case .followRequests:
             FollowRequestsView()
+        case .log:
+            EmptyView()
+        case .post(let sessionId):
+            PostDetailView(sessionId: sessionId)
+                .toolbar(.hidden, for: .navigationBar)
         }
     }
 }

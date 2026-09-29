@@ -33,4 +33,17 @@ enum StorageService {
             .upload(path, data: data, options: FileOptions(contentType: "image/jpeg"))
         return path
     }
+
+    /// Uploads one extra gallery photo (the review screen's photo strip) to
+    /// `monitors` under the session, as `gallery-<index>.jpg`, so it can't
+    /// collide with a segment's `<position>.jpg`. It sits in the owner's
+    /// folder, so the existing upload and read policies already cover it.
+    /// Returns the path to store in `session_photos.path`.
+    static func uploadGalleryPhoto(_ data: Data, userId: UUID, sessionId: UUID, index: Int) async throws -> String {
+        let path = "\(userId.uuidString.lowercased())/\(sessionId.uuidString.lowercased())/gallery-\(index).jpg"
+        try await SupabaseService.shared.storage
+            .from("monitors")
+            .upload(path, data: data, options: FileOptions(contentType: "image/jpeg"))
+        return path
+    }
 }

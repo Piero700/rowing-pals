@@ -162,8 +162,7 @@ struct ClubSearchView: View {
         }
         .padding(14)
         .glassSurface(cornerRadius: 20)
-        .contentShape(Rectangle())
-        .onTapGesture {
+        .asButton {
             viewModel.selectedClub = club
         }
     }

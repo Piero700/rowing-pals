@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><meta name="design_doc_mode" content="canvas"><title>Rowing Pals — Artboards</title><style>html,body{margin:0;background:#16171b}a{color:#91b8ff}a:hover{color:#c6adff}</style></helmet>
+<div style="width:max-content;min-width:100%;min-height:100vh;box-sizing:border-box;background:#16171b;padding:64px;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',sans-serif;color:#f7f8fc;display:flex;flex-direction:column;gap:40px">
+  <div style="display:flex;flex-direction:column;gap:6px">
+    <div style="font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:#bbc0ce;font-weight:700">Rowing Pals · iOS interface study</div>
+    <div style="font-size:40px;font-weight:800;letter-spacing:-.03em">All screens — dark &amp; light</div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(4,max-content);gap:72px 72px">
+    <sc-for list="{{ screens }}" as="s" hint-placeholder-count="12">
+      <div id="{{ s.id }}" style="display:flex;flex-direction:column;gap:16px">
+        <div style="display:flex;align-items:baseline;gap:10px">
+          <span style="font-size:14px;font-weight:800;color:#91b8ff;font-variant-numeric:tabular-nums">{{ s.num }}</span>
+          <span style="font-size:22px;font-weight:750;letter-spacing:-.02em">{{ s.name }}</span>
+        </div>
+        <div style="display:flex;gap:28px">
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <span style="font-size:12px;color:#bbc0ce;font-weight:700;letter-spacing:.08em;text-transform:uppercase">Dark</span>
+            <iframe src="{{ s.dark }}" title="{{ s.name }} dark" loading="lazy" style="width:393px;height:852px;border:1px solid #464a56;border-radius:48px;background:#101114;display:block;box-shadow:0 28px 70px rgba(0,0,0,.45)"></iframe>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <span style="font-size:12px;color:#bbc0ce;font-weight:700;letter-spacing:.08em;text-transform:uppercase">Light</span>
+            <iframe src="{{ s.light }}" title="{{ s.name }} light" loading="lazy" style="width:393px;height:852px;border:1px solid #949eae;border-radius:48px;background:#edf0f5;display:block;box-shadow:0 28px 70px rgba(0,0,0,.45)"></iframe>
+          </div>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    const names = ['Onboarding','Activity feed','Rankings','Log workout','Review session','Profile','Settings','Other profile','Find rowers','PB history','All personal bests','Clubs'];
+    const base = 'Rowing%20Pals.dc.html?artboard=1';
+    return {
+      screens: names.map((name, i) => {
+        const n = i + 1, num = String(n).padStart(2, '0');
+        return { id: 's' + num, num, name, dark: `${base}&screen=${n}&theme=dark`, light: `${base}&screen=${n}&theme=light` };
+      })
+    };
+  }
+}
+</script>
+</body>
+</html>

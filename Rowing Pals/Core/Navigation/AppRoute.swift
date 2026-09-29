@@ -22,6 +22,10 @@ enum AppRoute: Hashable, Identifiable {
     case profile(UUID)
     case people(PeopleListKind)
     case followRequests
+    /// One workout's detail screen.
+    case post(UUID)
+    /// Opens Log (capture) — handled by `RootView`, which owns that modal.
+    case log
 
     var id: Self { self }
 }

@@ -15,7 +15,8 @@ struct DraftSegment: Identifiable {
 
     let id = UUID()
     var label: SegmentLabel
-    var photoJPEG: Data
+    /// Nil for a manually entered segment — there is no monitor photo.
+    var photoJPEG: Data?
     var distanceM: Int
     var timeMs: Int
     var splitMs: Int
@@ -29,6 +30,13 @@ struct DraftSegment: Identifiable {
     /// review sheet, never red (CLAUDE.md: this is expected, not an error).
     var lowConfidenceFields: Set<Field>
     var wasEdited = false
+    /// The rower has checked this segment's stroke rate against the monitor.
+    /// Required before posting a photographed segment, and cleared whenever
+    /// the rate is edited (prototype: "Check the stroke rate against your
+    /// monitor, then tap Confirm."). A manual segment has no monitor to
+    /// check against, so it starts confirmed.
+    var isRateConfirmed = false
+    var isManual: Bool { photoJPEG == nil }
 
     /// Builds a segment from one photo's OCR output. Any field with no
     /// reading defaults to 0 so the user has something to type over, and is
@@ -54,7 +62,38 @@ struct DraftSegment: Identifiable {
         splitMs = resolve(fields.splitMs, .split, default: 0)
         rate = resolve(fields.rate, .rate, default: 0)
 
+        // The average is derived from distance and time, never read, so it
+        // can't be "low confidence" — nothing for the rower to check.
+        lowConfidence.remove(.split)
         lowConfidenceFields = lowConfidence
         ocrConfidence = confidences.reduce(0, +) / Double(confidences.count)
+        // The monitor's own split is not trusted: the average is always
+        // derived from distance and time, so the three can never disagree.
+        recomputeSplit()
+    }
+
+    /// A blank segment for "Enter session manually": no photo, nothing read,
+    /// nothing to confirm.
+    init(manualLabel label: SegmentLabel) {
+        self.label = label
+        photoJPEG = nil
+        distanceM = 0
+        timeMs = 0
+        splitMs = 0
+        rate = 0
+        ocrConfidence = 0
+        lowConfidenceFields = []
+        isRateConfirmed = true
+    }
+
+    /// Average pace per 500 m, derived from distance and time — read-only in
+    /// the UI ("Average /500m now read-only, auto-computed as distance/time
+    /// change"). Zero until both are known.
+    mutating func recomputeSplit() {
+        guard distanceM > 0, timeMs > 0 else {
+            splitMs = 0
+            return
+        }
+        splitMs = Int((Double(timeMs) / (Double(distanceM) / 500)).rounded())
     }
 }

@@ -60,4 +60,12 @@ extension Int {
             return String(format: "%.1fkm", km)
         }
     }
+
+    /// The number and unit separately — v3 draws the unit smaller ("116,250 m", "116.3 km").
+    func distanceParts(unit: DistanceUnit) -> (value: String, unit: String) {
+        switch unit {
+        case .metres: (formattedWithGrouping, "m")
+        case .kilometres: (String(format: "%.1f", Double(self) / 1000), "km")
+        }
+    }
 }

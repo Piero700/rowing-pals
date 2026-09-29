@@ -22,8 +22,8 @@ that they match the prototype.
 1. **Branch hygiene (do first).** Commit the km narrowing, fast-forward `t21-redesign-foundation`
    or work only on `worktree-t21-redesign-continue`, merge to `main` once verified. Two branches
    currently carry the redesign; keep one.
-2. **E — Private accounts + follow requests. BUILT (branch `t22-private-accounts`), not yet
-   exercised against a database.** Decisions: private means only approved followers see anything —
+2. **E — Private accounts + follow requests. MERGED to `main` 2026-09-24 (database rules verified
+   on staging; in-app checks pending).** Decisions: private means only approved followers see anything —
    no clubmate access, and a private account drops off leaderboards for non-followers.
    - Database: `docs/migrations/2026-09-23-private-accounts.sql` (also folded into
      `docs/schema.sql`): `profiles.is_private`, `follows.status`, `can_view_user()` /
@@ -43,10 +43,64 @@ that they match the prototype.
      rank); a follow-request badge on the Profile tab; testing against a real database, including
      two accounts (one private) to prove the privacy rules; unit tests for `FollowService` state
      logic.
-3. **F — Review session.** Main-workout label (UT2/UT1/Threshold/Intervals/Test/Recovery); read-only
-   auto-computed average split; stroke-rate inline Confirm; session-type dropdown with 2k/5k
-   validation that updates PB and the test board; extra-photo strip; "Enter session manually"
-   from Capture. Verify against `ReviewSheetView` first — some may already exist.
+3. **F — Review session. BUILT (branch `t23-review-session`); needs the 2026-09-24 migration and
+   a real-device check.** Decisions: a manual entry is personal-only (never on leaderboards, never
+   a test result, stored `photo_verified = false`).
+   - Database: `docs/migrations/2026-09-24-review-session.sql` (also in `docs/schema.sql`):
+     `sessions.workout_label`, `daily_totals.ranked_*` (what leaderboards now read),
+     `session_photos` (+ RLS). **Run in Supabase, staging first, before running this build.**
+   - App: main-workout label dropdown (UT2 / UT1 / Threshold / Intervals / Test / Recovery) shown
+     as the Main split's badge in the feed and post detail; average /500m read-only and derived
+     from distance and time; stroke rate with an inline Confirm, required before posting and
+     cleared by any edit; Session type dropdown (Training + every standard test) with exact-match
+     validation, keeping the "this looks like a test" suggestion; "Include on leaderboards"
+     switch; extra-photo strip (photo library, up to 6, removable) shown in the post detail
+     gallery; "Enter session manually" on Capture; Volume leaderboard reads the ranked columns.
+   - Verified: build passes; 21 unit tests in `ReviewSessionTests` pass. NOT yet run on a device
+     (the camera path needs a real phone) or against the migrated database.
+   - Not done: manual-entry posts show a "MANUAL ENTRY" placeholder where the photo would be —
+     confirm that's the look you want.
+   - **Step 1 of the 2026-09-25 plan, BUILT on the same branch** (`39ce605`, `dc0c7b1`): one
+     "Add photo" (camera or library), automatic monitor/environment detection with corrections,
+     lead piece (`segments.is_lead`), new-PB flag (`sessions.is_new_pb`). Needs
+     `docs/migrations/2026-09-25-lead-piece-and-pb.sql`. 32 unit tests pass; checked in the
+     simulator via manual entry + library photos. Next: step 2 (v3 foundation + tap fixes), then v3
+     screens (feed carousel, lead-piece numbers and PB glow are built with the v3 feed).
+   - **Step 2 (v3 foundation + tap reliability), BUILT** on branch `t24-v3-foundation` (`4921566`),
+     stacked on `t23-review-session`. Root cause of mis-taps: `.plain` tab items only hit on drawn
+     pixels, plus a card-wide feed tap. New: v3 tokens/type scale, v3 glass (app-wide), button
+     family + `asButton`, sliding segmented control, v3 bottom nav (58 pt, 6 pt from bottom),
+     full-screen Log. Verified by targeted simulator taps; 34 tests pass.
+   - **Step 3 — Feed screen, BUILT** on branch `t25-v3-feed` (`0734209`), stacked on
+     `t24-v3-foundation`: v3 header + search, Following/Club with caption, v3 card, carousel,
+     lead-piece numbers, reactions (12-emoji v3 picker, saved and removable — verified), share,
+     comments pill, PB glow (verified by snapshot test), empty states. "Explore clubs" for viewers
+     without a club waits for phase G (the onboarding club search can't be reused for it).
+     Next screens in order: Rankings, Profile, Log/Review, Settings, Other profile, Find rowers,
+     PB history, All PBs, Onboarding.
+   - **Rankings (Volume) BUILT** (`7a97110`): v3 layout; decisions 17–18 keep My club / Following
+     only, Week / Month / Year and All / Erg / Water. v3 lists 7 tests; the app keeps its 9.
+   - **Profile BUILT**: v3 header + Settings gear, centred identity, counts, 4-up stats, top PBs,
+     estimate cards (dash until the algorithm arrives — decision 2), v3 weekly chart (tap a bar for
+     its total), 7×12 consistency grid (fixes the wrapping month labels), recent activity →
+     workout (new `.post` route). "Your club" button waits for phase G. Other-rower mode keeps
+     phase E behaviour with v3 styling; the full §08 layout (rank mini-cards) is still to do.
+   - **Log + Review BUILT** (`f864f86`): v3 §04/§05; library start = personal-only session; Help
+     sheet; inset corner moved by press-and-hold (v3 has no corner button).
+   - **Settings BUILT**: v3 §07 grouped cards; real Dark/Light appearance (app-wide, remembered);
+     compact Metres|km (leaderboards) and Split|Watts; Privacy row → sheet; Edit profile screen;
+     Log out; Contact + Terms (App Store requirement); Delete account; version. Left out: app icon
+     (14), CSV (15); "Who can comment" needs the user's go-ahead.
+   - **Notifications BUILT** (branch `t26-notifications`, decision 19): Settings switches + Quiet
+     hours sheet, permission prompt, device registration, alert tap opens the post over anything.
+     Server: migration `2026-09-26-notifications.sql`, `send-push` Edge Function (deployed to
+     staging), database webhook. **Alerts reach a phone only after the paid Apple Developer Program
+     is joined** and the push key is added — steps in `docs/testing/notifications.md` Part 3.
+   - Remaining v3 screens: Other profile (§08 details), Find rowers, PB history, All PBs,
+     Onboarding, Clubs (with phase G).
+   - **Known for step 3:** profile consistency grid month labels wrap letter by letter ("M / ar").
+     Note: the clickable prototype renders an 8 pt nav gap; `RP Screen.dc.html` and the README say
+     4 pt — 4 pt is used.
 4. **G — Clubs.** Create club, join policy (open / approval / invite), roles
    (owner / co-owner / admin / member), join requests, owner-only management, onboarding policy
    tags and "Join request pending". Needs schema (roles, policy, requests). Existing base:
@@ -68,4 +122,6 @@ that they match the prototype.
 
 - The prediction algorithm (phase K).
 - Concrete description of what is still wrong with the tab bar (phase L).
-- Go-ahead on placeholders: quiet hours, "Who can comment".
+- Go-ahead on the placeholder "Who can comment".
+- Joining the paid Apple Developer Program, so push notifications can be delivered (and for
+  TestFlight). Then the push key + capability (`docs/testing/notifications.md` Part 3).

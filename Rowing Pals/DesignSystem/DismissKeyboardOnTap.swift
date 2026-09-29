@@ -12,9 +12,12 @@ extension View {
     /// SwiftUI sheets and full-screen covers are separate presentation
     /// contexts from whatever screen presented them and don't inherit a
     /// modifier applied to the root.
+    ///
+    /// Recognised *alongside* other gestures, never instead of them: an exclusive tap gesture on
+    /// a whole screen can win over the buttons inside it.
     func dismissesKeyboardOnTap() -> some View {
-        onTapGesture {
+        simultaneousGesture(TapGesture().onEnded {
             UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
-        }
+        })
     }
 }

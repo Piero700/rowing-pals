@@ -17,12 +17,7 @@ struct PostSheetView: View {
             // its own @Environment(\.dismiss): it's pushed onto this same
             // NavigationStack via navigationDestination, so its own dismiss
             // would only pop back to CaptureView, not close this sheet.
-            CaptureView(onPosted: { dismiss() })
-                .toolbar {
-                    ToolbarItem(placement: .cancellationAction) {
-                        Button("Cancel") { dismiss() }
-                    }
-                }
+            CaptureView(onPosted: { dismiss() }, onClose: { dismiss() })
         }
     }
 }

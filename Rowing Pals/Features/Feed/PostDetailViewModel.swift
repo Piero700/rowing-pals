@@ -76,6 +76,12 @@ final class PostDetailViewModel {
     var avgRate: Double?
     var photoVerified = false
     var loggedLate = false
+    /// Badge text for the Main piece ("UT2", "2k test"); nil on posts made
+    /// before redesign phase F.
+    var workoutLabel: String?
+    /// Extra gallery photos (`session_photos`), in order — beyond the two
+    /// dual-camera shots and any other pieces' monitor photos.
+    var galleryPaths: [String] = []
     var postedAt = Date()
     var segments: [DetailSegment] = []
     var monitorURLs: [String: URL] = [:]
@@ -153,9 +159,16 @@ final class PostDetailViewModel {
                     }
                 }
 
+                struct PhotoRow: Decodable {
+                    let position: Int
+                    let path: String
+                }
+
                 let userId: UUID
                 let type: SessionType
                 let caption: String?
+                let workoutLabel: String?
+                let sessionPhotos: [PhotoRow]?
                 let totalDistanceM: Int
                 let totalTimeMs: Int
                 let avgSplitMs: Int?
@@ -169,6 +182,8 @@ final class PostDetailViewModel {
                 enum CodingKeys: String, CodingKey {
                     case userId = "user_id"
                     case type, caption
+                    case workoutLabel = "workout_label"
+                    case sessionPhotos = "session_photos"
                     case totalDistanceM = "total_distance_m"
                     case totalTimeMs = "total_time_ms"
                     case avgSplitMs = "avg_split_ms"
@@ -184,10 +199,11 @@ final class PostDetailViewModel {
             let row: SessionRow = try await SupabaseService.shared
                 .from("sessions")
                 .select("""
-                user_id, type, caption, total_distance_m, total_time_ms, avg_split_ms, avg_rate, \
+                user_id, type, caption, workout_label, total_distance_m, total_time_ms, avg_split_ms, avg_rate, \
                 photo_verified, logged_late, posted_at, \
                 profiles!sessions_user_id_fkey(id, display_name, category, gender, clubs(name)), \
-                segments(id, label, position, distance_m, time_ms, split_ms, rate, monitor_photo_path)
+                segments(id, label, position, distance_m, time_ms, split_ms, rate, monitor_photo_path), \
+                session_photos(position, path)
                 """)
                 .eq("id", value: sessionId)
                 .single()
@@ -208,6 +224,8 @@ final class PostDetailViewModel {
                 .sorted { $0.position < $1.position }
                 .map { DetailSegment(id: $0.id, label: $0.label, position: $0.position, distanceM: $0.distanceM, timeMs: $0.timeMs, splitMs: $0.splitMs, rate: $0.rate, monitorPhotoPath: $0.monitorPhotoPath) }
             isOwnPost = row.userId == userId
+            workoutLabel = row.workoutLabel
+            galleryPaths = (row.sessionPhotos ?? []).sorted { $0.position < $1.position }.map(\.path)
 
             async let photos: Void = fetchPhotoURLs(authorId: row.userId)
             async let banner = Self.loadTestBanner(sessionId: sessionId, authorId: row.userId)
@@ -240,11 +258,20 @@ final class PostDetailViewModel {
         Task { await SupabaseService.shared.removeChannel(realtimeChannel) }
     }
 
+    /// The tag on a piece: the Main piece shows the workout label ("UT2",
+    /// "2k test") instead of "MAIN", as in the prototype.
+    func badgeText(for segment: DetailSegment) -> String {
+        if segment.label == .main, let workoutLabel {
+            return workoutLabel.uppercased()
+        }
+        return segment.label.rawValue.uppercased()
+    }
+
     // MARK: - Photos
 
     @MainActor
     private func fetchPhotoURLs(authorId: UUID) async {
-        let monitorPaths = segments.compactMap(\.monitorPhotoPath)
+        let monitorPaths = segments.compactMap(\.monitorPhotoPath) + galleryPaths
         async let monitors = Self.signURLs(bucket: "monitors", paths: monitorPaths)
         async let selfies = Self.signURLs(bucket: "selfies", paths: [FeedViewModel.selfiePath(userId: authorId, sessionId: sessionId)])
         let (monitorResults, selfieResults) = await (monitors, selfies)

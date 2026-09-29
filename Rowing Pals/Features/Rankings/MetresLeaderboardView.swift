@@ -5,109 +5,86 @@
 
 import SwiftUI
 
-/// Screen 5 — Metres leaderboard, aggregated from `daily_totals` only
-/// (never `sessions`, per task 13). UK spelling "Metres" per CLAUDE.md's
-/// domain vocabulary.
+/// Rankings → Volume, to v3 (`docs/design/v3/RP Screen.dc.html` §03): mode control, the lilac
+/// rank-hero card, Gender and Level selects, the scope control, a "This week · N rowers match"
+/// caption, and one leaderboard card of 72 pt rows (#1 in gold with ♛ and a gold edge bar, your
+/// row tinted brand). Also keeps Week / Month / Year and All / Erg / Water (decision 18) and
+/// scope My club / Following only (decision 17). Distances follow the km toggle (decision 3).
 struct MetresLeaderboardView: View {
+    @Binding var mode: RankingsMode
+
     @State private var viewModel = MetresLeaderboardViewModel()
-    /// Whether the current user's own row is visible in the scrollable
-    /// list — the pinned row below only shows once it scrolls out of view,
-    /// so they never appear twice on screen at once.
     @State private var isOwnRowVisible = true
-    /// False when embedded under `RankingsView` (redesign, phase A) — this
-    /// screen's own title is replaced by `RankingsHeader` there instead.
-    var showsOwnTitle = true
-    /// Only used when `showsOwnTitle` is false — see `RankingsView`.
-    var mode: Binding<RankingsMode>?
-    /// Redesign phase B — per-device display preference, not synced to
-    /// the profile. See DesignSystem/DistanceUnit.swift.
     @AppStorage(DistanceUnit.storageKey) private var distanceUnit: DistanceUnit = .metres
-    /// Redesign phase D — single Filters sheet replacing inline chips, see
-    /// RankingsFilters.swift.
-    @State private var isShowingFilters = false
+    @Environment(\.navigate) private var navigate
+
+    /// v3 order without the cancelled app-wide "All": My club, then Following.
+    private static let scopes: [SocialScope] = [.myClub, .following]
 
     var body: some View {
-        // Direct ScrollView child, same constraint as FeedView — see its comment.
         ScrollView {
-            VStack(alignment: .leading, spacing: 12) {
-                if showsOwnTitle {
-                    Text("Metres")
-                        .font(.system(size: 30, weight: .bold))
-                        .foregroundStyle(Tokens.Ink.primary)
-                        .padding(.top, 8)
-                } else if let mode {
-                    RankingsHeader(mode: mode)
-                }
+            VStack(alignment: .leading, spacing: 0) {
+                RankingsHeader(mode: $mode)
 
-                PillSegmentedControl(options: MetresLeaderboardViewModel.Period.allCases.map(\.label), selection: periodSelection)
+                PillSegmentedControl(
+                    options: MetresLeaderboardViewModel.Period.allCases.map(\.label),
+                    selection: periodSelection
+                )
+                .padding(.top, Tokens.Spacing.loose)
 
-                HStack(spacing: 7) {
-                    ForEach(MetresLeaderboardViewModel.Source.allCases, id: \.self) { source in
-                        FilterChip(label: source.label, isSelected: viewModel.source == source)
-                            .onTapGesture { viewModel.source = source }
+                rankHeroCard
+                    .padding(.top, 13)
+
+                HStack(spacing: Tokens.Spacing.gap) {
+                    select(title: "Gender", value: genderLabel, options: [("All genders", nil), ("Male", .male), ("Female", .female)]) {
+                        viewModel.filters.gender = $0
+                    }
+                    select(title: "Level", value: levelLabel, options: [("All levels", nil), ("Novice", .novice), ("Senior", .senior)]) {
+                        viewModel.filters.level = $0
                     }
                 }
+                .padding(.top, 15)
+                .padding(.bottom, Tokens.Spacing.gap)
 
-                // Redesign phase D — Gender/Level/Scope collapse into one
-                // "Filters" sheet with a caption stating the composed
-                // filter, replacing what used to be inline chips/text here.
-                // Source above stays inline: it picks *which figure* ranks
-                // rows, not *who* is included, so it isn't one of the three
-                // AND'd axes the sheet covers.
-                HStack(spacing: 10) {
-                    RankingsFiltersButton(filters: viewModel.filters) { isShowingFilters = true }
-                }
-                .padding(.top, 2)
+                // v3 wording: "My club", "Following".
+                PillSegmentedControl(options: ["My club", "Following"], selection: scopeSelection)
+
+                sourcePills
+                    .padding(.top, Tokens.Spacing.loose)
+
+                Text(matchCaption)
+                    .textStyle(Typography.meta)
+                    .tabularNumerals()
+                    .foregroundStyle(Tokens.Ink.secondary)
+                    .padding(.horizontal, 2)
+                    .padding(.vertical, Tokens.Spacing.loose)
 
                 if viewModel.rankedRows.isEmpty {
-                    emptyState
+                    emptyCard
                 } else {
-                    rankHeroCard
-                        .padding(.top, 4)
-
-                    VStack(spacing: 8) {
-                        ForEach(viewModel.rankedRows) { row in
-                            if row.rank <= 3 {
-                                podiumRow(row)
-                            } else {
-                                restRow(row)
-                            }
-                        }
-                    }
-                    .padding(.top, 6)
-
-                    HStack(spacing: 14) {
-                        legendSwatch(opacity: 0.75, label: "Erg")
-                        legendSwatch(opacity: 0.28, label: "Water")
-                    }
-                    .padding(.top, 2)
+                    leaderboard
                 }
 
-                Color.clear.frame(height: 60)
+                Color.clear.frame(height: Tokens.Spacing.tabScrollBottom)
             }
-            .padding(.horizontal, 14)
+            .padding(.horizontal, Tokens.Spacing.screen)
         }
+        .scrollIndicators(.hidden)
         .background(Tokens.Base.ground)
         .tracksFloatingBar()
         .ignoresSafeArea(edges: .bottom)
         .overlay(alignment: .bottom) {
             if !isOwnRowVisible, let ownRow = viewModel.rankedRows.first(where: \.isCurrentUser) {
                 MetresPinnedRow(row: ownRow, periodLabel: viewModel.period.label.lowercased())
-                    .padding(.bottom, 20)
+                    .padding(.bottom, Tokens.Size.navHeight + Tokens.Size.navBottomInset + 30)
                     .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
         .task { await viewModel.loadInitial() }
         .refreshable { await viewModel.reload() }
-        // `simultaneousGesture`, not `gesture` — this must never win
-        // exclusively over the ScrollView's own vertical pan recognizer,
-        // only additionally recognize a clearly horizontal drag anywhere
-        // on the page, Safari-back/forward-swipe style.
-        .simultaneousGesture(periodSwipeGesture)
-        .sheet(isPresented: $isShowingFilters) {
-            RankingsFiltersSheet(filters: $viewModel.filters)
-        }
     }
+
+    // MARK: - Controls
 
     private var periodSelection: Binding<Int> {
         Binding(
@@ -116,95 +93,142 @@ struct MetresLeaderboardView: View {
         )
     }
 
-    /// Swiping anywhere on the page — not just the Week/Month/Year control —
-    /// steps to the next/previous period, Safari-style: left advances
-    /// (Week → Month → Year), right goes back, clamped at either end
-    /// rather than wrapping.
-    private var periodSwipeGesture: some Gesture {
-        DragGesture(minimumDistance: 24)
-            .onEnded { value in
-                guard abs(value.translation.width) > abs(value.translation.height) else { return }
-                advancePeriod(by: value.translation.width < 0 ? 1 : -1)
-            }
+    private var scopeSelection: Binding<Int> {
+        Binding(
+            get: { Self.scopes.firstIndex(of: viewModel.filters.scope) ?? 0 },
+            set: { viewModel.filters.scope = Self.scopes[$0] }
+        )
     }
 
-    private func advancePeriod(by delta: Int) {
-        let periods = MetresLeaderboardViewModel.Period.allCases
-        guard
-            let currentIndex = periods.firstIndex(of: viewModel.period),
-            periods.indices.contains(currentIndex + delta)
-        else { return }
-        viewModel.period = periods[currentIndex + delta]
-    }
-
-    @ViewBuilder
-    private var emptyState: some View {
-        VStack(spacing: 6) {
-            if let errorMessage = viewModel.errorMessage {
-                Text("Couldn't load the leaderboard")
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(Tokens.Ink.primary)
-                Text(errorMessage)
-                    .textStyle(Typography.bodySecondary)
-                    .foregroundStyle(Tokens.Ink.secondary)
-                    .multilineTextAlignment(.center)
-            } else {
-                Text("Nobody's logged metres here yet")
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(Tokens.Ink.primary)
-                Text("Post a session to be the first on the board.")
-                    .textStyle(Typography.bodySecondary)
-                    .foregroundStyle(Tokens.Ink.secondary)
-            }
+    private var genderLabel: String {
+        switch viewModel.filters.gender {
+        case .male: "Male"
+        case .female: "Female"
+        case nil: "All genders"
         }
-        .padding(.horizontal, 20)
-        .padding(.top, 40)
+    }
+
+    private var levelLabel: String {
+        switch viewModel.filters.level {
+        case .novice: "Novice"
+        case .senior: "Senior"
+        case nil: "All levels"
+        }
+    }
+
+    /// v3 select: 12 pt muted label over a 44 pt raised field (radius 15, 1 pt line).
+    private func select<Value>(
+        title: String, value: String, options: [(String, Value?)], onPick: @escaping (Value?) -> Void
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(title)
+                .font(.system(size: 12))
+                .foregroundStyle(Tokens.Ink.secondary)
+            Menu {
+                ForEach(options.indices, id: \.self) { index in
+                    Button(options[index].0) { onPick(options[index].1) }
+                }
+            } label: {
+                HStack {
+                    Text(value)
+                        .font(.system(size: 15))
+                        .foregroundStyle(Tokens.Ink.primary)
+                        .lineLimit(1)
+                    Spacer(minLength: 4)
+                    Image(systemName: "chevron.up.chevron.down")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(Tokens.Ink.secondary)
+                }
+                .padding(Tokens.Spacing.loose)
+                .frame(maxWidth: .infinity, minHeight: Tokens.Size.minTap)
+                .background {
+                    RoundedRectangle(cornerRadius: Tokens.Radius.select, style: .continuous).fill(Tokens.Surface.raised)
+                }
+                .overlay {
+                    RoundedRectangle(cornerRadius: Tokens.Radius.select, style: .continuous)
+                        .strokeBorder(Tokens.Surface.line, lineWidth: 1)
+                }
+                .contentShape(RoundedRectangle(cornerRadius: Tokens.Radius.select, style: .continuous))
+            }
+            .accessibilityLabel("\(title): \(value)")
+        }
         .frame(maxWidth: .infinity)
     }
 
-    /// Redesign phase D — the rank-hero card atop the Volume ranked list,
-    /// per docs/design/rowing-pals-redesign-handoff-v2.md §2 Screen 03:
-    /// the viewer's own total for the selected period, a live sentence, and
-    /// the overall leader's name. Rendered in the lilac `.records` role,
-    /// same as every other PB/rank-hero surface in the app — never gold,
-    /// which is reserved for rank-movement only.
-    @ViewBuilder
+    /// All / Erg / Water (decision 18) as glass pills.
+    private var sourcePills: some View {
+        HStack(spacing: Tokens.Spacing.tight) {
+            ForEach(MetresLeaderboardViewModel.Source.allCases, id: \.self) { source in
+                Button(source.label) { viewModel.source = source }
+                    .buttonStyle(.rpPill(isOn: viewModel.source == source, minHeight: 40))
+                    .accessibilityAddTraits(viewModel.source == source ? .isSelected : [])
+            }
+        }
+    }
+
+    private var matchCaption: String {
+        let count = viewModel.rankedRows.count
+        return "This \(viewModel.period.label.lowercased()) · \(count) rower\(count == 1 ? "" : "s") match"
+    }
+
+    // MARK: - Rank hero
+
+    /// Lilac → card gradient card: "<period> volume · You", your total, how far to the next
+    /// place, and the overall leader.
     private var rankHeroCard: some View {
         let rows = viewModel.rankedRows
         let ownIndex = rows.firstIndex(where: \.isCurrentUser)
-        let leader = rows.first
-
-        VStack(alignment: .leading, spacing: 10) {
-            HStack(alignment: .firstTextBaseline) {
-                Text("You")
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(Tokens.Ink.secondary)
-                Spacer()
-                if let leader, !leader.isCurrentUser {
-                    Text("\(leader.name) leads")
-                        .font(.system(size: 12.5, weight: .medium))
-                        .foregroundStyle(Tokens.Ink.secondary)
-                        .lineLimit(1)
-                }
-            }
-            Text((ownIndex.map { rows[$0].metres } ?? 0).formattedDistance(unit: distanceUnit))
-                .font(.system(size: 32, weight: .bold))
+        let own = (ownIndex.map { rows[$0].metres } ?? 0).distanceParts(unit: distanceUnit)
+        let shape = RoundedRectangle(cornerRadius: Tokens.Radius.card, style: .continuous)
+        return VStack(alignment: .leading, spacing: 0) {
+            Text("\(periodAdjective) volume · You")
+                .textStyle(Typography.overline)
+                .foregroundStyle(Tokens.Accent.records)
+            (Text(own.value) + Text(" \(own.unit)").font(.system(size: 16, weight: .bold)))
+                .textStyle(Typography.heroNumber)
                 .tabularNumerals()
                 .foregroundStyle(Tokens.Ink.primary)
+                .padding(.top, Tokens.Spacing.loose)
             Text(heroSentence(rows: rows, ownIndex: ownIndex))
-                .font(.system(size: 13, weight: .semibold))
-                .foregroundStyle(Tokens.Accent.records)
+                .textStyle(Typography.bodyV3)
+                .foregroundStyle(Tokens.Ink.primary)
+                .padding(.vertical, Tokens.Spacing.tight)
+            if let leader = rows.first {
+                Text("Overall leader · \(leader.isCurrentUser ? "You" : leader.name) · \(leader.metres.formattedDistance(unit: distanceUnit))")
+                    .font(.system(size: 12))
+                    .tabularNumerals()
+                    .foregroundStyle(Tokens.Ink.secondary)
+            }
         }
-        .padding(16)
+        .padding(17)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background {
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .fill(Tokens.Accent.records.opacity(0.1))
+            shape.fill(
+                LinearGradient(
+                    stops: [.init(color: Tokens.Accent.recordsSoft, location: 0), .init(color: Tokens.Surface.card, location: 0.75)],
+                    startPoint: UnitPoint(x: 0.1, y: 0.2),
+                    endPoint: UnitPoint(x: 0.9, y: 0.8)
+                )
+            )
+        }
+        .overlay { shape.strokeBorder(Tokens.Surface.line, lineWidth: 1) }
+        .accessibilityElement(children: .combine)
+    }
+
+    private var periodAdjective: String {
+        switch viewModel.period {
+        case .week: "Weekly"
+        case .month: "Monthly"
+        case .year: "Yearly"
         }
     }
 
     private func heroSentence(rows: [MetresLeaderboardViewModel.Row], ownIndex: Int?) -> String {
-        guard let ownIndex else { return "You are outside these filters" }
+        guard let ownIndex else {
+            return viewModel.viewerMatchesFilters
+                ? "No metres logged this \(viewModel.period.label.lowercased()) yet"
+                : "You are outside these filters"
+        }
         let ownRow = rows[ownIndex]
         guard ownRow.rank > 1 else { return "You lead this group" }
         let aboveRow = rows[ownIndex - 1]
@@ -212,86 +236,110 @@ struct MetresLeaderboardView: View {
         return "\(gap.formattedDistance(unit: distanceUnit)) to move into #\(aboveRow.rank)"
     }
 
-    private func podiumRow(_ row: MetresLeaderboardViewModel.Row) -> some View {
-        HStack(spacing: 12) {
-            Text("\(row.rank)")
-                .font(.system(size: 26, weight: .bold))
-                .tabularNumerals()
-                .foregroundStyle(Tokens.Accent.records)
-                .frame(width: 26)
-            AvatarPlaceholder(diameter: 42, streakDays: row.streakDays)
-            rowLabels(row)
-            Text(row.metres.formattedDistance(unit: distanceUnit))
-                .font(.system(size: 19, weight: .bold))
-                .tabularNumerals()
-                .foregroundStyle(Tokens.Ink.primary)
-        }
-        .padding(13)
-        .background {
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .fill(Tokens.Accent.records.opacity(0.07))
-        }
-        .modifier(TrackVisibility(isTracked: row.isCurrentUser, isVisible: $isOwnRowVisible))
-    }
+    // MARK: - Leaderboard
 
-    private func restRow(_ row: MetresLeaderboardViewModel.Row) -> some View {
-        HStack(spacing: 12) {
-            Text("\(row.rank)")
-                .font(.system(size: 17, weight: .semibold))
-                .tabularNumerals()
-                .foregroundStyle(Tokens.Ink.secondary)
-                .frame(width: 26)
-            AvatarPlaceholder(diameter: 38, streakDays: row.streakDays)
-            rowLabels(row)
-            Text(row.metres.formattedDistance(unit: distanceUnit))
-                .font(.system(size: 17, weight: .semibold))
-                .tabularNumerals()
-                .foregroundStyle(Tokens.Ink.primary)
-        }
-        .padding(12)
-        .background {
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .fill(Tokens.Ink.primary.opacity(0.05))
-        }
-        .modifier(TrackVisibility(isTracked: row.isCurrentUser, isVisible: $isOwnRowVisible))
-    }
-
-    private func rowLabels(_ row: MetresLeaderboardViewModel.Row) -> some View {
-        VStack(alignment: .leading, spacing: 5) {
-            Text(row.name)
-                .font(.system(size: 14.5, weight: .semibold))
-                .foregroundStyle(Tokens.Ink.primary)
-                .lineLimit(1)
-            Text(row.club ?? "No club")
-                .textStyle(Typography.bodySecondary)
-                .foregroundStyle(Tokens.Ink.secondary)
-                .lineLimit(1)
-            GeometryReader { geometry in
-                HStack(spacing: 0) {
-                    Rectangle().fill(Tokens.Ink.primary.opacity(0.75))
-                        .frame(width: geometry.size.width * row.ergFraction)
-                    Rectangle().fill(Tokens.Ink.primary.opacity(0.28))
+    private var leaderboard: some View {
+        let shape = RoundedRectangle(cornerRadius: Tokens.Radius.card, style: .continuous)
+        return VStack(spacing: 0) {
+            ForEach(viewModel.rankedRows) { row in
+                leaderboardRow(row)
+                if row.id != viewModel.rankedRows.last?.id {
+                    Rectangle().fill(Tokens.Surface.line).frame(height: 1)
                 }
             }
-            .frame(height: 3)
-            .clipShape(Capsule())
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(shape.fill(Tokens.Surface.card))
+        .clipShape(shape)
+        .overlay { shape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
     }
 
-    private func legendSwatch(opacity: Double, label: String) -> some View {
-        HStack(spacing: 5) {
-            Capsule().fill(Tokens.Ink.primary.opacity(opacity)).frame(width: 14, height: 3)
-            Text(label)
-                .font(.system(size: 11.5))
-                .foregroundStyle(Tokens.Ink.secondary)
+    /// 72 pt row, columns 20 | 32 | name | score with 7 pt gaps. #1: ♛ and score in gold, gold
+    /// tint and a 3 pt gold bar on the left. Your row: brand tint. Tap opens the profile.
+    private func leaderboardRow(_ row: MetresLeaderboardViewModel.Row) -> some View {
+        let isWinner = row.rank == 1
+        let score = row.metres.distanceParts(unit: distanceUnit)
+        return HStack(spacing: 7) {
+            Text(isWinner ? "♛" : "\(row.rank)")
+                .font(.system(size: 16, weight: .heavy))
+                .tabularNumerals()
+                .foregroundStyle(isWinner ? Tokens.Accent.rank : Tokens.Ink.secondary)
+                .frame(width: 20)
+            AvatarPlaceholder(diameter: 32, streakDays: row.streakDays, name: row.name)
+            VStack(alignment: .leading, spacing: 1) {
+                Text(row.isCurrentUser ? "\(row.name) (you)" : row.name)
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundStyle(Tokens.Ink.primary)
+                    .lineLimit(1)
+                Text(rowMeta(row))
+                    .font(.system(size: 10))
+                    .foregroundStyle(Tokens.Ink.secondary)
+                    .lineLimit(1)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            VStack(alignment: .trailing, spacing: 2) {
+                Text(score.value)
+                    .font(.system(size: 14, weight: .bold))
+                    .tabularNumerals()
+                    .foregroundStyle(isWinner ? Tokens.Accent.rank : Tokens.Ink.secondary)
+                Text(score.unit == "m" ? "metres" : "km")
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(Tokens.Ink.secondary)
+            }
+        }
+        .padding(.vertical, 9)
+        .padding(.horizontal, 11)
+        .frame(minHeight: 72)
+        .background {
+            if isWinner {
+                Tokens.Accent.rankSoft
+            } else if row.isCurrentUser {
+                Tokens.Accent.brandSoft
+            }
+        }
+        .overlay(alignment: .leading) {
+            if isWinner {
+                Rectangle().fill(Tokens.Accent.rank).frame(width: 3)
+            }
+        }
+        .asButton { navigate(.profile(row.userId)) }
+        .accessibilityLabel("Rank \(row.rank), \(row.name), \(row.metres.formattedDistance(unit: distanceUnit))")
+        .modifier(TrackVisibility(isTracked: row.isCurrentUser, isVisible: $isOwnRowVisible))
+    }
+
+    private func rowMeta(_ row: MetresLeaderboardViewModel.Row) -> String {
+        [row.club ?? "No club", row.level?.rawValue].compactMap { $0 }.joined(separator: " · ")
+    }
+
+    private var emptyCard: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            if let errorMessage = viewModel.errorMessage {
+                Text("Couldn't load the leaderboard")
+                    .font(.system(size: 17, weight: .bold))
+                    .foregroundStyle(Tokens.Ink.primary)
+                Text(errorMessage)
+                    .textStyle(Typography.meta)
+                    .foregroundStyle(Tokens.Ink.secondary)
+            } else {
+                Text("Nobody's logged metres here yet")
+                    .font(.system(size: 17, weight: .bold))
+                    .foregroundStyle(Tokens.Ink.primary)
+                Text("Post a session to be the first on the board.")
+                    .textStyle(Typography.meta)
+                    .foregroundStyle(Tokens.Ink.secondary)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(Tokens.Spacing.card)
+        .background {
+            RoundedRectangle(cornerRadius: Tokens.Radius.card, style: .continuous).fill(Tokens.Surface.card)
+        }
+        .overlay {
+            RoundedRectangle(cornerRadius: Tokens.Radius.card, style: .continuous)
+                .strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1)
         }
     }
 }
 
-/// Reports whether the current user's row has scrolled out of the visible
-/// area, so the pinned row can appear only once its inline counterpart is
-/// gone — never both at once.
 private struct TrackVisibility: ViewModifier {
     let isTracked: Bool
     @Binding var isVisible: Bool
@@ -311,49 +359,44 @@ private struct TrackVisibility: ViewModifier {
     }
 }
 
-/// The pinned "You" row shown above the floating tab bar once the user's
-/// own row scrolls out of view — an overlay on this screen's ScrollView,
-/// not a TabView-level accessory (see the design handoff doc for why).
+/// Your own row, floating above the nav when it has scrolled out of view.
 struct MetresPinnedRow: View {
     let row: MetresLeaderboardViewModel.Row
     let periodLabel: String
-    /// Redesign phase B — per-device display preference, not synced to
-    /// the profile. See DesignSystem/DistanceUnit.swift.
     @AppStorage(DistanceUnit.storageKey) private var distanceUnit: DistanceUnit = .metres
 
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 10) {
             Text("\(row.rank)")
-                .font(.system(size: 20, weight: .bold))
+                .font(.system(size: 16, weight: .heavy))
                 .tabularNumerals()
-                .foregroundStyle(row.rank <= 3 ? Tokens.Accent.records : Tokens.Ink.primary)
-                .frame(width: 26)
-            AvatarPlaceholder(diameter: 38, streakDays: row.streakDays)
+                .foregroundStyle(row.rank == 1 ? Tokens.Accent.rank : Tokens.Ink.primary)
+                .frame(width: 22)
+            AvatarPlaceholder(diameter: 32, streakDays: row.streakDays, name: row.name)
             VStack(alignment: .leading, spacing: 1) {
                 Text("You")
-                    .font(.system(size: 15, weight: .bold))
+                    .textStyle(Typography.name)
                     .foregroundStyle(Tokens.Ink.primary)
                 Text("\(row.club ?? "No club") · this \(periodLabel)")
-                    .textStyle(Typography.bodySecondary)
+                    .textStyle(Typography.meta)
                     .foregroundStyle(Tokens.Ink.secondary)
                     .lineLimit(1)
             }
             Spacer(minLength: 8)
             Text(row.metres.formattedDistance(unit: distanceUnit))
-                .font(.system(size: 18, weight: .bold))
+                .font(.system(size: 16, weight: .bold))
                 .tabularNumerals()
                 .foregroundStyle(Tokens.Ink.primary)
                 .lineLimit(1)
                 .fixedSize(horizontal: true, vertical: false)
-                .layoutPriority(1)
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
-        .glassSurface(cornerRadius: 24)
-        .padding(.horizontal, 16)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
+        .glassSurface(in: Capsule())
+        .padding(.horizontal, Tokens.Size.navSideInset)
     }
 }
 
 #Preview {
-    MetresLeaderboardView()
+    MetresLeaderboardView(mode: .constant(.volume))
 }

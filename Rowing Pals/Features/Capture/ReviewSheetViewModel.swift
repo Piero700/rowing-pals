@@ -9,19 +9,52 @@ import UIKit
 
 /// Owns the segment list building up in the review sheet, and the final
 /// write to Supabase on Post — one `sessions` row plus one `segments` row
-/// per photo, uploaded only now that the user has confirmed the numbers.
+/// per piece, uploaded only now that the user has confirmed the numbers.
+///
+/// Redesign phase F (docs/design/rowing-pals-redesign-handoff-v2.md §2
+/// Screen 05): main-workout label, session type (Training or a test) with
+/// validation, an "Include on leaderboards" switch, an extra-photo strip,
+/// an always-required stroke-rate confirmation, read-only averages, and
+/// manual entry. A manual session has no photos, so it is stored unverified
+/// and stays personal: never on leaderboards, never a test result (decision
+/// 2026-09-24).
 @Observable
 final class ReviewSheetViewModel {
-    let selfieJPEG: Data
+    /// An environment photo — one with no erg monitor in it (the crew, the
+    /// boathouse). Shown in the post's gallery; no numbers are taken from it.
+    /// Keeps whatever the reader found, so "Read as monitor photo" can turn
+    /// it into a piece if the automatic guess was wrong.
+    struct GalleryPhoto: Identifiable {
+        let id = UUID()
+        let jpeg: Data
+        var fields: ParsedMonitorFields?
+    }
+
+    /// Most environment photos one session can carry — keeps upload size and
+    /// storage cost bounded.
+    static let maxGalleryPhotos = 6
+
+    /// Nil for a manual entry: no camera was used.
+    let selfieJPEG: Data?
     var segments: [DraftSegment] = []
+    var galleryPhotos: [GalleryPhoto] = []
     var caption = ""
     /// Who can see this post — a new choice at post time. `.everyone`
     /// (club + followers, not an app-wide public option — see
     /// `PostVisibility`) is the widest of the three, so it's the default.
     var visibility: PostVisibility = .everyone
+    /// The badge text on the main split. Replaced by the test's own label
+    /// when the session is posted as a test.
+    var workoutLabel: WorkoutLabel = .ut2
+    var sessionKind: SessionKind = .training
+    /// "Include this session in your volume totals" — the leaderboards. Off
+    /// still counts the session in your own profile and streak.
+    var includeOnLeaderboards = true
     var isProcessingPhoto = false
     var isPosting = false
     var postError: String?
+
+    var isManual: Bool { selfieJPEG == nil }
 
     var totalDistanceM: Int { segments.reduce(0) { $0 + $1.distanceM } }
     var totalTimeMs: Int { segments.reduce(0) { $0 + $1.timeMs } }
@@ -41,13 +74,46 @@ final class ReviewSheetViewModel {
         return ((weighted / Double(totalDistanceM)) * 10).rounded() / 10
     }
 
-    var canPost: Bool { !segments.isEmpty && !isPosting }
+    /// The segment a session type is judged against — the Main one.
+    var mainSegment: DraftSegment? { segments.first(where: { $0.label == .main }) }
+
+    /// What the "Session type" dropdown offers. A manual entry can only be
+    /// Training: there is no photo to prove a test.
+    var availableKinds: [SessionKind] { isManual ? [.training] : SessionKind.allCases }
+
+    /// Why the chosen session type can't be posted right now, if it can't.
+    var sessionKindProblem: String? {
+        guard let test = sessionKind.test else { return nil }
+        guard let main = mainSegment else { return "Label one piece as Main to post a \(test.label) test." }
+        return sessionKind.problem(distanceM: main.distanceM, timeMs: main.timeMs)
+    }
+
+    /// Photographed segments whose stroke rate hasn't been checked yet.
+    var hasUnconfirmedRate: Bool { segments.contains { !$0.isRateConfirmed } }
+
+    /// The first reason Post is unavailable, shown next to the button. Nil
+    /// when the session can be posted.
+    var postBlocker: String? {
+        if segments.isEmpty { return "Add a piece to post." }
+        if segments.contains(where: { $0.distanceM <= 0 || $0.timeMs <= 0 }) {
+            return "Enter a distance and time for every piece."
+        }
+        if segments.contains(where: { $0.rate <= 0 }) {
+            return "Enter the stroke rate for every piece."
+        }
+        if hasUnconfirmedRate { return "Confirm the stroke rate before posting." }
+        return sessionKindProblem
+    }
+
+    var canPost: Bool { postBlocker == nil && !isPosting }
 
     /// The standard test the Main segment currently matches, if any — re-read
-    /// live off `segments`, so editing a field can make the prompt appear,
-    /// change which distance it names, or disappear again.
+    /// live off `segments`, so editing a field can make the suggestion
+    /// appear, change which distance it names, or disappear again. Only a
+    /// suggestion: nothing enters the test rankings until the rower chooses
+    /// it.
     var detectedTest: StandardTest? {
-        guard let main = segments.first(where: { $0.label == .main }) else { return nil }
+        guard !isManual, let main = mainSegment else { return nil }
         return StandardTest.match(distanceM: main.distanceM, timeMs: main.timeMs)
     }
 
@@ -55,21 +121,63 @@ final class ReviewSheetViewModel {
     /// the Main segment into a *different* standard distance re-prompts,
     /// rather than silently keeping a stale decision.
     private var decidedTestKey: String?
-    private var testAccepted = false
 
-    /// Whether the highlighted test-detection block should show right now.
-    var showsTestPrompt: Bool { detectedTest != nil && detectedTest?.key != decidedTestKey }
-
-    init(selfieJPEG: Data) {
-        self.selfieJPEG = selfieJPEG
+    /// Whether the highlighted "this looks like a test" suggestion shows.
+    var showsTestPrompt: Bool {
+        sessionKind == .training && detectedTest != nil && detectedTest?.key != decidedTestKey
     }
 
-    /// Records the user's Yes/No answer to "Add it to the Xk leaderboard?".
-    /// Nothing is written until Post — `test_results` needs the session and
-    /// segment rows to exist first (its foreign keys aren't nullable).
+    /// A photographed session starts with the selfie; a manual one with a
+    /// single blank piece to type into.
+    /// `startsBlank` is false when a session without a selfie begins from a library photo: that
+    /// photo becomes the first piece instead of a blank one.
+    init(selfieJPEG: Data?, startsBlank: Bool = true) {
+        self.selfieJPEG = selfieJPEG
+        if selfieJPEG == nil && startsBlank {
+            segments = [DraftSegment(manualLabel: .main)]
+        }
+    }
+
+    /// The piece that leads the post on the feed (docs/design/v2-decisions.md
+    /// #10): for a test, the Main piece; otherwise the fastest average split
+    /// among pieces that aren't warm-up or cool-down, earliest on a tie. Falls
+    /// back to Main, then the first piece, when nothing qualifies.
+    var leadSegmentID: DraftSegment.ID? {
+        Self.leadSegmentID(in: segments, isTest: sessionKind.test != nil)
+    }
+
+    static func leadSegmentID(in segments: [DraftSegment], isTest: Bool) -> DraftSegment.ID? {
+        let main = segments.first { $0.label == .main }
+        if isTest, let main { return main.id }
+        let candidates = segments.filter { $0.label != .warmup && $0.label != .cooldown && $0.splitMs > 0 }
+        if let fastest = candidates.min(by: { $0.splitMs < $1.splitMs }) {
+            return fastest.id
+        }
+        return main?.id ?? segments.first?.id
+    }
+
+    /// Whether a new test result beats the rower's previous best for that
+    /// test: faster for a distance test, further for a timed one. With no
+    /// earlier result, the first one is the best so far and counts.
+    static func isNewBest(
+        test: StandardTest, distanceM: Int, timeMs: Int,
+        previous: [(distanceM: Int, timeMs: Int)]
+    ) -> Bool {
+        guard !previous.isEmpty else { return true }
+        if test.isDurationBased {
+            return distanceM > previous.map(\.distanceM).max() ?? 0
+        }
+        return timeMs < previous.map(\.timeMs).min() ?? Int.max
+    }
+
+    /// Answers the suggestion. Yes picks that test in the Session type
+    /// dropdown; No hides the suggestion for that test. Nothing is written
+    /// until Post.
     func decideTest(accepted: Bool) {
         decidedTestKey = detectedTest?.key
-        testAccepted = accepted
+        if accepted, let test = detectedTest {
+            sessionKind = .test(test)
+        }
     }
 
     /// Runs OCR on a freshly captured monitor photo and appends it as a new
@@ -86,8 +194,69 @@ final class ReviewSheetViewModel {
         segments.append(DraftSegment(label: label, photoJPEG: jpeg, fields: fields))
     }
 
+    /// Adds a blank piece to a manual entry, e.g. a warm-up before the main
+    /// piece.
+    func addManualSegment() {
+        segments.append(DraftSegment(manualLabel: segments.isEmpty ? .main : .extra))
+    }
+
     func removeSegment(_ id: DraftSegment.ID) {
         segments.removeAll { $0.id == id }
+    }
+
+    /// Adds a photo from the camera or the library and decides, without
+    /// asking, what it is: a monitor photo becomes a piece (its numbers read,
+    /// editable, added to the total); anything else is an environment photo
+    /// (docs/design/v2-decisions.md #8–9).
+    @MainActor
+    func addPhoto(_ jpeg: Data) async {
+        isProcessingPhoto = true
+        defer { isProcessingPhoto = false }
+
+        let fields = await Self.extractFields(from: jpeg)
+        if fields.looksLikeMonitor {
+            let label: SegmentLabel = segments.isEmpty ? .main : .extra
+            segments.append(DraftSegment(label: label, photoJPEG: jpeg, fields: fields))
+        } else if galleryPhotos.count < Self.maxGalleryPhotos {
+            galleryPhotos.append(GalleryPhoto(jpeg: jpeg, fields: fields))
+        }
+    }
+
+    /// Correction when a piece's photo isn't really a monitor: it moves to
+    /// the environment photos and its numbers leave the total.
+    func moveSegmentToGallery(_ id: DraftSegment.ID) {
+        guard let index = segments.firstIndex(where: { $0.id == id }),
+              let jpeg = segments[index].photoJPEG,
+              galleryPhotos.count < Self.maxGalleryPhotos
+        else { return }
+        let segment = segments.remove(at: index)
+        // Keep the piece's numbers so moving it back is lossless.
+        let kept = ParsedMonitorFields(
+            elapsedTimeMs: MonitorField(value: segment.timeMs > 0 ? segment.timeMs : nil, confidence: 1),
+            distanceM: MonitorField(value: segment.distanceM > 0 ? segment.distanceM : nil, confidence: 1),
+            splitMs: MonitorField(value: segment.splitMs > 0 ? segment.splitMs : nil, confidence: 1),
+            rate: MonitorField(value: segment.rate > 0 ? segment.rate : nil, confidence: 1)
+        )
+        galleryPhotos.append(GalleryPhoto(jpeg: jpeg, fields: kept))
+    }
+
+    /// Correction the other way: an environment photo that is a monitor
+    /// becomes a piece, pre-filled with whatever the reader managed (often
+    /// nothing, so the rower types the numbers).
+    func readGalleryPhotoAsMonitor(_ id: GalleryPhoto.ID) {
+        guard let index = galleryPhotos.firstIndex(where: { $0.id == id }) else { return }
+        let photo = galleryPhotos.remove(at: index)
+        let empty = ParsedMonitorFields(elapsedTimeMs: .empty, distanceM: .empty, splitMs: .empty, rate: .empty)
+        let label: SegmentLabel = segments.isEmpty ? .main : .extra
+        segments.append(DraftSegment(label: label, photoJPEG: photo.jpeg, fields: photo.fields ?? empty))
+    }
+
+    func addGalleryPhoto(_ jpeg: Data) {
+        galleryPhotos.append(GalleryPhoto(jpeg: jpeg, fields: nil))
+    }
+
+    func removeGalleryPhoto(_ id: GalleryPhoto.ID) {
+        galleryPhotos.removeAll { $0.id == id }
     }
 
     private static func extractFields(from jpeg: Data) async -> ParsedMonitorFields {
@@ -112,6 +281,7 @@ final class ReviewSheetViewModel {
         let type: SessionType
         let caption: String?
         let visibility: PostVisibility
+        let workoutLabel: String
         let totalDistanceM: Int
         let totalTimeMs: Int
         let avgSplitMs: Int?
@@ -120,11 +290,14 @@ final class ReviewSheetViewModel {
         let loggedLate: Bool
         let capturedAt: Date
         let sessionDate: String
+        let isNewPB: Bool
 
         enum CodingKeys: String, CodingKey {
             case id
             case userId = "user_id"
             case type, caption, visibility
+            case isNewPB = "is_new_pb"
+            case workoutLabel = "workout_label"
             case totalDistanceM = "total_distance_m"
             case totalTimeMs = "total_time_ms"
             case avgSplitMs = "avg_split_ms"
@@ -148,12 +321,17 @@ final class ReviewSheetViewModel {
         let timeMs: Int
         let splitMs: Int
         let rate: Double
-        let monitorPhotoPath: String
-        let ocrConfidence: Double
+        /// Nil for a manual piece — there is no monitor photo.
+        let monitorPhotoPath: String?
+        /// Nil for a manual piece — nothing was read, so there is no
+        /// confidence to record (`segments.ocr_confidence` is nullable).
+        let ocrConfidence: Double?
         let wasEdited: Bool
+        let isLead: Bool
 
         enum CodingKeys: String, CodingKey {
             case id
+            case isLead = "is_lead"
             case sessionId = "session_id"
             case label, position
             case distanceM = "distance_m"
@@ -166,10 +344,22 @@ final class ReviewSheetViewModel {
         }
     }
 
-    /// Written only when the user tapped Yes on the test-detection prompt.
-    /// `genderAtTime`/`categoryAtTime` are snapshots of the profile *at post
-    /// time*, not a join — docs/schema.sql: reading them live would let a
-    /// later profile edit silently rewrite history and the rankings.
+    private struct NewSessionPhoto: Encodable {
+        let sessionId: UUID
+        let position: Int
+        let path: String
+
+        enum CodingKeys: String, CodingKey {
+            case sessionId = "session_id"
+            case position, path
+        }
+    }
+
+    /// Written only when the rower chose a test in the Session type
+    /// dropdown. `genderAtTime`/`categoryAtTime` are snapshots of the
+    /// profile *at post time*, not a join — docs/schema.sql: reading them
+    /// live would let a later profile edit silently rewrite history and the
+    /// rankings.
     private struct NewTestResult: Encodable {
         let userId: UUID
         let sessionId: UUID
@@ -194,11 +384,11 @@ final class ReviewSheetViewModel {
         }
     }
 
-    /// Uploads the selfie and every segment's monitor photo, then inserts
-    /// the `sessions` row and its `segments` rows — in that order, so a
-    /// failed insert never leaves orphaned storage objects with no row
-    /// pointing at them, and a failed upload never leaves a DB row with a
-    /// dangling photo path.
+    /// Uploads the selfie, every segment's monitor photo and the gallery
+    /// photos, then inserts the `sessions` row, its `segments` and
+    /// `session_photos` rows — in that order, so a failed insert never
+    /// leaves orphaned storage objects with no row pointing at them, and a
+    /// failed upload never leaves a DB row with a dangling photo path.
     @MainActor
     func post() async -> Bool {
         guard canPost else { return false }
@@ -213,7 +403,10 @@ final class ReviewSheetViewModel {
             postError = "That caption isn't allowed. Please rephrase it."
             return false
         }
-        for jpeg in [selfieJPEG] + segments.map(\.photoJPEG) {
+        let allPhotos = [selfieJPEG].compactMap { $0 }
+            + segments.compactMap(\.photoJPEG)
+            + galleryPhotos.map(\.jpeg)
+        for jpeg in allPhotos {
             guard let image = UIImage(data: jpeg) else { continue }
             if await ImageModerationService.check(image) == .blocked {
                 postError = "One of your photos couldn't be posted."
@@ -225,14 +418,26 @@ final class ReviewSheetViewModel {
             let userId = try await SupabaseService.shared.auth.session.user.id
             let sessionId = UUID()
 
-            try await StorageService.uploadSessionPhoto(selfieJPEG, bucket: "selfies", userId: userId, sessionId: sessionId)
+            if let selfieJPEG {
+                try await StorageService.uploadSessionPhoto(selfieJPEG, bucket: "selfies", userId: userId, sessionId: sessionId)
+            }
 
-            var monitorPaths: [String] = []
+            var monitorPaths: [String?] = []
             for (index, segment) in segments.enumerated() {
-                let path = try await StorageService.uploadSegmentPhoto(
-                    segment.photoJPEG, userId: userId, sessionId: sessionId, position: index
-                )
-                monitorPaths.append(path)
+                if let jpeg = segment.photoJPEG {
+                    monitorPaths.append(try await StorageService.uploadSegmentPhoto(
+                        jpeg, userId: userId, sessionId: sessionId, position: index
+                    ))
+                } else {
+                    monitorPaths.append(nil)
+                }
+            }
+
+            var galleryPaths: [String] = []
+            for (index, photo) in galleryPhotos.enumerated() {
+                galleryPaths.append(try await StorageService.uploadGalleryPhoto(
+                    photo.jpeg, userId: userId, sessionId: sessionId, index: index
+                ))
             }
 
             let formatter = DateFormatter()
@@ -241,23 +446,52 @@ final class ReviewSheetViewModel {
             formatter.dateFormat = "yyyy-MM-dd"
             let sessionDate = formatter.string(from: Date())
 
+            // A new PB is only possible on a photographed test session, and is
+            // judged against the rower's earlier results for that test before
+            // this one is recorded (docs/design/v2-decisions.md #12).
+            var isNewPB = false
+            if !isManual, case .test(let test) = sessionKind, let main = mainSegment {
+                struct PreviousResult: Decodable {
+                    let distanceM: Int
+                    let timeMs: Int
+                    enum CodingKeys: String, CodingKey {
+                        case distanceM = "distance_m"
+                        case timeMs = "time_ms"
+                    }
+                }
+                let previous: [PreviousResult] = try await SupabaseService.shared
+                    .from("test_results")
+                    .select("distance_m, time_ms")
+                    .eq("user_id", value: userId)
+                    .eq("distance_key", value: test.key)
+                    .execute()
+                    .value
+                isNewPB = Self.isNewBest(
+                    test: test, distanceM: main.distanceM, timeMs: main.timeMs,
+                    previous: previous.map { ($0.distanceM, $0.timeMs) }
+                )
+            }
+
             let newSession = NewSession(
                 id: sessionId,
                 userId: userId,
                 type: .erg,
                 caption: caption.isEmpty ? nil : caption,
                 visibility: visibility,
+                workoutLabel: sessionKind.testLabel ?? workoutLabel.rawValue,
                 totalDistanceM: totalDistanceM,
                 totalTimeMs: totalTimeMs,
                 avgSplitMs: avgSplitMs,
                 avgRate: avgRate,
-                photoVerified: true,
+                photoVerified: !isManual,
                 loggedLate: false,
                 capturedAt: Date(),
-                sessionDate: sessionDate
+                sessionDate: sessionDate,
+                isNewPB: isNewPB
             )
             try await SupabaseService.shared.from("sessions").insert(newSession).execute()
 
+            let leadID = leadSegmentID
             let newSegments = segments.enumerated().map { index, segment in
                 NewSegment(
                     id: segment.id,
@@ -269,16 +503,28 @@ final class ReviewSheetViewModel {
                     splitMs: segment.splitMs,
                     rate: segment.rate,
                     monitorPhotoPath: monitorPaths[index],
-                    ocrConfidence: segment.ocrConfidence,
-                    wasEdited: segment.wasEdited
+                    ocrConfidence: segment.isManual ? nil : segment.ocrConfidence,
+                    wasEdited: segment.wasEdited,
+                    isLead: segment.id == leadID
                 )
             }
             try await SupabaseService.shared.from("segments").insert(newSegments).execute()
 
-            try await Self.addToDailyTotal(userId: userId, day: sessionDate, distanceM: totalDistanceM, type: .erg)
+            if !galleryPaths.isEmpty {
+                let rows = galleryPaths.enumerated().map { index, path in
+                    NewSessionPhoto(sessionId: sessionId, position: index, path: path)
+                }
+                try await SupabaseService.shared.from("session_photos").insert(rows).execute()
+            }
 
-            if testAccepted, let test = detectedTest, test.key == decidedTestKey,
-               let main = segments.first(where: { $0.label == .main }) {
+            // A manual entry never ranks; a photographed one ranks unless
+            // the rower switched "Include on leaderboards" off.
+            let isRanked = !isManual && includeOnLeaderboards
+            try await Self.addToDailyTotal(
+                userId: userId, day: sessionDate, distanceM: totalDistanceM, type: .erg, isRanked: isRanked
+            )
+
+            if !isManual, case .test(let test) = sessionKind, let main = mainSegment {
                 let profile: Profile = try await SupabaseService.shared
                     .from("profiles")
                     .select()
@@ -314,6 +560,9 @@ final class ReviewSheetViewModel {
     /// it happens here, client-side, right after the row it's summarizing
     /// exists — every leaderboard and profile chart reads only from this
     /// table, so a session that doesn't reach it is invisible everywhere.
+    ///
+    /// The personal columns always grow; the `ranked_*` columns the
+    /// leaderboards read grow only for a ranked session.
     private struct DailyTotalUpsert: Encodable {
         let userId: UUID
         let day: String
@@ -321,6 +570,9 @@ final class ReviewSheetViewModel {
         let ergDistanceM: Int
         let waterDistanceM: Int
         let sessionCount: Int
+        let rankedDistanceM: Int
+        let rankedErgDistanceM: Int
+        let rankedWaterDistanceM: Int
 
         enum CodingKeys: String, CodingKey {
             case userId = "user_id"
@@ -329,10 +581,15 @@ final class ReviewSheetViewModel {
             case ergDistanceM = "erg_distance_m"
             case waterDistanceM = "water_distance_m"
             case sessionCount = "session_count"
+            case rankedDistanceM = "ranked_distance_m"
+            case rankedErgDistanceM = "ranked_erg_distance_m"
+            case rankedWaterDistanceM = "ranked_water_distance_m"
         }
     }
 
-    private static func addToDailyTotal(userId: UUID, day: String, distanceM: Int, type: SessionType) async throws {
+    private static func addToDailyTotal(
+        userId: UUID, day: String, distanceM: Int, type: SessionType, isRanked: Bool
+    ) async throws {
         let existing: [DailyTotal] = try await SupabaseService.shared
             .from("daily_totals")
             .select()
@@ -342,13 +599,18 @@ final class ReviewSheetViewModel {
             .value
         let current = existing.first
 
+        let erg = type == .erg ? distanceM : 0
+        let water = type == .water ? distanceM : 0
         let upsert = DailyTotalUpsert(
             userId: userId,
             day: day,
             distanceM: (current?.distanceM ?? 0) + distanceM,
-            ergDistanceM: (current?.ergDistanceM ?? 0) + (type == .erg ? distanceM : 0),
-            waterDistanceM: (current?.waterDistanceM ?? 0) + (type == .water ? distanceM : 0),
-            sessionCount: (current?.sessionCount ?? 0) + 1
+            ergDistanceM: (current?.ergDistanceM ?? 0) + erg,
+            waterDistanceM: (current?.waterDistanceM ?? 0) + water,
+            sessionCount: (current?.sessionCount ?? 0) + 1,
+            rankedDistanceM: (current?.rankedDistanceM ?? 0) + (isRanked ? distanceM : 0),
+            rankedErgDistanceM: (current?.rankedErgDistanceM ?? 0) + (isRanked ? erg : 0),
+            rankedWaterDistanceM: (current?.rankedWaterDistanceM ?? 0) + (isRanked ? water : 0)
         )
         try await SupabaseService.shared
             .from("daily_totals")

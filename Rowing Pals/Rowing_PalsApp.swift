@@ -9,10 +9,16 @@ import SwiftUI
 
 @main
 struct Rowing_PalsApp: App {
+    /// Push notifications' device-token and alert-tap callbacks (see `AppDelegate`).
+    @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @State private var authState = AuthState()
+
+    /// Settings → Appearance; dark is the primary design.
+    @AppStorage(Appearance.storageKey) private var appearance: Appearance = .dark
 
     var body: some Scene {
         WindowGroup {
+            Group {
             if !authState.isSignedIn {
                 SignInView()
             } else if authState.needsOnboarding == nil {
@@ -24,6 +30,8 @@ struct Rowing_PalsApp: App {
             } else {
                 RootView()
             }
+            }
+            .preferredColorScheme(appearance.colorScheme)
         }
         .environment(authState)
     }

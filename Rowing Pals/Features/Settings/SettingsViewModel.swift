@@ -27,6 +27,13 @@ final class SettingsViewModel {
     var isDeletingAccount = false
     var deleteError: String?
 
+    /// Notifications (docs/design/v2-decisions.md #19). Each change is saved the moment
+    /// it's made, like the privacy switch; nil until loaded.
+    var notificationSettings: NotificationSettings?
+    var notificationError: String?
+    /// For "New posts from UEA Boat Club"; nil when the rower has no club.
+    var clubName: String?
+
     private var userId: UUID?
     /// Loaded values, to detect whether Save has anything to do.
     private var original: (displayName: String, gender: RowerGender, category: RowerCategory, weeklyTargetM: Int)?
@@ -59,8 +66,59 @@ final class SettingsViewModel {
             weeklyTargetM = profile.weeklyTargetM
             isPrivate = profile.isPrivate
             original = (profile.displayName, gender, profile.category, profile.weeklyTargetM)
+            await loadNotifications(userId: id, clubId: profile.clubId)
         } catch {
             saveError = error.localizedDescription
+        }
+    }
+
+    /// The rower's row, or the defaults when they've never changed anything.
+    @MainActor
+    private func loadNotifications(userId: UUID, clubId: UUID?) async {
+        do {
+            let rows: [NotificationSettings] = try await SupabaseService.shared
+                .from("notification_settings")
+                .select()
+                .eq("user_id", value: userId)
+                .execute()
+                .value
+            notificationSettings = rows.first ?? .defaults(for: userId)
+        } catch {
+            notificationSettings = .defaults(for: userId)
+            notificationError = "Couldn't load your notification settings. \(error.localizedDescription)"
+        }
+        if let clubId {
+            let club: Club? = try? await SupabaseService.shared
+                .from("clubs")
+                .select()
+                .eq("id", value: clubId)
+                .single()
+                .execute()
+                .value
+            clubName = club?.name
+        }
+        await PushNotificationService.shared.refreshAuthorizationStatus()
+    }
+
+    /// Applies one change at once and saves the whole row (with the phone's current time
+    /// zone). Reverts if the save fails, so a switch never shows a choice that isn't saved.
+    @MainActor
+    func updateNotifications(_ change: (inout NotificationSettings) -> Void) async {
+        guard let previous = notificationSettings else { return }
+        var updated = previous
+        change(&updated)
+        updated.timeZone = TimeZone.current.identifier
+        guard updated != previous else { return }
+        notificationSettings = updated
+        notificationError = nil
+        do {
+            try await SupabaseService.shared
+                .from("notification_settings")
+                .upsert(updated, onConflict: "user_id")
+                .execute()
+        } catch {
+            notificationSettings = previous
+            notificationError = "Couldn't save that change. \(error.localizedDescription)"
         }
     }
 
@@ -143,6 +201,8 @@ final class SettingsViewModel {
 
     @MainActor
     func signOut() async {
+        // While still signed in: a signed-out phone must stop getting this rower's alerts.
+        await PushNotificationService.shared.unregisterThisDevice()
         try? await SupabaseService.shared.auth.signOut()
     }
 

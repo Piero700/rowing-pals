@@ -43,7 +43,15 @@ final class ProfileViewModel {
         let id: UUID // session id
         let distanceM: Int
         let monitorPath: String?
+        var workoutLabel: String? = nil
+        var totalTimeMs: Int = 0
     }
+
+    /// The most recent session, for v3's "Recent activity" row.
+    var latestSession: ProfilePhoto? { photos.first }
+
+    /// Days with a logged session in the consistency grid (v3's "N active days" chip).
+    var activeDaysInGrid: Int { consistencyDays.filter { $0.distanceM > 0 }.count }
     struct PBTile: Identifiable {
         let test: StandardTest
         var id: String { test.key }
@@ -228,7 +236,10 @@ final class ProfileViewModel {
             weeklyVolumes = Self.weeklyVolumes(dailyTotals: totals)
             consistencyDays = Self.consistencyGrid(dailyTotals: totals)
 
-            photos = sessionRows.map { ProfilePhoto(id: $0.id, distanceM: $0.totalDistanceM, monitorPath: $0.primarySegmentPath) }
+            photos = sessionRows.map {
+                ProfilePhoto(id: $0.id, distanceM: $0.totalDistanceM, monitorPath: $0.primarySegmentPath,
+                             workoutLabel: $0.workoutLabel, totalTimeMs: $0.totalTimeMs)
+            }
             await fetchPhotoURLs(for: photos)
 
             errorMessage = nil
@@ -455,7 +466,7 @@ final class ProfileViewModel {
     /// A 7 (Mon-Sun) x 26-week grid ending on the current week, from the
     /// same rows as above — days after today (a partial current week)
     /// simply aren't included, rather than showing as empty-but-real days.
-    private static func consistencyGrid(dailyTotals: [DailyTotalRow], weeks: Int = 26) -> [ConsistencyDay] {
+    private static func consistencyGrid(dailyTotals: [DailyTotalRow], weeks: Int = 12) -> [ConsistencyDay] {
         var calendar = Calendar.current
         calendar.firstWeekday = 2
 
@@ -498,11 +509,15 @@ final class ProfileViewModel {
 
         let id: UUID
         let totalDistanceM: Int
+        let totalTimeMs: Int
+        let workoutLabel: String?
         let segments: [Segment]
 
         enum CodingKeys: String, CodingKey {
             case id
             case totalDistanceM = "total_distance_m"
+            case totalTimeMs = "total_time_ms"
+            case workoutLabel = "workout_label"
             case segments
         }
 
@@ -514,7 +529,7 @@ final class ProfileViewModel {
     private static func fetchRecentSessions(userId: UUID) async throws -> [SessionRow] {
         try await SupabaseService.shared
             .from("sessions")
-            .select("id, total_distance_m, segments(position, monitor_photo_path)")
+            .select("id, total_distance_m, total_time_ms, workout_label, segments(position, monitor_photo_path)")
             .eq("user_id", value: userId)
             .order("posted_at", ascending: false)
             .limit(30)

@@ -71,6 +71,7 @@ struct InsetCornerPickerView: View {
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 16)
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         // `.interactiveGlassSurface` is exactly Glass.swift's primitive for

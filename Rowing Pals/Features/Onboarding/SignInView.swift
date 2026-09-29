@@ -103,7 +103,10 @@ struct SignInView: View {
                 Image(systemName: viewModel.hasAgreedToTerms ? "checkmark.square.fill" : "square")
                     .font(.system(size: 18))
                     .foregroundStyle(viewModel.hasAgreedToTerms ? Tokens.Accent.brand : Tokens.Ink.secondary)
+                    .frame(width: Tokens.Size.minTap, height: Tokens.Size.minTap)
+                    .contentShape(Rectangle())
             }
+            .accessibilityLabel("Agree to the Terms of Service")
             .buttonStyle(.plain)
 
             HStack(spacing: 0) {
@@ -115,6 +118,8 @@ struct SignInView: View {
                     Text("Terms of Service")
                         .underline()
                         .foregroundStyle(Tokens.Accent.brand)
+                        .frame(minHeight: Tokens.Size.minTap)
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
             }

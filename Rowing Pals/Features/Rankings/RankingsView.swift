@@ -22,15 +22,33 @@ import SwiftUI
 /// Previously two separate features (Leaderboards, Tests) — folded into
 /// one `Rankings` feature folder now that they're one screen, so this
 /// isn't "one feature importing another" (CLAUDE.md's architecture rule).
+/// Screen 03 — Rankings (docs/design/rowing-pals-v3-spec.md; `RP Screen.dc.html` §03): a pinned
+/// large-title header, then Volume or Test results.
 struct RankingsView: View {
     @State private var mode: RankingsMode = .volume
 
     var body: some View {
-        switch mode {
-        case .volume:
-            MetresLeaderboardView(showsOwnTitle: false, mode: $mode)
-        case .tests:
-            TestsView(showsOwnTitle: false, mode: $mode)
+        Group {
+            switch mode {
+            case .volume:
+                MetresLeaderboardView(mode: $mode)
+            case .tests:
+                TestsView(showsOwnTitle: false, mode: $mode)
+            }
+        }
+        .safeAreaInset(edge: .top, spacing: 0) {
+            HStack {
+                Text("Rankings")
+                    .textStyle(Typography.largeTitle)
+                    .foregroundStyle(Tokens.Ink.primary)
+                    .accessibilityAddTraits(.isHeader)
+                Spacer(minLength: 0)
+            }
+            .padding(.top, 8)
+            .padding(.horizontal, Tokens.Spacing.headerHorizontal)
+            .padding(.bottom, 14)
+            .frame(minHeight: Tokens.Size.headerMinHeight)
+            .background(Tokens.Base.ground)
         }
     }
 }
@@ -48,23 +66,19 @@ enum RankingsMode: Int, CaseIterable {
 
 /// The shared "Rankings" title + Volume/Test results toggle, rendered as
 /// the first row inside whichever mode's own `ScrollView` is active.
+/// The Volume / Test results control at the top of each Rankings mode. (The "Rankings" title
+/// is pinned above by `RankingsView`.)
 struct RankingsHeader: View {
     @Binding var mode: RankingsMode
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Rankings")
-                .font(.system(size: 30, weight: .bold))
-                .foregroundStyle(Tokens.Ink.primary)
-            PillSegmentedControl(
-                options: RankingsMode.allCases.map(\.label),
-                selection: Binding(
-                    get: { mode.rawValue },
-                    set: { mode = RankingsMode(rawValue: $0) ?? .volume }
-                )
+        PillSegmentedControl(
+            options: RankingsMode.allCases.map(\.label),
+            selection: Binding(
+                get: { mode.rawValue },
+                set: { mode = RankingsMode(rawValue: $0) ?? .volume }
             )
-        }
-        .padding(.top, 8)
+        )
     }
 }
 

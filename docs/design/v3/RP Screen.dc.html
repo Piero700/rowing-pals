@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><style>*{box-sizing:border-box}button,input,textarea,select{font:inherit;color:inherit}button{cursor:pointer}</style></helmet>
+<div data-screen-label="{{ label }}" style="position:relative;width:393px;height:852px;background:var(--base);color:var(--text);display:flex;flex-direction:column;overflow:hidden;font-family:Inter,-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',sans-serif;-webkit-font-smoothing:antialiased;font-size:16px">
+  <div style="position:absolute;z-index:30;top:10px;left:50%;transform:translateX(-50%);width:106px;height:27px;border-radius:99px;background:#030408"></div>
+  <div style="height:51px;flex:none;padding:13px 24px 5px;display:flex;align-items:flex-end;justify-content:space-between;font-size:12px;font-weight:760">
+    <span>9:41</span>
+    <span style="display:flex;gap:4px"><i style="display:block;border:1.5px solid currentColor;border-radius:2px;width:14px;height:8px"></i><i style="display:block;border:1.5px solid currentColor;border-radius:2px;width:19px;height:8px;background:currentColor"></i></span>
+  </div>
+
+  <!-- 01 ONBOARDING -->
+  <sc-if value="{{ isOnboarding }}" hint-placeholder-val="{{ false }}">
+    <div style="flex:1;min-height:0;overflow-y:auto;scrollbar-width:none;padding:0 15px 100px">
+      <div style="display:flex;flex-direction:column">
+        <span style="font-size:12px;line-height:1.4;text-transform:uppercase;letter-spacing:.1em;font-weight:760;color:var(--brand)">Set up your crew</span>
+        <h1 style="font-size:33px;line-height:1.05;letter-spacing:-.05em;margin:8px 0">Find your club</h1>
+        <p style="line-height:1.5;color:var(--muted);margin:0 0 18px;text-wrap:pretty">Your club powers your feed and team rankings. You can also continue without one.</p>
+      </div>
+      <div style="display:grid;gap:6px;margin-bottom:12px">
+        <label style="font-size:12.5px;color:var(--muted);font-weight:720">Club name</label>
+        <div style="position:relative">
+          <svg viewBox="0 0 24 24" style="position:absolute;left:14px;top:16px;width:20px;height:20px;fill:none;stroke:var(--muted);stroke-width:1.9;stroke-linecap:round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg>
+          <input value="UEA" style="width:100%;min-height:52px;border:1px solid var(--line);border-radius:24px;background:var(--card);padding:12px 14px 12px 43px">
+        </div>
+      </div>
+      <div style="display:grid;gap:9px;margin-top:12px">
+        <sc-for list="{{ clubs }}" as="c" hint-placeholder-count="3">
+          <sc-if value="{{ c.selected }}" hint-placeholder-val="{{ false }}">
+            <button style="width:100%;min-height:76px;border:1px solid var(--brand);border-radius:24px;background:var(--brandSoft);padding:10px;display:flex;align-items:center;gap:11px;text-align:left">
+              <span style="width:44px;height:44px;border-radius:13px;background:var(--raised);display:grid;place-items:center;color:var(--brand);font-size:12px;font-weight:820;flex:none">{{ c.crest }}</span>
+              <span style="flex:1;min-width:0"><strong style="display:block;font-size:15px;font-weight:740">{{ c.name }}</strong><span style="display:block;font-size:12.8px;line-height:1.4;color:var(--muted)">{{ c.meta }}</span></span>
+              <span style="width:24px;height:24px;border-radius:50%;background:var(--brand);color:var(--onBrand);display:grid;place-items:center;flex:none"><svg viewBox="0 0 24 24" style="width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round"><path d="m5 12 4 4L19 6"></path></svg></span>
+            </button>
+          </sc-if>
+          <sc-if value="{{ c.unselected }}" hint-placeholder-val="{{ true }}">
+            <button style="width:100%;min-height:76px;border:1px solid var(--line);border-radius:24px;background:var(--card);padding:10px;display:flex;align-items:center;gap:11px;text-align:left">
+              <span style="width:44px;height:44px;border-radius:13px;background:var(--raised);display:grid;place-items:center;color:var(--brand);font-size:12px;font-weight:820;flex:none">{{ c.crest }}</span>
+              <span style="flex:1;min-width:0"><strong style="display:block;font-size:15px;font-weight:740">{{ c.name }}</strong><span style="display:block;font-size:12.8px;line-height:1.4;color:var(--muted)">{{ c.meta }}</span></span>
+              <span style="width:24px;height:24px;flex:none"></span>
+            </button>
+          </sc-if>
+        </sc-for>
+      </div>
+      <button style="width:100%;min-height:44px;margin-top:8px;border-radius:999px;background:transparent;border:0;color:var(--brand);font-weight:730">I’m not in a club</button>
+    </div>
+    <div style="position:absolute;z-index:18;left:0;right:0;bottom:0;padding:12px 15px 15px;background:linear-gradient(to top,var(--base) 72%,transparent)">
+      <button style="width:100%;min-height:54px;border-radius:999px;display:flex;align-items:center;justify-content:center;gap:7px;font-weight:770;color:var(--onBrand);background:linear-gradient(180deg,color-mix(in srgb,var(--brand) 88%,#fff 12%),var(--brand));border:1px solid color-mix(in srgb,var(--brand) 60%,#fff 40%);box-shadow:inset 0 1px 0 rgba(255,255,255,.45),inset 0 -1px 0 rgba(0,0,0,.18),0 8px 22px color-mix(in srgb,var(--brand) 30%,transparent)">Continue with UEA Boat Club<svg viewBox="0 0 24 24" style="width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round"><path d="m9 18 6-6-6-6"></path></svg></button>
+    </div>
+  </sc-if>
+
+  <!-- 02 FEED -->
+  <sc-if value="{{ isFeed }}" hint-placeholder-val="{{ false }}">
+    <header style="min-height:61px;flex:none;padding:8px 18px 14px;display:flex;align-items:center;gap:10px">
+      <h1 style="margin:0;flex:1;font-size:29px;letter-spacing:-.04em;line-height:1.1">Your crew</h1>
+      <button aria-label="Search" style="width:44px;height:44px;border-radius:50%;display:grid;place-items:center;color:var(--text);flex:none;background:var(--lg-fill);border:1px solid var(--lg-edge);box-shadow:inset 0 1px 0 var(--lg-hi),inset 0 -1px 0 var(--lg-lo),var(--lg-shadow);backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%)"><svg viewBox="0 0 24 24" style="width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg></button>
+    </header>
+    <div style="flex:1;min-height:0;overflow-y:auto;scrollbar-width:none;padding:0 15px 90px">
+      <div style="display:flex;padding:4px;border-radius:999px;background:var(--lg-fill);border:1px solid var(--lg-edge);box-shadow:inset 0 1px 0 var(--lg-hi),inset 0 -1px 0 var(--lg-lo),var(--lg-shadow);backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%)">
+        <button style="flex:1;min-height:44px;border-radius:999px;font-size:14px;font-weight:730;color:var(--text);background:var(--lg-fill-strong);border:1px solid var(--lg-edge);box-shadow:inset 0 1px 0 var(--lg-hi),0 2px 8px rgba(0,0,0,.18)">Following</button>
+        <button style="flex:1;min-height:44px;border-radius:999px;font-size:14px;font-weight:730;color:var(--muted);background:transparent;border:1px solid transparent">Club</button>
+      </div>
+      <p style="font-size:12.8px;line-height:1.4;color:var(--muted);margin:12px 2px">You and people you follow</p>
+      <sc-for list="{{ posts }}" as="p" hint-placeholder-count="2">
+        <article style="margin-top:12px;padding:15px;background:var(--card);border:1px solid var(--cardEdge);border-radius:30px">
+          <div style="display:flex;align-items:center;gap:11px">
+            <span style="position:relative;width:41px;height:41px;border-radius:50%;background:linear-gradient(145deg,var(--accentSoft),var(--raised));display:grid;place-items:center;color:var(--accent);font-weight:800;flex:none">{{ p.initials }}<span style="position:absolute;right:-5px;top:-5px;font-size:15px;line-height:22px;background:var(--card);border-radius:50%;width:23px;height:23px;text-align:center">🔥</span></span>
+            <div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:740">{{ p.name }}</div><div style="font-size:12.8px;line-height:1.4;color:var(--muted)">{{ p.club }}</div></div>
+          </div>
+          <div style="position:relative;aspect-ratio:4/3;width:100%;overflow:hidden;border-radius:22px;margin:14px 0 0;background:repeating-linear-gradient(135deg,var(--raised) 0 10px,color-mix(in srgb,var(--raised) 80%,var(--base)) 10px 20px)">
+            <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:var(--muted);font:600 12px ui-monospace,Menlo,monospace">rear camera photo</div>
+            <div style="position:absolute;top:10px;right:10px;width:27%;height:37%;border-radius:17px;border:2px solid var(--card);background:var(--base);display:grid;place-items:center;color:var(--muted);font:600 9px ui-monospace,Menlo,monospace;text-align:center;box-shadow:0 5px 14px #0005">front<br>camera</div>
+          </div>
+          <dl style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0">
+            <div><dt style="font-size:12px;font-weight:760;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)">Distance</dt><dd style="margin:3px 0 0;font-size:17px;font-weight:730;font-variant-numeric:tabular-nums">{{ p.distance }}</dd></div>
+            <div><dt style="font-size:12px;font-weight:760;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)">Time</dt><dd style="margin:3px 0 0;font-size:17px;font-weight:730;font-variant-numeric:tabular-nums">{{ p.time }}</dd></div>
+            <div><dt style="font-size:12px;font-weight:760;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)">/500m</dt><dd style="margin:3px 0 0;font-size:17px;font-weight:730;font-variant-numeric:tabular-nums">{{ p.pace }}</dd></div>
+          </dl>
+          <p style="font-size:16px;line-height:1.5;margin:13px 0 9px;text-wrap:pretty">{{ p.caption }}</p>
+          <button style="width:100%;display:flex;align-items:center;justify-content:space-between;text-align:left;padding:15px;border:1px solid var(--line);background:var(--raised);border-radius:18px;gap:12px;min-height:68px">
+            <span><strong style="font-size:14px;display:block">{{ p.workout }}</strong><small style="display:block;color:var(--muted);font-size:12px;margin-top:6px">{{ p.workoutMeta }}</small></span>
+            <svg viewBox="0 0 24 24" style="width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round"><path d="m9 18 6-6-6-6"></path></svg>
+          </button>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:14px">
+            <sc-for list="{{ p.reactions }}" as="r" hint-placeholder-count="2">
+              <button style="min-height:40px;min-width:44px;border-radius:99px;padding:0 12px;font-size:13px;font-weight:700;color:var(--text);background:var(--lg-fill);border:1px solid var(--lg-edge);box-shadow:inset 0 1px 0 var(--lg-hi),inset 0 -1px 0 var(--lg-lo)">{{ r }}</button>
+            </sc-for>
+            <button style="min-height:40px;min-width:44px;border-radius:99px;padding:0 12px;font-size:13px;font-weight:700;color:var(--muted);background:var(--lg-fill);border:1px solid var(--lg-edge);box-shadow:inset 0 1px 0 var(--lg-hi),inset 0 -1px 0 var(--lg-lo)">＋☺</button>
+          </div>
+          <div style="display:flex;gap:8px;padding-top:9px;margin-top:12px;border-top:1px solid var(--line)">
+            <button style="min-height:44px;border-radius:99px;padding:0 12px;display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:var(--text);background:var(--lg-fill);border:1px solid var(--lg-edge);box-shadow:inset 0 1px 0 var(--lg-hi),inset 0 -1px 0 var(--lg-lo)"><svg viewBox="0 0 24 24" style="width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"></path></svg>{{ p.comments }}</button>
+            <button aria-label="Share" style="margin-left:auto;width:44px;min-height:44px;border-radius:99px;display:grid;place-items:center;color:var(--text);background:var(--lg-fill);border:1px solid var(--lg-edge);box-shadow:inset 0 1px 0 var(--lg-hi),inset 0 -1px 0 var(--lg-lo)"><svg viewBox="0 0 24 24" style="width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round"><path d="M12 16V3M7 8l5-5 5 5M5 13v7h14v-7"></path></svg></button>
+          </div>
+        </article>
+      </sc-for>
+    </div>
+  </sc-if>
+
+  <!-- 03 RANKINGS -->
+  <sc-if value="{{ isRankings }}" hint-placeholder-val="{{ false }}">
+    <header style="min-height:61px;flex:none;padding:8px 18px 14px;display:flex;align-items:center;gap:10px">
+      <h1 style="margin:0;flex:1;font-size:29px;letter-spacing:-.04em;line-height:1.1">Rankings</h1>
+    </header>
+    <div style="flex:1;min-height:0;overflow-y:auto;scrollbar-width:none;padding:0 15px 90px">
+      <div style="display:flex;padding:4px;border-radius:999px;background:var(--lg-fill);border:1px solid var(--lg-edge);box-shadow:inset 0 1px 0 var(--lg-hi),inset 0 -1px 0 var(--lg-lo),var(--lg-shadow);backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%)">
+        <button style="flex:1;min-height:44px;border-radius:999px;font-size:14px;font-weight:730;color:var(--text);background:var(--lg-fill-strong);border:1px solid var(--lg-edge);box-shadow:inset 0 1px 0 var(--lg-hi),0 2px 8px rgba(0,0,0,.18)">Volume</button>
+        <button style="flex:1;min-height:44px;border-radius:999px;font-size:14px;font-weight:730;color:var(--muted);background:transparent;border:1px solid transparent">Test results</button>
+      </div>
+      <div style="margin-top:13px;padding:17px;background:linear-gradient(130deg,var(--accentSoft),var(--card) 75%);border:1px solid var(--line);border-radius:30px">
+        <span style="font-size:12px;text-transform:uppercase;letter-spacing:.1em;font-weight:760;color:var(--accent)">Weekly volume · You</span>
+        <strong style="display:block;font-size:32px;margin-top:12px;letter-spacing:-1px">116,250<small style="font-size:16px"> m</small></strong>
+        <p style="margin:8px 0">5,651m to move into #2</p>
+        <small style="font-size:12px;color:var(--muted)">Overall leader · Tom Ashworth · 128,400m</small>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:15px 0 10px">
+        <label style="font-size:12px;color:var(--muted)">Gender<select style="width:100%;margin-top:6px;min-height:44px;padding:12px;border-radius:15px;background:var(--raised);border:1px solid var(--line);color:var(--text)"><option>All genders</option><option>Male</option><option>Female</option></select></label>
+        <label style="font-size:12px;color:var(--muted)">Level<select style="width:100%;margin-top:6px;min-height:44px;padding:12px;border-radius:15px;background:var(--raised);border:1px solid var(--line);color:var(--text)"><option>All levels</option><option>Novice</option><option>Senior</option></select></label>
+      </div>
+      <div style="display:flex;padding:4px;border-radius:999px;background:var(--lg-fill);border:1px solid var(--lg-edge);box-shadow:inset 0 1px 0 var(--lg-hi),inset 0 -1px 0 var(--lg-lo),var(--lg-shadow)">
+        <button style="flex:1;min-height:44px;border-radius:999px;font-size:14px;font-weight:730;color:var(--text);background:var(--lg-fill-strong);border:1px solid var(--lg-edge);box-shadow:inset 0 1px 0 var(--lg-hi),0 2px 8px rgba(0,0,0,.18)">All</button>
+        <button style="flex:1;min-height:44px;border-radius:999px;font-size:14px;font-weight:730;color:var(--muted);background:transparent;border:1px solid transparent">My club</button>
+        <button style="flex:1;min-height:44px;border-radius:999px;font-size:14px;font-weight:730;color:var(--muted);background:transparent;border:1px solid transparent">Following</button>
+      </div>
+      <p style="font-size:12.8px;color:var(--muted);margin:12px 2px">This week · 6 rowers match</p>
+      <div style="overflow:hidden;background:var(--card);border:1px solid var(--cardEdge);border-radius:30px">
+        <sc-for list="{{ leaders }}" as="l" hint-placeholder-count="6">
+          <div style="min-height:72px;padding:9px 11px;display:grid;grid-template-columns:20px 32px minmax(0,1fr) auto;align-items:center;gap:7px;border-bottom:1px solid var(--line);background:{{ l.bg }};box-shadow:{{ l.bar }}">
+            <span style="text-align:center;font-weight:820;color:{{ l.rankColor }}">{{ l.rank }}</span>
+            <span style="position:relative;width:32px;height:32px;border-radius:50%;background:linear-gradient(145deg,var(--accentSoft),var(--raised));display:grid;place-items:center;color:var(--accent);font-weight:800;font-size:10px">{{ l.initials }}</span>
+            <span style="font-size:12px;font-weight:740;min-width:0">{{ l.name }}<small style="display:block;font-size:10px;font-weight:400;color:var(--muted)">{{ l.meta }}</small></span>
+            <span style="text-align:right;font-size:14px;font-weight:760;font-variant-numeric:tabular-nums;color:{{ l.rankColor }}">{{ l.score }}<small style="display:block;margin-top:2px;color:var(--muted);font-size:10px;font-weight:560">metres</small></span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- 04 LOG WORKOUT -->
+  <sc-if value="{{ isCapture }}" hint-placeholder-val="{{ false }}">
+    <header style="min-height:58px;flex:none;padding:8px 18px 14px;display:flex;align-items:center;gap:10px">
+      <button aria-label="Back" style="width:44px;height:44px;border-radius:50%;display:grid;place-items:center;flex:none;background:var(--lg-fill);border:1px solid var(--lg-edge);box-shadow:inset 0 1px 0 var(--lg-hi),inset 0 -1px 0 var(--lg-lo),var(--lg-shadow)"><svg viewBox="0 0 24 24" style="width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round"><path d="m15 18-6-6 6-6"></path></svg></button>
+      <h1 style="margin:0;flex:1;font-size:17px;letter-spacing:-.01em">Log workout</h1>
+      <button style="min-height:44px;border-radius:999px;padding:0 10px;background:transparent;border:0;color:var(--brand);font-weight:730">Help</button>
+    </header>
+    <div style="flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:0 15px">
+      <div style="position:relative;flex:1;width:100%;max-height:530px;overflow:hidden;border-radius:22px;background:repeating-linear-gradient(135deg,var(--raised) 0 10px,color-mix(in srgb,var(--raised) 80%,var(--base)) 10px 20px)">
+        <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:var(--muted);font:600 12px ui-monospace,Menlo,monospace;text-align:center">rear camera<span style="font-size:10px;opacity:.8">tap to add a photo</span></div>
+        <div style="position:absolute;top:10px;right:10px;width:27%;height:37%;border-radius:17px;border:2px solid var(--card);background:var(--base);display:grid;place-items:center;color:var(--muted);font:600 9px ui-monospace,Menlo,monospace;text-align:center;box-shadow:0 5px 14px #0005">front<br>camera</div>
+      </div>
+      <p style="color:var(--muted);font-size:12px;text-align:center;margin:0">Front + rear · No time limit</p>
+    </div>
+    <button style="margin:10px 15px 0;min-height:52px;border-radius:999px;padding:0 17px;font-weight:770;display:flex;align-items:center;justify-content:center;gap:7px;color:var(--text);background:var(--lg-fill);border:1px solid var(--lg-edge);box-shadow:inset 0 1px 0 var(--lg-hi),inset 0 -1px 0 var(--lg-lo),var(--lg-shadow)"><svg viewBox="0 0 24 24" style="width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round"><path d="M12 5v14M5 12h14"></path></svg>Enter session manually</button>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;justify-items:center;align-items:center;padding:13px 15px 18px">
+      <button aria-label="Flip camera" style="width:48px;height:48px;border-radius:50%;display:grid;place-items:center;font-size:18px;background:var(--lg-fill);border:1px solid var(--lg-edge);box-shadow:inset 0 1px 0 var(--lg-hi),inset 0 -1px 0 var(--lg-lo),var(--lg-shadow)">↔</button>
+      <button aria-label="Take photo" style="width:76px;height:76px;border-radius:50%;background:#fff;border:6px solid var(--raised);box-shadow:0 0 0 2px #fff"></button>
+      <button aria-label="Choose from library" style="width:48px;height:48px;border-radius:50%;display:grid;place-items:center;background:var(--lg-fill);border:1px solid var(--lg-edge);box-shadow:inset 0 1px 0 var(--lg-hi),inset 0 -1px 0 var(--lg-lo),var(--lg-shadow)"><svg viewBox="0 0 24 24" style="width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linejoin:round"><rect x="3" y="5" width="18" height="14" rx="3"></rect></svg></button>
+    </div>
+  </sc-if>
+
+  <!-- 05 REVIEW -->
+  <sc-if value="{{ isReview }}" hint-placeholder-val="{{ false }}">
+    <header style="min-height:58px;flex:none;padding:8px 18px 14px;display:flex;align-items:center;gap:10px">
+      <button aria-label="Back" style="width:44px;height:44px;border-radius:50%;display:grid;place-items:center;flex:none;background:var(--lg-fill);border:1px solid var(--lg-edge);box-shadow:inset 0 1px 0 var(--lg-hi),inset 0 -1px 0 var(--lg-lo),var(--lg-shadow)"><svg viewBox="0 0 24 24" style="width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round"><path d="m15 18-6-6 6-6"></path></svg></button>
+      <h1 style="margin:0;flex:1;font-size:17px;letter-spacing:-.01em">Review session</h1>
+    </header>
+    <div style="flex:1;min-height:0;overflow-y:auto;scrollbar-width:none;padding:12px 15px 100px">
+      <div style="padding:15px;background:var(--card);border:1px solid var(--cardEdge);border-radius:30px">
+        <div style="font-size:12px;text-transform:uppercase;letter-spacing:.1em;font-weight:760;color:var(--muted)">Workout total</div>
+        <div style="font-size:29px;line-height:1;font-weight:820;letter-spacing:-.055em;margin-top:6px;font-variant-numeric:tabular-nums">16,000<span style="font-size:15px;color:var(--muted);letter-spacing:0;margin-left:3px">m</span></div>
+      </div>
+      <h2 style="margin:20px 2px 9px;font-size:12px;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);font-weight:780">Check the numbers</h2>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px 10px;align-items:start">
+        <sc-for list="{{ reviewFields }}" as="f" hint-placeholder-count="3">
+          <div style="display:grid;gap:6px"><label style="font-size:12.5px;color:var(--muted);font-weight:720">{{ f.label }}</label><input value="{{ f.value }}" style="width:100%;height:54px;border:1px solid var(--line);border-radius:24px;background:var(--card);padding:12px 14px"></div>
+        </sc-for>
+        <div style="display:grid;gap:6px"><label style="font-size:12.5px;color:var(--muted);font-weight:720">Stroke rate</label>
+          <div style="position:relative"><input value="19 spm" style="width:100%;height:54px;border:1px solid var(--line);border-radius:24px;background:var(--card);padding:12px 95px 12px 14px"><button style="position:absolute;right:7px;top:7px;height:40px;min-width:80px;border-radius:999px;font-size:13px;font-weight:750;color:var(--brand);background:var(--lg-fill);border:1px solid var(--lg-edge);box-shadow:inset 0 1px 0 var(--lg-hi)">Confirm</button></div>
+        </div>
+      </div>
+      <p style="font-size:12.8px;color:var(--muted);line-height:1.4">Check the stroke rate against your monitor, then tap Confirm.</p>
+      <h2 style="margin:20px 2px 9px;font-size:12px;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);font-weight:780">Splits</h2>
+      <div style="display:grid;gap:6px;margin-bottom:12px"><label style="font-size:12.5px;color:var(--muted);font-weight:720">Main workout label</label><select style="width:100%;min-height:44px;padding:12px;border-radius:15px;background:var(--raised);border:1px solid var(--line);color:var(--text)"><option>UT2</option><option>UT1</option><option>Threshold</option><option>Intervals</option></select></div>
+      <div style="display:grid;gap:7px">
+        <sc-for list="{{ splits }}" as="s" hint-placeholder-count="3">
+          <button style="min-height:62px;border:1px solid var(--line);border-radius:24px;background:var(--card);padding:8px 10px;display:grid;grid-template-columns:72px 1fr auto;align-items:center;gap:8px;text-align:left">
+            <span style="display:inline-flex;justify-content:center;align-items:center;min-height:27px;padding:3px 8px;border-radius:99px;font-size:12px;font-weight:760;background:{{ s.badgeBg }};color:{{ s.badgeColor }}">{{ s.label }}</span>
+            <span style="font-size:12.8px;color:var(--muted)">{{ s.meta }}</span>
+            <strong style="font-size:13px;font-variant-numeric:tabular-nums">{{ s.pace }}</strong>
+          </button>
+        </sc-for>
+      </div>
+      <h2 style="margin:20px 2px 9px;font-size:12px;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);font-weight:780">Caption</h2>
+      <textarea style="width:100%;min-height:82px;border:1px solid var(--line);border-radius:24px;background:var(--card);padding:12px 14px;resize:vertical">Steady state + rate ladder. Felt smooth until the last 2k.</textarea>
+      <h2 style="margin:20px 2px 9px;font-size:12px;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);font-weight:780">Photos</h2>
+      <button style="width:100%;min-height:52px;border-radius:999px;font-weight:770;color:var(--text);background:var(--lg-fill);border:1px solid var(--lg-edge);box-shadow:inset 0 1px 0 var(--lg-hi),inset 0 -1px 0 var(--lg-lo),var(--lg-shadow)">Add another photo</button>
+      <div style="display:grid;gap:6px;margin:12px 0"><label style="font-size:12.5px;color:var(--muted);font-weight:720">Session type</label><select style="width:100%;min-height:44px;padding:12px;border-radius:15px;background:var(--raised);border:1px solid var(--line);color:var(--text)"><option>Training</option><option>2k test</option><option>5k test</option></select></div>
+      <button style="width:100%;min-height:66px;padding:9px 12px;background:var(--card);border:1px solid var(--cardEdge);border-radius:30px;display:flex;align-items:center;gap:10px;text-align:left">
+        <span style="flex:1"><strong style="display:block;font-size:14px">Include on leaderboards</strong><small style="display:block;font-size:12.8px;color:var(--muted);margin-top:2px">Include this session in your volume totals.</small></span>
+        <span style="width:50px;height:29px;padding:2px;border-radius:99px;background:var(--good);display:flex;justify-content:flex-end"><span style="width:25px;height:25px;border-radius:50%;background:#fff;box-shadow:0 2px 5px rgba(0,0,0,.22)"></span></span>
+      </button>
+    </div>
+    <div style="position:absolute;z-index:18;left:0;right:0;bottom:0;padding:12px 15px 15px;background:linear-gradient(to top,var(--base) 72%,transparent)">
+      <button style="width:100%;min-height:54px;border-radius:999px;font-weight:770;color:var(--onBrand);background:linear-gradient(180deg,color-mix(in srgb,var(--brand) 88%,#fff 12%),var(--brand));border:1px solid color-mix(in srgb,var(--brand) 60%,#fff 40%);box-shadow:inset 0 1px 0 rgba(255,255,255,.45),inset 0 -1px 0 rgba(0,0,0,.18),0 8px 22px color-mix(in srgb,var(--brand) 30%,transparent)">Post session</button>
+    </div>
+  </sc-if>
+
+  <!-- 06 PROFILE -->
+  <sc-if value="{{ isProfile }}" hint-placeholder-val="{{ false }}">
+    <header style="min-height:61px;flex:none;padding:8px 18px 14px;display:flex;align-items:center;gap:10px">
+      <h1 style="margin:0;flex:1;font-size:29px;letter-spacing:-.04em;line-height:1.1">Profile</h1>
+      <button aria-label="Settings" style="width:44px;height:44px;border-radius:50%;display:grid;place-items:center;flex:none;background:var(--lg-fill);border:1px solid var(--lg-edge);box-shadow:inset 0 1px 0 var(--lg-hi),inset 0 -1px 0 var(--lg-lo),var(--lg-shadow)"><svg viewBox="0 0 24 24" style="width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round"><path d="m9 3-.6 2.3-2 .9-2.1-.6-2 3.4 1.6 1.7v2.6l-1.6 1.7 2 3.4 2.1-.6 2 .9L9 21h4l.6-2.3 2-.9 2.1.6 2-3.4-1.6-1.7v-2.6L19.7 9l-2-3.4-2.1.6-2-.9L13 3z"></path><circle cx="11" cy="12" r="3"></circle></svg></button>
+    </header>
+    <div style="flex:1;min-height:0;overflow-y:auto;scrollbar-width:none;padding:0 15px 90px">
+      <div style="text-align:center;padding:11px 0 14px">
+        <span style="position:relative;margin:0 auto 10px;width:76px;height:76px;border-radius:50%;background:linear-gradient(145deg,var(--accentSoft),var(--raised));display:grid;place-items:center;color:var(--accent);font-weight:800;font-size:20px">PC<span style="position:absolute;right:-2px;top:-3px;font-size:23px;line-height:32px;width:32px;height:32px;background:var(--card);border-radius:50%">🔥</span></span>
+        <h2 style="font-size:23px;margin:0">Piero Ciobanu</h2>
+        <p style="margin:4px 0 8px;color:var(--muted);font-size:13px">UEA Boat Club · Senior</p>
+      </div>
+      <div style="display:flex;justify-content:center;gap:6px;margin:10px 0">
+        <button style="background:transparent;border:0;min-height:48px;padding:6px 14px;border-radius:999px"><strong style="display:block">2</strong><small style="display:block;color:var(--muted);font-size:12.8px">Followers</small></button>
+        <button style="background:transparent;border:0;min-height:48px;padding:6px 14px;border-radius:999px"><strong style="display:block">2</strong><small style="display:block;color:var(--muted);font-size:12.8px">Following</small></button>
+      </div>
+      <button style="width:100%;min-height:44px;border-radius:999px;background:transparent;border:0;color:var(--brand);font-weight:730">Find rowers</button>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);padding:12px 0;background:var(--card);border:1px solid var(--cardEdge);border-radius:30px">
+        <sc-for list="{{ myStats }}" as="st" hint-placeholder-count="4">
+          <div style="text-align:center;border-right:{{ st.border }}"><strong style="display:block;font-size:21px">{{ st.value }}</strong><span style="font-size:10px;color:var(--muted)">{{ st.label }}</span></div>
+        </sc-for>
+      </div>
+      <div style="display:flex;padding:4px;margin-top:11px;border-radius:999px;background:var(--lg-fill);border:1px solid var(--lg-edge);box-shadow:inset 0 1px 0 var(--lg-hi),inset 0 -1px 0 var(--lg-lo),var(--lg-shadow)">
+        <button style="flex:1;min-height:44px;border-radius:999px;font-size:14px;font-weight:730;color:var(--text);background:var(--lg-fill-strong);border:1px solid var(--lg-edge);box-shadow:inset 0 1px 0 var(--lg-hi),0 2px 8px rgba(0,0,0,.18)">Overview</button>
+        <button style="flex:1;min-height:44px;border-radius:999px;font-size:14px;font-weight:730;color:var(--muted);background:transparent;border:1px solid transparent">PBs</button>
+        <button style="flex:1;min-height:44px;border-radius:999px;font-size:14px;font-weight:730;color:var(--muted);background:transparent;border:1px solid transparent">Posts</button>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <h2 style="margin:20px 2px 9px;font-size:12px;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);font-weight:780">Top personal bests</h2>
+        <button style="min-height:44px;border-radius:999px;padding:0 10px;background:transparent;border:0;color:var(--brand);font-weight:730">View all ›</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <sc-for list="{{ topPBs }}" as="pb" hint-placeholder-count="2">
+          <button style="position:relative;text-align:left;min-height:90px;padding:13px 24px 13px 13px;border:1px solid var(--line);border-radius:24px;background:var(--card)">
+            <span style="font-size:12px;color:var(--muted);font-weight:760">{{ pb.label }}</span>
+            <strong style="display:block;font-size:17px;margin:5px 0 2px;color:var(--accent);font-variant-numeric:tabular-nums">{{ pb.value }}</strong>
+            <small style="font-size:12px;color:var(--faint)">View PB history ›</small>
+            <span style="position:absolute;right:11px;top:12px;color:var(--muted)">›</span>
+          </button>
+        </sc-for>
+      </div>
+      <div style="display:grid;gap:10px;margin-top:12px">
+        <sc-for list="{{ estimates }}" as="e" hint-placeholder-count="2">
+          <div style="background:var(--accentSoft);border:1px solid color-mix(in srgb,var(--accent) 30%,transparent);border-radius:22px;padding:14px 16px">
+            <div style="display:flex;align-items:center;justify-content:space-between"><span style="font-size:10px;text-transform:uppercase;letter-spacing:.1em;font-weight:760;color:var(--muted)">{{ e.label }}</span><span style="width:36px;height:36px;display:grid;place-items:center;color:var(--accent)">ⓘ</span></div>
+            <strong style="display:block;font-size:29px;letter-spacing:-.7px;color:var(--accent);font-variant-numeric:tabular-nums">{{ e.value }}</strong>
+            <p style="margin:6px 0;font-size:12.8px;color:var(--muted)">Illustrative training estimate · Algorithm preview</p>
+            <small style="font-size:12px;color:var(--muted)">Illustrative estimate · 16 Sep · Not a recorded PB</small>
+          </div>
+        </sc-for>
+      </div>
+      <div style="margin-top:24px;display:flex;align-items:center;justify-content:space-between">
+        <h2 style="margin:20px 2px 9px;font-size:12px;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);font-weight:780">Weekly volume</h2>
+        <span style="display:inline-flex;align-items:center;min-height:27px;padding:3px 8px;border-radius:99px;background:var(--raised);font-size:12px;font-weight:760;color:var(--muted)">12 weeks</span>
+      </div>
+      <div style="padding:18px 15px;background:var(--card);border:1px solid var(--cardEdge);border-radius:30px">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between">
+          <div><span style="font-size:12px;text-transform:uppercase;letter-spacing:.1em;font-weight:760;color:var(--muted)">This week · In progress</span><strong style="display:block;font-size:30px;letter-spacing:-.7px;margin:7px 0;font-variant-numeric:tabular-nums">116.25<small style="font-size:15px;color:var(--muted);font-weight:500"> km</small></strong></div>
+          <span style="font-size:12.8px;color:var(--muted)">14 Sept</span>
+        </div>
+        <div style="display:flex;height:156px;margin-top:22px;gap:8px">
+          <div style="width:33px;flex:none;display:flex;flex-direction:column;justify-content:space-between;color:var(--muted);font-size:10px"><span>125k</span><span>62.5k</span><span>0</span></div>
+          <div style="flex:1;min-width:0;display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:5px;align-items:end;border-bottom:1px solid var(--line)">
+            <sc-for list="{{ volumeBars }}" as="b" hint-placeholder-count="12">
+              <span style="display:block;width:100%;height:{{ b.h }};border-radius:5px 5px 0 0;background:{{ b.color }};opacity:{{ b.opacity }}"></span>
+            </sc-for>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin:8px 0 0 41px;font-size:10px;color:var(--muted)"><span>29 Jun</span><span>3 Aug</span><span>14 Sept</span></div>
+        <p style="font-size:11px;margin:15px 0 0;color:var(--muted)">Monday–Sunday · Tap a bar for the total</p>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin:20px 0 0">
+        <h2 style="margin:20px 2px 9px;font-size:12px;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);font-weight:780">Consistency</h2>
+        <span style="display:inline-flex;align-items:center;min-height:27px;padding:3px 8px;border-radius:99px;background:var(--raised);font-size:12px;font-weight:760;color:var(--muted)">59 active days</span>
+      </div>
+      <div style="padding:18px 15px;background:var(--card);border:1px solid var(--cardEdge);border-radius:30px">
+        <p style="font-size:12.8px;color:var(--muted);margin:0 0 14px">Every coloured square is a day you posted a workout.</p>
+        <div style="display:flex;gap:8px">
+          <div style="display:grid;grid-template-rows:repeat(7,1fr);width:16px;font-size:10px;text-align:center;color:var(--muted)"><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span></div>
+          <div style="flex:1;min-width:0;display:grid;grid-template-rows:repeat(7,1fr);grid-template-columns:repeat(12,minmax(0,1fr));grid-auto-flow:column;gap:5px">
+            <sc-for list="{{ habitCells }}" as="h" hint-placeholder-count="84">
+              <span style="aspect-ratio:1;border-radius:4px;border:1px solid {{ h.border }};background:{{ h.bg }};opacity:{{ h.opacity }};outline:{{ h.outline }};outline-offset:1px"></span>
+            </sc-for>
+          </div>
+        </div>
+        <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:10px;color:var(--muted);margin-top:17px">
+          <span style="display:flex;align-items:center;gap:5px"><i style="display:inline-block;width:11px;height:11px;border:1px solid var(--line);background:var(--raised);border-radius:3px"></i>No post</span>
+          <span style="display:flex;align-items:center;gap:5px"><i style="display:inline-block;width:11px;height:11px;border:1px solid var(--brand);background:var(--brand);border-radius:3px"></i>Posted</span>
+          <span style="display:flex;align-items:center;gap:5px"><i style="display:inline-block;width:11px;height:11px;border:2px solid var(--accent);background:var(--raised);border-radius:3px"></i>Today</span>
+        </div>
+        <p style="font-size:11px;margin:15px 0 0;color:var(--muted)">8-day current streak · Keep showing up</p>
+      </div>
+      <h2 style="margin:20px 2px 9px;font-size:12px;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);font-weight:780">Recent activity</h2>
+      <button style="width:100%;display:flex;align-items:center;justify-content:space-between;text-align:left;padding:15px;border:1px solid var(--line);background:var(--card);border-radius:18px;gap:12px;min-height:68px">
+        <span><strong style="font-size:14px;display:block">UT2 · 16,000m</strong><small style="display:block;color:var(--muted);font-size:12px;margin-top:6px">1:04:50 · View workout</small></span>
+        <svg viewBox="0 0 24 24" style="width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round"><path d="m9 18 6-6-6-6"></path></svg>
+      </button>
+      <button style="width:100%;margin-top:22px;min-height:52px;border-radius:999px;font-weight:770;color:var(--text);background:var(--lg-fill);border:1px solid var(--lg-edge);box-shadow:inset 0 1px 0 var(--lg-hi),inset 0 -1px 0 var(--lg-lo),var(--lg-shadow)">Your club</button>
+    </div>
+  </sc-if>
+
+  <!-- 07 SETTINGS -->
+  <sc-if value="{{ isSettings }}" hint-placeholder-val="{{ false }}">
+    <header style="min-height:58px;flex:none;padding:8px 18px 14px;display:flex;align-items:center;gap:10px">
+      <button aria-label="Back" style="width:44px;height:44px;border-radius:50%;display:grid;place-items:center;flex:none;background:var(--lg-fill);border:1px solid var(--lg-edge);box-shadow:inset 0 1px 0 var(--lg-hi),inset 0 -1px 0 var(--lg-lo),var(--lg-shadow)"><svg viewBox="0 0 24 24" style="width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round"><path d="m15 18-6-6 6-6"></path></svg></button>
+      <h1 style="margin:0;flex:1;font-size:17px;letter-spacing:-.01em">Settings</h1>
+    </header>
+    <div style="flex:1;min-height:0;overflow-y:auto;scrollbar-width:none;padding:0 15px 22px">
+      <h2 style="margin:8px 2px 9px;font-size:12px;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);font-weight:780">App icon</h2>
+      <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;padding:14px;background:var(--card);border:1px solid var(--cardEdge);border-radius:30px">
+        <sc-for list="{{ appIcons }}" as="ic" hint-placeholder-count="4">
+          <button style="min-height:110px;padding:8px;border-radius:20px;font-size:14px;color:var(--text);background:{{ ic.bg }};border:1px solid {{ ic.border }};box-shadow:inset 0 1px 0 var(--lg-hi)">
+            <span style="display:grid;place-items:center;width:58px;height:58px;border-radius:17px;margin:0 auto 8px;background:{{ ic.art }};border:{{ ic.artBorder }};box-shadow:inset 0 1px 2px #ffffff60,0 5px 10px #0002;color:{{ ic.glyph }}">
+              <svg viewBox="0 0 24 24" style="width:30px;height:30px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round"><path d="{{ ic.path }}"></path></svg>
+            </span>{{ ic.name }}
+          </button>
+        </sc-for>
+      </div>
+      <sc-for list="{{ settingGroups }}" as="g" hint-placeholder-count="4">
+        <h2 style="margin:20px 2px 9px;font-size:12px;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);font-weight:780">{{ g.title }}</h2>
+        <div style="overflow:hidden;background:var(--card);border:1px solid var(--cardEdge);border-radius:30px">
+          <sc-for list="{{ g.rows }}" as="r" hint-placeholder-count="2">
+            <div style="width:100%;min-height:66px;padding:9px 12px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px">
+              <span style="flex:1;min-width:0"><strong style="display:block;font-size:14px">{{ r.title }}</strong><small style="display:block;font-size:12.8px;color:var(--muted);margin-top:2px">{{ r.sub }}</small></span>
+              <span style="font-size:12px;color:var(--muted)">{{ r.value }}</span>
+              <sc-if value="{{ r.seg }}" hint-placeholder-val="{{ false }}">
+                <div style="width:145px;display:flex;padding:3px;border-radius:999px;background:var(--lg-fill);border:1px solid var(--lg-edge);box-shadow:inset 0 1px 0 var(--lg-hi),inset 0 -1px 0 var(--lg-lo)">
+                  <button style="flex:1;min-height:38px;border-radius:999px;font-size:13px;font-weight:730;color:var(--text);background:var(--lg-fill-strong);border:1px solid var(--lg-edge);box-shadow:inset 0 1px 0 var(--lg-hi)">{{ r.segA }}</button>
+                  <button style="flex:1;min-height:38px;border-radius:999px;font-size:13px;font-weight:730;color:var(--muted);background:transparent;border:1px solid transparent">{{ r.segB }}</button>
+                </div>
+              </sc-if>
+              <sc-if value="{{ r.toggle }}" hint-placeholder-val="{{ false }}">
+                <span style="width:50px;height:29px;padding:2px;border-radius:99px;display:flex;justify-content:{{ r.knob }};background:{{ r.track }};border:1px solid var(--lg-edge)"><span style="width:23px;height:23px;border-radius:50%;background:#fff;box-shadow:0 2px 5px rgba(0,0,0,.22)"></span></span>
+              </sc-if>
+              <sc-if value="{{ r.chevron }}" hint-placeholder-val="{{ false }}">
+                <svg viewBox="0 0 24 24" style="width:20px;height:20px;flex:none;fill:none;stroke:var(--muted);stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round"><path d="m9 18 6-6-6-6"></path></svg>
+              </sc-if>
+              <sc-if value="{{ r.check }}" hint-placeholder-val="{{ false }}">
+                <svg viewBox="0 0 24 24" style="width:20px;height:20px;flex:none;fill:none;stroke:var(--brand);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round"><path d="m5 12 4 4L19 6"></path></svg>
+              </sc-if>
+            </div>
+          </sc-for>
+        </div>
+      </sc-for>
+      <button style="width:100%;margin-top:10px;min-height:52px;border-radius:24px;border:0;font-weight:770;background:color-mix(in srgb,var(--bad) 13%,transparent);color:var(--bad)">Delete account</button>
+      <p style="text-align:center;font-size:12.8px;color:var(--muted)">Rowing Pals 1.0 (114)</p>
+    </div>
+  </sc-if>
+
+  <!-- 08 OTHER PROFILE -->
+  <sc-if value="{{ isPerson }}" hint-placeholder-val="{{ false }}">
+    <header style="min-height:58px;flex:none;padding:8px 18px 14px;display:flex;align-items:center;gap:10px">
+      <button aria-label="Back" style="width:44px;height:44px;border-radius:50%;display:grid;place-items:center;flex:none;background:var(--lg-fill);border:1px solid var(--lg-edge);box-shadow:inset 0 1px 0 var(--lg-hi),inset 0 -1px 0 var(--lg-lo),var(--lg-shadow)"><svg viewBox="0 0 24 24" style="width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round"><path d="m15 18-6-6 6-6"></path></svg></button>
+      <h1 style="margin:0;flex:1;font-size:17px;letter-spacing:-.01em">Rower profile</h1>
+    </header>
+    <div style="flex:1;min-height:0;overflow-y:auto;scrollbar-width:none;padding:0 15px 30px">
+      <div style="text-align:center;padding:11px 0 14px">
+        <span style="position:relative;margin:0 auto 10px;width:76px;height:76px;border-radius:50%;background:linear-gradient(145deg,var(--accentSoft),var(--raised));display:grid;place-items:center;color:var(--accent);font-weight:800;font-size:20px">AW<span style="position:absolute;right:-2px;top:-3px;font-size:23px;line-height:32px;width:32px;height:32px;background:var(--card);border-radius:50%">🔥</span></span>
+        <h2 style="font-size:23px;margin:0">Alice Whitfield</h2>
+        <p style="margin:4px 0 0;color:var(--muted);font-size:13px">Durham University BC</p>
+        <p style="margin:4px 0 8px;color:var(--muted);font-size:13px">Public profile</p>
+      </div>
+      <button style="width:100%;min-height:52px;border-radius:999px;font-weight:770;color:var(--text);background:var(--lg-fill);border:1px solid var(--lg-edge);box-shadow:inset 0 1px 0 var(--lg-hi),inset 0 -1px 0 var(--lg-lo),var(--lg-shadow)">Following</button>
+      <div style="display:flex;justify-content:center;gap:6px;margin:10px 0">
+        <button style="background:transparent;border:0;min-height:48px;padding:6px 14px;border-radius:999px"><strong style="display:block">4</strong><small style="display:block;color:var(--muted);font-size:12.8px">Followers</small></button>
+        <button style="background:transparent;border:0;min-height:48px;padding:6px 14px;border-radius:999px"><strong style="display:block">3</strong><small style="display:block;color:var(--muted);font-size:12.8px">Following</small></button>
+      </div>
+      <h2 style="margin:20px 2px 9px;font-size:12px;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);font-weight:780">Volume · This week</h2>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);padding:12px 0;background:var(--card);border:1px solid var(--cardEdge);border-radius:30px">
+        <sc-for list="{{ aliceStats }}" as="st" hint-placeholder-count="4">
+          <div style="text-align:center;border-right:{{ st.border }}"><strong style="display:block;font-size:21px">{{ st.value }}</strong><span style="font-size:10px;color:var(--muted)">{{ st.label }}</span></div>
+        </sc-for>
+      </div>
+      <h2 style="margin:20px 2px 9px;font-size:12px;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);font-weight:780">Personal bests</h2>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <sc-for list="{{ alicePBs }}" as="pb" hint-placeholder-count="2">
+          <button style="position:relative;text-align:left;min-height:90px;padding:13px 24px 13px 13px;border:1px solid var(--line);border-radius:24px;background:var(--card)">
+            <span style="font-size:12px;color:var(--muted);font-weight:760">{{ pb.label }}</span>
+            <strong style="display:block;font-size:17px;margin:5px 0 2px;color:var(--accent);font-variant-numeric:tabular-nums">{{ pb.value }}</strong>
+            <small style="font-size:12px;color:var(--faint)">Season best</small>
+            <span style="position:absolute;right:11px;top:12px;color:var(--muted)">›</span>
+          </button>
+        </sc-for>
+      </div>
+      <h2 style="margin:20px 2px 9px;font-size:12px;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);font-weight:780">Overall rankings</h2>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);padding:12px 0;background:var(--card);border:1px solid var(--cardEdge);border-radius:30px">
+        <div style="text-align:center;border-right:1px solid var(--line)"><strong style="display:block">#5</strong><span style="font-size:12px;color:var(--muted)">weekly volume</span></div>
+        <div style="text-align:center;border-right:1px solid var(--line)"><strong style="display:block">#5</strong><span style="font-size:12px;color:var(--muted)">2k test</span></div>
+        <div style="text-align:center"><strong style="display:block">#5</strong><span style="font-size:12px;color:var(--muted)">5k test</span></div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- 09 FIND ROWERS -->
+  <sc-if value="{{ isPeople }}" hint-placeholder-val="{{ false }}">
+    <header style="min-height:58px;flex:none;padding:8px 18px 14px;display:flex;align-items:center;gap:10px">
+      <button aria-label="Back" style="width:44px;height:44px;border-radius:50%;display:grid;place-items:center;flex:none;background:var(--lg-fill);border:1px solid var(--lg-edge);box-shadow:inset 0 1px 0 var(--lg-hi),inset 0 -1px 0 var(--lg-lo),var(--lg-shadow)"><svg viewBox="0 0 24 24" style="width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round"><path d="m15 18-6-6 6-6"></path></svg></button>
+      <h1 style="margin:0;flex:1;font-size:17px;letter-spacing:-.01em">Find rowers</h1>
+    </header>
+    <div style="flex:1;min-height:0;overflow-y:auto;scrollbar-width:none;padding:0 15px 30px">
+      <p style="font-size:12.8px;color:var(--muted);margin:0 2px 12px">Search your rowing community</p>
+      <div style="position:relative">
+        <svg viewBox="0 0 24 24" style="position:absolute;left:14px;top:16px;width:20px;height:20px;fill:none;stroke:var(--muted);stroke-width:1.9;stroke-linecap:round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg>
+        <input placeholder="Search rowers" style="width:100%;min-height:52px;border:1px solid var(--line);border-radius:24px;background:var(--card);padding:12px 14px 12px 43px">
+      </div>
+      <div style="margin-top:14px;overflow:hidden;background:var(--card);border:1px solid var(--cardEdge);border-radius:30px">
+        <sc-for list="{{ rowers }}" as="r" hint-placeholder-count="5">
+          <div style="display:flex;align-items:center;gap:10px;padding:12px;border-bottom:1px solid var(--line)">
+            <span style="width:38px;height:38px;border-radius:50%;background:linear-gradient(145deg,var(--accentSoft),var(--raised));display:grid;place-items:center;color:var(--accent);font-weight:800;font-size:13px;flex:none">{{ r.initials }}</span>
+            <span style="flex:1;min-width:0;font-weight:740">{{ r.name }}<span style="display:block;font-size:12.8px;font-weight:400;color:var(--muted)">{{ r.club }}</span></span>
+            <button style="min-height:44px;padding:0 12px;border-radius:999px;font-size:13px;font-weight:770;white-space:nowrap;color:var(--text);background:var(--lg-fill);border:1px solid var(--lg-edge);box-shadow:inset 0 1px 0 var(--lg-hi),inset 0 -1px 0 var(--lg-lo)">{{ r.action }}</button>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- 10 PB HISTORY -->
+  <sc-if value="{{ isPbHistory }}" hint-placeholder-val="{{ false }}">
+    <header style="min-height:58px;flex:none;padding:8px 18px 14px;display:flex;align-items:center;gap:10px">
+      <button aria-label="Back" style="width:44px;height:44px;border-radius:50%;display:grid;place-items:center;flex:none;background:var(--lg-fill);border:1px solid var(--lg-edge);box-shadow:inset 0 1px 0 var(--lg-hi),inset 0 -1px 0 var(--lg-lo),var(--lg-shadow)"><svg viewBox="0 0 24 24" style="width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round"><path d="m15 18-6-6 6-6"></path></svg></button>
+      <h1 style="margin:0;flex:1;font-size:17px;letter-spacing:-.01em">PB history · 2K</h1>
+    </header>
+    <div style="flex:1;min-height:0;overflow-y:auto;scrollbar-width:none;padding:0 15px 30px">
+      <p style="font-size:12.8px;color:var(--muted);margin:6px 4px 16px">Piero Ciobanu <span style="font-size:12px;color:var(--faint)">· Sample history</span></p>
+      <div style="background:var(--accentSoft);border:1px solid color-mix(in srgb,var(--accent) 30%,transparent);border-radius:22px;padding:14px 16px">
+        <div style="display:flex;align-items:center;justify-content:space-between"><span style="font-size:10px;text-transform:uppercase;letter-spacing:.1em;font-weight:760;color:var(--muted)">2k · Estimated today</span><span style="width:36px;height:36px;display:grid;place-items:center;color:var(--accent)">ⓘ</span></div>
+        <strong style="display:block;font-size:29px;letter-spacing:-.7px;color:var(--accent);font-variant-numeric:tabular-nums">6:16.2</strong>
+        <p style="margin:6px 0;font-size:12.8px;color:var(--muted)">Illustrative training estimate · Algorithm preview</p>
+        <small style="font-size:12px;color:var(--muted)">Illustrative estimate · 16 Sep · Not a recorded PB</small>
+      </div>
+      <div style="margin-top:14px;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:20px;background:var(--card);border:1px solid var(--cardEdge);border-radius:30px">
+        <div><span style="font-size:12px;text-transform:uppercase;letter-spacing:.1em;font-weight:760;color:var(--muted)">Current personal best</span><strong style="display:block;font-size:35px;letter-spacing:-.05em;color:var(--accent);margin:8px 0;font-variant-numeric:tabular-nums">6:18.9</strong><span style="font-size:12.8px;color:var(--muted)">14 Aug 2026</span></div>
+        <span style="background:var(--accentSoft);color:var(--accent);border-radius:999px;padding:9px 11px;font-size:13px;font-weight:700;text-align:center">1:34.5 faster</span>
+      </div>
+      <div style="display:flex;padding:4px;margin:16px 0;border-radius:999px;background:var(--lg-fill);border:1px solid var(--lg-edge);box-shadow:inset 0 1px 0 var(--lg-hi),inset 0 -1px 0 var(--lg-lo),var(--lg-shadow)">
+        <button style="flex:1;min-height:44px;border-radius:999px;font-size:14px;font-weight:730;color:var(--muted);background:transparent;border:1px solid transparent">3 months</button>
+        <button style="flex:1;min-height:44px;border-radius:999px;font-size:14px;font-weight:730;color:var(--muted);background:transparent;border:1px solid transparent">6 months</button>
+        <button style="flex:1;min-height:44px;border-radius:999px;font-size:14px;font-weight:730;color:var(--text);background:var(--lg-fill-strong);border:1px solid var(--lg-edge);box-shadow:inset 0 1px 0 var(--lg-hi),0 2px 8px rgba(0,0,0,.18)">All time</button>
+      </div>
+      <div style="padding:16px 10px 10px;background:var(--card);border:1px solid var(--cardEdge);border-radius:30px">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:0 7px"><h2 style="font-size:16px;margin:0">PB progression</h2><span style="font-size:12px;color:var(--muted)">Lower is faster</span></div>
+        <p style="font-size:12.8px;color:var(--muted);margin:12px 7px 0">Time · min:sec</p>
+        <svg viewBox="0 0 360 252" style="width:100%;height:auto;display:block;overflow:visible;margin-top:18px">
+          <sc-for list="{{ pbGrid }}" as="gl" hint-placeholder-count="5">
+            <line x1="64" x2="342" y1="{{ gl.y }}" y2="{{ gl.y }}" stroke="var(--line)" stroke-width="1" stroke-dasharray="3 5"></line>
+            <text x="55" y="{{ gl.ty }}" text-anchor="end" style="font-size:13px;fill:var(--muted);font-variant-numeric:tabular-nums">{{ gl.label }}</text>
+          </sc-for>
+          <path d="{{ pbArea }}" fill="var(--brandSoft)" stroke="none"></path>
+          <path d="{{ pbLine }}" stroke="var(--brand)" stroke-width="3" fill="none"></path>
+          <line x1="{{ pbLastX }}" x2="{{ pbLastX }}" y1="22" y2="212" stroke="var(--accent)" stroke-width="1" stroke-dasharray="3 4"></line>
+          <sc-for list="{{ pbDots }}" as="d" hint-placeholder-count="6">
+            <circle cx="{{ d.x }}" cy="{{ d.y }}" r="{{ d.r }}" fill="{{ d.fill }}" stroke="var(--brand)" stroke-width="2"></circle>
+          </sc-for>
+          <text x="64" y="238" style="font-size:13px;fill:var(--muted)">Oct 25</text>
+          <text x="342" y="238" text-anchor="end" style="font-size:13px;fill:var(--muted)">Aug 26</text>
+        </svg>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 12px;background:var(--raised);border-radius:20px;margin:4px 6px 10px;min-height:74px;font-size:14px">
+          <span>14 Aug 2026<small style="display:block;color:var(--muted);font-size:12px;margin-top:4px">Latest personal best</small></span>
+          <strong style="font-size:24px;color:var(--brand);font-variant-numeric:tabular-nums">6:18.9</strong>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;padding:0 6px">
+          <button aria-label="Previous" style="width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:var(--lg-fill);border:1px solid var(--lg-edge);box-shadow:inset 0 1px 0 var(--lg-hi),inset 0 -1px 0 var(--lg-lo)"><svg viewBox="0 0 24 24" style="width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round"><path d="m15 18-6-6 6-6"></path></svg></button>
+          <div style="position:relative;flex:1;height:44px;display:flex;align-items:center">
+            <div style="width:100%;height:8px;border-radius:999px;background:var(--lg-fill);border:1px solid var(--lg-edge)"></div>
+            <div style="position:absolute;right:0;width:30px;height:22px;border-radius:999px;background:var(--lg-fill-strong);border:1px solid var(--lg-edge);box-shadow:inset 0 1px 0 var(--lg-hi),0 3px 10px rgba(0,0,0,.25)"></div>
+          </div>
+          <button aria-label="Next" style="width:44px;height:44px;border-radius:50%;display:grid;place-items:center;opacity:.35;background:var(--lg-fill);border:1px solid var(--lg-edge)"><svg viewBox="0 0 24 24" style="width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round"><path d="m9 18 6-6-6-6"></path></svg></button>
+        </div>
+        <p style="text-align:center;font-size:12px;color:var(--muted);margin:8px 0 3px">Tap the line or slide to explore each result.</p>
+      </div>
+      <h2 style="margin:20px 2px 9px;font-size:12px;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);font-weight:780">Personal best history</h2>
+      <div style="overflow:hidden;background:var(--card);border:1px solid var(--cardEdge);border-radius:30px">
+        <sc-for list="{{ pbRows }}" as="r" hint-placeholder-count="6">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:15px 18px;min-height:68px;border-bottom:1px solid var(--line);background:{{ r.bg }};color:{{ r.color }}">
+            <span>{{ r.date }}<small style="display:block;font-size:12px;color:var(--muted);margin-top:4px">{{ r.note }}</small></span>
+            <strong style="font-variant-numeric:tabular-nums">{{ r.value }}</strong>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- 11 ALL PERSONAL BESTS -->
+  <sc-if value="{{ isAllPbs }}" hint-placeholder-val="{{ false }}">
+    <header style="min-height:58px;flex:none;padding:8px 18px 14px;display:flex;align-items:center;gap:10px">
+      <button aria-label="Back" style="width:44px;height:44px;border-radius:50%;display:grid;place-items:center;flex:none;background:var(--lg-fill);border:1px solid var(--lg-edge);box-shadow:inset 0 1px 0 var(--lg-hi),inset 0 -1px 0 var(--lg-lo),var(--lg-shadow)"><svg viewBox="0 0 24 24" style="width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round"><path d="m15 18-6-6 6-6"></path></svg></button>
+      <h1 style="margin:0;flex:1;font-size:17px;letter-spacing:-.01em">Personal bests</h1>
+    </header>
+    <div style="flex:1;min-height:0;overflow-y:auto;scrollbar-width:none;padding:0 15px 30px">
+      <p style="font-size:12.8px;color:var(--muted);margin:0 2px 14px">Your recorded bests. Select a test to explore its history.</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <sc-for list="{{ allPBs }}" as="pb" hint-placeholder-count="7">
+          <button style="position:relative;text-align:left;min-height:90px;padding:13px 24px 13px 13px;border:1px solid var(--line);border-radius:24px;background:var(--card)">
+            <span style="font-size:12px;color:var(--muted);font-weight:760">{{ pb.label }}</span>
+            <strong style="display:block;font-size:17px;margin:5px 0 2px;color:var(--accent);font-variant-numeric:tabular-nums">{{ pb.value }}</strong>
+            <small style="font-size:12px;color:var(--faint)">View PB history ›</small>
+            <span style="position:absolute;right:11px;top:12px;color:var(--muted)">›</span>
+          </button>
+        </sc-for>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- 12 CLUBS -->
+  <sc-if value="{{ isClubs }}" hint-placeholder-val="{{ false }}">
+    <header style="min-height:58px;flex:none;padding:8px 18px 14px;display:flex;align-items:center;gap:10px">
+      <button aria-label="Back" style="width:44px;height:44px;border-radius:50%;display:grid;place-items:center;flex:none;background:var(--lg-fill);border:1px solid var(--lg-edge);box-shadow:inset 0 1px 0 var(--lg-hi),inset 0 -1px 0 var(--lg-lo),var(--lg-shadow)"><svg viewBox="0 0 24 24" style="width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round"><path d="m15 18-6-6 6-6"></path></svg></button>
+      <h1 style="margin:0;flex:1;font-size:17px;letter-spacing:-.01em">Your crew</h1>
+    </header>
+    <div style="flex:1;min-height:0;overflow-y:auto;scrollbar-width:none;padding:0 15px 30px;display:flex;flex-direction:column;gap:12px">
+      <h2 style="margin:6px 2px 0;font-size:23px">UEA Boat Club</h2>
+      <p style="font-size:12.8px;color:var(--muted);margin:0 2px 8px">Join an existing crew, start your own, or row independently.</p>
+      <button style="width:100%;min-height:54px;border-radius:999px;font-weight:770;color:var(--onBrand);background:linear-gradient(180deg,color-mix(in srgb,var(--brand) 88%,#fff 12%),var(--brand));border:1px solid color-mix(in srgb,var(--brand) 60%,#fff 40%);box-shadow:inset 0 1px 0 rgba(255,255,255,.45),inset 0 -1px 0 rgba(0,0,0,.18),0 8px 22px color-mix(in srgb,var(--brand) 30%,transparent)">Find a club to join</button>
+      <button style="width:100%;min-height:52px;border-radius:999px;font-weight:770;color:var(--text);background:var(--lg-fill);border:1px solid var(--lg-edge);box-shadow:inset 0 1px 0 var(--lg-hi),inset 0 -1px 0 var(--lg-lo),var(--lg-shadow)">Create a club</button>
+      <button style="width:100%;min-height:44px;border-radius:999px;background:transparent;border:0;color:var(--brand);font-weight:730">Continue without a club</button>
+    </div>
+  </sc-if>
+
+  <!-- NAV BAR (Feed / Rankings / Profile) -->
+  <sc-if value="{{ hasNav }}" hint-placeholder-val="{{ false }}">
+    <nav style="position:absolute;z-index:20;left:16px;right:16px;bottom:6px;height:58px;display:flex;gap:4px">
+      <div style="flex:1;min-width:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));padding:4px;border-radius:999px;background:var(--lg-fill);border:1px solid var(--lg-edge);box-shadow:inset 0 1px 0 var(--lg-hi),inset 0 -1px 0 var(--lg-lo),var(--lg-shadow);backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%)">
+        <sc-for list="{{ navItems }}" as="n" hint-placeholder-count="3">
+          <button style="min-width:0;border-radius:999px;font-size:11px;font-weight:740;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:{{ n.color }};background:{{ n.bg }};border:1px solid {{ n.border }};box-shadow:{{ n.shadow }}">
+            <svg viewBox="0 0 24 24" style="width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round"><path d="{{ n.path }}"></path><circle cx="12" cy="8" r="{{ n.circle }}"></circle></svg>{{ n.label }}
+          </button>
+        </sc-for>
+      </div>
+      <button aria-label="Log workout" style="width:58px;flex:none;border-radius:999px;display:grid;place-items:center;color:var(--brand);background:var(--lg-fill);border:1px solid var(--lg-edge);box-shadow:inset 0 1px 0 var(--lg-hi),inset 0 -1px 0 var(--lg-lo),var(--lg-shadow);backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%)"><svg viewBox="0 0 24 24" style="width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round"><path d="M12 5v14M5 12h14"></path></svg></button>
+    </nav>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:393,&quot;height&quot;:852},&quot;screen&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;feed&quot;,&quot;options&quot;:[&quot;onboarding&quot;,&quot;feed&quot;,&quot;rankings&quot;,&quot;capture&quot;,&quot;review&quot;,&quot;profile&quot;,&quot;settings&quot;,&quot;person&quot;,&quot;people&quot;,&quot;pb-history&quot;,&quot;all-pbs&quot;,&quot;clubs&quot;],&quot;tsType&quot;:&quot;string&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const s = this.props.screen ?? 'feed';
+    const LABELS = { onboarding:'01 Onboarding', feed:'02 Activity feed', rankings:'03 Rankings', capture:'04 Log workout', review:'05 Review session', profile:'06 Profile', settings:'07 Settings', person:'08 Other profile', people:'09 Find rowers', 'pb-history':'10 PB history', 'all-pbs':'11 All personal bests', clubs:'12 Clubs' };
+    const fmt = v => { const t = Math.round(v * 10), m = Math.floor(t / 600), sec = Math.floor((t % 600) / 10); return `${m}:${String(sec).padStart(2, '0')}.${t % 10}`; };
+    const statRow = arr => arr.map(([value, label], i) => ({ value, label, border: i < arr.length - 1 ? '1px solid var(--line)' : '0' }));
+
+    // PB chart (2k, lower is faster)
+    const pts = [[300, 473.4], [230, 451.2], [160, 428.6], [95, 410.7], [42, 392.3], [0, 378.9]];
+    const max = 498.9, min = 258.9;
+    const xy = pts.map(([d, v]) => ({ x: +(64 + (300 - d) / 300 * 278).toFixed(1), y: +(22 + (max - v) / (max - min) * 190).toFixed(1) }));
+    const line = xy.map((p, i) => (i ? 'L' : 'M') + p.x + ' ' + p.y).join(' ');
+
+    const volumes = [72, 88, 64, 95, 81, 102, 90, 76, 110, 98, 121, 116];
+    const habit = Array.from({ length: 84 }, (_, i) => {
+      if (i >= 80) return 'F';
+      if (i === 79) return 'T';
+      if (i >= 72) return 'L';
+      return [0, 1, 3, 4, 5].includes(i % 7) ? 'L' : '_';
+    });
+    const nav = [
+      { label: 'Feed', key: 'feed', path: 'm3 11 9-7 9 7v9h-6v-6H9v6H3z', circle: 0 },
+      { label: 'Rankings', key: 'rankings', path: 'M5 20v-7h4v7M10 20V7h4v13M15 20v-10h4v10', circle: 0 },
+      { label: 'Profile', key: 'profile', path: 'M4.5 21a7.5 7.5 0 0 1 15 0', circle: 4 }
+    ];
+
+    return {
+      label: LABELS[s] || s,
+      isOnboarding: s === 'onboarding', isFeed: s === 'feed', isRankings: s === 'rankings', isCapture: s === 'capture',
+      isReview: s === 'review', isProfile: s === 'profile', isSettings: s === 'settings', isPerson: s === 'person',
+      isPeople: s === 'people', isPbHistory: s === 'pb-history', isAllPbs: s === 'all-pbs', isClubs: s === 'clubs',
+      hasNav: ['feed', 'rankings', 'profile'].includes(s),
+      navItems: nav.map(n => {
+        const on = n.key === s;
+        return { ...n, color: on ? 'var(--brand)' : 'var(--muted)', bg: on ? 'var(--lg-fill-strong)' : 'transparent', border: on ? 'var(--lg-edge)' : 'transparent', shadow: on ? 'inset 0 1px 0 var(--lg-hi),0 2px 8px rgba(0,0,0,.16)' : 'none' };
+      }),
+      clubs: [
+        { crest: 'UEA', name: 'UEA Boat Club', meta: '48 members · Norwich · Open membership', selected: true, unselected: false },
+        { crest: 'UN', name: 'UEA Novice Squad', meta: '31 members · Norwich · Open membership', selected: false, unselected: true },
+        { crest: 'NRC', name: 'Norwich Rowing Club', meta: '86 members · Norwich · Approval required', selected: false, unselected: true }
+      ],
+      posts: [
+        { initials: 'PC', name: 'Piero Ciobanu', club: 'UEA Boat Club', distance: '16,000m', time: '1:04:50', pace: '2:01.6', caption: 'Steady state + rate ladder. Felt smooth until the last 2k.', workout: 'UT2 · Main workout', workoutMeta: '12,000m · 47:28.8 · 3 splits', reactions: ['🔥 7', '💪 3'], comments: '2 comments' },
+        { initials: 'AW', name: 'Alice Whitfield', club: 'Durham University BC', distance: '2,000m', time: '7:04.1', pace: '1:46.0', caption: 'Finally under 7:05. Next stop, sub-7.', workout: '2k test · Main workout', workoutMeta: '2,000m · 7:04.1 · 1 segment', reactions: ['🎉 19'], comments: '1 comment' }
+      ],
+      leaders: [
+        ['♛', 'TA', 'Tom Ashworth', 'Newcastle University BC · senior', '128,400', 'winner'],
+        ['2', 'JF', 'Jack Fenwick', 'Durham University BC · senior', '121,900'],
+        ['3', 'PC', 'Piero Ciobanu', 'UEA Boat Club · senior', '116,250', 'you'],
+        ['4', 'MR', 'Marcus Reilly', 'UEA Boat Club · novice', '104,800'],
+        ['5', 'AW', 'Alice Whitfield', 'Durham University BC · senior', '98,300'],
+        ['6', 'NB', 'Nina Bergström', 'UEA Boat Club · novice', '76,000']
+      ].map(([rank, initials, name, meta, score, kind]) => ({
+        rank, initials, name, meta, score,
+        bg: kind === 'winner' ? 'var(--goldSoft)' : kind === 'you' ? 'var(--brandSoft)' : 'transparent',
+        bar: kind === 'winner' ? 'inset 3px 0 var(--gold)' : 'none',
+        rankColor: kind === 'winner' ? 'var(--gold)' : 'var(--muted)'
+      })),
+      reviewFields: [{ label: 'Distance (m)', value: '16000' }, { label: 'Time', value: '1:04:50' }, { label: 'Average /500m', value: '2:01.6' }],
+      splits: [
+        { label: 'Warm-up', meta: '2,000m · 8:33.2', pace: '2:08.3', badgeBg: 'var(--raised)', badgeColor: 'var(--muted)' },
+        { label: 'UT2', meta: '12,000m · 47:28.8', pace: '1:58.7', badgeBg: 'var(--brandSoft)', badgeColor: 'var(--brand)' },
+        { label: 'Cool-down', meta: '2,000m · 8:48.0', pace: '2:12.0', badgeBg: 'var(--raised)', badgeColor: 'var(--muted)' }
+      ],
+      myStats: statRow([['116.3k', 'weekly volume'], ['12', 'sessions'], ['7', 'PBs'], ['8', 'streak days']]),
+      aliceStats: statRow([['98.3k', 'metres'], ['#5', 'volume ranking'], ['6', 'sessions'], ['5', 'streak days']]),
+      topPBs: [{ label: '2K', value: '6:18.9' }, { label: '5K', value: '17:12.4' }],
+      alicePBs: [{ label: '2,000 METRES', value: '7:04.1' }, { label: '30 MINUTES', value: '7,460m' }],
+      allPBs: [['500M', '1:28.4'], ['1K', '3:02.6'], ['2K', '6:18.9'], ['5K', '17:12.4'], ['10K', '35:48.0'], ['30 MIN', '8,410m'], ['60 MIN', '16,220m']].map(([label, value]) => ({ label, value })),
+      estimates: [{ label: '2k · Estimated today', value: '6:16.2' }, { label: '5k · Estimated today', value: '17:05.8' }],
+      volumeBars: volumes.map((v, i) => ({ h: (v / 125 * 100).toFixed(1) + '%', color: i === 11 ? 'var(--accent)' : 'var(--brand)', opacity: i === 11 ? 1 : .65 })),
+      habitCells: habit.map(c => ({
+        bg: c === 'L' || c === 'T' ? 'var(--brand)' : 'var(--raised)',
+        border: c === 'L' || c === 'T' ? 'var(--brand)' : 'var(--line)',
+        opacity: c === 'F' ? .22 : 1,
+        outline: c === 'T' ? '2px solid var(--accent)' : 'none'
+      })),
+      appIcons: [
+        { name: 'Lagoon', art: '#168f82', glyph: '#fff', path: 'M4 7h16M6 12h12M9 17h6', selected: true },
+        { name: 'Midnight', art: '#233853', glyph: '#fff', path: 'M4 7h16M6 12h12M9 17h6' },
+        { name: 'Pearl', art: '#6c929a', glyph: '#fff', path: 'M4 7h16M6 12h12M9 17h6' },
+        { name: 'Custom', art: 'var(--lg-fill)', glyph: 'var(--muted)', path: 'M12 5v14M5 12h14', custom: true }
+      ].map(ic => ({
+        ...ic,
+        bg: ic.selected ? 'color-mix(in srgb,var(--brand) 20%,var(--lg-fill))' : 'var(--lg-fill)',
+        border: ic.selected ? 'color-mix(in srgb,var(--brand) 45%,transparent)' : 'var(--lg-edge)',
+        artBorder: ic.custom ? '1.5px dashed var(--lg-edge)' : '0'
+      })),
+      settingGroups: [
+        { title: 'Appearance', rows: [
+          { title: 'Dark mode', sub: 'Reduce glare in low light.', value: 'Selected', check: true },
+          { title: 'Light mode', sub: 'Higher contrast in daylight.', value: '', chevron: true } ] },
+        { title: 'Units and display', rows: [
+          { title: 'Distance', sub: '', seg: true, segA: 'Metres', segB: 'km' },
+          { title: 'Pace shown as', sub: '1:58.7 /500m', seg: true, segA: 'Split', segB: 'Watts' } ] },
+        { title: 'Notifications', rows: [
+          { title: 'Comments and replies', sub: 'Including your own threads', toggle: true, on: true },
+          { title: 'Personal bests', sub: 'When you or a friend beats one', toggle: true, on: true },
+          { title: 'Club activity', sub: 'New posts from UEA Boat Club', toggle: true, on: false },
+          { title: 'Quiet hours', sub: '22:00–06:30', chevron: true } ] },
+        { title: 'Privacy', rows: [
+          { title: 'Profile visibility', sub: '', value: 'Public', chevron: true },
+          { title: 'Who can comment', sub: '', value: 'Following', chevron: true } ] },
+        { title: 'Account', rows: [
+          { title: 'Edit profile', sub: '', chevron: true },
+          { title: 'Export your metres', sub: 'Download every session as a CSV.', chevron: true },
+          { title: 'Log out', sub: '' } ] }
+      ].map(g => ({ ...g, rows: g.rows.map(r => ({ value: '', seg: false, toggle: false, chevron: false, check: false, ...r, knob: r.on ? 'flex-end' : 'flex-start', track: r.on ? 'var(--good)' : 'var(--lg-fill)' })) })),
+      rowers: [
+        ['AW', 'Alice Whitfield', 'Durham University BC', 'Following'],
+        ['TA', 'Tom Ashworth', 'Newcastle University BC', 'Following'],
+        ['JF', 'Jack Fenwick', 'Durham University BC', 'Follow'],
+        ['MR', 'Marcus Reilly', 'UEA Boat Club', 'Follow'],
+        ['NB', 'Nina Bergström', 'UEA Boat Club', 'Follow back']
+      ].map(([initials, name, club, action]) => ({ initials, name, club, action })),
+      pbGrid: [0, 1, 2, 3, 4].map(i => { const y = 22 + i * 47.5; return { y, ty: y + 4, label: fmt(max - (max - min) * i / 4) }; }),
+      pbLine: line,
+      pbArea: `${line} L${xy[5].x} 212 L${xy[0].x} 212Z`,
+      pbLastX: xy[5].x,
+      pbDots: xy.map((p, i) => ({ ...p, r: i === 5 ? 6 : 4, fill: i === 5 ? 'var(--accent)' : 'var(--card)' })),
+      pbRows: [
+        ['14 Aug 2026', 'Current PB', '6:18.9'], ['3 Jul 2026', 'Personal best', '6:32.3'], ['11 May 2026', 'Personal best', '6:50.7'],
+        ['7 Mar 2026', 'Personal best', '7:08.6'], ['27 Dec 2025', 'Personal best', '7:31.2'], ['18 Oct 2025', 'Personal best', '7:53.4']
+      ].map(([date, note, value], i) => ({ date, note, value, bg: i === 0 ? 'var(--brandSoft)' : 'transparent', color: i === 0 ? 'var(--brand)' : 'var(--text)' }))
+    };
+  }
+}
+</script>
+</body>
+</html>

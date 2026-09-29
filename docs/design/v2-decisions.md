@@ -14,8 +14,40 @@ if they do, update this file.
 | 6 | Private accounts and follow requests | Build them, as an **early phase** (schema: `profiles.is_private` plus follow-request status; review every place `follows` is read). |
 | 7 | Clubs | Build as in the prototype: create club, join policy (open / approval / invite), roles (owner / co-owner / admin / member), join requests, owner-only management. Supersedes the "club model open question" note. |
 
-**Known conflict:** redesign Phase B (commit `e47755c`) built the metres/km toggle app-wide.
-Decision 3 narrows it to leaderboard totals only, so the code needs to be brought back in line.
+**Resolved:** redesign Phase B (commit `e47755c`) built the metres/km toggle app-wide; commit
+`903698c` narrowed it to the Volume leaderboard only, per decision 3.
 
 Other prototype items are placeholders and need the user's go-ahead before building: quiet hours,
 "Who can comment", the demo-data seeding button (dev-only, never ship).
+
+## Photos, lead piece and PB posts (decided 2026-09-25)
+
+| # | Topic | Decision |
+|---|---|---|
+| 8 | Adding photos | One "Add photo" action offering **Take photo** or **Choose from library**. Every added photo is run through OCR. |
+| 9 | Monitor vs environment photo | **Detected automatically, never asked.** If OCR finds erg-monitor readings, the photo becomes a piece (editable row, metres added to the session total). Otherwise it is an environment photo (shown in the gallery, not read). The rower can correct a wrong guess without being prompted. |
+| 10 | Lead piece on the feed | The **most intense** piece leads the post — proposed rule: fastest average split among the session's pieces. Warm-up/cool-down never lead. 30/60-minute UT2 pieces are ordinary training, not "PB attempts". |
+| 11 | Feed photos | Swipeable, Instagram-style carousel: lead piece's monitor photo first, then the other pieces, then environment photos. |
+| 12 | New PB | Only an **actual** new PB (beats the previous best) is highlighted: the post gets an attention-grabbing animated glow (RGB-LED style). Needs its own design token(s) and a Reduce Motion fallback (static glow). |
+
+## v3 design conflicts (decided 2026-09-25)
+
+| # | Topic | Decision |
+|---|---|---|
+| 13 | Font | **Keep SF Pro.** v3's Inter is not used; v3 sizes, weights and tracking still apply. |
+| 14 | App icon | **No app-icon section at all** in Settings for now — no icon changes. |
+| 15 | CSV export | Still **no export** (decision 4 stands over v3's "Export CSV" row). |
+| 16 | Feed numbers | The feed card's Distance / Time / /500m trio shows the **lead piece's own** numbers (decision 10's most intense piece), not the session totals. |
+
+## v3 Rankings (decided 2026-09-26)
+
+| # | Topic | Decision |
+|---|---|---|
+| 17 | Rankings scope | **My club / Following only** — v3's "All" (app-wide) is not added; the global-scope cancellation stands. |
+| 18 | Rankings period and source | Keep **Week / Month / Year** and **All / Erg / Water** alongside v3's layout; the hero card names the chosen period. |
+
+## Push notifications (decided 2026-09-26)
+
+| # | Topic | Decision |
+|---|---|---|
+| 19 | Notifications | **Built now, delivered once the paid Apple Developer Program is joined** (free accounts can't use push; the user chose "build now, enrol later"). v3 Settings' three switches plus Quiet hours, saved per rower in `notification_settings`. **Comments and replies**: a comment on your post, or on a post you've commented on (comments have no separate reply). **Personal bests**: your own new PB, and a new PB by someone you follow ("you or a friend"). **Club activity**: a clubmate posts; off by default, as in v3. Every alert obeys the feed's rules (blocks, private accounts, post visibility). **Quiet hours** (default 22:00–06:30, on the rower's own clock, editable in a sheet): alerts still arrive but silently, no sound and screen stays dark, waiting in Notification Centre. Tapping an alert opens the post above whatever is on screen. Server: triggers in `docs/migrations/2026-09-26-notifications.sql`, the `send-push` Edge Function, one database webhook; setup and tests in `docs/testing/notifications.md`. |

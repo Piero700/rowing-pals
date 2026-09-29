@@ -14,7 +14,11 @@ struct SettingsView: View {
     @State private var isShowingTerms = false
     @State private var isShowingPrivacy = false
     @State private var isShowingDeleteConfirmation = false
-    @FocusState private var isNameFocused: Bool
+    @State private var isShowingQuietHours = false
+    /// Whether iOS allows alerts, re-read on return from the iOS Settings app.
+    @State private var push = PushNotificationService.shared
+    @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.openURL) private var openURL
     /// Redesign phase B — per-device display preferences, not synced to
     /// the profile. See DesignSystem/DistanceUnit.swift (leaderboards only)
     /// and PaceDisplay.swift.
@@ -24,142 +28,105 @@ struct SettingsView: View {
     private static let supportEmail = "support@rowingpals.app"
     private static let supportMailtoURL = URL(string: "mailto:\(supportEmail)")
 
+    @AppStorage(Appearance.storageKey) private var appearance: Appearance = .dark
+
+    private static let cardShape = RoundedRectangle(cornerRadius: Tokens.Radius.card, style: .continuous)
+
+    /// v3 Settings (`docs/design/v3/RP Screen.dc.html` §07): grouped cards of 66 pt rows —
+    /// Appearance, Units and display, Notifications, Privacy, Account — then Delete account and
+    /// the version. Left out by decision: the app-icon section (14) and CSV export (15).
+    /// "Who can comment" waits for the user's go-ahead.
     var body: some View {
         NavigationStack {
-            List {
-                Section {
-                    TextField("Display name", text: $viewModel.displayName)
-                        .focused($isNameFocused)
-
-                    Picker("Gender", selection: $viewModel.gender) {
-                        Text("Male").tag(RowerGender.male)
-                        Text("Female").tag(RowerGender.female)
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                    group("Appearance") {
+                        row(title: "Dark mode", subtitle: "Reduce glare in low light.") {
+                            checkmark(appearance == .dark)
+                        } action: { appearance = .dark }
+                        divider
+                        row(title: "Light mode", subtitle: "Higher contrast in daylight.") {
+                            checkmark(appearance == .light)
+                        } action: { appearance = .light }
                     }
-                    .pickerStyle(.segmented)
-                    .listRowSeparator(.hidden)
 
-                    Picker("Category", selection: $viewModel.category) {
-                        Text("Novice").tag(RowerCategory.novice)
-                        Text("Senior").tag(RowerCategory.senior)
-                    }
-                    .pickerStyle(.segmented)
-
-                    Stepper(value: $viewModel.weeklyTargetM, in: 0...50_000, step: 1_000) {
-                        HStack {
-                            Text("Weekly target")
-                            Spacer()
-                            Text(viewModel.weeklyTargetM.formattedMetres)
-                                .tabularNumerals()
-                                .foregroundStyle(Tokens.Ink.secondary)
+                    group("Units and display") {
+                        row(title: "Leaderboard distance", subtitle: "Volume rankings only; everything else is metres.") {
+                            PillSegmentedControl(options: ["Metres", "km"], selection: Binding(
+                                get: { distanceUnit == .kilometres ? 1 : 0 },
+                                set: { distanceUnit = $0 == 1 ? .kilometres : .metres }
+                            ), compact: true)
+                            .frame(width: 145)
+                        }
+                        divider
+                        row(title: "Pace shown as", subtitle: paceExample) {
+                            PillSegmentedControl(options: ["Split", "Watts"], selection: Binding(
+                                get: { paceDisplay == .watts ? 1 : 0 },
+                                set: { paceDisplay = $0 == 1 ? .watts : .split }
+                            ), compact: true)
+                            .frame(width: 145)
                         }
                     }
 
-                    if let saveError = viewModel.saveError {
-                        Text(saveError)
-                            .foregroundStyle(Tokens.System.error)
+                    notificationsGroup
+
+                    group("Privacy") {
+                        row(title: "Profile visibility", subtitle: nil) {
+                            value(viewModel.isPrivate ? "Private" : "Public")
+                            chevron
+                        } action: { isShowingPrivacy = true }
                     }
 
-                    Button {
-                        isNameFocused = false
-                        Task { await viewModel.save() }
-                    } label: {
-                        HStack {
-                            Spacer()
-                            if viewModel.isSaving {
-                                ProgressView()
-                            } else {
-                                Text("Save changes").fontWeight(.semibold)
+                    group("Account") {
+                        NavigationLink {
+                            EditProfileView(viewModel: viewModel)
+                        } label: {
+                            rowContent(title: "Edit profile", subtitle: "Name, gender, level and weekly target") { chevron }
+                        }
+                        .buttonStyle(IconPressStyle())
+                        divider
+                        row(title: "Log out", subtitle: nil) { EmptyView() } action: {
+                            Task { await viewModel.signOut() }
+                        }
+                    }
+
+                    group("Help") {
+                        if let supportMailtoURL = Self.supportMailtoURL {
+                            Link(destination: supportMailtoURL) {
+                                rowContent(title: "Contact us", subtitle: Self.supportEmail) { chevron }
                             }
-                            Spacer()
+                            divider
                         }
+                        row(title: "Terms of Service", subtitle: nil) { chevron } action: { isShowingTerms = true }
                     }
-                    .disabled(!viewModel.hasUnsavedChanges || viewModel.isSaving)
-                } header: {
-                    Text("Profile")
-                } footer: {
-                    Text("Novice means you're in your first season. You can change this any time.")
-                }
 
-                Section {
-                    Picker("Leaderboard distance", selection: $distanceUnit) {
-                        ForEach(DistanceUnit.allCases, id: \.self) { unit in
-                            Text(unit.label).tag(unit)
-                        }
-                    }
-                    Picker("Pace shown as", selection: $paceDisplay) {
-                        ForEach(PaceDisplay.allCases, id: \.self) { display in
-                            Text(display.label).tag(display)
-                        }
-                    }
-                } header: {
-                    Text("Units and display")
-                } footer: {
-                    Text("Leaderboard distance switches the Volume leaderboard between metres and kilometres. Everything else stays in metres. Pace applies everywhere a pace is shown.")
-                }
-
-                Section {
-                    Button {
-                        isShowingPrivacy = true
-                    } label: {
-                        HStack {
-                            Label("Profile visibility", systemImage: "lock")
-                            Spacer()
-                            Text(viewModel.isPrivate ? "Private" : "Public")
-                                .foregroundStyle(Tokens.Ink.secondary)
-                            Image(systemName: "chevron.right")
-                                .font(.system(size: 12, weight: .semibold))
-                                .foregroundStyle(Tokens.Ink.faint)
-                        }
-                    }
-                    .foregroundStyle(Tokens.Ink.primary)
-                } header: {
-                    Text("Privacy")
-                }
-
-                Section {
-                    if let supportMailtoURL = Self.supportMailtoURL {
-                        Link(destination: supportMailtoURL) {
-                            Label(Self.supportEmail, systemImage: "envelope")
-                        }
-                    }
-                } header: {
-                    Text("Contact")
-                } footer: {
-                    Text("Reach us here to report something the in-app tools don't cover, or for anything else.")
-                }
-
-                Section {
-                    Button {
-                        isShowingTerms = true
-                    } label: {
-                        Label("Terms of Service", systemImage: "doc.text")
-                    }
-                }
-
-                Section {
-                    Button("Sign out") {
-                        Task { await viewModel.signOut() }
-                    }
-                    .foregroundStyle(Tokens.System.error)
-
-                    Button("Delete Account", role: .destructive) {
-                        isShowingDeleteConfirmation = true
-                    }
+                    Button("Delete account") { isShowingDeleteConfirmation = true }
+                        .buttonStyle(.rpDestructive)
+                        .padding(.top, Tokens.Spacing.gap)
                     if let deleteError = viewModel.deleteError {
                         Text(deleteError)
+                            .textStyle(Typography.meta)
                             .foregroundStyle(Tokens.System.error)
+                            .padding(.top, 6)
                     }
-                } footer: {
-                    Text("Deleting your account removes every session, photo and comment permanently. This can't be undone.")
+                    Text("Deleting your account removes every session, photo and comment permanently.")
+                        .textStyle(Typography.meta)
+                        .foregroundStyle(Tokens.Ink.secondary)
+                        .padding(.top, 6)
+
+                    Text(versionText)
+                        .textStyle(Typography.meta)
+                        .foregroundStyle(Tokens.Ink.secondary)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, Tokens.Spacing.loose)
                 }
+                .padding(.horizontal, Tokens.Spacing.screen)
+                .padding(.bottom, 22)
             }
-            .navigationTitle("Settings")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Close") { dismiss() }
-                }
-            }
+            .scrollIndicators(.hidden)
+            .safeAreaInset(edge: .top, spacing: 0) { header }
+            .background(Tokens.Base.ground)
+            .toolbar(.hidden, for: .navigationBar)
             .task { await viewModel.load() }
             .sheet(isPresented: $isShowingTerms) {
                 TermsOfServiceView()
@@ -167,6 +134,15 @@ struct SettingsView: View {
             .sheet(isPresented: $isShowingPrivacy) {
                 privacySheet
                     .presentationDetents([.medium])
+            }
+            .sheet(isPresented: $isShowingQuietHours) {
+                quietHoursSheet
+                    .presentationDetents([.medium])
+            }
+            .onChange(of: scenePhase) { _, phase in
+                if phase == .active {
+                    Task { await push.refreshAuthorizationStatus() }
+                }
             }
             .disabled(viewModel.isDeletingAccount)
             .overlay {
@@ -186,6 +162,231 @@ struct SettingsView: View {
                 Text("This permanently deletes your account and everything you've posted. This can't be undone.")
             }
         }
+        // An open sheet doesn't pick up the root's scheme change until it's presented again,
+        // so the choice is applied here too and shows the moment it's tapped.
+        .preferredColorScheme(appearance.colorScheme)
+    }
+
+    // MARK: - v3 building blocks
+
+    private var header: some View {
+        HStack(spacing: Tokens.Spacing.gap) {
+            GlassIconButton(systemImage: "chevron.left", accessibilityLabel: "Back") { dismiss() }
+            Text("Settings")
+                .textStyle(Typography.navTitle)
+                .foregroundStyle(Tokens.Ink.primary)
+                .accessibilityAddTraits(.isHeader)
+            Spacer(minLength: 0)
+        }
+        .padding(.top, 8)
+        .padding(.horizontal, Tokens.Spacing.headerHorizontal)
+        .padding(.bottom, 14)
+        .frame(minHeight: 58)
+        .background(Tokens.Base.ground)
+    }
+
+    /// Section title then one card (radius 30, card fill, card edge) of rows.
+    private func group<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text(title)
+                .textStyle(Typography.sectionTitle)
+                .foregroundStyle(Tokens.Ink.secondary)
+                .padding(.horizontal, 2)
+                .padding(.top, Tokens.Spacing.sectionTop)
+                .padding(.bottom, Tokens.Spacing.sectionBottom)
+                .accessibilityAddTraits(.isHeader)
+            VStack(spacing: 0) { content() }
+                .background(Self.cardShape.fill(Tokens.Surface.card))
+                .clipShape(Self.cardShape)
+                .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+        }
+    }
+
+    private var divider: some View {
+        Rectangle().fill(Tokens.Surface.line).frame(height: 1)
+    }
+
+    /// v3 row: title 14 bold, optional 12.8 subtitle, trailing control; at least 66 pt tall.
+    private func rowContent<Trailing: View>(title: String, subtitle: String?, @ViewBuilder trailing: () -> Trailing) -> some View {
+        HStack(spacing: Tokens.Spacing.gap) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .textStyle(Typography.rowTitle)
+                    .foregroundStyle(Tokens.Ink.primary)
+                if let subtitle {
+                    Text(subtitle)
+                        .textStyle(Typography.meta)
+                        .foregroundStyle(Tokens.Ink.secondary)
+                        .tabularNumerals()
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            trailing()
+        }
+        .padding(.horizontal, Tokens.Spacing.loose)
+        .padding(.vertical, 9)
+        .frame(minHeight: 66)
+        .contentShape(Rectangle())
+    }
+
+    /// A row that is itself a control (a whole-row button) when `action` is given.
+    @ViewBuilder
+    private func row<Trailing: View>(
+        title: String, subtitle: String?, @ViewBuilder trailing: () -> Trailing, action: (() -> Void)? = nil
+    ) -> some View {
+        if let action {
+            Button(action: action) { rowContent(title: title, subtitle: subtitle, trailing: trailing) }
+                .buttonStyle(IconPressStyle())
+        } else {
+            rowContent(title: title, subtitle: subtitle, trailing: trailing)
+        }
+    }
+
+    private func checkmark(_ isOn: Bool) -> some View {
+        Image(systemName: "checkmark")
+            .font(.system(size: 15, weight: .bold))
+            .foregroundStyle(Tokens.Accent.brand)
+            .opacity(isOn ? 1 : 0)
+            .accessibilityHidden(!isOn)
+    }
+
+    private var chevron: some View {
+        Image(systemName: "chevron.right")
+            .font(.system(size: 13, weight: .semibold))
+            .foregroundStyle(Tokens.Ink.secondary)
+    }
+
+    private func value(_ text: String) -> some View {
+        Text(text)
+            .font(.system(size: 12))
+            .foregroundStyle(Tokens.Ink.secondary)
+    }
+
+    private var paceExample: String {
+        // 1:58.7 /500m, shown in the chosen form.
+        let sample = 118_700
+        return paceDisplay == .split ? "\(sample.formattedPace(display: .split)) /500m" : sample.formattedPace(display: .watts)
+    }
+
+    private var versionText: String {
+        let info = Bundle.main.infoDictionary
+        let version = info?["CFBundleShortVersionString"] as? String ?? "1.0"
+        let build = info?["CFBundleVersion"] as? String ?? "1"
+        return "Rowing Pals \(version) (\(build))"
+    }
+
+    // MARK: - Notifications
+
+    /// v3 §07: three switches, then Quiet hours (docs/design/v2-decisions.md #19). If iOS has
+    /// alerts turned off for the app, a first row says so and opens the page in the iOS
+    /// Settings app where they're turned back on — the switches alone can't override iOS.
+    private var notificationsGroup: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            group("Notifications") {
+                if push.authorizationStatus == .denied {
+                    row(title: "Notifications are off", subtitle: "Allow them in iOS Settings to get alerts.") {
+                        chevron
+                    } action: {
+                        if let url = URL(string: UIApplication.openNotificationSettingsURLString) {
+                            openURL(url)
+                        }
+                    }
+                    divider
+                }
+                if let settings = viewModel.notificationSettings {
+                    toggleRow(title: "Comments and replies", subtitle: "Including your own threads", \.comments)
+                    divider
+                    toggleRow(title: "Personal bests", subtitle: "When you or a friend beats one", \.personalBests)
+                    divider
+                    toggleRow(
+                        title: "Club activity",
+                        subtitle: "New posts from \(viewModel.clubName ?? "your club")",
+                        \.clubActivity
+                    )
+                    divider
+                    row(title: "Quiet hours", subtitle: settings.quietHoursLabel) { chevron } action: {
+                        isShowingQuietHours = true
+                    }
+                } else {
+                    rowContent(title: "Notifications", subtitle: "Loading…") { ProgressView() }
+                }
+            }
+            if let error = viewModel.notificationError {
+                Text(error)
+                    .textStyle(Typography.meta)
+                    .foregroundStyle(Tokens.System.error)
+                    .padding(.top, 6)
+            }
+        }
+    }
+
+    /// A 66 pt row whose trailing control is a switch; on = the success colour, as v3's
+    /// `.switch` and the Review screen's "Include on leaderboards".
+    private func toggleRow(
+        title: String, subtitle: String, _ keyPath: WritableKeyPath<NotificationSettings, Bool>
+    ) -> some View {
+        Toggle(isOn: Binding(
+            get: { viewModel.notificationSettings?[keyPath: keyPath] ?? false },
+            set: { value in Task { await viewModel.updateNotifications { $0[keyPath: keyPath] = value } } }
+        )) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .textStyle(Typography.rowTitle)
+                    .foregroundStyle(Tokens.Ink.primary)
+                Text(subtitle)
+                    .textStyle(Typography.meta)
+                    .foregroundStyle(Tokens.Ink.secondary)
+            }
+        }
+        .tint(Tokens.Accent.success)
+        .padding(.horizontal, Tokens.Spacing.loose)
+        .padding(.vertical, 9)
+        .frame(minHeight: 66)
+    }
+
+    /// Opened from the Quiet hours row. The design shows only the row; this sheet follows
+    /// the privacy sheet's pattern. Times are on the 24-hour clock, as the row shows them.
+    private var quietHoursSheet: some View {
+        NavigationStack {
+            Form {
+                if let settings = viewModel.notificationSettings {
+                    Section {
+                        Toggle("Quiet hours", isOn: Binding(
+                            get: { settings.quietHoursEnabled },
+                            set: { value in Task { await viewModel.updateNotifications { $0.quietHoursEnabled = value } } }
+                        ))
+                        .tint(Tokens.Accent.success)
+                        if settings.quietHoursEnabled {
+                            DatePicker("From", selection: Binding(
+                                get: { settings.quietStart.date() },
+                                set: { date in Task { await viewModel.updateNotifications { $0.quietStart = ClockTime(date: date) } } }
+                            ), displayedComponents: .hourAndMinute)
+                            DatePicker("Until", selection: Binding(
+                                get: { settings.quietEnd.date() },
+                                set: { date in Task { await viewModel.updateNotifications { $0.quietEnd = ClockTime(date: date) } } }
+                            ), displayedComponents: .hourAndMinute)
+                        }
+                    } footer: {
+                        Text("Alerts that arrive during quiet hours make no sound and leave your screen dark. They wait in Notification Centre. Times follow your phone's clock.")
+                    }
+                    if let error = viewModel.notificationError {
+                        Section {
+                            Text(error).foregroundStyle(Tokens.System.error)
+                        }
+                    }
+                }
+            }
+            .environment(\.locale, Locale(identifier: "en_GB"))
+            .monospacedDigit()
+            .navigationTitle("Quiet hours")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") { isShowingQuietHours = false }
+                }
+            }
+        }
+        .preferredColorScheme(appearance.colorScheme)
     }
 
     /// The prototype's privacy sheet (docs/design/
