@@ -59,6 +59,8 @@ struct ClubSearchView: View {
         }
         .animation(.snappy, value: isAboutYou)
         .background(Tokens.Base.ground)
+        // Pushed from Your crew, the system bar would add a second back button over our own.
+        .toolbar(.hidden, for: .navigationBar)
         .dismissesKeyboardOnTap()
     }
 
