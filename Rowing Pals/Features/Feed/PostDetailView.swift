@@ -248,7 +248,7 @@ struct PostDetailView: View {
             state: viewModel.followState,
             followsYou: viewModel.authorFollowsViewer,
             isBusy: viewModel.isFollowBusy,
-            compact: true
+            variant: .compactPill
         ) {
             Task { await viewModel.toggleFollow() }
         }

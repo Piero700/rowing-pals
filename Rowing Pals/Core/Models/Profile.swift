@@ -20,6 +20,8 @@ struct Profile: Codable, Identifiable {
     /// only to approved followers; enforced in the database (see
     /// docs/migrations/2026-09-23-private-accounts.sql), not just hidden here.
     var isPrivate: Bool
+    /// Set when onboarding finishes, with or without a club (decision 24).
+    var onboardedAt: Date?
     let createdAt: Date
 
     enum CodingKeys: String, CodingKey {
@@ -31,6 +33,7 @@ struct Profile: Codable, Identifiable {
         case weeklyTargetSessions = "weekly_target_sessions"
         case weeklyTargetM = "weekly_target_m"
         case isPrivate = "is_private"
+        case onboardedAt = "onboarded_at"
         case createdAt = "created_at"
     }
 
@@ -47,6 +50,8 @@ struct Profile: Codable, Identifiable {
         // Absent means "public": a build running before the phase E migration
         // has been applied must not fail to decode every profile.
         isPrivate = try c.decodeIfPresent(Bool.self, forKey: .isPrivate) ?? false
+        // Absent before docs/migrations/2026-09-29-onboarding.sql has run.
+        onboardedAt = try c.decodeIfPresent(Date.self, forKey: .onboardedAt)
         createdAt = try c.decode(Date.self, forKey: .createdAt)
     }
 }

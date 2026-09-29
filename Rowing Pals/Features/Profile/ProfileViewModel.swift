@@ -135,6 +135,10 @@ final class ProfileViewModel {
 
     var seasonTotalDistanceM = 0
     var seasonSessionCount = 0
+    /// Another rower's "Volume · This week" card (v3 §08).
+    var weekSessionCount = 0
+    /// Another rower's place in their own club (decision 20); nil with no club or not loaded.
+    var clubRanks: ClubRankService.Ranks?
     var longestStreakDays = 0
 
     var pbTiles: [PBTile] = StandardTest.all.map { PBTile(test: $0, distanceM: nil, timeMs: nil, splitMs: nil, setAt: nil) }
@@ -170,19 +174,21 @@ final class ProfileViewModel {
                 let displayName: String
                 let category: RowerCategory
                 let club: Club?
+                let clubId: UUID?
                 let weeklyTargetM: Int
                 let isPrivate: Bool
                 enum CodingKeys: String, CodingKey {
                     case displayName = "display_name"
                     case category
                     case club = "clubs"
+                    case clubId = "club_id"
                     case weeklyTargetM = "weekly_target_m"
                     case isPrivate = "is_private"
                 }
             }
             let profile: ProfileRow = try await SupabaseService.shared
                 .from("profiles")
-                .select("display_name, category, clubs(name), weekly_target_m, is_private")
+                .select("display_name, category, clubs(name), club_id, weekly_target_m, is_private")
                 .eq("id", value: userId)
                 .single()
                 .execute()
@@ -235,6 +241,15 @@ final class ProfileViewModel {
 
             weeklyVolumes = Self.weeklyVolumes(dailyTotals: totals)
             consistencyDays = Self.consistencyGrid(dailyTotals: totals)
+            let weekStart = ClubRankService.weekStartString(for: Date())
+            weekSessionCount = totals.filter { $0.day >= weekStart }.reduce(0) { $0 + $1.sessionCount }
+
+            // Best-effort: a failure leaves the ranks as dashes rather than failing the profile.
+            if !isOwnProfile, let clubId = profile.clubId {
+                clubRanks = try? await ClubRankService.ranks(for: userId, clubId: clubId)
+            } else {
+                clubRanks = nil
+            }
 
             photos = sessionRows.map {
                 ProfilePhoto(id: $0.id, distanceM: $0.totalDistanceM, monitorPath: $0.primarySegmentPath,
@@ -254,6 +269,8 @@ final class ProfileViewModel {
         restDaysUsedThisWeek = 0
         seasonTotalDistanceM = 0
         seasonSessionCount = 0
+        weekSessionCount = 0
+        clubRanks = nil
         longestStreakDays = 0
         pbTiles = StandardTest.all.map { PBTile(test: $0, distanceM: nil, timeMs: nil, splitMs: nil, setAt: nil) }
         weeklyVolumes = []

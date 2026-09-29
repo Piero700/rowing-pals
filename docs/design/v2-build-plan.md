@@ -96,8 +96,17 @@ that they match the prototype.
      Server: migration `2026-09-26-notifications.sql`, `send-push` Edge Function (deployed to
      staging), database webhook. **Alerts reach a phone only after the paid Apple Developer Program
      is joined** and the push key is added — steps in `docs/testing/notifications.md` Part 3.
-   - Remaining v3 screens: Other profile (§08 details), Find rowers, PB history, All PBs,
-     Onboarding, Clubs (with phase G).
+   - **Other rower's profile BUILT** (branch `t27-other-profile`, decisions 20–22): v3 §08
+     exactly, with club rankings from `Core/Services/ClubRankService`.
+   - **Find rowers BUILT** (v3 §09): header, search, one card of rows with glass follow pills
+     and "Follow back"; Followers / Following lists share the layout. Shared `ScreenHeader`
+     (Settings, Rower profile, people lists) and a `FollowButton.Variant`.
+   - **PB history + All personal bests BUILT** (v3 §10–11, decision 23): shared `PBTileView`,
+     `EstimateCard`, `StandardTest` titles. Fixes the chart's stray fill panel and the page not
+     scrolling over the chart.
+   - **Onboarding BUILT** (v3 §01 + "About you", decision 24): optional club; needs
+     `docs/migrations/2026-09-29-onboarding.sql` run on staging before a new rower can finish it.
+   - Remaining v3 screen: Clubs (§12, with phase G).
    - **Known for step 3:** profile consistency grid month labels wrap letter by letter ("M / ar").
      Note: the clickable prototype renders an 8 pt nav gap; `RP Screen.dc.html` and the README say
      4 pt — 4 pt is used.

@@ -121,6 +121,8 @@ enum Tokens {
         static let estimate: CGFloat = 22
         static let photo: CGFloat = 22
         static let iconChoice: CGFloat = 20
+        /// An inset panel inside a card (PB history's selected result).
+        static let panel: CGFloat = 20
         static let workoutLink: CGFloat = 18
         static let photoInset: CGFloat = 17
         static let select: CGFloat = 15
@@ -217,6 +219,20 @@ enum Typography {
     static let overline = Style(size: 12, weight: .bold, trackingEm: 0.1, uppercase: true)
     static let metricLabel = Style(size: 12, weight: .bold, trackingEm: 0.07, uppercase: true)
     static let metricValue = Style(size: 17, weight: .bold, trackingEm: 0, uppercase: false)
+    /// A rank in a stats card ("#5"), v3 §08's rankings card.
+    static let rankValue = Style(size: 16, weight: .bold, trackingEm: 0, uppercase: false)
+    /// The label under a rank or stat ("2k test").
+    static let statLabel = Style(size: 12, weight: .regular, trackingEm: 0, uppercase: false)
+    /// PB history's "Current personal best" figure (v3 §10).
+    static let pbValue = Style(size: 35, weight: .bold, trackingEm: -0.05, uppercase: false)
+    /// A card's own heading ("PB progression").
+    static let cardTitle = Style(size: 16, weight: .bold, trackingEm: 0, uppercase: false)
+    /// Row text in a list card (PB history dates).
+    static let detail = Style(size: 14, weight: .regular, trackingEm: 0, uppercase: false)
+    /// The chosen result under the PB chart.
+    static let selectedValue = Style(size: 24, weight: .bold, trackingEm: 0, uppercase: false)
+    /// The small label over a form field ("Club name").
+    static let fieldLabel = Style(size: 12.5, weight: .bold, trackingEm: 0, uppercase: false)
     static let navLabel = Style(size: 11, weight: .bold, trackingEm: 0, uppercase: false)
     static let segment = Style(size: 14, weight: .bold, trackingEm: 0, uppercase: false)
     static let pill = Style(size: 13, weight: .bold, trackingEm: 0, uppercase: false)

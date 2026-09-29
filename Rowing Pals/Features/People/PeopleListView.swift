@@ -5,14 +5,19 @@
 
 import SwiftUI
 
-/// Followers, Following and Find rowers — one flat list of rows: avatar,
-/// name + club/level, and a follow button unless the row is you
-/// (docs/design/rowing-pals-redesign-handoff-v2.md §2 Screen 09). Tapping a
-/// row opens that rower's profile.
+/// Find rowers, Followers and Following, to v3 §09 (`docs/design/v3/RP Screen.dc.html`):
+/// glass back header, then — for Find rowers — "Search your rowing community" and a 52 pt
+/// search field; then one card of rows: 38 pt avatar, name, club, and a glass
+/// Follow / Following / Requested / Follow back pill unless the row is you. v3 draws only
+/// Find rowers; the two follow lists use the same layout so all three match. Tapping a row
+/// opens that rower's profile; a private rower keeps phase E's lock icon.
 struct PeopleListView: View {
     @State private var viewModel: PeopleListViewModel
     @State private var query = ""
     @Environment(\.navigate) private var navigate
+    @Environment(\.dismiss) private var dismiss
+
+    private static let cardShape = RoundedRectangle(cornerRadius: Tokens.Radius.card, style: .continuous)
 
     init(kind: PeopleListKind) {
         _viewModel = State(initialValue: PeopleListViewModel(kind: kind))
@@ -20,15 +25,22 @@ struct PeopleListView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: 0) {
                 if viewModel.isSearchable {
+                    Text("Search your rowing community")
+                        .textStyle(Typography.meta)
+                        .foregroundStyle(Tokens.Ink.secondary)
+                        .padding(.horizontal, 2)
+                        .padding(.bottom, 12)
                     searchField
+                        .padding(.bottom, 14)
                 }
 
                 if let message = viewModel.errorMessage {
                     Text(message)
-                        .textStyle(Typography.bodySecondary)
+                        .textStyle(Typography.meta)
                         .foregroundStyle(Tokens.System.error)
+                        .padding(.bottom, 12)
                 }
 
                 if viewModel.people.isEmpty && !viewModel.isLoading {
@@ -37,21 +49,20 @@ struct PeopleListView: View {
                         .foregroundStyle(Tokens.Ink.secondary)
                         .frame(maxWidth: .infinity)
                         .padding(.top, 40)
-                } else {
-                    LazyVStack(spacing: 8) {
-                        ForEach(viewModel.people) { person in
-                            row(person)
-                        }
-                    }
+                } else if !viewModel.people.isEmpty {
+                    list
                 }
             }
-            .padding(.horizontal, 14)
-            .padding(.top, 8)
-            .padding(.bottom, 40)
+            .padding(.horizontal, Tokens.Spacing.screen)
+            .padding(.bottom, 30)
         }
+        .scrollIndicators(.hidden)
+        .scrollDismissesKeyboard(.interactively)
+        .safeAreaInset(edge: .top, spacing: 0) {
+            ScreenHeader(title: viewModel.title) { dismiss() }
+        }
+        .toolbar(.hidden, for: .navigationBar)
         .background(Tokens.Base.ground)
-        .navigationTitle(viewModel.title)
-        .navigationBarTitleDisplayMode(.inline)
         // Reloads as the search text changes; the cancelled previous task
         // gives a light debounce.
         .task(id: query) {
@@ -64,76 +75,81 @@ struct PeopleListView: View {
         .refreshable { await viewModel.load(query: query) }
     }
 
+    /// 52 pt, card fill, 1 pt line, radius 24; a 20 pt search icon inset 14.
     private var searchField: some View {
-        HStack(spacing: 8) {
+        let shape = RoundedRectangle(cornerRadius: Tokens.Radius.input, style: .continuous)
+        return HStack(spacing: 9) {
             Image(systemName: "magnifyingglass")
+                .font(.system(size: 17, weight: .medium))
+                .frame(width: 20, height: 20)
                 .foregroundStyle(Tokens.Ink.secondary)
+                .accessibilityHidden(true)
             TextField("Search rowers", text: $query)
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
+                .submitLabel(.search)
                 .foregroundStyle(Tokens.Ink.primary)
         }
         .padding(.horizontal, 14)
-        .padding(.vertical, 12)
-        .background {
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(Tokens.Ink.primary.opacity(0.07))
+        .frame(minHeight: Tokens.Size.input)
+        .background(shape.fill(Tokens.Surface.card))
+        .overlay { shape.strokeBorder(Tokens.Surface.line, lineWidth: 1) }
+    }
+
+    /// One card (radius 30, card fill, card edge), rows split by 1 pt lines.
+    private var list: some View {
+        VStack(spacing: 0) {
+            ForEach(Array(viewModel.people.enumerated()), id: \.element.id) { index, person in
+                row(person)
+                if index < viewModel.people.count - 1 {
+                    Rectangle().fill(Tokens.Surface.line).frame(height: 1)
+                }
+            }
         }
+        .background(Self.cardShape.fill(Tokens.Surface.card))
+        .clipShape(Self.cardShape)
+        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
     }
 
     private func row(_ person: PersonSummary) -> some View {
-        HStack(spacing: 12) {
-            Button {
-                navigate(.profile(person.id))
-            } label: {
-                HStack(spacing: 12) {
-                    AvatarPlaceholder(diameter: 42)
-                    VStack(alignment: .leading, spacing: 2) {
-                        HStack(spacing: 6) {
-                            Text(person.displayName)
-                                .font(.system(size: 15.5, weight: .semibold))
-                                .foregroundStyle(Tokens.Ink.primary)
-                                .lineLimit(1)
-                            if person.isPrivate {
-                                Image(systemName: "lock.fill")
-                                    .font(.system(size: 10.5))
-                                    .foregroundStyle(Tokens.Ink.secondary)
-                                    .accessibilityLabel("Private account")
-                            }
-                        }
-                        Text(subtitle(for: person))
-                            .textStyle(Typography.bodySecondary)
-                            .foregroundStyle(Tokens.Ink.secondary)
+        HStack(spacing: Tokens.Spacing.gap) {
+            HStack(spacing: Tokens.Spacing.gap) {
+                AvatarPlaceholder(diameter: 38, name: person.displayName)
+                VStack(alignment: .leading, spacing: 1) {
+                    HStack(spacing: 6) {
+                        Text(person.displayName)
+                            .textStyle(Typography.name)
+                            .foregroundStyle(Tokens.Ink.primary)
                             .lineLimit(1)
+                        if person.isPrivate {
+                            Image(systemName: "lock.fill")
+                                .font(.system(size: 10.5))
+                                .foregroundStyle(Tokens.Ink.secondary)
+                                .accessibilityLabel("Private account")
+                        }
                     }
-                    Spacer(minLength: 8)
+                    Text(person.club?.name ?? "No club")
+                        .textStyle(Typography.meta)
+                        .foregroundStyle(Tokens.Ink.secondary)
+                        .lineLimit(1)
                 }
-                .contentShape(Rectangle())
+                Spacer(minLength: 0)
             }
-            .buttonStyle(.plain)
+            .asButton { navigate(.profile(person.id)) }
+            .accessibilityElement(children: .combine)
+            .accessibilityHint("Opens their profile")
 
             if person.id != viewModel.viewerId {
                 FollowButton(
                     state: viewModel.state(for: person.id),
+                    followsYou: viewModel.followsViewer.contains(person.id),
                     isBusy: viewModel.busyIds.contains(person.id),
-                    compact: true
+                    variant: .row
                 ) {
                     Task { await viewModel.toggleFollow(person.id) }
                 }
             }
         }
         .padding(12)
-        .background {
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .fill(Tokens.Ink.primary.opacity(0.06))
-        }
-    }
-
-    private func subtitle(for person: PersonSummary) -> String {
-        let level = person.category.rawValue.capitalized
-        if let club = person.club?.name {
-            return "\(club) · \(level)"
-        }
-        return level
     }
 }

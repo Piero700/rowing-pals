@@ -708,3 +708,16 @@ create trigger segments_after_insert_notify
   after insert on segments
   for each row when (new.position = 0)
   execute function sessions_notify();
+
+
+-- ---------------------------------------------------------------
+-- Onboarding without a club (decision 24)
+-- Canonical copy; an existing project gets it via
+-- docs/migrations/2026-09-29-onboarding.sql.
+-- ---------------------------------------------------------------
+alter table profiles add column if not exists onboarded_at timestamptz;
+
+-- Everyone already in a club has finished onboarding.
+update profiles
+set onboarded_at = created_at
+where club_id is not null and onboarded_at is null;

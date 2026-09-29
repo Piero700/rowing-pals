@@ -11,9 +11,10 @@ import SwiftUI
 /// top two PBs, the estimate cards, the weekly volume chart, the consistency grid and the most
 /// recent workout.
 ///
-/// Another rower's profile (`viewing` set) uses the same layout, titled "Rower profile", with a
-/// follow button, and shows only the lock card when their account is private and not approved
-/// (phase E).
+/// Another rower's profile (`viewing` set) follows v3 §08 exactly (decisions 20–22): "Rower
+/// profile" header, identity, full-width Follow, counts, this week's volume, two personal bests
+/// and their ranks within their own club. Only the lock card shows when their account is
+/// private and not approved (phase E).
 struct ProfileView: View {
     private enum Tab: Int, CaseIterable {
         case overview, pbs, posts
@@ -30,8 +31,10 @@ struct ProfileView: View {
     @State private var viewModel: ProfileViewModel
     @State private var expandedTest: StandardTest?
     @State private var isShowingSettings = false
+    @State private var isShowingAllPBs = false
     @State private var tab: Tab = .overview
     @Environment(\.navigate) private var navigate
+    @Environment(\.dismiss) private var dismiss
 
     private static let overviewPBKeys = ["2k", "5k"]
     private static let cardShape = RoundedRectangle(cornerRadius: Tokens.Radius.card, style: .continuous)
@@ -47,7 +50,9 @@ struct ProfileView: View {
                 identity
                 socialRow
 
-                if viewModel.isLocked {
+                if isOtherRower {
+                    otherRowerSections
+                } else if viewModel.isLocked {
                     privateCard
                         .padding(.top, Tokens.Spacing.loose)
                 } else {
@@ -71,17 +76,26 @@ struct ProfileView: View {
         }
         .scrollIndicators(.hidden)
         .safeAreaInset(edge: .top, spacing: 0) {
-            if viewModel.isOwnProfile && viewing == nil { header }
+            if viewing == nil {
+                header
+            } else {
+                ScreenHeader(title: "Rower profile") { dismiss() }
+            }
         }
-        .navigationTitle(viewing == nil ? "" : "Rower profile")
-        .navigationBarTitleDisplayMode(.inline)
+        .toolbar(.hidden, for: .navigationBar)
         .background(Tokens.Base.ground)
         .tracksFloatingBar()
         .ignoresSafeArea(edges: .bottom)
         .task { await viewModel.load() }
         .refreshable { await viewModel.load() }
+        .onReceive(NotificationCenter.default.publisher(for: .rowerClubChanged)) { _ in
+            Task { await viewModel.load() }
+        }
         .fullScreenCover(item: $expandedTest) { test in
             PBHistoryView(test: test, userId: viewing)
+        }
+        .fullScreenCover(isPresented: $isShowingAllPBs) {
+            AllPersonalBestsView(tiles: viewModel.pbTiles)
         }
         .sheet(isPresented: $isShowingSettings, onDismiss: { Task { await viewModel.load() } }) {
             SettingsView()
@@ -121,16 +135,14 @@ struct ProfileView: View {
                 .font(.system(size: 13))
                 .foregroundStyle(Tokens.Ink.secondary)
                 .padding(.top, 4)
-                .padding(.bottom, 8)
-            if !viewModel.isOwnProfile {
-                FollowButton(
-                    state: viewModel.followState,
-                    followsYou: viewModel.followsYou,
-                    isBusy: viewModel.isFollowBusy
-                ) {
-                    Task { await viewModel.toggleFollow() }
-                }
-                .padding(.top, 4)
+                .padding(.bottom, isOtherRower ? 0 : 8)
+            if isOtherRower {
+                // v3 §08: the club on one line, whether the profile is public on the next.
+                Text(viewModel.isPrivateAccount ? "Private profile" : "Public profile")
+                    .font(.system(size: 13))
+                    .foregroundStyle(Tokens.Ink.secondary)
+                    .padding(.top, 4)
+                    .padding(.bottom, 8)
             }
         }
         .frame(maxWidth: .infinity)
@@ -138,13 +150,17 @@ struct ProfileView: View {
         .padding(.bottom, 14)
     }
 
+    /// Your own profile: "Club · Level". Another rower's (v3 §08): the club alone.
     private var identityMeta: String {
         let club = viewModel.clubName ?? "No club"
+        if isOtherRower { return club }
         let level = viewModel.categoryLabel.capitalized
-        var parts = [club]
-        if !level.isEmpty { parts.append(level) }
-        if !viewModel.isOwnProfile { parts.append(viewModel.isPrivateAccount ? "Private profile" : "Public profile") }
-        return parts.joined(separator: " · ")
+        return level.isEmpty ? club : "\(club) · \(level)"
+    }
+
+    /// Someone else's profile, reached from a post, a list or a search.
+    private var isOtherRower: Bool {
+        viewing != nil && !viewModel.isOwnProfile
     }
 
     // MARK: - Social
@@ -153,6 +169,17 @@ struct ProfileView: View {
     /// your own profile, when someone is waiting — Follow requests. Hidden for a locked profile.
     @ViewBuilder
     private var socialRow: some View {
+        if isOtherRower {
+            // v3 §08: a full-width Follow / Following button under the identity.
+            FollowButton(
+                state: viewModel.followState,
+                followsYou: viewModel.followsYou,
+                isBusy: viewModel.isFollowBusy,
+                variant: .fullWidth
+            ) {
+                Task { await viewModel.toggleFollow() }
+            }
+        }
         if !viewModel.isLocked, let userId = viewModel.profileUserId {
             HStack(spacing: 6) {
                 countButton(value: viewModel.followerCount, label: "Followers") {
@@ -232,13 +259,16 @@ struct ProfileView: View {
     /// 4-up card: weekly volume, sessions, PBs, streak days — value 21 bold over a 10 pt label,
     /// thin dividers between columns.
     private var statsCard: some View {
-        let stats: [(String, String)] = [
+        statsCard([
             (Self.compactMetres(currentWeekVolumeM), "weekly volume"),
             ("\(viewModel.seasonSessionCount)", "sessions"),
             ("\(pbCount)", "PBs"),
             ("\(viewModel.streakDays)", "streak days")
-        ]
-        return HStack(spacing: 0) {
+        ])
+    }
+
+    private func statsCard(_ stats: [(String, String)]) -> some View {
+        HStack(spacing: 0) {
             ForEach(stats.indices, id: \.self) { index in
                 VStack(spacing: 2) {
                     Text(stats[index].0)
@@ -278,24 +308,98 @@ struct ProfileView: View {
         return String(format: "%.1fk", Double(metres) / 1_000)
     }
 
+    // MARK: - Another rower (v3 §08)
+
+    /// v3 §08 exactly (decision 22): this week's volume, two personal bests and their place
+    /// in their own club — no tabs, chart, grid or posts. A private account you aren't
+    /// approved for shows only the lock card.
+    @ViewBuilder
+    private var otherRowerSections: some View {
+        if viewModel.isLocked {
+            privateCard
+                .padding(.top, Tokens.Spacing.loose)
+        } else {
+            sectionTitle("Volume · This week")
+            statsCard([
+                (Self.compactMetres(currentWeekVolumeM), "metres"),
+                (Self.rankText(viewModel.clubRanks?.weeklyVolume), "volume ranking"),
+                ("\(viewModel.weekSessionCount)", "sessions"),
+                ("\(viewModel.streakDays)", "streak days")
+            ])
+
+            sectionTitle("Personal bests")
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: Tokens.Spacing.tight), count: 2), spacing: Tokens.Spacing.tight) {
+                ForEach(viewModel.pbTiles.filter { Self.rowerPBKeys.contains($0.test.key) }) { tile in
+                    // Decision 21: their all-time best, not a season best.
+                    PBTileView(tile: tile, label: tile.test.longTitle, footnote: "Personal best") { expandedTest = tile.test }
+                }
+            }
+
+            // Decision 20: ranks within their own club — app-wide rankings were dropped (17).
+            if viewModel.clubName != nil {
+                sectionTitle("Club rankings")
+                rankingsCard
+            }
+        }
+    }
+
+    /// Three columns — this week's volume, 2k, 5k — each "#n" over its label.
+    private var rankingsCard: some View {
+        let ranks: [(Int?, String)] = [
+            (viewModel.clubRanks?.weeklyVolume, "weekly volume"),
+            (viewModel.clubRanks?.twoK, "2k test"),
+            (viewModel.clubRanks?.fiveK, "5k test")
+        ]
+        return HStack(spacing: 0) {
+            ForEach(ranks.indices, id: \.self) { index in
+                VStack(spacing: 2) {
+                    Text(Self.rankText(ranks[index].0))
+                        .textStyle(Typography.rankValue)
+                        .tabularNumerals()
+                        .foregroundStyle(Tokens.Ink.primary)
+                    Text(ranks[index].1)
+                        .textStyle(Typography.statLabel)
+                        .foregroundStyle(Tokens.Ink.secondary)
+                        .lineLimit(1)
+                }
+                .frame(maxWidth: .infinity)
+                .accessibilityElement(children: .combine)
+                if index < ranks.count - 1 {
+                    Rectangle().fill(Tokens.Surface.line).frame(width: 1, height: 30)
+                }
+            }
+        }
+        .padding(.vertical, Tokens.Spacing.loose)
+        .background(Self.cardShape.fill(Tokens.Surface.card))
+        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+    }
+
+    /// v3 §08's two PB tiles.
+    private static let rowerPBKeys = ["2k", "30min"]
+
+    /// "#5", or a dash with nothing to rank.
+    private static func rankText(_ rank: Int?) -> String {
+        rank.map { "#\($0)" } ?? "—"
+    }
+
     // MARK: - Overview
 
     private var overview: some View {
         VStack(alignment: .leading, spacing: 0) {
             sectionHeader("Top personal bests") {
-                Button("View all ›") { tab = .pbs }
+                Button("View all ›") { isShowingAllPBs = true }
                     .buttonStyle(.rpText)
             }
             LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: Tokens.Spacing.tight), count: 2), spacing: Tokens.Spacing.tight) {
                 ForEach(topPBTiles) { tile in
-                    pbTile(tile)
+                    PBTileView(tile: tile) { expandedTest = tile.test }
                 }
             }
 
             if viewModel.isOwnProfile {
                 VStack(spacing: Tokens.Spacing.gap) {
-                    estimateCard(label: "2k · Estimated today")
-                    estimateCard(label: "5k · Estimated today")
+                    EstimateCard(label: "2k · Estimated today")
+                    EstimateCard(label: "5k · Estimated today")
                 }
                 .padding(.top, Tokens.Spacing.loose)
             }
@@ -375,36 +479,6 @@ struct ProfileView: View {
 
     /// Placeholder until the rower's own prediction algorithm is added (decision 2): the v3
     /// card, with no number invented.
-    private func estimateCard(label: String) -> some View {
-        let shape = RoundedRectangle(cornerRadius: Tokens.Radius.estimate, style: .continuous)
-        return VStack(alignment: .leading, spacing: 0) {
-            HStack {
-                Text(label)
-                    .font(.system(size: 10, weight: .bold))
-                    .tracking(1)
-                    .textCase(.uppercase)
-                    .foregroundStyle(Tokens.Ink.secondary)
-                Spacer()
-                Image(systemName: "info.circle")
-                    .foregroundStyle(Tokens.Accent.records)
-                    .frame(width: 36, height: 36)
-                    .accessibilityHidden(true)
-            }
-            Text("—")
-                .font(.system(size: 29, weight: .bold))
-                .foregroundStyle(Tokens.Accent.records)
-            Text("Your estimate will appear here once the prediction algorithm is added.")
-                .textStyle(Typography.meta)
-                .foregroundStyle(Tokens.Ink.secondary)
-                .padding(.vertical, 6)
-        }
-        .padding(.vertical, 14)
-        .padding(.horizontal, 16)
-        .background(shape.fill(Tokens.Accent.recordsSoft))
-        .overlay { shape.strokeBorder(Tokens.Accent.records.opacity(0.3), lineWidth: 1) }
-        .accessibilityElement(children: .combine)
-    }
-
     private func recentActivity(_ session: ProfileViewModel.ProfilePhoto) -> some View {
         let shape = RoundedRectangle(cornerRadius: Tokens.Radius.workoutLink, style: .continuous)
         return Button {
@@ -440,49 +514,10 @@ struct ProfileView: View {
     private var allPBs: some View {
         LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: Tokens.Spacing.tight), count: 2), spacing: Tokens.Spacing.tight) {
             ForEach(viewModel.pbTiles) { tile in
-                pbTile(tile)
+                PBTileView(tile: tile) { expandedTest = tile.test }
             }
         }
         .padding(.top, Tokens.Spacing.sectionTop)
-    }
-
-    /// v3 PB tile: card fill, 1 pt line, radius 24, min height 90 — label, value in the records
-    /// colour, "View PB history ›". Empty tests invite a first attempt.
-    private func pbTile(_ tile: ProfileViewModel.PBTile) -> some View {
-        let shape = RoundedRectangle(cornerRadius: Tokens.Radius.input, style: .continuous)
-        return VStack(alignment: .leading, spacing: 0) {
-            Text(tile.test.label.uppercased())
-                .font(.system(size: 12, weight: .bold))
-                .foregroundStyle(Tokens.Ink.secondary)
-            Text(tile.displayValue ?? "—")
-                .font(.system(size: 17, weight: .bold))
-                .tabularNumerals()
-                .foregroundStyle(tile.hasResult ? Tokens.Accent.records : Tokens.Ink.secondary)
-                .padding(.top, 5)
-                .padding(.bottom, 2)
-            Text(tile.hasResult ? "View PB history ›" : "No result yet")
-                .font(.system(size: 12))
-                .foregroundStyle(Tokens.Ink.faint)
-        }
-        .padding(.vertical, 13)
-        .padding(.leading, 13)
-        .padding(.trailing, 24)
-        .frame(maxWidth: .infinity, minHeight: 90, alignment: .topLeading)
-        .overlay(alignment: .topTrailing) {
-            if tile.hasResult {
-                Text("›")
-                    .foregroundStyle(Tokens.Ink.secondary)
-                    .padding(.top, 12)
-                    .padding(.trailing, 11)
-            }
-        }
-        .background(shape.fill(Tokens.Surface.card))
-        .overlay { shape.strokeBorder(Tokens.Surface.line, lineWidth: 1) }
-        .asButton {
-            guard tile.hasResult else { return }
-            expandedTest = tile.test
-        }
-        .accessibilityLabel("\(tile.test.label) personal best, \(tile.displayValue ?? "none")")
     }
 
     // MARK: - Posts tab
