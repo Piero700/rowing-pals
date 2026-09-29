@@ -9,8 +9,8 @@ import Supabase
 /// Onboarding, to v3 §01 (`docs/design/v3/RP Screen.dc.html`), then "About you"
 /// (decision 24). Step one — "Set up your crew / Find your club": a club search, club rows
 /// (44 pt crest, name, members · place, a check on the chosen one), "I'm not in a club", and a
-/// sticky "Continue with <club>". Step two — gender and level, which v3 leaves out but the test
-/// leaderboards need; the name was given at sign-up. Finishing writes the club (or none),
+/// sticky "Continue with <club>". Step two — gender and (in a club) level, which v3 leaves out
+/// but the test leaderboards need; the name was given at sign-up. Finishing writes the club (or none),
 /// gender, level and `onboarded_at` in one update.
 ///
 /// `.joinLater` is the club step alone, for a rower who onboarded without a club and now
@@ -238,7 +238,9 @@ struct ClubSearchView: View {
 
                 intro(
                     title: "About you",
-                    body: "Tests are ranked by gender and level, so every rower is compared fairly. You can change these any time in Settings."
+                    body: isWithoutClub
+                        ? "Tests are ranked by gender, so every rower is compared fairly. You can change this any time in Settings."
+                        : "Tests are ranked by gender and level, so every rower is compared fairly. You can change these any time in Settings."
                 )
 
                 Text("Gender")
@@ -247,16 +249,19 @@ struct ClubSearchView: View {
                     .padding(.bottom, 6)
                 PillSegmentedControl(options: ["Male", "Female"], selection: $genderSelection)
 
-                Text("Level")
-                    .textStyle(Typography.fieldLabel)
-                    .foregroundStyle(Tokens.Ink.secondary)
-                    .padding(.top, 18)
-                    .padding(.bottom, 6)
-                PillSegmentedControl(options: ["Novice", "Senior"], selection: $categorySelection)
-                Text("Novice means you’re in your first season.")
-                    .textStyle(Typography.meta)
-                    .foregroundStyle(Tokens.Ink.secondary)
-                    .padding(.top, 8)
+                // Novice / senior only matters within a club (user, 2026-09-29).
+                if !isWithoutClub {
+                    Text("Level")
+                        .textStyle(Typography.fieldLabel)
+                        .foregroundStyle(Tokens.Ink.secondary)
+                        .padding(.top, 18)
+                        .padding(.bottom, 6)
+                    PillSegmentedControl(options: ["Novice", "Senior"], selection: $categorySelection)
+                    Text("Novice means you’re in your first season.")
+                        .textStyle(Typography.meta)
+                        .foregroundStyle(Tokens.Ink.secondary)
+                        .padding(.top, 8)
+                }
 
                 if let saveError {
                     Text(saveError)
@@ -321,7 +326,8 @@ struct ClubSearchView: View {
         struct ProfileUpdate: Encodable {
             let clubId: UUID?
             let gender: RowerGender
-            let category: RowerCategory
+            /// Nil without a club: level isn't asked, so the column keeps its default.
+            let category: RowerCategory?
             let onboardedAt: Date
             enum CodingKeys: String, CodingKey {
                 case clubId = "club_id"
@@ -335,7 +341,7 @@ struct ClubSearchView: View {
             let update = ProfileUpdate(
                 clubId: isWithoutClub ? nil : viewModel.selectedClub?.id,
                 gender: genders[genderSelection],
-                category: categories[categorySelection],
+                category: isWithoutClub ? nil : categories[categorySelection],
                 onboardedAt: Date()
             )
             try await SupabaseService.shared
