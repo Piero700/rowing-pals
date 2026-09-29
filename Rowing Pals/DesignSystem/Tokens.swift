@@ -217,6 +217,10 @@ enum Typography {
     static let overline = Style(size: 12, weight: .bold, trackingEm: 0.1, uppercase: true)
     static let metricLabel = Style(size: 12, weight: .bold, trackingEm: 0.07, uppercase: true)
     static let metricValue = Style(size: 17, weight: .bold, trackingEm: 0, uppercase: false)
+    /// A rank in a stats card ("#5"), v3 §08's rankings card.
+    static let rankValue = Style(size: 16, weight: .bold, trackingEm: 0, uppercase: false)
+    /// The label under a rank or stat ("2k test").
+    static let statLabel = Style(size: 12, weight: .regular, trackingEm: 0, uppercase: false)
     static let navLabel = Style(size: 11, weight: .bold, trackingEm: 0, uppercase: false)
     static let segment = Style(size: 14, weight: .bold, trackingEm: 0, uppercase: false)
     static let pill = Style(size: 13, weight: .bold, trackingEm: 0, uppercase: false)

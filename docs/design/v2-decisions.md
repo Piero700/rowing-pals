@@ -51,3 +51,11 @@ Other prototype items are placeholders and need the user's go-ahead before build
 | # | Topic | Decision |
 |---|---|---|
 | 19 | Notifications | **Built now, delivered once the paid Apple Developer Program is joined** (free accounts can't use push; the user chose "build now, enrol later"). v3 Settings' three switches plus Quiet hours, saved per rower in `notification_settings`. **Comments and replies**: a comment on your post, or on a post you've commented on (comments have no separate reply). **Personal bests**: your own new PB, and a new PB by someone you follow ("you or a friend"). **Club activity**: a clubmate posts; off by default, as in v3. Every alert obeys the feed's rules (blocks, private accounts, post visibility). **Quiet hours** (default 22:00–06:30, on the rower's own clock, editable in a sheet): alerts still arrive but silently, no sound and screen stays dark, waiting in Notification Centre. Tapping an alert opens the post above whatever is on screen. Server: triggers in `docs/migrations/2026-09-26-notifications.sql`, the `send-push` Edge Function, one database webhook; setup and tests in `docs/testing/notifications.md`. |
+
+## Another rower's profile, v3 §08 (decided 2026-09-29)
+
+| # | Topic | Decision |
+|---|---|---|
+| 20 | Their ranks | v3's "Overall rankings" and "volume ranking" become their place **within their own club**: this week's ranked metres, best 2k and best 5k, every gender and level — the same rules as the Rankings screen's club board. The card is titled **"Club rankings"** (not "Overall", as app-wide rankings are dropped — decision 17). Equal results share a place; no result shows a dash; rowers with no club show no rankings card. |
+| 21 | Their PB tiles | **All-time bests**, labelled "Personal best" — not v3's "Season best". Tiles are v3's 2,000 METRES and 30 MINUTES; tapping opens their PB history. |
+| 22 | Layout | **v3 §08 exactly**: header, identity (club, then Public/Private profile), full-width Follow, counts, "Volume · This week" (metres, volume ranking, sessions, streak days), personal bests, club rankings. No tabs, weekly chart, consistency grid or posts grid for other rowers; their posts are reached from the feed. |

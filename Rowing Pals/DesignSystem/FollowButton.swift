@@ -17,6 +17,8 @@ struct FollowButton: View {
     var followsYou = false
     var isBusy = false
     var compact = false
+    /// v3 §08's profile button: full width, primary for Follow, glass for Following/Requested.
+    var fullWidth = false
     let action: () -> Void
 
     private var label: String {
@@ -32,6 +34,23 @@ struct FollowButton: View {
     private var isProminent: Bool { state == .notFollowing }
 
     var body: some View {
+        if fullWidth {
+            Group {
+                if isProminent {
+                    Button(label, action: action).buttonStyle(.rpPrimary)
+                } else {
+                    Button(label, action: action).buttonStyle(.rpGlass)
+                }
+            }
+            .opacity(isBusy ? 0.6 : 1)
+            .disabled(isBusy)
+            .accessibilityLabel(label)
+        } else {
+            pill
+        }
+    }
+
+    private var pill: some View {
         Button(action: action) {
             Text(label)
                 .font(.system(size: compact ? 11.5 : 13.5, weight: .bold))
