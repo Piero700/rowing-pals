@@ -5,55 +5,44 @@
 
 import SwiftUI
 
-/// Screen 12 — "Your crew", to v3 §12 (`docs/design/v3/RP Screen.dc.html`): your club's name
-/// and "Join an existing crew, start your own, or row independently.", then Find a club to
-/// join, Create a club and Continue without a club. Decision 25 adds what the design's
-/// prototype does around it: your role and Manage club for admins and up, a pending join
-/// request you can cancel, and club invitations to accept or decline.
+/// Screen 12 — "Your crew", to v3 §12 (`docs/design/v3/RP Screen.dc.html`), shaped by decisions
+/// 25–26. **In a club** (one club at a time): the club — name, details, your role — and every
+/// member, each opening their profile; Manage club for admins and up; and the one way out,
+/// Leave club (an owner hands over or deletes in Manage club instead). **Without a club**:
+/// your join request — "Requested" while it waits, or that you weren't accepted with Request
+/// again — any invitations, then v3's Find a club to join, Create a club and Continue without
+/// a club. The page updates live; when a waiting request is accepted it closes, back to where
+/// you started.
 struct ClubHubView: View {
     @State private var viewModel = ClubHubViewModel()
     @State private var isConfirmingLeave = false
     @Environment(\.navigate) private var navigate
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.closeRoute) private var closeRoute
+    @Environment(\.scenePhase) private var scenePhase
 
     private static let cardShape = RoundedRectangle(cornerRadius: Tokens.Radius.card, style: .continuous)
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: Tokens.Spacing.loose) {
-                header
-
+            VStack(alignment: .leading, spacing: 0) {
                 if let membership = viewModel.membership {
-                    if membership.role.canManageMembers, membership.club != nil {
-                        Button("Manage club") { navigate(.manageClub) }
-                            .buttonStyle(.rpGlass)
-                    }
-                    if let pending = membership.pendingRequest {
-                        pendingCard(pending)
-                    }
-                    if !membership.invitations.isEmpty {
-                        invitations(membership.invitations)
-                    }
-                }
-
-                Button("Find a club to join") { navigate(.findClub) }
-                    .buttonStyle(.rpPrimary)
-                Button("Create a club") { navigate(.createClub) }
-                    .buttonStyle(.rpGlass)
-                Button("Continue without a club") {
-                    if viewModel.membership?.club != nil {
-                        isConfirmingLeave = true
+                    if let club = membership.club {
+                        inClub(club, membership: membership)
                     } else {
-                        dismiss()
+                        withoutClub(membership)
                     }
+                } else if viewModel.isLoading {
+                    ProgressView()
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, 40)
                 }
-                .buttonStyle(.rpText)
-                .frame(maxWidth: .infinity)
 
                 if let error = viewModel.errorMessage {
                     Text(error)
                         .textStyle(Typography.meta)
                         .foregroundStyle(Tokens.System.error)
+                        .padding(.top, Tokens.Spacing.loose)
                 }
             }
             .padding(.horizontal, Tokens.Spacing.screen)
@@ -67,9 +56,15 @@ struct ClubHubView: View {
         .background(Tokens.Base.ground)
         .disabled(viewModel.isWorking)
         .task { await viewModel.load() }
+        .task {
+            for await _ in ClubLiveUpdates.changes() { await viewModel.load() }
+        }
         .refreshable { await viewModel.load() }
-        .onReceive(NotificationCenter.default.publisher(for: .rowerClubChanged)) { _ in
-            Task { await viewModel.load() }
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active { Task { await viewModel.load() } }
+        }
+        .onChange(of: viewModel.wasAccepted) { _, accepted in
+            if accepted { closeRoute() }
         }
         .alert("Leave \(viewModel.membership?.club?.name ?? "your club")?", isPresented: $isConfirmingLeave) {
             Button("Leave", role: .destructive) { Task { await viewModel.leave() } }
@@ -79,50 +74,177 @@ struct ClubHubView: View {
         }
     }
 
-    /// v3: the club's name at 23 pt, then one muted line; decision 25 adds the details.
-    private var header: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(viewModel.membership?.club?.name ?? (viewModel.isLoading ? " " : "No club yet"))
+    // MARK: - In a club
+
+    @ViewBuilder
+    private func inClub(_ club: Club, membership: ClubService.Membership) -> some View {
+        clubCard(club, membership: membership)
+            .padding(.top, 6)
+
+        if membership.role.canManageMembers {
+            Button("Manage club") { navigate(.manageClub) }
+                .buttonStyle(.rpGlass)
+                .padding(.top, Tokens.Spacing.loose)
+        }
+
+        SectionTitle("Members · \(viewModel.members.count)")
+        membersCard
+
+        VStack(alignment: .leading, spacing: 6) {
+            if membership.role == .owner {
+                Text("You own this club. To leave it, hand it over to another member or delete it in Manage club.")
+                    .textStyle(Typography.meta)
+                    .foregroundStyle(Tokens.Ink.secondary)
+            } else {
+                Button("Leave club") { isConfirmingLeave = true }
+                    .buttonStyle(.rpDestructive)
+            }
+        }
+        .padding(.top, Tokens.Spacing.sectionTop)
+    }
+
+    /// The club: name, description, members, place, join rule, focus and your role.
+    private func clubCard(_ club: Club, membership: ClubService.Membership) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(membership.role == .member ? "You're a member" : "You're the \(membership.role.label.lowercased())")
+                .textStyle(Typography.overline)
+                .foregroundStyle(Tokens.Accent.brand)
+            Text(club.name)
                 .textStyle(Typography.profileName)
                 .foregroundStyle(Tokens.Ink.primary)
-                .padding(.top, 6)
-            if let membership = viewModel.membership, let club = membership.club {
-                Text(clubMeta(club, membership: membership))
+            if let description = club.description, !description.isEmpty {
+                Text(description)
                     .textStyle(Typography.meta)
-                    .tabularNumerals()
                     .foregroundStyle(Tokens.Ink.secondary)
             }
+            WrapLayout(spacing: Tokens.Spacing.tight) {
+                tag("\(membership.memberCount) member\(membership.memberCount == 1 ? "" : "s")")
+                if let location = club.location, !location.isEmpty { tag(location) }
+                tag(club.joinPolicy.tag)
+                tag(club.focus.rawValue)
+            }
+            .padding(.top, 4)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(Tokens.Spacing.card + 3)
+        .background(Self.cardShape.fill(Tokens.Surface.card))
+        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+    }
+
+    private func tag(_ text: String) -> some View {
+        Text(text)
+            .textStyle(Typography.statLabel)
+            .tabularNumerals()
+            .foregroundStyle(Tokens.Ink.secondary)
+            .padding(.horizontal, 9)
+            .padding(.vertical, 5)
+            .background(Capsule().fill(Tokens.Surface.raised))
+            .lineLimit(1)
+    }
+
+    /// Everyone in the club — owner first, then co-owners, admins, members — each opening
+    /// their profile.
+    private var membersCard: some View {
+        VStack(spacing: 0) {
+            ForEach(Array(viewModel.members.enumerated()), id: \.element.id) { index, person in
+                HStack(spacing: Tokens.Spacing.gap) {
+                    AvatarPlaceholder(diameter: 38, name: person.displayName)
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text(person.displayName)
+                            .textStyle(Typography.name)
+                            .foregroundStyle(Tokens.Ink.primary)
+                            .lineLimit(1)
+                        Text(person.role == .member
+                             ? person.category.rawValue.capitalized
+                             : "\(person.role.label) · \(person.category.rawValue.capitalized)")
+                            .textStyle(Typography.meta)
+                            .foregroundStyle(Tokens.Ink.secondary)
+                    }
+                    Spacer(minLength: 0)
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(Tokens.Ink.secondary)
+                }
+                .padding(12)
+                .asButton { navigate(.profile(person.id)) }
+                .accessibilityElement(children: .combine)
+                if index < viewModel.members.count - 1 {
+                    Rectangle().fill(Tokens.Surface.line).frame(height: 1)
+                }
+            }
+        }
+        .background(Self.cardShape.fill(Tokens.Surface.card))
+        .clipShape(Self.cardShape)
+        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+    }
+
+    // MARK: - Without a club
+
+    @ViewBuilder
+    private func withoutClub(_ membership: ClubService.Membership) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text("No club yet")
+                .textStyle(Typography.profileName)
+                .foregroundStyle(Tokens.Ink.primary)
             Text("Join an existing crew, start your own, or row independently.")
                 .textStyle(Typography.meta)
                 .foregroundStyle(Tokens.Ink.secondary)
-                .padding(.bottom, 8)
         }
         .padding(.horizontal, 2)
+        .padding(.top, 6)
+        .padding(.bottom, 14)
+
+        VStack(alignment: .leading, spacing: Tokens.Spacing.loose) {
+            if let request = membership.request {
+                requestCard(request)
+            }
+            if !membership.invitations.isEmpty {
+                invitations(membership.invitations)
+            }
+            Button("Find a club to join") { navigate(.findClub) }
+                .buttonStyle(.rpPrimary)
+            Button("Create a club") { navigate(.createClub) }
+                .buttonStyle(.rpGlass)
+            Button("Continue without a club") { dismiss() }
+                .buttonStyle(.rpText)
+                .frame(maxWidth: .infinity)
+        }
     }
 
-    private func clubMeta(_ club: Club, membership: ClubService.Membership) -> String {
-        var parts = ["\(membership.memberCount) member\(membership.memberCount == 1 ? "" : "s")"]
-        if let location = club.location, !location.isEmpty { parts.append(location) }
-        parts.append(club.joinPolicy.tag)
-        parts.append("You're \(membership.role == .member ? "a member" : "the \(membership.role.label.lowercased())")")
-        return parts.joined(separator: " · ")
-    }
-
-    /// The prototype's "Join request pending · <club>", with a way to take it back.
-    private func pendingCard(_ club: Club) -> some View {
-        HStack(spacing: Tokens.Spacing.gap) {
+    /// Waiting: "Requested" (greyed) with Refresh and Cancel request. Declined: "You weren't
+    /// accepted" with Request again and Dismiss.
+    private func requestCard(_ request: ClubService.JoinRequest) -> some View {
+        VStack(alignment: .leading, spacing: Tokens.Spacing.gap) {
             VStack(alignment: .leading, spacing: 2) {
-                Text("Join request pending")
+                Text(request.isDeclined ? "You weren't accepted to \(request.club.name)" : "Request sent to \(request.club.name)")
                     .textStyle(Typography.rowTitle)
-                    .foregroundStyle(Tokens.Ink.primary)
-                Text(club.name)
+                    .foregroundStyle(request.isDeclined ? Tokens.System.error : Tokens.Ink.primary)
+                Text(request.isDeclined
+                     ? "An admin declined your request. You can ask again, or find another club."
+                     : "You'll join as soon as an admin accepts. This page updates by itself.")
                     .textStyle(Typography.meta)
                     .foregroundStyle(Tokens.Ink.secondary)
             }
-            Spacer(minLength: 0)
-            Button("Cancel") { Task { await viewModel.cancelRequest() } }
-                .buttonStyle(.rpPill(isOn: false))
+            HStack(spacing: Tokens.Spacing.tight) {
+                if request.isDeclined {
+                    Button("Request again") { Task { await viewModel.requestAgain(request.club) } }
+                        .buttonStyle(.rpPill(isOn: true))
+                    Button("Dismiss") { Task { await viewModel.cancelRequest() } }
+                        .buttonStyle(.rpText)
+                } else {
+                    Button("Requested") {}
+                        .buttonStyle(.rpPill(isOn: false))
+                        .disabled(true)
+                        .opacity(0.5)
+                    Button("Refresh") { Task { await viewModel.load() } }
+                        .buttonStyle(.rpText)
+                    Spacer(minLength: 0)
+                    Button("Cancel request") { Task { await viewModel.cancelRequest() } }
+                        .buttonStyle(.rpText)
+                }
+            }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .padding(Tokens.Spacing.card)
         .background(Self.cardShape.fill(Tokens.Surface.card))
         .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }

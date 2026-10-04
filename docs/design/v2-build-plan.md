@@ -110,6 +110,9 @@ that they match the prototype.
      edit club, Manage club (requests, invites + code, members and roles, hand over, delete),
      Profile club entry, join rules in onboarding. Needs `2026-09-30-clubs.sql` then
      `2026-09-30-club-directory.sql` on staging (`docs/testing/clubs.md`).
+   - **Club follow-ups BUILT** (decision 26): one-club Your crew with every member, Requested /
+     declined / Request again, invitation alerts and declined invites, live updates. Needs
+     `2026-10-04-club-updates.sql` on staging.
    - All v3 screens are now built.
    - **Known for step 3:** profile consistency grid month labels wrap letter by letter ("M / ar").
      Note: the clickable prototype renders an 8 pt nav gap; `RP Screen.dc.html` and the README say

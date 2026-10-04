@@ -21,6 +21,7 @@ struct ManageClubView: View {
     @State private var isConfirmingNewCode = false
     @Environment(\.navigate) private var navigate
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.scenePhase) private var scenePhase
 
     private static let cardShape = RoundedRectangle(cornerRadius: Tokens.Radius.card, style: .continuous)
 
@@ -63,6 +64,13 @@ struct ManageClubView: View {
         .disabled(viewModel.isWorking)
         .task { await viewModel.load() }
         .refreshable { await viewModel.load() }
+        // Live: requests, answers and members appear without leaving the page (decision 26).
+        .task {
+            for await _ in ClubLiveUpdates.changes() { await viewModel.load() }
+        }
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active { Task { await viewModel.load() } }
+        }
         .onReceive(NotificationCenter.default.publisher(for: .rowerClubChanged)) { _ in
             Task { await viewModel.load() }
         }
@@ -174,7 +182,7 @@ struct ManageClubView: View {
                 InviteRowerView(
                     clubName: club.name,
                     memberIds: Set(viewModel.members.map(\.id)),
-                    invitedIds: Set(viewModel.invitations.map(\.id))
+                    invitedIds: Set(viewModel.invitations.filter { !$0.isDeclined }.map(\.id))
                 )
             } label: {
                 Text("Invite a rower")
@@ -209,13 +217,49 @@ struct ManageClubView: View {
 
             if !viewModel.invitations.isEmpty {
                 SectionTitle("Invited · \(viewModel.invitations.count)")
-                listCard(viewModel.invitations, empty: "") { person in
-                    personLabel(person, detail: "Hasn't answered yet")
-                    Button("Withdraw") { Task { await viewModel.withdrawInvitation(to: person) } }
-                        .buttonStyle(.rpText)
+                invitationsCard
+            }
+        }
+    }
+
+    /// Each invitation and its answer so far; a declined one can be sent again or cleared.
+    private var invitationsCard: some View {
+        VStack(spacing: 0) {
+            ForEach(Array(viewModel.invitations.enumerated()), id: \.element.id) { index, invitation in
+                HStack(spacing: Tokens.Spacing.gap) {
+                    HStack(spacing: Tokens.Spacing.gap) {
+                        AvatarPlaceholder(diameter: 38, name: invitation.person.displayName)
+                        VStack(alignment: .leading, spacing: 1) {
+                            Text(invitation.person.displayName)
+                                .textStyle(Typography.name)
+                                .foregroundStyle(Tokens.Ink.primary)
+                                .lineLimit(1)
+                            Text(invitation.isDeclined ? "Declined the invitation" : "Hasn't answered yet")
+                                .textStyle(Typography.meta)
+                                .foregroundStyle(invitation.isDeclined ? Tokens.System.error : Tokens.Ink.secondary)
+                        }
+                        Spacer(minLength: 0)
+                    }
+                    .asButton { navigate(.profile(invitation.person.id)) }
+                    if invitation.isDeclined {
+                        Button("Clear") { Task { await viewModel.withdrawInvitation(to: invitation.person) } }
+                            .buttonStyle(.rpText)
+                        Button("Invite again") { Task { await viewModel.inviteAgain(invitation.person) } }
+                            .buttonStyle(.rpPill(isOn: true))
+                    } else {
+                        Button("Withdraw") { Task { await viewModel.withdrawInvitation(to: invitation.person) } }
+                            .buttonStyle(.rpText)
+                    }
+                }
+                .padding(12)
+                if index < viewModel.invitations.count - 1 {
+                    Rectangle().fill(Tokens.Surface.line).frame(height: 1)
                 }
             }
         }
+        .background(Self.cardShape.fill(Tokens.Surface.card))
+        .clipShape(Self.cardShape)
+        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
     }
 
     // MARK: - Members

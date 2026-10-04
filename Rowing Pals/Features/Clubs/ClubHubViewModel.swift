@@ -5,37 +5,56 @@
 
 import Foundation
 
-/// "Your crew" (v3 §12): the rower's club and role, a pending request, invitations, leaving.
+/// "Your crew" (v3 §12, decisions 25–26): the rower's club with every member, or — without a
+/// club — their join request (waiting or declined), invitations and ways to find or create one.
 @Observable
 final class ClubHubViewModel {
     var membership: ClubService.Membership?
+    var members: [ClubService.Person] = []
     var isLoading = false
     var isWorking = false
     var errorMessage: String?
+    /// Set when a request this screen was waiting on is accepted, so the screen closes and the
+    /// rower lands back where they started, now in the club.
+    var wasAccepted = false
 
     @MainActor
     func load() async {
         isLoading = true
         defer { isLoading = false }
+        let wasWaiting = membership?.club == nil && membership?.request?.isDeclined == false
         do {
-            membership = try await ClubService.membership()
+            let fresh = try await ClubService.membership()
+            if let clubId = fresh.club?.id {
+                members = try await ClubService.members(of: clubId)
+            } else {
+                members = []
+            }
+            membership = fresh
+            if wasWaiting, fresh.club != nil {
+                wasAccepted = true
+                NotificationCenter.default.post(name: .rowerClubChanged, object: nil)
+            }
         } catch {
             errorMessage = error.localizedDescription
         }
     }
 
-    @MainActor
-    func leave() async {
+    @MainActor func leave() async {
         await perform { try await ClubService.leave() }
     }
 
-    @MainActor
-    func cancelRequest() async {
+    /// Takes back a waiting request, or clears a declined one.
+    @MainActor func cancelRequest() async {
         await perform { try await ClubService.cancelRequest() }
     }
 
-    @MainActor
-    func respond(to club: Club, accept: Bool) async {
+    /// After a decline: ask the same club again.
+    @MainActor func requestAgain(_ club: Club) async {
+        await perform { _ = try await ClubService.join(club.id) }
+    }
+
+    @MainActor func respond(to club: Club, accept: Bool) async {
         await perform { try await ClubService.respondToInvitation(from: club.id, accept: accept) }
     }
 

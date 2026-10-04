@@ -22,13 +22,29 @@ enum ClubService {
         case inviteOnly = "invite_only"
     }
 
-    /// The signed-in rower's club, role, pending request and invitations.
+    /// The signed-in rower's club, role, join request and invitations.
     struct Membership {
         var club: Club?
         var role: ClubRole
         var memberCount: Int
-        var pendingRequest: Club?
+        /// Their request to join a club, waiting or turned down (decision 26).
+        var request: JoinRequest?
+        /// Invitations still waiting for an answer.
         var invitations: [Club]
+    }
+
+    /// A rower's request to join an approval club.
+    struct JoinRequest {
+        let club: Club
+        /// False while it waits; true once an admin has declined it.
+        let isDeclined: Bool
+    }
+
+    /// Someone a club has invited, and whether they've turned it down (decision 26).
+    struct Invitation: Identifiable {
+        let person: Person
+        let isDeclined: Bool
+        var id: UUID { person.id }
     }
 
     /// A rower on a club's member, request or invite list.
@@ -73,17 +89,22 @@ enum ClubService {
                 .eq("club_id", value: clubId).execute().count ?? 0
         }
 
+        struct RequestRow: Decodable {
+            let clubs: Club
+            let status: String?
+        }
         struct ClubRow: Decodable { let clubs: Club }
-        let requests: [ClubRow] = (try? await SupabaseService.shared
-            .from("club_join_requests").select("clubs(*)").eq("user_id", value: me).execute().value) ?? []
+        let requests: [RequestRow] = (try? await SupabaseService.shared
+            .from("club_join_requests").select("*, clubs(*)").eq("user_id", value: me).execute().value) ?? []
         let invites: [ClubRow] = (try? await SupabaseService.shared
-            .from("club_invites").select("clubs(*)").eq("user_id", value: me).execute().value) ?? []
+            .from("club_invites").select("clubs(*)").eq("user_id", value: me).eq("status", value: "pending")
+            .execute().value) ?? []
 
         return Membership(
             club: club,
             role: profile.clubRole,
             memberCount: count,
-            pendingRequest: requests.first?.clubs,
+            request: requests.first.map { JoinRequest(club: $0.clubs, isDeclined: $0.status == "declined") },
             invitations: invites.map(\.clubs)
         )
     }
@@ -104,17 +125,20 @@ enum ClubService {
         struct Row: Decodable { let profiles: Person }
         let rows: [Row] = try await SupabaseService.shared
             .from("club_join_requests").select("created_at, profiles(\(personColumns))")
-            .eq("club_id", value: clubId).order("created_at").execute().value
+            .eq("club_id", value: clubId).eq("status", value: "pending").order("created_at").execute().value
         return rows.map(\.profiles)
     }
 
-    /// Rowers invited to `clubId` who haven't answered yet.
-    static func invitations(for clubId: UUID) async throws -> [Person] {
-        struct Row: Decodable { let invitee: Person }
+    /// Rowers `clubId` has invited who haven't joined: waiting, or declined (decision 26).
+    static func invitations(for clubId: UUID) async throws -> [Invitation] {
+        struct Row: Decodable {
+            let invitee: Person
+            let status: String
+        }
         let rows: [Row] = try await SupabaseService.shared
-            .from("club_invites").select("invitee:profiles!club_invites_user_id_fkey(\(personColumns))")
-            .eq("club_id", value: clubId).order("created_at").execute().value
-        return rows.map(\.invitee)
+            .from("club_invites").select("status, invitee:profiles!club_invites_user_id_fkey(\(personColumns))")
+            .eq("club_id", value: clubId).order("created_at", ascending: false).execute().value
+        return rows.map { Invitation(person: $0.invitee, isDeclined: $0.status == "declined") }
     }
 
     // MARK: - Joining and leaving
@@ -141,6 +165,7 @@ enum ClubService {
         announce()
     }
 
+    /// Takes back a waiting request, or clears a declined one.
     static func cancelRequest() async throws {
         try await SupabaseService.shared.rpc("cancel_join_request").execute()
     }

@@ -39,8 +39,10 @@ struct ClubSearchView: View {
     @State private var inviteCode = ""
     /// Set once a code has put the rower in a club, so finishing doesn't join again.
     @State private var joinedByCodeName: String?
-    /// Joining later sent a request to an approval club; the alert says so, then closes.
-    @State private var requestedClubName: String?
+    /// Joining later: the rower's join request, waiting or declined (decision 26).
+    @State private var myRequest: ClubService.JoinRequest?
+    @Environment(\.closeRoute) private var closeRoute
+    @Environment(\.scenePhase) private var scenePhase
     /// Onboarding's back button: the account exists by now, so going back means signing out.
     @State private var isConfirmingSignOut = false
 
@@ -75,6 +77,11 @@ struct ClubSearchView: View {
                         ? "Your club powers your feed and team rankings. You can also continue without one."
                         : "Your club powers your feed and team rankings."
                 )
+
+                if mode == .joinLater, let myRequest {
+                    requestStatus(myRequest)
+                        .padding(.bottom, 18)
+                }
 
                 Text("Club name")
                     .textStyle(Typography.fieldLabel)
@@ -136,7 +143,7 @@ struct ClubSearchView: View {
             Text("You'll be signed out. Your account is kept, so sign in again any time to finish setting up.")
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            stickyButton(clubButtonTitle, isEnabled: viewModel.selectedClub.map { $0.joinPolicy != .invite } ?? false) {
+            stickyButton(clubButtonTitle, isEnabled: canContinueWithClub) {
                 isWithoutClub = false
                 joinedByCodeName = nil
                 isAboutYou = true
@@ -151,19 +158,34 @@ struct ClubSearchView: View {
         } message: {
             Text("Enter the code a club admin shared with you.")
         }
-        .alert("Request sent", isPresented: Binding(
-            get: { requestedClubName != nil },
-            set: { if !$0 { requestedClubName = nil; dismiss() } }
-        )) {
-            Button("OK") {}
-        } message: {
-            Text("\(requestedClubName ?? "The club") will let you in once an admin approves. You'll see it under Your club.")
+        .task { await refreshMembership() }
+        .task {
+            guard mode == .joinLater else { return }
+            for await _ in ClubLiveUpdates.changes() { await refreshMembership() }
+        }
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active { Task { await refreshMembership() } }
         }
     }
 
-    /// v3's sticky label, honest about what happens next for each kind of club.
+    /// The chosen club is the one already asked, still waiting.
+    private var isAwaitingChosenClub: Bool {
+        guard let myRequest, let club = viewModel.selectedClub else { return false }
+        return myRequest.club.id == club.id && !myRequest.isDeclined
+    }
+
+    private var canContinueWithClub: Bool {
+        guard let club = viewModel.selectedClub else { return false }
+        return club.joinPolicy != .invite && !isAwaitingChosenClub
+    }
+
+    /// v3's sticky label, honest about what happens next for each kind of club: "Requested"
+    /// (greyed) while a request waits, "Request again" after a decline (decision 26).
     private var clubButtonTitle: String {
         guard let club = viewModel.selectedClub else { return "Choose a club" }
+        if let myRequest, myRequest.club.id == club.id {
+            return myRequest.isDeclined ? "Request again" : "Requested"
+        }
         switch club.joinPolicy {
         case .open: return "Continue with \(club.name)"
         case .approval: return "Request to join \(club.name)"
@@ -478,9 +500,9 @@ struct ClubSearchView: View {
         }
     }
 
-    /// `.joinLater`: join (or ask to join) the chosen club and save the level. A request says
-    /// so before closing; joining closes straight away (`ClubService` tells the feed,
-    /// rankings and profile).
+    /// `.joinLater`: join (or ask to join) the chosen club and save the level. Joining closes
+    /// straight away (`ClubService` tells the feed, rankings and profile); a request stays here,
+    /// waiting.
     private func joinSelectedClub() async {
         isSaving = true
         saveError = nil
@@ -498,13 +520,55 @@ struct ClubSearchView: View {
                 .eq("id", value: userId)
                 .execute()
             if outcome == .requested {
-                requestedClubName = viewModel.selectedClub?.name
+                // Stay on this page: the button now reads "Requested" and the page updates
+                // by itself until an admin answers (decision 26).
+                isAboutYou = false
+                await refreshMembership()
             } else {
                 dismiss()
             }
         } catch {
             saveError = error.localizedDescription
         }
+    }
+
+    // MARK: - Waiting for an answer (decision 26)
+
+    /// Joining later: reads the rower's request. If a waiting request has just been accepted,
+    /// the whole club screen closes, back to where they started.
+    private func refreshMembership() async {
+        guard mode == .joinLater, let membership = try? await ClubService.membership() else { return }
+        let wasWaiting = myRequest?.isDeclined == false
+        myRequest = membership.request
+        if wasWaiting, membership.club != nil {
+            NotificationCenter.default.post(name: .rowerClubChanged, object: nil)
+            closeRoute()
+        }
+    }
+
+    /// "Request sent to X" with Refresh while it waits; "You weren't accepted to X" once declined.
+    private func requestStatus(_ request: ClubService.JoinRequest) -> some View {
+        let shape = RoundedRectangle(cornerRadius: Tokens.Radius.input, style: .continuous)
+        return HStack(alignment: .top, spacing: Tokens.Spacing.gap) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(request.isDeclined ? "You weren't accepted to \(request.club.name)" : "Request sent to \(request.club.name)")
+                    .textStyle(Typography.rowTitle)
+                    .foregroundStyle(request.isDeclined ? Tokens.System.error : Tokens.Ink.primary)
+                Text(request.isDeclined
+                     ? "Choose it again to ask again, or pick another club."
+                     : "Waiting for an admin to accept you. This page updates by itself.")
+                    .textStyle(Typography.meta)
+                    .foregroundStyle(Tokens.Ink.secondary)
+            }
+            Spacer(minLength: 0)
+            if !request.isDeclined {
+                Button("Refresh") { Task { await refreshMembership() } }
+                    .buttonStyle(.rpPill(isOn: false))
+            }
+        }
+        .padding(Tokens.Spacing.card)
+        .background(shape.fill(Tokens.Surface.card))
+        .overlay { shape.strokeBorder(request.isDeclined ? Tokens.System.error.opacity(0.5) : Tokens.Surface.line, lineWidth: 1) }
     }
 }
 

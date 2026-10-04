@@ -119,6 +119,8 @@ final class ProfileViewModel {
     var clubRole: ClubRole?
     /// "Join request pending · <club>".
     var pendingClubName: String?
+    /// Clubs that have invited you and are waiting for an answer.
+    var invitingClubNames: [String] = []
 
     /// This profile's own privacy flag (used for the follow-requests row on
     /// your profile) and, for someone else's, whether it is hidden from the
@@ -211,8 +213,18 @@ final class ProfileViewModel {
                 }
                 let pending: [Pending]? = try? await SupabaseService.shared
                     .from("club_join_requests").select("clubs(name)").eq("user_id", value: userId)
-                    .execute().value
+                    .eq("status", value: "pending").execute().value
                 pendingClubName = pending?.first?.clubs.name
+                // Invitations waiting for an answer (decision 26): shown in the app as well as
+                // by alert, which only arrives once push is switched on.
+                struct Invite: Decodable {
+                    struct Club: Decodable { let name: String }
+                    let clubs: Club
+                }
+                let invites: [Invite]? = try? await SupabaseService.shared
+                    .from("club_invites").select("clubs(name)").eq("user_id", value: userId)
+                    .eq("status", value: "pending").execute().value
+                invitingClubNames = invites?.map(\.clubs.name) ?? []
             }
             weeklyTargetM = profile.weeklyTargetM
             isPrivateAccount = profile.isPrivate

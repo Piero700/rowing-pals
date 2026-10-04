@@ -16,7 +16,8 @@ final class ManageClubViewModel {
     var myId: UUID?
     var members: [ClubService.Person] = []
     var requests: [ClubService.Person] = []
-    var invitations: [ClubService.Person] = []
+    /// Waiting and declined invitations (decision 26).
+    var invitations: [ClubService.Invitation] = []
     var inviteCode: String?
     var isLoading = false
     var isWorking = false
@@ -59,6 +60,11 @@ final class ManageClubViewModel {
 
     @MainActor func withdrawInvitation(to person: ClubService.Person) async {
         await perform { try await ClubService.withdrawInvitation(to: person.id) }
+    }
+
+    /// After a decline: send the invitation again.
+    @MainActor func inviteAgain(_ person: ClubService.Person) async {
+        await perform { try await ClubService.invite(person.id) }
     }
 
     @MainActor func newInviteCode() async {

@@ -445,6 +445,18 @@ struct ProfileView: View {
                     .foregroundStyle(Tokens.Ink.secondary)
                     .padding(.horizontal, 2)
             }
+            ForEach(viewModel.invitingClubNames, id: \.self) { club in
+                Button {
+                    navigate(.clubHub)
+                } label: {
+                    Text("\(club) invited you to join · View")
+                        .textStyle(Typography.meta)
+                        .foregroundStyle(Tokens.Accent.brand)
+                        .frame(minHeight: Tokens.Size.minTap)
+                }
+                .buttonStyle(IconPressStyle())
+                .padding(.horizontal, 2)
+            }
         }
     }
 

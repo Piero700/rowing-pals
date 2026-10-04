@@ -50,6 +50,10 @@ end $$;
 - [ ] Expect: **ERROR: Club membership changes go through the app**. (If you see "GUARD FAILED",
       the guard isn't working — tell Claude.)
 
+### 4b. Run the follow-up migration (decision 26)
+**+ New query** → paste `docs/migrations/2026-10-04-club-updates.sql` → **Run**. Expect **Success**.
+(If it notes "No notifications table", run `2026-09-26-notifications.sql` first, then this again.)
+
 ## Part 2 — In the app (build from branch `t28-clubs`)
 
 ### 5. Owner view (A)
@@ -97,6 +101,20 @@ end $$;
 ### 11. Onboarding with the new rules (new account)
 - [ ] Sign up a new test account → Find your club: rows show the join rule; an approval club
       sends a request and finishes onboarding without a club; **Have an invite code?** works here too.
+
+### 12. Your notes of 2026-10-04 (decision 26)
+- [ ] **In a club**, Your crew shows the club card, **every member** (tap one → their profile) and
+      only **Leave club** — no Find/Create buttons. An owner sees a line pointing to Manage club.
+- [ ] **B** (no club) asks to join an approval club from Find a club: after the level step the page
+      stays, the button reads **Requested** (greyed) and a card says "Request sent" with **Refresh**.
+- [ ] **A** accepts, with B still on that page. Expect B's page to close by itself back to where B
+      started (Profile), now in the club — no need to leave and come back.
+- [ ] Repeat, but **A declines**. Expect B to see **"You weren't accepted to <club>"**, and the
+      button **Request again**.
+- [ ] **A** invites B. Expect B's Profile → Club to show "<club> invited you to join · View", and
+      (once push is switched on) an alert that opens Your crew.
+- [ ] **B** declines. Expect A's Manage club → Invited to show B as **"Declined the invitation"**,
+      with **Invite again** and **Clear** — without A leaving the page.
 
 ## Cleanup
 Set UEA Boat Club back to how you want it (Edit club), and put B back in it if you like.

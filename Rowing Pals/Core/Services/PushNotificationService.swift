@@ -126,8 +126,13 @@ final class PushNotificationService {
         }
     }
 
-    /// A tapped alert carries its post's id as `session_id` (see send-push).
-    func open(sessionId: String?) {
+    /// A tapped alert opens its post (`session_id`), or — for a club invitation — Your club,
+    /// where it can be accepted or declined (see send-push, decision 26).
+    func open(sessionId: String?, kind: String?) {
+        if kind == "club_invite" {
+            pendingRoute = .clubHub
+            return
+        }
         guard let sessionId, let id = UUID(uuidString: sessionId) else { return }
         pendingRoute = .post(id)
     }

@@ -35,14 +35,16 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
         [.banner, .list, .sound]
     }
 
-    /// Tapping an alert opens its post.
+    /// Tapping an alert opens its post, or Your club for an invitation.
     nonisolated func userNotificationCenter(
         _ center: UNUserNotificationCenter,
         didReceive response: UNNotificationResponse
     ) async {
-        let sessionId = response.notification.request.content.userInfo["session_id"] as? String
+        let userInfo = response.notification.request.content.userInfo
+        let sessionId = userInfo["session_id"] as? String
+        let kind = userInfo["kind"] as? String
         await MainActor.run {
-            PushNotificationService.shared.open(sessionId: sessionId)
+            PushNotificationService.shared.open(sessionId: sessionId, kind: kind)
         }
     }
 }

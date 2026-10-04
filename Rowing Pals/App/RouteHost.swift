@@ -42,6 +42,7 @@ struct RouteHost: View {
         }
         .tint(Tokens.Accent.brand)
         .environment(barVisibility)
+        .environment(\.closeRoute, CloseRouteAction { dismiss() })
         .environment(\.navigate, NavigateAction { route in
             // Log belongs to the tab screens; it can't be pushed here.
             guard route != .log else { return }
