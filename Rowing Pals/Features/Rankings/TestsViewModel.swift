@@ -6,18 +6,22 @@
 import Foundation
 import Supabase
 
-/// Owns the distance picker's own-PB lookups — one per standard distance,
-/// so the grid doubles as a personal scoreboard (design brief, Screen 6A).
+/// Owns the distance picker's own-PB lookups — one per standard distance, then one per club
+/// test (decision 28) — so the grid doubles as a personal scoreboard (design brief, Screen 6A).
 @Observable
 final class TestsViewModel {
     struct Tile: Identifiable {
         let test: StandardTest
+        /// Set for a club test, which admins and up can delete from its board.
+        var clubTest: ClubTest?
         /// nil shows a quiet "—" — no result for this distance yet.
         let displayValue: String?
         var id: String { test.key }
     }
 
     var tiles: [Tile] = StandardTest.all.map { Tile(test: $0, displayValue: nil) }
+    /// The rower's club tests, and whether they may add or delete them.
+    var clubTests = ClubTestService.MyClubTests.none
     var isLoading = false
 
     @MainActor
@@ -26,6 +30,9 @@ final class TestsViewModel {
         defer { isLoading = false }
 
         guard let userId = try? await SupabaseService.shared.auth.session.user.id else { return }
+        // Before the club-tests migration has run, this is simply none.
+        clubTests = (try? await ClubTestService.mine()) ?? .none
+        let tests = StandardTest.all + clubTests.tests.map(\.asTest)
 
         struct ResultRow: Decodable {
             let distanceKey: String
@@ -49,7 +56,7 @@ final class TestsViewModel {
 
         var bestByKey: [String: ResultRow] = [:]
         for row in rows {
-            guard let test = StandardTest.all.first(where: { $0.key == row.distanceKey }) else { continue }
+            guard let test = tests.first(where: { $0.key == row.distanceKey }) else { continue }
             guard let existing = bestByKey[row.distanceKey] else {
                 bestByKey[row.distanceKey] = row
                 continue
@@ -58,13 +65,22 @@ final class TestsViewModel {
             if isBetter { bestByKey[row.distanceKey] = row }
         }
 
-        tiles = StandardTest.all.map { test in
-            guard let row = bestByKey[test.key] else { return Tile(test: test, displayValue: nil) }
+        let clubTestsByKey = Dictionary(uniqueKeysWithValues: clubTests.tests.map { ($0.key, $0) })
+        tiles = tests.map { test in
             // Duration tests show distance covered (unit-aware); distance
             // tests show total time taken — elapsed time, not a split, so
             // it stays formattedDurationMs regardless of paceDisplay.
-            let display = test.isDurationBased ? row.distanceM.formattedMetres : row.timeMs.formattedDurationMs
-            return Tile(test: test, displayValue: display)
+            let display = bestByKey[test.key].map { row in
+                test.isDurationBased ? row.distanceM.formattedMetres : row.timeMs.formattedDurationMs
+            }
+            return Tile(test: test, clubTest: clubTestsByKey[test.key], displayValue: display)
         }
+    }
+
+    /// Deletes a club test and every result posted to it, then refreshes the grid.
+    @MainActor
+    func delete(_ clubTest: ClubTest) async throws {
+        try await ClubTestService.delete(clubTest.id)
+        await loadOwnPBs()
     }
 }

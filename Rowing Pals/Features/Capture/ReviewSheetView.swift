@@ -120,6 +120,7 @@ struct ReviewSheetView: View {
         .background(Tokens.Base.ground)
         .toolbar(.hidden, for: .navigationBar)
         .dismissesKeyboardOnTap()
+        .task { await viewModel.loadClubTests() }
         .task {
             guard viewModel.segments.isEmpty, let initialMonitorPhoto else { return }
             await viewModel.addSegment(from: initialMonitorPhoto)

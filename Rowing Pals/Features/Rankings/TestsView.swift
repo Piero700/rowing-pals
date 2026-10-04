@@ -10,7 +10,8 @@ import SwiftUI
 /// as a personal scoreboard. Tapping a tile opens its full leaderboard.
 struct TestsView: View {
     @State private var viewModel = TestsViewModel()
-    @State private var selectedTest: StandardTest?
+    @State private var selectedTile: TestsViewModel.Tile?
+    @State private var isAddingTest = false
     /// False when embedded under `RankingsView` (redesign, phase A) — this
     /// screen's own title is replaced by `RankingsHeader` there instead.
     var showsOwnTitle = true
@@ -40,7 +41,13 @@ struct TestsView: View {
                 LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 3), spacing: 10) {
                     ForEach(viewModel.tiles) { tile in
                         distanceTile(tile)
-                            .asButton { selectedTest = tile.test }
+                            .asButton { selectedTile = tile }
+                    }
+                    // Club admins and up add their club's own tests (decision 28).
+                    if viewModel.clubTests.canManage {
+                        addTestTile
+                            .asButton { isAddingTest = true }
+                            .accessibilityLabel("Add a club test")
                     }
                 }
 
@@ -54,8 +61,37 @@ struct TestsView: View {
         .ignoresSafeArea(edges: .bottom)
         .task { await viewModel.loadOwnPBs() }
         .refreshable { await viewModel.loadOwnPBs() }
-        .fullScreenCover(item: $selectedTest) { test in
-            TestLeaderboardView(test: test)
+        .fullScreenCover(item: $selectedTile) { tile in
+            TestLeaderboardView(test: tile.test, onDelete: deleteAction(for: tile))
+        }
+        .sheet(isPresented: $isAddingTest) {
+            AddClubTestView(existing: viewModel.clubTests.tests) { await viewModel.loadOwnPBs() }
+        }
+        // Joining or leaving a club changes which club tests show.
+        .onReceive(NotificationCenter.default.publisher(for: .rowerClubChanged)) { _ in
+            Task { await viewModel.loadOwnPBs() }
+        }
+    }
+
+    /// Only a club test, and only for its admins and up.
+    private func deleteAction(for tile: TestsViewModel.Tile) -> (() async throws -> Void)? {
+        guard let clubTest = tile.clubTest, viewModel.clubTests.canManage else { return nil }
+        return { try await viewModel.delete(clubTest) }
+    }
+
+    /// The trailing "+ Add test" tile, the same size as a test tile.
+    private var addTestTile: some View {
+        VStack(spacing: 6) {
+            Image(systemName: "plus")
+                .font(.system(size: 21, weight: .bold))
+            Text("Add test")
+                .textStyle(Typography.pill)
+        }
+        .foregroundStyle(Tokens.Accent.brand)
+        .frame(maxWidth: .infinity, minHeight: Tokens.Size.testTile)
+        .background {
+            RoundedRectangle(cornerRadius: Tokens.Radius.input, style: .continuous)
+                .fill(Tokens.Ink.primary.opacity(0.08))
         }
     }
 
@@ -75,9 +111,9 @@ struct TestsView: View {
                 .minimumScaleFactor(0.6)
         }
         .padding(.horizontal, 6)
-        .frame(maxWidth: .infinity, minHeight: 106)
+        .frame(maxWidth: .infinity, minHeight: Tokens.Size.testTile)
         .background {
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
+            RoundedRectangle(cornerRadius: Tokens.Radius.input, style: .continuous)
                 .fill(Tokens.Ink.primary.opacity(0.08))
         }
     }

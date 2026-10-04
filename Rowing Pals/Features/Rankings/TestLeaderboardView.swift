@@ -21,9 +21,14 @@ struct TestLeaderboardView: View {
     /// Redesign phase D — single Filters sheet replacing the two stacked
     /// inline segmented controls, see RankingsFilters.swift.
     @State private var isShowingFilters = false
+    /// Deletes this club test (decision 28); nil for a standard test, or a rower who can't.
+    private let onDelete: (() async throws -> Void)?
+    @State private var isConfirmingDelete = false
+    @State private var deleteError: String?
 
-    init(test: StandardTest) {
+    init(test: StandardTest, onDelete: (() async throws -> Void)? = nil) {
         _viewModel = State(initialValue: TestLeaderboardViewModel(test: test))
+        self.onDelete = onDelete
     }
 
     var body: some View {
@@ -39,8 +44,20 @@ struct TestLeaderboardView: View {
                     Text(viewModel.test.label)
                         .font(.system(size: 30, weight: .bold))
                         .foregroundStyle(Tokens.Ink.primary)
+                    if onDelete != nil {
+                        Spacer(minLength: 0)
+                        GlassIconButton(systemImage: "trash", accessibilityLabel: "Delete test", tint: Tokens.System.error) {
+                            isConfirmingDelete = true
+                        }
+                    }
                 }
                 .padding(.top, 52)
+
+                if let deleteError {
+                    Text(deleteError)
+                        .textStyle(Typography.meta)
+                        .foregroundStyle(Tokens.System.error)
+                }
 
                 HStack(spacing: 10) {
                     RankingsFiltersButton(filters: viewModel.filters) { isShowingFilters = true }
@@ -70,6 +87,23 @@ struct TestLeaderboardView: View {
         }
         .sheet(isPresented: $isShowingFilters) {
             RankingsFiltersSheet(filters: $viewModel.filters)
+        }
+        .alert("Delete the \(viewModel.test.label) test?", isPresented: $isConfirmingDelete) {
+            Button("Delete", role: .destructive) { Task { await delete() } }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Its leaderboard and every result posted to it are deleted for the whole club. The sessions stay on the feed.")
+        }
+    }
+
+    private func delete() async {
+        guard let onDelete else { return }
+        deleteError = nil
+        do {
+            try await onDelete()
+            dismiss()
+        } catch {
+            deleteError = error.localizedDescription
         }
     }
 

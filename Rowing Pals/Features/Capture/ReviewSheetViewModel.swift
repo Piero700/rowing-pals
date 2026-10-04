@@ -47,6 +47,8 @@ final class ReviewSheetViewModel {
     /// when the session is posted as a test.
     var workoutLabel: WorkoutLabel = .ut2
     var sessionKind: SessionKind = .training
+    /// The rower's club tests (decision 28), offered after the standard ones.
+    var clubTests: [ClubTest] = []
     /// "Include this session in your volume totals" — the leaderboards. Off
     /// still counts the session in your own profile and streak.
     var includeOnLeaderboards = true
@@ -77,9 +79,17 @@ final class ReviewSheetViewModel {
     /// The segment a session type is judged against — the Main one.
     var mainSegment: DraftSegment? { segments.first(where: { $0.label == .main }) }
 
-    /// What the "Session type" dropdown offers. A manual entry can only be
-    /// Training: there is no photo to prove a test.
-    var availableKinds: [SessionKind] { isManual ? [.training] : SessionKind.allCases }
+    /// What the "Session type" dropdown offers: Training, the standard tests, then the rower's
+    /// club tests. A manual entry can only be Training: there is no photo to prove a test.
+    var availableKinds: [SessionKind] {
+        isManual ? [.training] : SessionKind.allCases + clubTests.map { .test($0.asTest) }
+    }
+
+    /// Before the club-tests migration has run, or without a club, there are none.
+    @MainActor
+    func loadClubTests() async {
+        clubTests = (try? await ClubTestService.mine().tests) ?? []
+    }
 
     /// Why the chosen session type can't be posted right now, if it can't.
     var sessionKindProblem: String? {
