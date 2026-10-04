@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import Supabase
 
 /// "Your crew" (v3 §12, decisions 25–26): the rower's club with every member, or — without a
 /// club — their join request (waiting or declined), invitations and ways to find or create one.
@@ -11,6 +12,7 @@ import Foundation
 final class ClubHubViewModel {
     var membership: ClubService.Membership?
     var members: [ClubService.Person] = []
+    var myId: UUID?
     var isLoading = false
     var isWorking = false
     var errorMessage: String?
@@ -24,6 +26,7 @@ final class ClubHubViewModel {
         defer { isLoading = false }
         let wasWaiting = membership?.club == nil && membership?.request?.isDeclined == false
         do {
+            myId = try? await SupabaseService.shared.auth.session.user.id
             let fresh = try await ClubService.membership()
             if let clubId = fresh.club?.id {
                 members = try await ClubService.members(of: clubId)

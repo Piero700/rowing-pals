@@ -7,7 +7,7 @@ import SwiftUI
 
 /// Screen 12 — "Your crew", to v3 §12 (`docs/design/v3/RP Screen.dc.html`), shaped by decisions
 /// 25–26. **In a club** (one club at a time): the club — name, details, your role — and every
-/// member, each opening their profile; Manage club for admins and up; and the one way out,
+/// other member, each opening their profile; Manage club for admins and up; and the one way out,
 /// Leave club (an owner hands over or deletes in Manage club instead). **Without a club**:
 /// your join request — "Requested" while it waits, or that you weren't accepted with Request
 /// again — any invitations, then v3's Find a club to join, Create a club and Continue without
@@ -87,7 +87,7 @@ struct ClubHubView: View {
                 .padding(.top, Tokens.Spacing.loose)
         }
 
-        SectionTitle("Members · \(viewModel.members.count)")
+        SectionTitle("Crewmates · \(crewmates.count)")
         membersCard
 
         VStack(alignment: .leading, spacing: 6) {
@@ -142,11 +142,31 @@ struct ClubHubView: View {
             .lineLimit(1)
     }
 
-    /// Everyone in the club — owner first, then co-owners, admins, members — each opening
+    /// Everyone in the club but you (user, 2026-10-04).
+    private var crewmates: [ClubService.Person] {
+        viewModel.members.filter { $0.id != viewModel.myId }
+    }
+
+    /// Everyone else in the club — owner first, then co-owners, admins, members — each opening
     /// their profile.
+    @ViewBuilder
     private var membersCard: some View {
+        if crewmates.isEmpty {
+            Text("Nobody else is in the club yet.")
+                .textStyle(Typography.meta)
+                .foregroundStyle(Tokens.Ink.secondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(Tokens.Spacing.card)
+                .background(Self.cardShape.fill(Tokens.Surface.card))
+                .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+        } else {
+            crewmatesList
+        }
+    }
+
+    private var crewmatesList: some View {
         VStack(spacing: 0) {
-            ForEach(Array(viewModel.members.enumerated()), id: \.element.id) { index, person in
+            ForEach(Array(crewmates.enumerated()), id: \.element.id) { index, person in
                 HStack(spacing: Tokens.Spacing.gap) {
                     AvatarPlaceholder(diameter: 38, name: person.displayName)
                     VStack(alignment: .leading, spacing: 1) {
@@ -168,7 +188,7 @@ struct ClubHubView: View {
                 .padding(12)
                 .asButton { navigate(.profile(person.id)) }
                 .accessibilityElement(children: .combine)
-                if index < viewModel.members.count - 1 {
+                if index < crewmates.count - 1 {
                     Rectangle().fill(Tokens.Surface.line).frame(height: 1)
                 }
             }

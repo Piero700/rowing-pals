@@ -103,12 +103,17 @@ end $$;
       sends a request and finishes onboarding without a club; **Have an invite code?** works here too.
 
 ### 12. Your notes of 2026-10-04 (decision 26)
-- [ ] **In a club**, Your crew shows the club card, **every member** (tap one → their profile) and
+- [ ] **In a club**, Your crew shows the club card, **every other member** under "Crewmates · N" — not you (tap one → their profile) and
       only **Leave club** — no Find/Create buttons. An owner sees a line pointing to Manage club.
 - [ ] **B** (no club) asks to join an approval club from Find a club: tapping **Request to join** — no level step — the page
       stays, the button reads **Requested** (greyed) and a card says "Request sent" with **Refresh**.
 - [ ] **A** accepts, with B still on that page. Expect B's page to close by itself back to where B
       started (Profile), now in the club — no need to leave and come back.
+- [ ] New account, onboarding: pick an approval club → finish. Feed says **"Request sent to <club>"**.
+      **A** accepts on another phone. Without touching anything else, expect within a few seconds:
+      Feed shows the club's posts (no flashing when switching Following/Club), Rankings shows the
+      club, and Profile → Club reads **Your club**. (If the app was in the background, it updates as
+      soon as you return to it.)
 - [ ] Repeat, but **A declines**. Expect B to see **"You weren't accepted to <club>"**, and the
       button **Request again**.
 - [ ] **A** invites B. Expect B's Profile → Club to show "<club> invited you to join · View", and

@@ -50,6 +50,8 @@ struct RootView: View {
     @State private var presentedRoute: AppRoute?
     /// A tapped push alert's post arrives here (docs/design/v2-decisions.md #19).
     @State private var push = PushNotificationService.shared
+    @State private var membershipMonitor = MembershipMonitor()
+    @Environment(\.scenePhase) private var scenePhase
     @AppStorage(Appearance.storageKey) private var appearance: Appearance = .dark
 
     /// House/bar-chart/person — matches the prototype's actual inline SVG
@@ -93,6 +95,11 @@ struct RootView: View {
                 RouteHost(root: route)
             }
             .task { await push.start() }
+            // An admin elsewhere can accept, remove or promote this rower; reload when they do.
+            .task { await membershipMonitor.run() }
+            .onChange(of: scenePhase) { _, phase in
+                if phase == .active { Task { await membershipMonitor.check() } }
+            }
             .onChange(of: push.pendingRoute, initial: true) {
                 // Next run loop: on a launch from an alert, the window is still being set up.
                 Task { openPendingRoute() }

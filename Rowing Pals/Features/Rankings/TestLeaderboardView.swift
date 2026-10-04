@@ -64,6 +64,10 @@ struct TestLeaderboardView: View {
         .edgeSwipeToDismiss()
         .task { await viewModel.loadInitial() }
         .refreshable { await viewModel.reload() }
+        // A club joined or left elsewhere changes who's on the My club board.
+        .onReceive(NotificationCenter.default.publisher(for: .rowerClubChanged)) { _ in
+            Task { await viewModel.reload() }
+        }
         .sheet(isPresented: $isShowingFilters) {
             RankingsFiltersSheet(filters: $viewModel.filters)
         }
