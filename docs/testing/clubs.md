@@ -66,7 +66,7 @@ end $$;
 ### 6. Request and approve (B, then A)
 - [ ] **B**: Profile → **Your club** → **Continue without a club** → **Leave**. Expect "No club yet".
 - [ ] **B**: **Find a club to join** → search "UEA" → the row reads "… · Approval required";
-      the button **Request to join UEA Boat Club** → level → **Request to join** → "Request sent".
+      the button **Request to join UEA Boat Club** → tap it → it turns **Requested** (no level step).
 - [ ] **B**: Profile shows **Join request pending · UEA Boat Club**; Your crew shows it with Cancel.
 - [ ] **A**: Manage club → **Join requests · 1** → **Accept**. Expect B under Members.
 
@@ -81,7 +81,7 @@ end $$;
 - [ ] **A**: Edit club → **Invitation only**. **B** leaves (Your crew → Continue without a club).
 - [ ] **B**: Find a club to join → UEA row reads "Invitation only"; the button can't be pressed.
 - [ ] **A**: Manage club → **Invite code** — note it (or **Share** it to yourself).
-- [ ] **B**: **Have an invite code?** → enter it → level → **Done**. Expect B is in UEA Boat Club.
+- [ ] **B**: **Have an invite code?** → enter it → **Join**. Expect B is in UEA Boat Club straight away.
 - [ ] **B** leaves again. **A**: **Invite a rower** → search B → **Invite** (turns **Invited**).
 - [ ] **B**: Your crew → **Invitations** → UEA Boat Club → **Join**. Expect B is back in.
 - [ ] **A**: **New** code → the old code no longer works.
@@ -105,7 +105,7 @@ end $$;
 ### 12. Your notes of 2026-10-04 (decision 26)
 - [ ] **In a club**, Your crew shows the club card, **every member** (tap one → their profile) and
       only **Leave club** — no Find/Create buttons. An owner sees a line pointing to Manage club.
-- [ ] **B** (no club) asks to join an approval club from Find a club: after the level step the page
+- [ ] **B** (no club) asks to join an approval club from Find a club: tapping **Request to join** — no level step — the page
       stays, the button reads **Requested** (greyed) and a card says "Request sent" with **Refresh**.
 - [ ] **A** accepts, with B still on that page. Expect B's page to close by itself back to where B
       started (Profile), now in the club — no need to leave and come back.

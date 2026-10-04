@@ -9,13 +9,12 @@ import Supabase
 /// Onboarding, to v3 §01 (`docs/design/v3/RP Screen.dc.html`), then "About you"
 /// (decision 24). Step one — "Set up your crew / Find your club": a club search, club rows
 /// (44 pt crest, name, members · place, a check on the chosen one), "I'm not in a club", and a
-/// sticky "Continue with <club>". Step two — gender and (in a club) level, which v3 leaves out
-/// but the test leaderboards need; the name was given at sign-up. Finishing writes the club (or none),
+/// sticky "Continue with <club>". Step two — gender and level, asked of everyone, which v3 leaves
+/// out but the test leaderboards need; the name was given at sign-up. Finishing writes the club (or none),
 /// gender, level and `onboarded_at` in one update.
 ///
-/// `.joinLater` is for a rower who onboarded without a club and now picks one from the feed or
-/// rankings: the club step, then their level (skipped at onboarding without a club), then it
-/// saves both and closes.
+/// `.joinLater` is for a rower who onboarded without a club and now picks one from Your crew,
+/// the feed or rankings: the club step alone — choosing joins (or asks to join) at once.
 struct ClubSearchView: View {
     enum Mode {
         case onboarding
@@ -146,7 +145,12 @@ struct ClubSearchView: View {
             stickyButton(clubButtonTitle, isEnabled: canContinueWithClub) {
                 isWithoutClub = false
                 joinedByCodeName = nil
-                isAboutYou = true
+                if mode == .joinLater {
+                    // Level and gender were set at sign-up (user, 2026-10-04): join straight away.
+                    Task { await joinSelectedClub() }
+                } else {
+                    isAboutYou = true
+                }
             }
         }
         .alert("Have an invite code?", isPresented: $isEnteringCode) {
@@ -187,14 +191,14 @@ struct ClubSearchView: View {
             return myRequest.isDeclined ? "Request again" : "Requested"
         }
         switch club.joinPolicy {
-        case .open: return "Continue with \(club.name)"
+        case .open: return mode == .joinLater ? "Join \(club.name)" : "Continue with \(club.name)"
         case .approval: return "Request to join \(club.name)"
         case .invite: return "Invitation only — use a code"
         }
     }
 
-    /// "Have an invite code?": joins straight away, then asks the level (and, at onboarding,
-    /// the gender) as choosing a club does.
+    /// "Have an invite code?": joins straight away. Joining later, that's it; at onboarding the
+    /// rower goes on to About you.
     private func joinWithCode() async {
         let code = inviteCode.trimmingCharacters(in: .whitespacesAndNewlines)
         inviteCode = ""
@@ -207,7 +211,11 @@ struct ClubSearchView: View {
                 .execute().value
             joinedByCodeName = row?.name ?? "your club"
             isWithoutClub = false
-            isAboutYou = true
+            if mode == .joinLater {
+                dismiss()
+            } else {
+                isAboutYou = true
+            }
         } catch {
             saveError = error.localizedDescription
         }
@@ -337,30 +345,29 @@ struct ClubSearchView: View {
                 }
                 .padding(.bottom, Tokens.Spacing.loose)
 
-                intro(title: aboutYouTitle, body: aboutYouBody)
+                intro(
+                    title: "About you",
+                    body: "Tests are ranked by gender and level, so every rower is compared fairly. You can change these any time in Settings."
+                )
 
-                // Joining later: gender was given at onboarding; only the level is new.
-                if mode == .onboarding {
-                    Text("Gender")
-                        .textStyle(Typography.fieldLabel)
-                        .foregroundStyle(Tokens.Ink.secondary)
-                        .padding(.bottom, 6)
-                    PillSegmentedControl(options: ["Male", "Female"], selection: $genderSelection)
-                }
+                // Everyone gives both at sign-up, club or not, so joining a club later never
+                // needs to ask (user, 2026-10-04).
+                Text("Gender")
+                    .textStyle(Typography.fieldLabel)
+                    .foregroundStyle(Tokens.Ink.secondary)
+                    .padding(.bottom, 6)
+                PillSegmentedControl(options: ["Male", "Female"], selection: $genderSelection)
 
-                // Novice / senior only matters within a club (user, 2026-09-29).
-                if !isWithoutClub {
-                    Text("Level")
-                        .textStyle(Typography.fieldLabel)
-                        .foregroundStyle(Tokens.Ink.secondary)
-                        .padding(.top, mode == .onboarding ? 18 : 0)
-                        .padding(.bottom, 6)
-                    PillSegmentedControl(options: ["Novice", "Senior"], selection: $categorySelection)
-                    Text("Novice means you’re in your first season.")
-                        .textStyle(Typography.meta)
-                        .foregroundStyle(Tokens.Ink.secondary)
-                        .padding(.top, 8)
-                }
+                Text("Level")
+                    .textStyle(Typography.fieldLabel)
+                    .foregroundStyle(Tokens.Ink.secondary)
+                    .padding(.top, 18)
+                    .padding(.bottom, 6)
+                PillSegmentedControl(options: ["Novice", "Senior"], selection: $categorySelection)
+                Text("Novice means you’re in your first season.")
+                    .textStyle(Typography.meta)
+                    .foregroundStyle(Tokens.Ink.secondary)
+                    .padding(.top, 8)
 
                 if let saveError {
                     Text(saveError)
@@ -375,38 +382,10 @@ struct ClubSearchView: View {
         }
         .scrollIndicators(.hidden)
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            stickyButton(aboutYouButtonTitle, isEnabled: !isSaving) {
-                Task {
-                    if mode == .joinLater {
-                        await joinSelectedClub()
-                    } else {
-                        await finishOnboarding()
-                    }
-                }
+            stickyButton(isWithoutClub ? "Start without a club" : "Start rowing", isEnabled: !isSaving) {
+                Task { await finishOnboarding() }
             }
         }
-    }
-
-    private var aboutYouTitle: String {
-        mode == .joinLater ? "Your level" : "About you"
-    }
-
-    private var aboutYouBody: String {
-        if mode == .joinLater {
-            return "In a club, you're ranked alongside rowers at your level. You can change this any time in Settings."
-        }
-        return isWithoutClub
-            ? "Tests are ranked by gender, so every rower is compared fairly. You can change this any time in Settings."
-            : "Tests are ranked by gender and level, so every rower is compared fairly. You can change these any time in Settings."
-    }
-
-    private var aboutYouButtonTitle: String {
-        if mode == .joinLater {
-            if joinedByCodeName != nil { return "Done" }
-            guard let club = viewModel.selectedClub else { return "Join club" }
-            return club.joinPolicy == .approval ? "Request to join \(club.name)" : "Join \(club.name)"
-        }
-        return isWithoutClub ? "Start without a club" : "Start rowing"
     }
 
     // MARK: - Sticky primary button
@@ -472,8 +451,7 @@ struct ClubSearchView: View {
 
         struct ProfileUpdate: Encodable {
             let gender: RowerGender
-            /// Nil without a club: level isn't asked, so the column keeps its default.
-            let category: RowerCategory?
+            let category: RowerCategory
             let onboardedAt: Date
             enum CodingKeys: String, CodingKey {
                 case gender, category
@@ -486,7 +464,7 @@ struct ClubSearchView: View {
             let userId = try await SupabaseService.shared.auth.session.user.id
             let update = ProfileUpdate(
                 gender: genders[genderSelection],
-                category: isWithoutClub ? nil : categories[categorySelection],
+                category: categories[categorySelection],
                 onboardedAt: Date()
             )
             try await SupabaseService.shared
@@ -500,29 +478,19 @@ struct ClubSearchView: View {
         }
     }
 
-    /// `.joinLater`: join (or ask to join) the chosen club and save the level. Joining closes
-    /// straight away (`ClubService` tells the feed, rankings and profile); a request stays here,
-    /// waiting.
+    /// `.joinLater`: join (or ask to join) the chosen club — no level step, as everyone gives
+    /// theirs at sign-up. Joining closes straight away (`ClubService` tells the feed, rankings
+    /// and profile); a request stays here, waiting.
     private func joinSelectedClub() async {
         isSaving = true
         saveError = nil
         defer { isSaving = false }
 
-        struct LevelUpdate: Encodable {
-            let category: RowerCategory
-        }
         do {
             let outcome = try await joinChosenClub()
-            let userId = try await SupabaseService.shared.auth.session.user.id
-            try await SupabaseService.shared
-                .from("profiles")
-                .update(LevelUpdate(category: categories[categorySelection]))
-                .eq("id", value: userId)
-                .execute()
             if outcome == .requested {
                 // Stay on this page: the button now reads "Requested" and the page updates
                 // by itself until an admin answers (decision 26).
-                isAboutYou = false
                 await refreshMembership()
             } else {
                 dismiss()
