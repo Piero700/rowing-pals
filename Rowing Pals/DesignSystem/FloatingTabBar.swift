@@ -15,6 +15,9 @@ import SwiftUI
 /// used the `.plain` button style, which only answers taps on drawn pixels — a tap between the
 /// icon and the label fell through to the feed card underneath and opened a post.
 ///
+/// Tapping the tab that's already selected reports it through `onReselect` (Feed uses it to
+/// scroll to the top and refresh, user 2026-10-04).
+///
 /// Scroll behaviour is unchanged from 2026-09-17 device feedback: scrolling down hides the pill
 /// (and stops it taking touches) while the Log button only shrinks and stays tappable.
 struct FloatingTabBar<Tab: Hashable>: View {
@@ -26,6 +29,7 @@ struct FloatingTabBar<Tab: Hashable>: View {
 
     let items: [Item]
     @Binding var selection: Tab
+    var onReselect: (Tab) -> Void = { _ in }
     let onTapLog: () -> Void
 
     @Environment(FloatingBarVisibility.self) private var visibility
@@ -73,7 +77,10 @@ struct FloatingTabBar<Tab: Hashable>: View {
     private func tabButton(_ item: Item) -> some View {
         let isSelected = item.tab == selection
         return Button {
-            guard item.tab != selection else { return }
+            guard item.tab != selection else {
+                onReselect(item.tab)
+                return
+            }
             if reduceMotion {
                 selection = item.tab
             } else {
