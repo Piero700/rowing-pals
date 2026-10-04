@@ -15,7 +15,7 @@ import SwiftUI
 /// used the `.plain` button style, which only answers taps on drawn pixels — a tap between the
 /// icon and the label fell through to the feed card underneath and opened a post.
 ///
-/// Tapping the tab that's already selected reports it through `onReselect` (Feed uses it to
+/// Tapping the tab that's already selected reports it through `onReselect` (each tab uses it to
 /// scroll to the top and refresh, user 2026-10-04).
 ///
 /// Scroll behaviour is unchanged from 2026-09-17 device feedback: scrolling down hides the pill

@@ -25,15 +25,18 @@ import SwiftUI
 /// Screen 03 — Rankings (docs/design/rowing-pals-v3-spec.md; `RP Screen.dc.html` §03): a pinned
 /// large-title header, then Volume or Test results.
 struct RankingsView: View {
+    /// Goes up by one each time Rankings is tapped while already selected (decision 27).
+    var reselects = 0
+
     @State private var mode: RankingsMode = .volume
 
     var body: some View {
         Group {
             switch mode {
             case .volume:
-                MetresLeaderboardView(mode: $mode)
+                MetresLeaderboardView(mode: $mode, reselects: reselects)
             case .tests:
-                TestsView(showsOwnTitle: false, mode: $mode)
+                TestsView(showsOwnTitle: false, mode: $mode, reselects: reselects)
             }
         }
         .safeAreaInset(edge: .top, spacing: 0) {

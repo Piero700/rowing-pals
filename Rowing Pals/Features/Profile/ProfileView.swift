@@ -28,6 +28,8 @@ struct ProfileView: View {
     }
 
     private let viewing: UUID?
+    /// Goes up by one each time Profile is tapped while already selected (decision 27).
+    private let reselects: Int
     @State private var viewModel: ProfileViewModel
     @State private var expandedTest: StandardTest?
     @State private var isShowingSettings = false
@@ -39,8 +41,9 @@ struct ProfileView: View {
     private static let overviewPBKeys = ["2k", "5k"]
     private static let cardShape = RoundedRectangle(cornerRadius: Tokens.Radius.card, style: .continuous)
 
-    init(viewing: UUID? = nil) {
+    init(viewing: UUID? = nil, reselects: Int = 0) {
         self.viewing = viewing
+        self.reselects = reselects
         _viewModel = State(initialValue: ProfileViewModel(userId: viewing))
     }
 
@@ -75,6 +78,7 @@ struct ProfileView: View {
             .padding(.horizontal, Tokens.Spacing.screen)
         }
         .scrollIndicators(.hidden)
+        .scrollsToTopOnReselect(reselects) { await viewModel.load() }
         .safeAreaInset(edge: .top, spacing: 0) {
             if viewing == nil {
                 header

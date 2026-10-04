@@ -16,6 +16,8 @@ struct TestsView: View {
     var showsOwnTitle = true
     /// Only used when `showsOwnTitle` is false — see `RankingsView`.
     var mode: Binding<RankingsMode>?
+    /// Goes up by one each time Rankings is tapped while already selected (decision 27).
+    var reselects = 0
 
     var body: some View {
         // Direct ScrollView child, same constraint as FeedView — see its comment.
@@ -46,6 +48,7 @@ struct TestsView: View {
             }
             .padding(.horizontal, 16)
         }
+        .scrollsToTopOnReselect(reselects) { await viewModel.loadOwnPBs() }
         .background(Tokens.Base.ground)
         .tracksFloatingBar()
         .ignoresSafeArea(edges: .bottom)

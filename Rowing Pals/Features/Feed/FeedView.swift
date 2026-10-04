@@ -20,24 +20,12 @@ struct FeedView: View {
 
     @State private var viewModel = FeedViewModel()
     @State private var selectedPost: SelectedPost?
-    @State private var scrollPosition = ScrollPosition(edge: .top)
-    /// A tab-tap refresh is running; pull to refresh shows its own spinner.
-    @State private var isRefreshingFromTab = false
-    @State private var isAtTop = true
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.navigate) private var navigate
 
     var body: some View {
         // The scroll view stays the tab's root view so the floating bar can track it.
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 0) {
-                if isRefreshingFromTab {
-                    ProgressView()
-                        .tint(Tokens.Ink.primary)
-                        .frame(maxWidth: .infinity)
-                        .padding(.bottom, Tokens.Spacing.loose)
-                }
-
                 PillSegmentedControl(options: ["Following", "Club"], selection: scopeSelection)
 
                 Text(scopeCaption)
@@ -59,51 +47,19 @@ struct FeedView: View {
             }
             .padding(.horizontal, Tokens.Spacing.screen)
         }
-        .scrollPosition($scrollPosition)
         .scrollIndicators(.hidden)
+        .scrollsToTopOnReselect(reselects) { await viewModel.reload() }
         .safeAreaInset(edge: .top, spacing: 0) { header }
         .background(Tokens.Base.ground)
         .tracksFloatingBar()
-        // A Bool, not the offset, so the feed only redraws when it reaches or leaves the top.
-        .onScrollGeometryChange(for: Bool.self) { $0.contentOffset.y <= 1 } action: { _, atTop in
-            isAtTop = atTop
-        }
         .ignoresSafeArea(edges: .bottom)
         .task { await viewModel.loadInitial() }
         .refreshable { await viewModel.reload() }
-        .onChange(of: reselects) { scrollToTopAndRefresh() }
         .onReceive(NotificationCenter.default.publisher(for: .rowerClubChanged)) { _ in
             Task { await viewModel.clubChanged() }
         }
         .fullScreenCover(item: $selectedPost) { post in
             PostDetailView(sessionId: post.id)
-        }
-    }
-
-    /// Scrolls to the top first and only then refreshes. Starting the reload mid-scroll put
-    /// the spinner into the list above what was on screen; iOS held the visible post in place,
-    /// which cancelled the scroll and read to the tab bar as scrolling down, hiding it until
-    /// the reload finished (user, 2026-10-04, on a phone).
-    private func scrollToTopAndRefresh() {
-        guard !reduceMotion else {
-            scrollPosition.scrollTo(edge: .top)
-            refreshFromTab()
-            return
-        }
-        withAnimation(Tokens.Motion.scrollToTop) {
-            scrollPosition.scrollTo(edge: .top)
-        } completion: {
-            refreshFromTab()
-        }
-    }
-
-    private func refreshFromTab() {
-        guard !isRefreshingFromTab else { return }
-        // The spinner only goes in at the top, where adding it can't move what's on screen.
-        isRefreshingFromTab = isAtTop
-        Task {
-            await viewModel.reload()
-            isRefreshingFromTab = false
         }
     }
 
