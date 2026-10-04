@@ -14,15 +14,17 @@
 
 import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2"
 
-type Kind = "comment" | "reply" | "pb" | "club_post"
+type Kind = "comment" | "reply" | "pb" | "club_post" | "club_invite"
 
 interface NotificationRow {
   id: string
   recipient_id: string
   actor_id: string
   kind: Kind
-  session_id: string
+  // Empty for a club invitation (docs/migrations/2026-10-04-club-updates.sql).
+  session_id: string | null
   comment_id: string | null
+  club_id?: string | null
 }
 
 interface DeviceToken {
@@ -66,7 +68,7 @@ Deno.serve(async (req) => {
     .update({ sent_at: new Date().toISOString() })
     .eq("id", id)
     .is("sent_at", null)
-    .select("id, recipient_id, actor_id, kind, session_id, comment_id")
+    .select("*")
     .maybeSingle()
   if (claimError) return json({ error: claimError.message }, 500)
   if (!claimed) return json({ skipped: "already sent or not found" })
@@ -91,12 +93,14 @@ Deno.serve(async (req) => {
   const body = {
     aps: {
       alert,
-      "thread-id": row.session_id,
+      "thread-id": row.session_id ?? row.club_id ?? row.id,
       // Quiet hours: delivered silently to Notification Centre, screen stays dark.
       "interruption-level": quiet ? "passive" : "active",
       ...(quiet ? {} : { sound: "default" }),
     },
-    session_id: row.session_id,
+    // The app opens the post, or Your club for an invitation.
+    ...(row.session_id ? { session_id: row.session_id } : {}),
+    ...(row.club_id ? { club_id: row.club_id } : {}),
     kind: row.kind,
   }
 
@@ -111,6 +115,14 @@ Deno.serve(async (req) => {
 // MARK: - Alert text
 
 async function composeAlert(admin: SupabaseClient, row: NotificationRow) {
+  if (row.kind === "club_invite") {
+    const { data: club } = await admin.from("clubs").select("name").eq("id", row.club_id).maybeSingle()
+    if (!club) return null
+    const actor = await displayName(admin, row.actor_id)
+    return { title: club.name as string, body: `${actor} invited you to join. Tap to answer.` }
+  }
+  if (!row.session_id) return null
+
   const { data: session } = await admin
     .from("sessions")
     .select("user_id, type, workout_label, total_distance_m")

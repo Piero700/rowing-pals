@@ -115,6 +115,12 @@ final class ProfileViewModel {
     var displayName = ""
     var categoryLabel = ""
     var clubName: String?
+    /// Your role in your club, for the Profile club button (decision 25); nil with no club.
+    var clubRole: ClubRole?
+    /// "Join request pending · <club>".
+    var pendingClubName: String?
+    /// Clubs that have invited you and are waiting for an answer.
+    var invitingClubNames: [String] = []
 
     /// This profile's own privacy flag (used for the follow-requests row on
     /// your profile) and, for someone else's, whether it is hidden from the
@@ -175,6 +181,8 @@ final class ProfileViewModel {
                 let category: RowerCategory
                 let club: Club?
                 let clubId: UUID?
+                /// Absent before docs/migrations/2026-09-30-clubs.sql.
+                let clubRole: ClubRole?
                 let weeklyTargetM: Int
                 let isPrivate: Bool
                 enum CodingKeys: String, CodingKey {
@@ -182,13 +190,14 @@ final class ProfileViewModel {
                     case category
                     case club = "clubs"
                     case clubId = "club_id"
+                    case clubRole = "club_role"
                     case weeklyTargetM = "weekly_target_m"
                     case isPrivate = "is_private"
                 }
             }
             let profile: ProfileRow = try await SupabaseService.shared
                 .from("profiles")
-                .select("display_name, category, clubs(name), club_id, weekly_target_m, is_private")
+                .select("*, clubs(name)")
                 .eq("id", value: userId)
                 .single()
                 .execute()
@@ -196,6 +205,27 @@ final class ProfileViewModel {
             displayName = profile.displayName
             categoryLabel = profile.category.rawValue.uppercased()
             clubName = profile.club?.name
+            clubRole = profile.club == nil ? nil : (profile.clubRole ?? .member)
+            if userId == viewerId {
+                struct Pending: Decodable {
+                    struct Club: Decodable { let name: String }
+                    let clubs: Club
+                }
+                let pending: [Pending]? = try? await SupabaseService.shared
+                    .from("club_join_requests").select("clubs(name)").eq("user_id", value: userId)
+                    .eq("status", value: "pending").execute().value
+                pendingClubName = pending?.first?.clubs.name
+                // Invitations waiting for an answer (decision 26): shown in the app as well as
+                // by alert, which only arrives once push is switched on.
+                struct Invite: Decodable {
+                    struct Club: Decodable { let name: String }
+                    let clubs: Club
+                }
+                let invites: [Invite]? = try? await SupabaseService.shared
+                    .from("club_invites").select("clubs(name)").eq("user_id", value: userId)
+                    .eq("status", value: "pending").execute().value
+                invitingClubNames = invites?.map(\.clubs.name) ?? []
+            }
             weeklyTargetM = profile.weeklyTargetM
             isPrivateAccount = profile.isPrivate
 

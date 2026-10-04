@@ -15,7 +15,16 @@ final class ClubSearchViewModel {
         let id: UUID
         let name: String
         let location: String?
+        private let joinPolicyValue: ClubJoinPolicy?
         private let profiles: [CountWrapper]
+
+        /// Absent before docs/migrations/2026-09-30-clubs.sql has run: every club was open.
+        var joinPolicy: ClubJoinPolicy { joinPolicyValue ?? .open }
+
+        private enum CodingKeys: String, CodingKey {
+            case id, name, location, profiles
+            case joinPolicyValue = "join_policy"
+        }
 
         var memberCount: Int { profiles.first?.count ?? 0 }
 
@@ -66,7 +75,7 @@ final class ClubSearchViewModel {
         do {
             let query = SupabaseService.shared
                 .from("clubs")
-                .select("id, name, location, profiles(count)")
+                .select("*, profiles(count)")
 
             let response: [ClubResult]
             if searchText.isEmpty {

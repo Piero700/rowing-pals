@@ -69,10 +69,14 @@ final class FeedViewModel {
         await reload()
     }
 
-    /// Who is viewing and which club they belong to — loaded once.
+    /// A request waiting on a club (decision 26): the Club tab says so instead of "not in a club".
+    var pendingClubName: String?
+
+    /// Who is viewing and which club they belong to — the club is re-read on every load, so a
+    /// club joined (or left) elsewhere shows at the next refresh rather than staying stale.
     @MainActor
     private func loadViewer() async {
-        guard viewerId == nil, let id = try? await SupabaseService.shared.auth.session.user.id else { return }
+        guard let id = try? await SupabaseService.shared.auth.session.user.id else { return }
         viewerId = id
         struct Row: Decodable {
             struct Club: Decodable { let name: String }
@@ -86,7 +90,20 @@ final class FeedViewModel {
             .single()
             .execute()
             .value
-        viewerClubName = row?.club?.name
+        let clubName = row?.club?.name
+        if clubName != viewerClubName {
+            // A different club means different clubmates.
+            clubmateIds = nil
+        }
+        viewerClubName = clubName
+        struct Pending: Decodable {
+            struct Club: Decodable { let name: String }
+            let clubs: Club
+        }
+        let pending: [Pending]? = try? await SupabaseService.shared
+            .from("club_join_requests").select("clubs(name)").eq("user_id", value: id)
+            .eq("status", value: "pending").execute().value
+        pendingClubName = pending?.first?.clubs.name
     }
 
     // MARK: - Reactions
@@ -193,7 +210,10 @@ final class FeedViewModel {
 
     @MainActor
     private func loadPage(offset: Int, replacing: Bool) async {
-        await loadViewer()
+        // Fresh loads only; the next page of the same feed needs nothing new.
+        if offset == 0 || viewerId == nil {
+            await loadViewer()
+        }
         do {
             var query = SupabaseService.shared
                 .from("sessions")

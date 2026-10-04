@@ -101,7 +101,15 @@ struct FeedView: View {
         if let errorMessage = viewModel.errorMessage, viewModel.posts.isEmpty {
             messageCard(title: "Couldn't load the feed", body: errorMessage, showsPostButton: false)
         } else if viewModel.scope == .myClub, viewModel.viewerClubName == nil, !viewModel.isLoading {
-            messageCard(title: "You're not in a club", body: "Find your crew to see their workouts here.", showsPostButton: false, showsFindClub: true)
+            if let pending = viewModel.pendingClubName {
+                messageCard(
+                    title: "Request sent to \(pending)",
+                    body: "Your crew's workouts appear here as soon as an admin accepts you.",
+                    showsPostButton: false
+                )
+            } else {
+                messageCard(title: "You're not in a club", body: "Find your crew to see their workouts here.", showsPostButton: false, showsFindClub: true)
+            }
         } else if viewModel.posts.isEmpty, !viewModel.isLoading {
             messageCard(
                 title: "Your crew starts here",
