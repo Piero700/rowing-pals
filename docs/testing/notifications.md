@@ -86,10 +86,9 @@ Before the paid account, `sent_at` stays empty — nothing can be delivered yet,
 1. Go to **developer.apple.com/programs/enroll** → **Start your enrollment** → sign in with your
    Apple ID → choose **Individual / Sole Proprietor** → follow the steps and pay (£79/yr).
 2. Wait for Apple's "Welcome to the Apple Developer Program" email (usually within 1–2 days).
-3. Tell Claude — it switches the app to the paid team and adds the Push Notifications
-   capability. (If you'd rather do it: Xcode → click the blue **Rowing Pals** project at the top
-   of the left sidebar → target **Rowing Pals** → **Signing & Capabilities** → set **Team** to
-   your paid team → **+ Capability** → double-click **Push Notifications**.)
+3. **Done 2026-10-04.** The paid team kept the same Team ID (`X734984ZF7`), so signing needed no
+   change. Push is switched on by `aps-environment` in `Rowing Pals/Rowing Pals.entitlements`;
+   Xcode's automatic signing registered Push Notifications on the app ID on the next build.
 
 ### 6. Create the push key
 1. **developer.apple.com/account** → **Certificates, IDs & Profiles** → **Keys** → blue **+**.
