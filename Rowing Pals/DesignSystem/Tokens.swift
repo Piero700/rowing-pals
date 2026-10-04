@@ -179,6 +179,8 @@ enum Tokens {
         /// The segmented thumb's slide — 0.32 s with a slight overshoot, like the design's
         /// cubic-bezier(.3, 1.4, .5, 1).
         static let thumb = Animation.spring(response: 0.32, dampingFraction: 0.72)
+        /// Tapping the selected tab: its list glides back to the top.
+        static let scrollToTop = Animation.easeOut(duration: 0.3)
     }
 }
 

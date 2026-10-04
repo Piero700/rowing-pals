@@ -51,6 +51,8 @@ struct RootView: View {
     /// A tapped push alert's post arrives here (docs/design/v2-decisions.md #19).
     @State private var push = PushNotificationService.shared
     @State private var membershipMonitor = MembershipMonitor()
+    /// Counts taps on Feed while Feed is already showing; Feed scrolls to the top and refreshes.
+    @State private var feedReselects = 0
     @Environment(\.scenePhase) private var scenePhase
     @AppStorage(Appearance.storageKey) private var appearance: Appearance = .dark
 
@@ -73,9 +75,14 @@ struct RootView: View {
                 VStack(spacing: 0) {
                     Spacer(minLength: 0)
                         .allowsHitTesting(false)
-                    FloatingTabBar(items: Self.items, selection: $selection) {
-                        isShowingPostSheet = true
-                    }
+                    FloatingTabBar(
+                        items: Self.items,
+                        selection: $selection,
+                        onReselect: { tab in
+                            if tab == .feed { feedReselects += 1 }
+                        },
+                        onTapLog: { isShowingPostSheet = true }
+                    )
                 }
                 .ignoresSafeArea(.container, edges: .bottom)
             }
@@ -116,7 +123,7 @@ struct RootView: View {
     /// All three live simultaneously — see the doc comment above for why.
     private var content: some View {
         ZStack {
-            tab(.feed) { FeedView() }
+            tab(.feed) { FeedView(reselects: feedReselects) }
             tab(.rankings) { RankingsView() }
             tab(.profile) { ProfileView() }
         }

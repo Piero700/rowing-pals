@@ -8,20 +8,35 @@ import SwiftUI
 /// Screen 02 — Activity feed, "Your crew" (docs/design/rowing-pals-v3-spec.md; exact values
 /// from `docs/design/v3/RP Screen.dc.html` §02): a large-title header with a glass search
 /// button, the Following / Club control with a caption naming the scope, and v3 post cards.
+/// Tapping Feed in the tab bar while the feed is showing scrolls to the top and refreshes.
 struct FeedView: View {
     /// `.fullScreenCover(item:)` requires `Identifiable` — `UUID` alone doesn't conform.
     private struct SelectedPost: Identifiable {
         let id: UUID
     }
 
+    /// Goes up by one each time Feed is tapped while already selected.
+    var reselects = 0
+
     @State private var viewModel = FeedViewModel()
     @State private var selectedPost: SelectedPost?
+    @State private var scrollPosition = ScrollPosition(edge: .top)
+    /// A tab-tap refresh is running; pull to refresh shows its own spinner.
+    @State private var isRefreshingFromTab = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.navigate) private var navigate
 
     var body: some View {
         // The scroll view stays the tab's root view so the floating bar can track it.
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 0) {
+                if isRefreshingFromTab {
+                    ProgressView()
+                        .tint(Tokens.Ink.primary)
+                        .frame(maxWidth: .infinity)
+                        .padding(.bottom, Tokens.Spacing.loose)
+                }
+
                 PillSegmentedControl(options: ["Following", "Club"], selection: scopeSelection)
 
                 Text(scopeCaption)
@@ -43,6 +58,7 @@ struct FeedView: View {
             }
             .padding(.horizontal, Tokens.Spacing.screen)
         }
+        .scrollPosition($scrollPosition)
         .scrollIndicators(.hidden)
         .safeAreaInset(edge: .top, spacing: 0) { header }
         .background(Tokens.Base.ground)
@@ -50,11 +66,26 @@ struct FeedView: View {
         .ignoresSafeArea(edges: .bottom)
         .task { await viewModel.loadInitial() }
         .refreshable { await viewModel.reload() }
+        .onChange(of: reselects) { scrollToTopAndRefresh() }
         .onReceive(NotificationCenter.default.publisher(for: .rowerClubChanged)) { _ in
             Task { await viewModel.clubChanged() }
         }
         .fullScreenCover(item: $selectedPost) { post in
             PostDetailView(sessionId: post.id)
+        }
+    }
+
+    private func scrollToTopAndRefresh() {
+        if reduceMotion {
+            scrollPosition.scrollTo(edge: .top)
+        } else {
+            withAnimation(Tokens.Motion.scrollToTop) { scrollPosition.scrollTo(edge: .top) }
+        }
+        guard !isRefreshingFromTab else { return }
+        isRefreshingFromTab = true
+        Task {
+            await viewModel.reload()
+            isRefreshingFromTab = false
         }
     }
 
