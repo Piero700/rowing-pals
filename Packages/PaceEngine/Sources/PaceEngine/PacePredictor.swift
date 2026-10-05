@@ -8,7 +8,7 @@
 import Foundation
 
 public enum PacePredictor {
-    public static let schemaVersion = "anchor-impulse/1.3.1"
+    public static let schemaVersion = "anchor-impulse/1.4"
 
     /// Predicts a test-piece split and total time from session-summary history.
     ///
@@ -296,7 +296,7 @@ public enum PacePredictor {
         let split = Py.min(Py.max(s2k + projection, config.floorSplitAtReference + projection),
                            config.ceilingSplit)
         let total = split * target / 500.0
-        var flags = flags + ["population_estimate", "prior_is_seed_data"]
+        var flags = flags + ["population_estimate", "prior_from_concept2_rankings"]
         if profile.sex == nil {
             flags.append("sex_neutral_prior")
         }

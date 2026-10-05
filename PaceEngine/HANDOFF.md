@@ -180,10 +180,11 @@ that needed a judgement call to pass.
 - **Weight-adjusted scores conflict with the app's "no weight class anywhere" rule.** The
   engine computes them, but they're effectively a weight-class comparison. Don't surface
   them on any leaderboard or public view without explicit sign-off.
-- **Age-graded scores are seed data.** If shown, label them as indicative.
-- **Population Estimate seed values** must be replaced with fitted data before any user
-  sees one (SPEC §7.6). Ask whether to ship the cold-start estimate in v1 or hide it
-  behind a flag.
+- **Age-graded scores** are fitted to the Concept2 rankings medians from age 27 up (seed
+  rule below 27). If shown, label them as indicative.
+- **Population Estimate** values are fitted from the Concept2 rankings medians since v1.4
+  (SPEC §7.6). Piero chose to keep the cold-start estimate hidden for now (2026-10-05):
+  `PredictionService.showsPopulationEstimate` in the app.
 
 ### Performance
 

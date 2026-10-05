@@ -143,9 +143,10 @@ that they match the prototype.
    is in the app target; `PredictionService` feeds the engine each zoned erg session's main
    segment(s) from the last 60 days; predictions show on the Profile 2k/5k cards, on the Test
    results distance tiles, and in the "How we got this" sheet (`docs/testing/pace-engine.md`).
-   Still to do before launch: fit the cold-start seed values and the age curve from the Concept2
-   rankings (SPEC.md §7.6) — the Population Estimate stays off until then — and tune the tier
-   constants on a real cohort (SPEC.md §7.2).
+   Population prior DONE (engine v1.4, 2026-10-05): cold-start baselines and the age curve from
+   27 up fitted from the Concept2 rankings medians (SPEC.md §7.6,
+   `PaceEngine/fit_population_prior.py`); the Population Estimate stays off by the user's choice.
+   Still to do before launch: tune the tier constants on a real cohort (SPEC.md §7.2).
 9. **L — Polish and release.** Tab bar (user: "still not there" — get concrete detail before
    changing it), light mode and Increase Contrast pass, full screen-by-screen comparison against the
    prototype, then task 19 (TestFlight).

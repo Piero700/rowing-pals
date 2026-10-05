@@ -82,13 +82,20 @@ public struct EngineConfig: Sendable {
     public var weightTrendSensitivity: Double = 0.0
     public var weightTrendMinKg: Double = 1.5
 
-    // Cold-start population prior. SEED VALUES, not fitted (SPEC.md §7.6).
+    // Cold-start population prior. FITTED from the Concept2 rankings medians, 2025 and 2026
+    // seasons (PaceEngine/fit_population_prior.py, SPEC.md §7.6).
     public var priorReferenceAge: Double = 27.0
-    public var priorMale2kSeconds: Double = 440.0
-    public var priorFemale2kSeconds: Double = 500.0
+    public var priorMale2kSeconds: Double = 418.6      // 6:58.6, all-weights 19-29 median
+    public var priorFemale2kSeconds: Double = 483.5    // 8:03.5, all-weights 19-29 median
+    // Not fitted: assumed typical bodyweights for the baselines above.
     public var priorMaleReferenceKg: Double = 82.0
     public var priorFemaleReferenceKg: Double = 68.0
     public var priorConfidenceNumeric: Int = 15
+    /// Age curve from the reference age up, as (age, fractional slowdown vs the reference age).
+    public var priorAgeCurve: [(age: Double, fraction: Double)] = [
+        (35.0, 0.0587), (45.0, 0.0892), (55.0, 0.119),
+        (65.0, 0.1739), (75.0, 0.2652), (85.0, 0.4267),
+    ]
 
     /// Reproduce the original v1.0 Step 3 arithmetic, for A/B measurement only.
     public var legacyV1Formula: Bool = false
