@@ -26,6 +26,10 @@ final class CommentThread {
     /// Load failures and refused comments, shown above the composer.
     var errorMessage: String?
 
+    /// Postgres's "insufficient privilege": a row-level security rule refused the write.
+    private static let notAllowedCode = "42501"
+    static let notAllowedMessage = "Only people who follow this rower or share their club can comment."
+
     private var ownUserId: UUID?
     private var ownDisplayName = ""
     private var realtimeChannel: RealtimeChannelV2?
@@ -90,6 +94,11 @@ final class CommentThread {
             // if it does.
             append(Entry(id: newComment.id, authorId: userId, authorName: ownDisplayName, body: trimmed, createdAt: newComment.createdAt))
             errorMessage = nil
+        } catch let error as PostgrestError where error.code == Self.notAllowedCode {
+            // The database's own rule (decision 33): only people who can see a post may comment,
+            // e.g. this rower unfollowed the author, or the author changed who can see it.
+            print("Comment refused (\(sessionId)): \(error)")
+            errorMessage = Self.notAllowedMessage
         } catch {
             errorMessage = error.localizedDescription
         }
