@@ -81,7 +81,7 @@ struct SettingsView: View {
                         NavigationLink {
                             EditProfileView(viewModel: viewModel)
                         } label: {
-                            rowContent(title: "Edit profile", subtitle: "Name, gender, level and weekly target") { chevron }
+                            rowContent(title: "Edit profile", subtitle: "Name, gender, level, weekly target and private details") { chevron }
                         }
                         .buttonStyle(IconPressStyle())
                         divider

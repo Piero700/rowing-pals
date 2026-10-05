@@ -15,6 +15,10 @@ final class SettingsViewModel {
     var gender: RowerGender = .male
     var category: RowerCategory = .novice
     var weeklyTargetM = 20_000
+    /// Private inputs to the prediction algorithm (decision 30), never shown anywhere.
+    var birthDate: Date?
+    /// Bodyweight as typed, in kg; empty when not given.
+    var weightText = ""
     /// Redesign phase E. Saved the moment it's toggled, not with the Save
     /// button — the prototype's privacy sheet acts immediately.
     var isPrivate = false
@@ -37,6 +41,7 @@ final class SettingsViewModel {
     private var userId: UUID?
     /// Loaded values, to detect whether Save has anything to do.
     private var original: (displayName: String, gender: RowerGender, category: RowerCategory, weeklyTargetM: Int)?
+    private var originalPrivate = AthletePrivateService.Details()
 
     var hasUnsavedChanges: Bool {
         guard let original else { return false }
@@ -44,6 +49,23 @@ final class SettingsViewModel {
             || gender != original.gender
             || category != original.category
             || weeklyTargetM != original.weeklyTargetM
+            || weightProblem != nil
+            || AthletePrivateService.Details(birthDate: birthDate, weightKg: parsedWeight) != originalPrivate
+    }
+
+    private var parsedWeight: Double? {
+        let text = weightText.trimmingCharacters(in: .whitespaces).replacingOccurrences(of: ",", with: ".")
+        return text.isEmpty ? nil : Double(text)
+    }
+
+    /// Why the typed weight can't be saved, or nil.
+    var weightProblem: String? {
+        let text = weightText.trimmingCharacters(in: .whitespaces)
+        guard !text.isEmpty else { return nil }
+        guard let weight = parsedWeight, (25...250).contains(weight) else {
+            return "Enter a weight between 25 and 250 kg."
+        }
+        return nil
     }
 
     @MainActor
@@ -66,6 +88,11 @@ final class SettingsViewModel {
             weeklyTargetM = profile.weeklyTargetM
             isPrivate = profile.isPrivate
             original = (profile.displayName, gender, profile.category, profile.weeklyTargetM)
+            // Before docs/migrations/2026-10-05-pace-engine-inputs.sql has run, there's nothing yet.
+            let details = (try? await AthletePrivateService.mine()) ?? AthletePrivateService.Details()
+            originalPrivate = details
+            birthDate = details.birthDate
+            weightText = details.weightKg.map(Self.weightString) ?? ""
             await loadNotifications(userId: id, clubId: profile.clubId)
         } catch {
             saveError = error.localizedDescription
@@ -134,9 +161,18 @@ final class SettingsViewModel {
         }
     }
 
+    /// "78.5", or "80" for a whole number.
+    static func weightString(_ kg: Double) -> String {
+        kg == kg.rounded() ? String(Int(kg)) : String(format: "%.1f", kg)
+    }
+
     @MainActor
     func save() async {
         guard let userId, !displayName.trimmingCharacters(in: .whitespaces).isEmpty else { return }
+        if let weightProblem {
+            saveError = weightProblem
+            return
+        }
         isSaving = true
         saveError = nil
         defer { isSaving = false }
@@ -159,6 +195,12 @@ final class SettingsViewModel {
                 return
             }
             original = (displayName, gender, category, weeklyTargetM)
+
+            let details = AthletePrivateService.Details(birthDate: birthDate, weightKg: parsedWeight)
+            if details != originalPrivate {
+                try await AthletePrivateService.save(details)
+                originalPrivate = details
+            }
         } catch {
             saveError = error.localizedDescription
         }

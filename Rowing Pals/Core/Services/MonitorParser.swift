@@ -22,6 +22,9 @@ nonisolated struct ParsedMonitorFields {
     let distanceM: MonitorField<Int>
     let splitMs: MonitorField<Int>
     let rate: MonitorField<Double>
+    /// An interval workout's rep distance, from the screen's title ("8x500m/1:00r" → 500).
+    /// Nil for a continuous piece or a timed-rep workout ("8x2:00/1:00r"). Decision 31.
+    var repDistanceM: Int? = nil
 
     /// Whether all four fields extracted successfully — the task 09
     /// pass/fail bar is "all four fields correctly", not partial credit.
@@ -91,12 +94,33 @@ nonisolated enum MonitorParser {
 
         guard durations.count == 2, numbers.count == 2 else { return allEmpty }
 
+        // The workout title sits above the table: "8x500m/1:00r" on an interval workout.
+        let title = rows[..<headerIndex].flatMap { $0 }.map(\.text).joined(separator: " ")
+
         return ParsedMonitorFields(
             elapsedTimeMs: field(durations[0], parse: parseDurationMs),
             distanceM: field(numbers[0], parse: parseDistanceM),
             splitMs: field(durations[1], parse: parseDurationMs),
-            rate: field(numbers[1], parse: parseRate)
+            rate: field(numbers[1], parse: parseRate),
+            repDistanceM: repDistance(fromTitle: title)
         )
+    }
+
+    /// The rep distance of a fixed-distance interval workout, from its PM5 title: a rep
+    /// count, an "x", and a distance in metres — "8x500m/1:00r", "4 x 1000m", "3×2000m".
+    /// Nil for anything else, including timed reps ("8x2:00/1:00r") and single pieces ("2000m").
+    static func repDistance(fromTitle title: String) -> Int? {
+        let pattern = #"(?<![\d])(\d{1,2})\s*[xX×]\s*(\d{1,2},?\d{3}|\d{3,5})\s*m"#
+        guard let regex = try? NSRegularExpression(pattern: pattern) else { return nil }
+        let range = NSRange(title.startIndex..., in: title)
+        guard let match = regex.firstMatch(in: title, range: range),
+              let countRange = Range(match.range(at: 1), in: title),
+              let distanceRange = Range(match.range(at: 2), in: title),
+              let count = Int(title[countRange]), count >= 2,
+              let distance = Int(title[distanceRange].replacingOccurrences(of: ",", with: "")),
+              (100...10_000).contains(distance)
+        else { return nil }
+        return distance
     }
 
     private static var allEmpty: ParsedMonitorFields {
