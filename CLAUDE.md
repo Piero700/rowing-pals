@@ -145,7 +145,7 @@ After any change:
 
 ## Current focus
 
-Coaching and the v4 canvas, phases C1–C5 in `docs/design/coaching-build-plan.md`. Earlier:
+Coaching and the v4 canvas: a catch-up phase, then coaching Phases 1–3 in `docs/design/coaching-build-plan.md`. Earlier:
 
 Implementing the v2 redesign in phases. Status and the remaining order are in
 `docs/design/v2-build-plan.md`; screens and components are in
