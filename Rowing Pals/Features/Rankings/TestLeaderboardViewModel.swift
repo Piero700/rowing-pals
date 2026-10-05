@@ -39,6 +39,8 @@ final class TestLeaderboardViewModel {
     }
 
     var rows: [Row] = []
+    /// The viewer's gender, level and club — what the board opens on and Reset returns to.
+    var ownGroup: ViewerGroup?
     var isLoading = false
     var errorMessage: String?
 
@@ -54,9 +56,13 @@ final class TestLeaderboardViewModel {
         guard !hasLoadedOnce else { return }
         hasLoadedOnce = true
 
-        // Gender/level default to All (redesign phase D) — no more
-        // best-effort defaulting to the viewer's own gender first.
-        await reload()
+        // Opens on the viewer's own group (decision 37); changing `filters` reloads.
+        ownGroup = await ViewerGroup.load()
+        if let ownGroup, ownGroup.filters != filters {
+            filters = ownGroup.filters
+        } else {
+            await reload()
+        }
     }
 
     /// Cancels any reload already in flight before starting a new one —

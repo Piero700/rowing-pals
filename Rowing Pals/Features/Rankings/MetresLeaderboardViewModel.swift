@@ -28,7 +28,7 @@ final class MetresLeaderboardViewModel {
 
         var label: String {
             switch self {
-            case .all: "All"
+            case .all: "Erg + water"
             case .erg: "Erg"
             case .water: "Water"
             }
@@ -56,8 +56,8 @@ final class MetresLeaderboardViewModel {
     var period: Period = .week {
         didSet { guard oldValue != period else { return }; Task { await reload() } }
     }
-    /// Redesign phase D — the Gender/Level/Scope axes, driven by the single
-    /// "Filters" sheet now (`RankingsFilters.swift`), not inline chips.
+    /// Gender, level and scope, set from the Filters sheet; opens on the viewer's own group
+    /// (decision 37).
     var filters = RankingsFilters.initial {
         didSet { guard oldValue != filters else { return }; Task { await reload() } }
     }
@@ -68,6 +68,8 @@ final class MetresLeaderboardViewModel {
     }
 
     var rankedRows: [Row] = []
+    /// The viewer's gender, level and club — what the board opens on and Reset returns to.
+    var ownGroup: ViewerGroup?
 
     /// Whether the viewer is in the group these filters select, whether or not they have
     /// logged metres in the period — tells "no metres yet" apart from "not in this group".
@@ -106,11 +108,14 @@ final class MetresLeaderboardViewModel {
         guard !hasLoadedOnce else { return }
         hasLoadedOnce = true
 
-        // Gender/level default to All now that the Filters sheet offers
-        // that option (redesign phase D) — no more best-effort defaulting
-        // to the viewer's own gender before the first query.
         ownUserId = try? await SupabaseService.shared.auth.session.user.id
-        await reload()
+        // Opens on the viewer's own group (decision 37); changing `filters` reloads.
+        ownGroup = await ViewerGroup.load()
+        if let ownGroup, ownGroup.filters != filters {
+            filters = ownGroup.filters
+        } else {
+            await reload()
+        }
     }
 
     /// Cancels any reload already in flight, then runs a fresh one and

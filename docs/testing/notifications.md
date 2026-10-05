@@ -49,12 +49,9 @@ in the top bar, press **Cmd + R**.
 - [ ] Right after the app opens, iOS asks **"Would Like to Send You Notifications"**. Tap **Allow**.
 - [ ] **Profile → ⚙︎ Settings**. Expect a **Notifications** section between Units and Privacy:
       Comments and replies **on**, Personal bests **on**, Club activity **off** with
-      "New posts from *your club*", Quiet hours **22:00–06:30**. No red error under it.
+      "New posts from *your club*". No Quiet hours row (removed by decision 36). No red error.
 - [ ] Turn **Club activity** on. Close Settings, fully close the app (swipe it away), reopen,
       go back to Settings. Expect: still on.
-- [ ] Tap **Quiet hours**. Expect a sheet: a Quiet hours switch, **From 22:00**, **Until 06:30**.
-      Change **From** to 23:00, tap **Done**. Expect the row reads **23:00–06:30**. Set it back.
-- [ ] Turn the Quiet hours switch off. Expect the row reads **Off**. Turn it back on.
 - [ ] iPhone **Settings** app → **Notifications** → **RP Dev** → turn **Allow Notifications** off.
       Back in Rowing Pals Settings, expect a first row **Notifications are off**; tapping it opens
       the iPhone Settings page. Turn Allow Notifications back on; the row disappears.
@@ -125,9 +122,6 @@ Rebuild onto the phone with **Cmd + R** after step 5.
       Settings; back returns to Settings.
 - [ ] A posts a PB. Expect on A's phone: **"New personal best — Your 2k is now 7:04.1."** (with
       A's real test and time).
-- [ ] Quiet hours: set **From** to a minute ago and **Until** to an hour from now. B comments.
-      Expect: **no** sound and the screen stays dark; the alert is waiting in Notification Centre
-      (swipe down from the top). Set quiet hours back to 22:00–06:30.
 - [ ] **Log out** on A's phone; B comments. Expect: **no** alert on A's phone. Log back in.
 
 ## Cleanup

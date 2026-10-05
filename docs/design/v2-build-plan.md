@@ -158,8 +158,8 @@ that they match the prototype.
    Contrast, full screen-by-screen comparison against the
    prototype, then task 19 (TestFlight).
 
-10. **Coaching and the v4 canvas** (decisions 34–38): phases C1–C5 in
-    `docs/design/coaching-build-plan.md`. Next: C1.
+10. **Coaching and the v4 canvas** (decisions 34–41): canvas catch-up, then coaching Phases 1–3 in
+    `docs/design/coaching-build-plan.md`. Catch-up BUILT (branch `t36-canvas-catch-up`, `docs/testing/canvas-catch-up.md`); next: coaching Phase 1.
 
 ## Waiting on the user
 

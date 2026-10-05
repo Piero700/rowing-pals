@@ -508,6 +508,7 @@ create table if not exists notification_settings (
   comments            boolean not null default true,
   personal_bests      boolean not null default true,
   club_activity       boolean not null default false,
+  -- Unused since decision 36 removed Quiet hours (app and send-push no longer read them).
   quiet_hours_enabled boolean not null default true,
   quiet_start         time not null default '22:00',
   quiet_end           time not null default '06:30',

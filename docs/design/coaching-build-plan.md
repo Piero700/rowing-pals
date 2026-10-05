@@ -10,58 +10,62 @@ Each phase: build, check on the simulator against its artboards, write a test ch
 `docs/testing/`, then the user confirms and it's merged. Server changes ship as one migration per
 phase in `docs/migrations/`, run on staging first.
 
-## Phase C1 — Existing screens catch up with the canvas
-Artboards: `RankingsVolume`, `RankingsTests`, `RankingsFilters`, `Settings`, `SettingsProfile`,
-`SettingsPrivacy`, `PostDetail`.
+## Catch-up — Existing screens match the canvas (first) — BUILT, branch `t36-canvas-catch-up`
+Artboards: `RankingsVolume`, `RankingsTests`, `RankingsFilters`, `Settings`, `PostDetail`.
 - Rankings open on your own group; Volume rank card wording; Test results "Best in your group";
   Filters' Source (Volume only). (Decision 37.)
-- Settings: Match iPhone; remove Quiet hours (app and server); Privacy Policy link. The two new
-  alert switches arrive with the features they control (C4, C5). (Decision 36.)
-- Edit profile: Weekly target (km). Account type waits for C2.
+- Settings: Match iPhone; remove Quiet hours; Privacy Policy link. (Decision 36.)
+  Quiet hours is gone from the app and from `send-push` (redeployed to staging 2026-10-05); its
+  `notification_settings` columns stay, unused. The Privacy Policy is an in-app page
+  (`DesignSystem/PrivacyPolicyView.swift`) that still needs the user's review, and a public web
+  copy before App Store submission. **Phase 1 must update it**: coaches will see age and
+  bodyweight (decision 35).
 - Workout screen: drop "Photo-verified". (Decision 38.)
 
-## Phase C2 — Coaches, coach-only accounts and privacy
+## Phase 1 — Coaches, squads, the overview and privacy (brief phase 1)
 Artboards: `CoachMakeCoach`, `CoachOnboarding`, `CoachJoinNotice`, `CoachCrew`, `CoachOnlyFeed`,
-`SettingsProfile` (Account type), `SettingsPrivacy`.
-- Server: a coach flag per club member; who may grant it; coaches read every member's sessions,
-  photos, tests, daily totals and `athlete_private` (extends `can_view_session()` of decision 33
-  and the private-account rule); coach-only accounts excluded from every leaderboard.
-- App: Make coach; "I row / I'm a coach" at onboarding and in Edit profile; coach-only accounts
-  have no Log button and no rankings; the join notice; coaches listed in Your crew with a way into
-  Coaching.
+`SettingsProfile`, `SettingsPrivacy`, `CoachRowers`, `CoachSortSheet`, `CoachRower`, `CoachSquads`,
+`CoachSquadEdit`.
+- `docs/migrations/2026-10-05-coaching.sql`: coach flag, non-rowing flag, squads and members,
+  workouts and assignments, `sessions.workout_id`, practices, responses and marks (`set_by`,
+  `set_at`), term dates; security-definer RPCs for every write; `is_club_coach()`; RLS on every
+  table; coaches read their members (`can_view_user`, a read rule beside `can_view_session`, the
+  photo policy, `athlete_private`) — read-only (decision 40).
+- Make coach (owner, co-owners); "I row / I'm a coach" at onboarding and in Edit profile; weekly
+  target; non-rowing coaches: no Log button, no gender/level, off every board and Crewmates;
+  Coaches section in Your crew; join notice; Privacy sheet wording.
+- Coaching entry (Your crew, Profile → Club); Rowers list (week metres vs target, sessions, latest
+  test and PBs, predicted 2k and band, term attendance once Phase 3 lands), sort and squad filter,
+  flags (`elevated_recent_effort`, `tier_disagreement`, 10+ days without a session); one rower
+  (volume chart, zone mix, effort trend, tests with W/kg, attendance history, posts, age and
+  bodyweight); squads (list, create, rename, members, delete).
 
-## Phase C3 — Coaching: rowers and squads
-Artboards: `CoachRowers`, `CoachSortSheet`, `CoachRower`, `CoachSquads`, `CoachSquadEdit`.
-- Rowers tab: week volume against weekly target, sessions, attendance (from C5; hidden until
-  then), 2k PB, Pace Engine prediction, flags (no session in N days; the engine's mis-tag and
-  `elevated_recent_effort`). Squad filter and sort.
-- One rower: age, bodyweight, private-account badge, flag explanation, 8-week volume, zone mix,
-  effort trend, tests with watts and W/kg, attendance grid (C5), posts.
-- Squads: list, create, edit members, delete.
-
-## Phase C4 — Set workouts
+## Phase 2 — Set workouts (brief phase 2)
 Artboards: `CoachWorkouts`, `CoachWorkoutNew`, `CoachWorkoutResults`, `RowerFeedCoaching`,
 `RowerLogCoaching`.
-- Coach creates a workout (title, date, optional time, description, target zone, pieces with
-  reps/rest/rate/split targets, test day, whole club / squads / rowers).
-- Rowers: "New workout from your coach" alert (Settings switch), Today's workout card on the feed
-  with "Log it", and linking a logged session to the workout.
-- Results: done / partly / not yet, each piece's split against target.
+- Create (title, date, optional time, description, zone, optional pieces with reps/rest/rate/
+  split, optional test day → a standard or club test; whole club / squads / rowers).
+- Rowers: Today's workout on Feed and Log; posting links the session (default on); push kind
+  "New workout from your coach" with its Settings switch.
+- Coach: done / partly / not yet per rower, actual splits against targets.
 
-## Phase C5 — Practices and attendance
+## Phase 3 — Attendance (brief phase 3)
 Artboards: `CoachPractices`, `CoachPracticeNew`, `CoachPracticeRegister`, `CoachAttendance`,
 `RowerPractice`, the practice card in `RowerFeedCoaching`.
-- Practices with place, time, squads, weekly repeats until a date, edit/cancel one or the series
-  (members notified).
-- Rowers answer Going / Can't make it (reason seen by coaches only) and check in from 30 minutes
-  before; reminders 2 hours before (Settings switch; needs a scheduled server job).
-- Register: present / late / absent / excused, suggested ticks from sessions posted that day,
-  the coach's mark always wins. Attendance totals by term (editable dates), squad and rower.
+- Practices: date, start/end, place, squads; one-off or weekly until a date; edit/cancel one or
+  the series (rowers notified).
+- Rowers: Going / Can't make it (+ reason, coaches only), check-in on the day.
+- Register: fast tick list, suggested ticks from sessions posted that day, coach's mark wins,
+  editable later, who/when kept. Totals per rower and squad over a range, default the current
+  term, term dates set by coaches. Optional reminder push with its Settings switch.
 
 ## Questions to settle at the start of each phase
-- C2: who can make someone a coach (owner and co-owners?); can a coach also row in the same club
-  (the canvas shows "Co-owner · Coach · Novice", so yes); what a coach-only account sees on Feed.
-- C3: thresholds for "no session in N days" and "behind target".
-- C4: what "partly" means for a linked session; whether a test-day workout posts to the test's
-  leaderboard automatically.
-- C5: what "check in" proves (a tap during the window, no location); term dates per club.
+- Phase 1: what "behind target" means mid-week (pro-rata or end of week).
+- Phase 2: what "partly" means for a linked session; whether a test-day workout posts to the
+  test's leaderboard automatically.
+- Phase 3: what "check in" proves (a tap during the window, no location).
+
+Each phase: new branch; decisions recorded; build plan updated; click-by-click checklist in
+`docs/testing/`; unit tests for the rules (who can see what, coach override, squad filters,
+completion matching); build, all tests, every new screen checked on the simulator; report what
+was tested and what needs a second phone; **no merge until the user has tested on their phone**.

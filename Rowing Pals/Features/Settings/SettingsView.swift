@@ -14,7 +14,7 @@ struct SettingsView: View {
     @State private var isShowingTerms = false
     @State private var isShowingPrivacy = false
     @State private var isShowingDeleteConfirmation = false
-    @State private var isShowingQuietHours = false
+    @State private var isShowingPrivacyPolicy = false
     /// Whether iOS allows alerts, re-read on return from the iOS Settings app.
     @State private var push = PushNotificationService.shared
     @Environment(\.scenePhase) private var scenePhase
@@ -48,6 +48,10 @@ struct SettingsView: View {
                         row(title: "Light mode", subtitle: "Higher contrast in daylight.") {
                             checkmark(appearance == .light)
                         } action: { appearance = .light }
+                        divider
+                        row(title: "Match iPhone", subtitle: "Switches with your iPhone’s Light or Dark setting.") {
+                            checkmark(appearance == .system)
+                        } action: { appearance = .system }
                     }
 
                     group("Units and display") {
@@ -98,6 +102,8 @@ struct SettingsView: View {
                             divider
                         }
                         row(title: "Terms of Service", subtitle: nil) { chevron } action: { isShowingTerms = true }
+                        divider
+                        row(title: "Privacy Policy", subtitle: nil) { chevron } action: { isShowingPrivacyPolicy = true }
                     }
 
                     Button("Delete account") { isShowingDeleteConfirmation = true }
@@ -135,9 +141,8 @@ struct SettingsView: View {
                 privacySheet
                     .presentationDetents([.medium])
             }
-            .sheet(isPresented: $isShowingQuietHours) {
-                quietHoursSheet
-                    .presentationDetents([.medium])
+            .sheet(isPresented: $isShowingPrivacyPolicy) {
+                PrivacyPolicyView()
             }
             .onChange(of: scenePhase) { _, phase in
                 if phase == .active {
@@ -162,9 +167,6 @@ struct SettingsView: View {
                 Text("This permanently deletes your account and everything you've posted. This can't be undone.")
             }
         }
-        // An open sheet doesn't pick up the root's scheme change until it's presented again,
-        // so the choice is applied here too and shows the moment it's tapped.
-        .preferredColorScheme(appearance.colorScheme)
     }
 
     // MARK: - v3 building blocks
@@ -261,7 +263,7 @@ struct SettingsView: View {
 
     // MARK: - Notifications
 
-    /// v3 §07: three switches, then Quiet hours (docs/design/v2-decisions.md #19). If iOS has
+    /// v3 §07: three switches (docs/design/v2-decisions.md #19; Quiet hours removed by #36). If iOS has
     /// alerts turned off for the app, a first row says so and opens the page in the iOS
     /// Settings app where they're turned back on — the switches alone can't override iOS.
     private var notificationsGroup: some View {
@@ -277,7 +279,7 @@ struct SettingsView: View {
                     }
                     divider
                 }
-                if let settings = viewModel.notificationSettings {
+                if viewModel.notificationSettings != nil {
                     toggleRow(title: "Comments and replies", subtitle: "Including your own threads", \.comments)
                     divider
                     toggleRow(title: "Personal bests", subtitle: "When you or a friend beats one", \.personalBests)
@@ -287,10 +289,6 @@ struct SettingsView: View {
                         subtitle: "New posts from \(viewModel.clubName ?? "your club")",
                         \.clubActivity
                     )
-                    divider
-                    row(title: "Quiet hours", subtitle: settings.quietHoursLabel) { chevron } action: {
-                        isShowingQuietHours = true
-                    }
                 } else {
                     rowContent(title: "Notifications", subtitle: "Loading…") { ProgressView() }
                 }
@@ -328,50 +326,6 @@ struct SettingsView: View {
         .frame(minHeight: 66)
     }
 
-    /// Opened from the Quiet hours row. The design shows only the row; this sheet follows
-    /// the privacy sheet's pattern. Times are on the 24-hour clock, as the row shows them.
-    private var quietHoursSheet: some View {
-        NavigationStack {
-            Form {
-                if let settings = viewModel.notificationSettings {
-                    Section {
-                        Toggle("Quiet hours", isOn: Binding(
-                            get: { settings.quietHoursEnabled },
-                            set: { value in Task { await viewModel.updateNotifications { $0.quietHoursEnabled = value } } }
-                        ))
-                        .tint(Tokens.Accent.success)
-                        if settings.quietHoursEnabled {
-                            DatePicker("From", selection: Binding(
-                                get: { settings.quietStart.date() },
-                                set: { date in Task { await viewModel.updateNotifications { $0.quietStart = ClockTime(date: date) } } }
-                            ), displayedComponents: .hourAndMinute)
-                            DatePicker("Until", selection: Binding(
-                                get: { settings.quietEnd.date() },
-                                set: { date in Task { await viewModel.updateNotifications { $0.quietEnd = ClockTime(date: date) } } }
-                            ), displayedComponents: .hourAndMinute)
-                        }
-                    } footer: {
-                        Text("Alerts that arrive during quiet hours make no sound and leave your screen dark. They wait in Notification Centre. Times follow your phone's clock.")
-                    }
-                    if let error = viewModel.notificationError {
-                        Section {
-                            Text(error).foregroundStyle(Tokens.System.error)
-                        }
-                    }
-                }
-            }
-            .environment(\.locale, Locale(identifier: "en_GB"))
-            .monospacedDigit()
-            .navigationTitle("Quiet hours")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") { isShowingQuietHours = false }
-                }
-            }
-        }
-        .preferredColorScheme(appearance.colorScheme)
-    }
 
     /// The prototype's privacy sheet (docs/design/
     /// rowing-pals-redesign-handoff-v2.md §2 Screen 07): one switch, with

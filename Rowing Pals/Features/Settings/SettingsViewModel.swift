@@ -127,14 +127,13 @@ final class SettingsViewModel {
         await PushNotificationService.shared.refreshAuthorizationStatus()
     }
 
-    /// Applies one change at once and saves the whole row (with the phone's current time
-    /// zone). Reverts if the save fails, so a switch never shows a choice that isn't saved.
+    /// Applies one change at once and saves the whole row. Reverts if the save fails, so a
+    /// switch never shows a choice that isn't saved.
     @MainActor
     func updateNotifications(_ change: (inout NotificationSettings) -> Void) async {
         guard let previous = notificationSettings else { return }
         var updated = previous
         change(&updated)
-        updated.timeZone = TimeZone.current.identifier
         guard updated != previous else { return }
         notificationSettings = updated
         notificationError = nil

@@ -59,9 +59,7 @@ struct TestLeaderboardView: View {
                         .foregroundStyle(Tokens.System.error)
                 }
 
-                HStack(spacing: 10) {
-                    RankingsFiltersButton(filters: viewModel.filters) { isShowingFilters = true }
-                }
+                RankingsFiltersPill(text: viewModel.filters.captionText) { isShowingFilters = true }
 
                 if viewModel.rows.isEmpty {
                     emptyState
@@ -86,7 +84,7 @@ struct TestLeaderboardView: View {
             Task { await viewModel.reload() }
         }
         .sheet(isPresented: $isShowingFilters) {
-            RankingsFiltersSheet(filters: $viewModel.filters)
+            RankingsFiltersSheet(filters: $viewModel.filters, ownGroup: viewModel.ownGroup)
         }
         .alert("Delete the \(viewModel.test.label) test?", isPresented: $isConfirmingDelete) {
             Button("Delete", role: .destructive) { Task { await delete() } }

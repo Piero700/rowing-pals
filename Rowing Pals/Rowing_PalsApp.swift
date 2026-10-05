@@ -31,7 +31,7 @@ struct Rowing_PalsApp: App {
                 RootView()
             }
             }
-            .preferredColorScheme(appearance.colorScheme)
+            .onChange(of: appearance, initial: true) { appearance.apply() }
         }
         .environment(authState)
     }

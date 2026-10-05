@@ -26,7 +26,15 @@ final class TestsViewModel {
     var tiles: [Tile] = StandardTest.all.map { Tile(test: $0, displayValue: nil) }
     /// The rower's club tests, and whether they may add or delete them.
     var clubTests = ClubTestService.MyClubTests.none
+    /// "Best in your group" (decision 37): 2k and 5k among the viewer's gender and level in
+    /// their club. Empty without a club or a gender on file.
+    var groupBests: [GroupBest] = []
+    /// "Senior men · My club".
+    var groupCaption: String?
     var isLoading = false
+
+    /// The tests the group cards show, in order.
+    static let groupBestKeys = ["2k", "5k"]
 
     @MainActor
     func loadOwnPBs() async {
@@ -79,7 +87,53 @@ final class TestsViewModel {
             }
             return Tile(test: test, clubTest: clubTestsByKey[test.key], displayValue: display)
         }
-        await loadPredictions()
+        async let predictions: Void = loadPredictions()
+        async let groups: Void = loadGroupBests(viewerId: userId)
+        _ = await (predictions, groups)
+    }
+
+    @MainActor
+    private func loadGroupBests(viewerId: UUID) async {
+        guard let group = await ViewerGroup.load(), let gender = group.gender, group.clubName != nil,
+              let memberIds = try? await SocialScope.myClub.userIds(), !memberIds.isEmpty else {
+            groupBests = []
+            groupCaption = nil
+            return
+        }
+        struct Row: Decodable {
+            struct Author: Decodable {
+                let displayName: String
+                enum CodingKeys: String, CodingKey { case displayName = "display_name" }
+            }
+            let userId: UUID
+            let distanceKey: String
+            let timeMs: Int
+            let author: Author
+            enum CodingKeys: String, CodingKey {
+                case userId = "user_id"
+                case distanceKey = "distance_key"
+                case timeMs = "time_ms"
+                case author = "profiles"
+            }
+        }
+        guard let rows: [Row] = try? await SupabaseService.shared
+            .from("test_results")
+            .select("user_id, distance_key, time_ms, profiles(display_name)")
+            .in("user_id", values: memberIds)
+            .in("distance_key", values: Self.groupBestKeys)
+            .eq("gender_at_time", value: gender.rawValue)
+            .eq("category_at_time", value: group.level.rawValue)
+            .execute()
+            .value
+        else { return }
+
+        groupCaption = group.filters.captionText
+        groupBests = Self.groupBestKeys.compactMap { key in
+            guard let test = StandardTest.all.first(where: { $0.key == key }) else { return nil }
+            let results = rows.filter { $0.distanceKey == key }
+                .map { GroupBest.Result(userId: $0.userId, name: $0.author.displayName, timeMs: $0.timeMs) }
+            return GroupBest.make(test: test, results: results, viewerId: viewerId)
+        }
     }
 
     /// The Pace Engine predicts a distance, so timed tests (4min, 30min, a club's 30s) get none.

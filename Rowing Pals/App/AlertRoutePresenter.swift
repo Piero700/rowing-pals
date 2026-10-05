@@ -14,7 +14,7 @@ import UIKit
 enum AlertRoutePresenter {
     /// False when there's no window to present from yet; the caller keeps the route and tries again.
     @discardableResult
-    static func present(_ route: AppRoute, colorScheme: ColorScheme) -> Bool {
+    static func present(_ route: AppRoute, colorScheme: ColorScheme?) -> Bool {
         let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
         let scene = scenes.first { $0.activationState == .foregroundActive } ?? scenes.first
         guard var top = scene?.keyWindow?.rootViewController else { return false }
