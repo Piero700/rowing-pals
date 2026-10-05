@@ -55,8 +55,9 @@ profile would show errors.
 - [ ] Each card: picture, name, their squads (or level) and "· Coach" for rowing coaches;
       "**x.x** / NN km this week" and sessions; a thin bar — **red** if they're behind the
       pro-rata share of their target (decision 43: nothing is due on Monday; by Wednesday two
-      sevenths), white otherwise; "2k PB" and "Predicted 6:52.3 · High" (or "—" without enough
-      sessions); any flags as chips.
+      sevenths), white otherwise; "2k PB" and "Predicted 7:20 ±9s" (or "—" without enough
+      sessions); any flags as chips. The ± is wider for rowers with only easy sessions or few
+      sessions, narrow (about ±3s) for someone who did an all-out 2k in the last fortnight.
 - [ ] Coach-only accounts are **not** on the list.
 - [ ] Footer: "Predictions and flags come from the Pace Engine."
 2. Tap either pill.
@@ -73,7 +74,8 @@ Tap a rower's card.
 - [ ] Header **Rower**; big picture, name, squads; chips **Age NN** and **NN.N kg** (only if they've
       entered date of birth / weight) and **Private account** if theirs is private.
 - [ ] A card per flag (red for no session in 10+ days and elevated effort, neutral for mis-tagged).
-- [ ] This week: km of target (red when behind), sessions, predicted 2k with its band, and the bar.
+- [ ] This week: km of target (red when behind), sessions, predicted 2k ("6:10" over "pred. ±3s"),
+      and the bar.
 - [ ] **WEEKLY VOLUME · 8 WEEKS**: eight bars, this week's in blue; first week's date under the
       left, "This week" under the right.
 - [ ] **ZONE MIX · LAST 4 WEEKS**: one bar in five shades and a legend with percentages (or
@@ -274,6 +276,23 @@ begin
 end $$;
 ```
 - [ ] Expect `RESULT: still coach=f, squads left=0`
+
+## Added beyond the canvas — check these
+Not drawn on the canvas, but needed to build what it and the brief describe (you said to
+build them and point them out):
+- [ ] **"joined Sep 2025"** in a member's sheet comes from a new `profiles.club_joined_at`, set
+      whenever someone joins a club. Members who joined before the migration show no date.
+- [ ] **Invite codes**: a new `club_for_invite_code()` finds the club behind a code without
+      joining, so "<Club> has coaches" can show before a code join (section 10).
+- [ ] **Coaches' Club feed**: it now includes posts a coach sees only as coach (e.g. a private
+      clubmate who hasn't approved them). Those are read-only — `sessions_i_can_interact_with()`
+      tells the app which (section 6). Say if you'd rather such posts stayed out of the feed and
+      only showed in Coaching.
+- [ ] **Squads in Manage club** for the owner and co-owners, and owners/co-owners can make
+      **themselves** coach (sections 3 and 7).
+- [ ] **Change photo** at the top of Edit profile (section 8).
+- [ ] **The ± range** (decision 48) is the Pace Engine's new v1.5 output; its sizes are seeds to
+      tune after launch.
 
 ## What needs a second phone (or a second account)
 - Coach and rower at once: making someone a coach on one phone and seeing **Coaching** appear on

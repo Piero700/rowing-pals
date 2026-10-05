@@ -149,8 +149,8 @@ struct CoachRowerView: View {
             HStack(alignment: .top, spacing: 4) {
                 stat(CoachRowerText.km(rower.weekMetres), "of \(CoachRowerText.km(rower.weeklyTargetM, decimals: false)) km", isAlert: rower.isBehindTarget)
                 stat("\(rower.weekSessions)", rower.weekSessions == 1 ? "session" : "sessions")
-                stat(rower.prediction?.predictedTotalTimeFormatted ?? "—",
-                     rower.prediction.map { "pred. · \(CoachRowerText.band($0.confidenceScore))" } ?? "pred.")
+                stat(CoachRowerText.predictedTime(rower.prediction) ?? "—",
+                     CoachRowerText.range(rower.prediction).map { "pred. \($0)" } ?? "pred.")
             }
             TargetBar(metres: rower.weekMetres, target: rower.weeklyTargetM, isBehind: rower.isBehindTarget)
         }

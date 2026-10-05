@@ -204,3 +204,9 @@ The Python file stays the source of truth. To change a constant or rule:
 4. Port the change and get `swift test` green.
 
 Never edit the Swift side alone; the two will drift and the vectors stop meaning anything.
+
+## v1.5 (2026-10-05): prediction range
+`predicted_split_range_seconds` and `predicted_total_time_range_seconds` (SPEC.md §5.13): a
+± in seconds, shown in Coaching as "7:20 ±9s". Ported to `Packages/PaceEngine`
+(`PredictionRange.swift`); golden vectors regenerated (38 cases, all reproduced).
+

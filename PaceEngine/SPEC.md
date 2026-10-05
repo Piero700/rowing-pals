@@ -1,7 +1,7 @@
-# Anchor & Impulse Pace Engine — Technical Specification v1.4
+# Anchor & Impulse Pace Engine — Technical Specification v1.5
 
 **Status:** Ready for implementation
-**Supersedes:** v1.3 (audit fixes — §8.9). v1.3 added perceived effort, age, sex and bodyweight (§2.1, §5.9–5.12)
+**Supersedes:** v1.4 (adds the prediction range — §5.13, §8.11). v1.3.1: audit fixes — §8.9. v1.3 added perceived effort, age, sex and bodyweight (§2.1, §5.9–5.12)
 **Constraints honoured:** no ML, session-summary data only, user-supplied intensity tags
 
 ---
@@ -376,6 +376,30 @@ The first logged session replaces it.
 Weight applies at full strength here, unlike in §5.11's trend term, because comparing
 different people is exactly what the Concept2 formula was built for.
 
+### 5.13 Prediction range (v1.5)
+Every anchored prediction carries a **± in seconds**: how far it could plausibly be off.
+It is built from the same evidence the confidence score reads, one term per independent
+source of doubt, added in quadrature, in seconds per 500m:
+
+| Term | Value |
+|---|---|
+| Anchor zone (base) | AN 0.75, TR 1.0, AT 1.5, UT1 2.0, UT2 2.25 |
+| Stale anchor | 0.05 per day older than 14 days |
+| Projection | 0.75 per doubling from the anchor's distance (AN/TR) or from 2000m (submaximal, already converted) to the target |
+| Zones disagree | half the cross-tier spread, when 2+ zones are logged |
+| Thin history | 1.5 × (1 − load_confidence) |
+| Possible intervals | 3.0 when `interval_structure_ambiguous` |
+| Tag contradicted | 1.0 each for the anchor's rate and its RPE contradicting its tag |
+
+```
+split_range = sqrt(sum(term²))
+total_range = split_range × target / 500
+```
+
+A fresh all-out 2k with a full month of logging gives ±3 s over 2k; UT2 sessions alone, ±9 s.
+Population estimates and empty results carry no range (`null`): a population estimate is
+about people like the rower, not the rower.
+
 ---
 
 ## 6. Output contract
@@ -389,6 +413,8 @@ different people is exactly what the Concept2 formula was built for.
   "predicted_split_formatted": "1:45.0",
   "predicted_total_time_seconds": 419.99,
   "predicted_total_time_formatted": "7:00.0",
+  "predicted_split_range_seconds": 0.75,
+  "predicted_total_time_range_seconds": 3.0,
   "confidence_score": "High",
   "confidence_numeric": 80,
   "confidence_factors": [ { "label": "Recent race-pace work", "delta": 80 } ],
@@ -493,6 +519,11 @@ A user on the CR10 scale can't enter 11+, so this is unambiguous above 10 — bu
 6–20 user entering 6–10 will be misread as CR10. If the app lets users pick a scale,
 store it with the value rather than inferring it.
 
+**7.9 The range is a seed, not a measured error.** The §5.13 terms are chosen to agree with
+coaching experience (a fresh test pins a 2k to a few seconds; easy mileage alone, to about
+ten), not fitted. After launch, compare each prediction with the test the rower then posts
+and tune the terms until about two thirds of results land inside the range.
+
 ---
 
 ## 8. Deviations from v1.0, with rationale
@@ -587,7 +618,16 @@ up are fitted from the Concept2 rankings medians (§5.12, §7.6). The flag
 changes: the prior is used only with no history at all, and age only feeds the prior and
 the age-graded score.
 
+### 8.11 v1.5 prediction range
+Adds `predicted_split_range_seconds` and `predicted_total_time_range_seconds` (§5.13) so the
+coach view can show "7:20 ±9s". Nothing else changes: every v1.4 prediction, confidence
+score and flag is identical.
+
 ## 9. Test coverage
+
+v1.5 adds 6 checks for the range (±3 s from a fresh all-out 2k, ±9 s from UT2 alone, wider
+when projecting further, with a thin history and with contradictory tags, and no range on a
+population estimate or an empty result).
 
 v1.4 adds 2 checks for the fitted age curve (passes through every knot, continuous at
 the reference age; 90 total). v1.3.1 added 11 audit regressions, one per bug in §8.9. v1.3 added 34, most importantly: identical predictions across wildly

@@ -80,7 +80,7 @@ from dataclasses import dataclass, field, replace
 from datetime import date, datetime, timedelta
 from typing import Any, Iterable, Mapping, Sequence
 
-SCHEMA_VERSION = "anchor-impulse/1.4"
+SCHEMA_VERSION = "anchor-impulse/1.5"
 
 __all__ = [
     "SCHEMA_VERSION",
@@ -312,6 +312,26 @@ class EngineConfig:
         (35.0, 0.0587), (45.0, 0.0892), (55.0, 0.119),
         (65.0, 0.1739), (75.0, 0.2652), (85.0, 0.4267),
     )
+
+    # --- Prediction range (v1.5, SPEC.md §5.13) -------------------------------------------
+    #
+    # A "± seconds" around the predicted split: how far the answer could plausibly be off,
+    # built from the same evidence the confidence score reads. Independent sources of doubt
+    # are added in quadrature (root of the sum of squares). SEED VALUES, not fitted: after
+    # launch, compare predictions with the tests rowers then post and tune these (§7.9).
+    #
+    # Base doubt by anchor zone, seconds per 500m: a fresh all-out piece pins the 2k down to
+    # about ±0.75 s/500m (±3 s over 2k); an easy UT2 session leans on the zone's offset and
+    # gives about ±2.25 s/500m (±9 s over 2k).
+    range_base_split_s: dict[str, float] = field(
+        default_factory=lambda: {"AN": 0.75, "TR": 1.0, "AT": 1.5, "UT1": 2.0, "UT2": 2.25}
+    )
+    range_per_stale_day_s: float = 0.05        # per day the anchor is older than recent_anchor_days
+    range_per_doubling_s: float = 0.75         # per doubling of distance the projection spans
+    range_spread_share: float = 0.5            # share of the cross-zone spread, when 2+ zones
+    range_thin_history_s: float = 1.5          # at no history, scaled by (1 - load_confidence)
+    range_interval_ambiguous_s: float = 3.0    # AN/TR anchor that may have been intervals
+    range_tag_mismatch_s: float = 1.0          # each of: anchor rate, anchor RPE contradict tag
 
     # Reproduce the original v1.0 Step 3 arithmetic, for A/B measurement only.
     legacy_v1_formula: bool = False
@@ -1137,6 +1157,39 @@ def diagnose_history(
 # Confidence
 # --------------------------------------------------------------------------------------
 
+def _prediction_range(
+    anchor: Anchor,
+    target_distance: float,
+    spread_s: float,
+    tiers_represented: int,
+    load_confidence: float,
+    as_of: date,
+    config: EngineConfig,
+) -> float:
+    """Half-width of the likely range around the predicted split, seconds per 500m (§5.13).
+
+    Each term is one independent reason the number could be off; they are added in
+    quadrature. A maximal anchor projects from its own distance; a submaximal one has
+    already been converted to the 2000m reference (its doubt is in the zone's base term),
+    so it projects from there.
+    """
+    days_ago = (as_of - anchor.day).days
+    projection_from = (anchor.effective_distance_m if anchor.tag in MAXIMAL_TIERS
+                       else config.reference_distance_m)
+    doublings = abs(math.log2(target_distance / max(projection_from, 1e-9)))
+    terms = [
+        config.range_base_split_s[anchor.tag],
+        max(0, days_ago - config.recent_anchor_days) * config.range_per_stale_day_s,
+        doublings * config.range_per_doubling_s,
+        spread_s * config.range_spread_share if tiers_represented >= 2 else 0.0,
+        (1.0 - load_confidence) * config.range_thin_history_s,
+        config.range_interval_ambiguous_s if anchor.interval_ambiguous else 0.0,
+        config.range_tag_mismatch_s if anchor.rate_mismatch else 0.0,
+        config.range_tag_mismatch_s if anchor.rpe_mismatch else 0.0,
+    ]
+    return math.sqrt(sum(term * term for term in terms))
+
+
 def _score_confidence(
     anchor: Anchor,
     sessions: Sequence[Session],
@@ -1527,6 +1580,9 @@ def predict_test_piece(
 
     total_time = final_split * target / 500.0
     rated_count = sum(1 for s in window if s.rpe is not None)
+    split_range = _prediction_range(anchor, target, spread,
+                                    int(diagnostics["tiers_represented"]), load_confidence,
+                                    resolved_as_of, config)
 
     return {
         "schema_version": SCHEMA_VERSION,
@@ -1536,6 +1592,9 @@ def predict_test_piece(
         "predicted_split_formatted": format_seconds(final_split),
         "predicted_total_time_seconds": round(total_time, 2),
         "predicted_total_time_formatted": format_seconds(total_time),
+        # ± around the split and the total time (§5.13).
+        "predicted_split_range_seconds": round(split_range, 2),
+        "predicted_total_time_range_seconds": round(split_range * target / 500.0, 2),
         "confidence_score": band,
         "confidence_numeric": score,
         "confidence_factors": factors,
@@ -1625,6 +1684,9 @@ def _population_estimate_result(
         "predicted_split_formatted": format_seconds(split),
         "predicted_total_time_seconds": round(total, 2),
         "predicted_total_time_formatted": format_seconds(total),
+        # A population estimate isn't about this rower, so it carries no range (§5.13).
+        "predicted_split_range_seconds": None,
+        "predicted_total_time_range_seconds": None,
         "confidence_score": "Population Estimate",
         "confidence_numeric": config.prior_confidence_numeric,
         "confidence_factors": [{
@@ -1672,6 +1734,8 @@ def _empty_result(
         "predicted_split_formatted": None,
         "predicted_total_time_seconds": None,
         "predicted_total_time_formatted": None,
+        "predicted_split_range_seconds": None,
+        "predicted_total_time_range_seconds": None,
         "confidence_score": "Insufficient Data",
         "confidence_numeric": 0,
         "confidence_factors": [],
@@ -2271,6 +2335,44 @@ def _run_self_test() -> None:
     check("a tier where every rating contradicts its tag is flagged without crashing",
           "anchor_tag_rpe_mismatch" in all_contradicted["flags"]
           and all_contradicted["components"]["rpe_correction"] == 0.0)
+
+    print("\n" + "=" * 78)
+    print("11b. Prediction range (v1.5)")
+    print("=" * 78)
+    fresh_an = predict_test_piece(
+        [{"id": "an", "date": (as_of - timedelta(days=2)).isoformat(), "distance_m": 2000,
+          "split_s": 105.0, "tag": "AN", "stroke_rate": 32}]
+        + [{"id": f"u{i}", "date": (as_of - timedelta(days=i + 3)).isoformat(),
+            "distance_m": 16000, "split_s": round(_pace_for("UT2", 16000, 105.0), 1),
+            "tag": "UT2", "stroke_rate": 19} for i in range(8)], 2000, as_of)
+    ut2_only = predict_test_piece(
+        [{"id": f"u{i}", "date": (as_of - timedelta(days=i + 1)).isoformat(),
+          "distance_m": 16000, "split_s": round(_pace_for("UT2", 16000, 105.0), 1),
+          "tag": "UT2", "stroke_rate": 19} for i in range(8)], 2000, as_of)
+    check("a fresh all-out 2k gives about ±3 s over 2k",
+          abs(fresh_an["predicted_total_time_range_seconds"] - 3.0) < 0.05,
+          f"±{fresh_an['predicted_total_time_range_seconds']}")
+    check("UT2-only history gives about ±9 s over 2k",
+          abs(ut2_only["predicted_total_time_range_seconds"] - 9.0) < 0.05,
+          f"±{ut2_only['predicted_total_time_range_seconds']}")
+    five_k = predict_test_piece(
+        [{"id": f"u{i}", "date": (as_of - timedelta(days=i + 1)).isoformat(),
+          "distance_m": 16000, "split_s": round(_pace_for("UT2", 16000, 105.0), 1),
+          "tag": "UT2", "stroke_rate": 19} for i in range(8)], 5000, as_of)
+    check("projecting further widens the range per 500m",
+          five_k["predicted_split_range_seconds"] > ut2_only["predicted_split_range_seconds"])
+    thin = predict_test_piece(
+        [{"id": "an", "date": (as_of - timedelta(days=2)).isoformat(), "distance_m": 2000,
+          "split_s": 105.0, "tag": "AN", "stroke_rate": 32}], 2000, as_of)
+    check("a thin history widens the range",
+          thin["predicted_split_range_seconds"] > fresh_an["predicted_split_range_seconds"])
+    check("the contradictory tag set has a wider range than the coherent one",
+          mis["predicted_split_range_seconds"] > two_k["predicted_split_range_seconds"])
+    prior = predict_test_piece([], 2000, as_of, athlete={"age": 21, "sex": "male"})
+    empty = predict_test_piece([], 2000, as_of)
+    check("population estimates and empty results carry no range",
+          prior["predicted_total_time_range_seconds"] is None
+          and empty["predicted_total_time_range_seconds"] is None)
 
     print("\n" + "=" * 78)
     print("12. Full output shape (with profile and RPE)")

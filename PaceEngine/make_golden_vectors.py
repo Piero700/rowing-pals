@@ -191,6 +191,8 @@ def expected_view(result: dict) -> dict:
         "predicted_total_time_seconds": result["predicted_total_time_seconds"],
         "predicted_split_formatted": result["predicted_split_formatted"],
         "predicted_total_time_formatted": result["predicted_total_time_formatted"],
+        "predicted_split_range_seconds": result["predicted_split_range_seconds"],
+        "predicted_total_time_range_seconds": result["predicted_total_time_range_seconds"],
         "confidence_score": result["confidence_score"],
         "confidence_numeric": result["confidence_numeric"],
         "anchor_tier": anchor["tier"] if anchor else None,

@@ -26,8 +26,7 @@ Artboards: `RankingsVolume`, `RankingsTests`, `RankingsFilters`, `Settings`, `Po
 Built 2026-10-05 (decisions 43–47; checklist `docs/testing/coaching-phase1.md`). Waiting on: the
 migration run on staging, then the user's phone test before merging. Left for later phases, on
 purpose: attendance figures (Rowers list, one rower's page, the sort) and the Workouts /
-Practices tabs. Open question for the user: the canvas's "±4s" on predictions — the engine gives a
-confidence band, shown as "· High" for now (decision 45).
+Practices tabs. Predictions show "±Ns" from the engine's new range (v1.5, decision 48).
 Artboards: `CoachMakeCoach`, `CoachOnboarding`, `CoachJoinNotice`, `CoachCrew`, `CoachOnlyFeed`,
 `SettingsProfile`, `SettingsPrivacy`, `CoachRowers`, `CoachSortSheet`, `CoachRower`, `CoachSquads`,
 `CoachSquadEdit`.

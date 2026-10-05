@@ -151,7 +151,8 @@ that they match the prototype.
    Population prior DONE (engine v1.4, 2026-10-05): cold-start baselines and the age curve from
    27 up fitted from the Concept2 rankings medians (SPEC.md §7.6,
    `PaceEngine/fit_population_prior.py`); the Population Estimate stays off by the user's choice.
-   After launch: tune the tier constants on a real cohort (SPEC.md §7.2) — there is no real data
+   Prediction range DONE (engine v1.5, decision 48): a ± in seconds on every anchored
+   prediction, shown in Coaching. After launch: tune the tier constants on a real cohort (SPEC.md §7.2) — there is no real data
    until rowers start posting, so this waits for the live app (user, 2026-10-05).
 9. **L — Polish and release.** Tab bar: fine for now (user, 2026-10-05). Light mode already
    exists (Settings → Appearance); what's left is a screen-by-screen check of it and of Increase

@@ -64,6 +64,10 @@ struct GoldenVectorTests {
         expectClose(prediction.predictedSplitSeconds, expected.predictedSplitSeconds, "predicted_split_seconds")
         expectClose(prediction.predictedTotalTimeSeconds, expected.predictedTotalTimeSeconds,
                     "predicted_total_time_seconds")
+        expectClose(prediction.predictedSplitRangeSeconds, expected.predictedSplitRangeSeconds,
+                    "predicted_split_range_seconds")
+        expectClose(prediction.predictedTotalTimeRangeSeconds, expected.predictedTotalTimeRangeSeconds,
+                    "predicted_total_time_range_seconds")
         expectClose(prediction.load.trimpLite, expected.loadTrimpLite, "load.trimp_lite")
         expectClose(prediction.load.modifierSeconds, expected.loadModifierSeconds, "load.modifier_seconds")
         expectClose(prediction.diagnostics.spreadSeconds, expected.spreadSeconds, "diagnostics.spread_seconds")

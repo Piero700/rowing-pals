@@ -21,20 +21,26 @@ enum CoachRowerText {
         return metres % 1000 == 0 ? String(metres / 1000) : String(format: "%.1f", Double(metres) / 1000)
     }
 
-    /// The Pace Engine's 2k time and how sure it is: "6:52.3 · High". The engine gives a
-    /// confidence band, not a ± in seconds, so the band is what's shown.
+    /// The Pace Engine's 2k time and its likely range (engine v1.5): "7:20 ±9s".
     static func prediction(_ prediction: Prediction?) -> String {
-        guard let prediction, let time = prediction.predictedTotalTimeFormatted else { return "—" }
-        return "\(time) · \(band(prediction.confidenceScore))"
+        guard let time = predictedTime(prediction) else { return "—" }
+        guard let range = range(prediction) else { return time }
+        return "\(time) \(range)"
     }
 
-    static func band(_ band: Prediction.ConfidenceBand) -> String {
-        switch band {
-        case .high: "High"
-        case .medium: "Medium"
-        case .low: "Low"
-        case .populationEstimate: "Estimate"
-        case .insufficientData: "—"
-        }
+    /// The predicted time to the second, as the canvas shows it: "7:20".
+    static func predictedTime(_ prediction: Prediction?) -> String? {
+        guard let seconds = prediction?.predictedTotalTimeSeconds else { return nil }
+        let whole = Int(seconds.rounded())
+        let hours = whole / 3600, minutes = (whole % 3600) / 60, rest = whole % 60
+        return hours > 0
+            ? String(format: "%d:%02d:%02d", hours, minutes, rest)
+            : String(format: "%d:%02d", minutes, rest)
+    }
+
+    /// "±9s": the engine's range over the whole piece, to the second (at least 1).
+    static func range(_ prediction: Prediction?) -> String? {
+        guard let seconds = prediction?.predictedTotalTimeRangeSeconds else { return nil }
+        return "±\(max(1, Int(seconds.rounded())))s"
     }
 }

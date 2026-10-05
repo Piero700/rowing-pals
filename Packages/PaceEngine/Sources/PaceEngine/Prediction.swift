@@ -206,6 +206,10 @@ public struct Prediction: Codable, Sendable, Equatable {
     public var predictedSplitFormatted: String?
     public var predictedTotalTimeSeconds: Double?
     public var predictedTotalTimeFormatted: String?
+    /// ± around the predicted split and total time, seconds (SPEC.md §5.13, v1.5); nil for a
+    /// population estimate or no prediction.
+    public var predictedSplitRangeSeconds: Double?
+    public var predictedTotalTimeRangeSeconds: Double?
     public var confidenceScore: ConfidenceBand
     public var confidenceNumeric: Int
     public var confidenceFactors: [ConfidenceFactor]
@@ -233,6 +237,8 @@ public struct Prediction: Codable, Sendable, Equatable {
         case predictedSplitFormatted = "predicted_split_formatted"
         case predictedTotalTimeSeconds = "predicted_total_time_seconds"
         case predictedTotalTimeFormatted = "predicted_total_time_formatted"
+        case predictedSplitRangeSeconds = "predicted_split_range_seconds"
+        case predictedTotalTimeRangeSeconds = "predicted_total_time_range_seconds"
         case confidenceScore = "confidence_score"
         case confidenceNumeric = "confidence_numeric"
         case confidenceFactors = "confidence_factors"

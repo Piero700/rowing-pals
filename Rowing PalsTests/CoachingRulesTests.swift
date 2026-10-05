@@ -154,6 +154,18 @@ struct CoachingRulesTests {
         #expect(CoachingRules.age(birthDate: born, asOf: Self.day(6), calendar: Self.calendar) == 21)
     }
 
+    // MARK: - Prediction wording
+
+    @Test func predictionShowsTheTimeToTheSecondAndItsRange() throws {
+        let prediction = try Self.prediction(flags: [], twoKByTier: [:], spread: 0, totalSeconds: 439.6, rangeSeconds: 8.7)
+        #expect(CoachRowerText.prediction(prediction) == "7:20 ±9s")
+        #expect(CoachRowerText.predictedTime(prediction) == "7:20")
+        #expect(CoachRowerText.range(prediction) == "±9s")
+        let tight = try Self.prediction(flags: [], twoKByTier: [:], spread: 0, totalSeconds: 370.0, rangeSeconds: 0.3)
+        #expect(CoachRowerText.range(tight) == "±1s")
+        #expect(CoachRowerText.prediction(nil) == "—")
+    }
+
     // MARK: - The list
 
     @Test func squadFilterKeepsOnlyItsRowers() {
@@ -213,12 +225,18 @@ struct CoachingRulesTests {
     }
 
     /// The smallest engine output the flags read.
-    private static func prediction(flags: [String], twoKByTier: [String: Double], spread: Double) throws -> Prediction {
+    private static func prediction(
+        flags: [String], twoKByTier: [String: Double], spread: Double,
+        totalSeconds: Double? = nil, rangeSeconds: Double? = nil
+    ) throws -> Prediction {
+        let timing = totalSeconds.map { "\"predicted_total_time_seconds\": \($0)," } ?? ""
+        let range = rangeSeconds.map { "\"predicted_total_time_range_seconds\": \($0)," } ?? ""
         let tiers = twoKByTier.map { "\"\($0.key)\": \($0.value)" }.joined(separator: ", ")
         let quoted = flags.map { "\"\($0)\"" }.joined(separator: ", ")
         let json = """
         {
-          "schema_version": "anchor-impulse/1.4",
+          \(timing) \(range)
+          "schema_version": "anchor-impulse/1.5",
           "confidence_score": "Medium",
           "confidence_numeric": 60,
           "confidence_factors": [],

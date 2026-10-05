@@ -8,7 +8,7 @@
 import Foundation
 
 public enum PacePredictor {
-    public static let schemaVersion = "anchor-impulse/1.4"
+    public static let schemaVersion = "anchor-impulse/1.5"
 
     /// Predicts a test-piece split and total time from session-summary history.
     ///
@@ -216,6 +216,11 @@ public enum PacePredictor {
 
         let totalTime = finalSplit * target / 500.0
         let ratedCount = window.filter { $0.rpe != nil }.count
+        let splitRange = predictionRange(
+            anchor: anchor, targetDistance: target, spreadS: spread,
+            tiersRepresented: diagnostics.tiersRepresented, loadConfidence: loadConfidence,
+            asOfDay: asOfDay, config: config
+        )
 
         return Prediction(
             schemaVersion: schemaVersion,
@@ -225,6 +230,8 @@ public enum PacePredictor {
             predictedSplitFormatted: formatSeconds(finalSplit),
             predictedTotalTimeSeconds: Py.round(totalTime, 2),
             predictedTotalTimeFormatted: formatSeconds(totalTime),
+            predictedSplitRangeSeconds: Py.round(splitRange, 2),
+            predictedTotalTimeRangeSeconds: Py.round(splitRange * target / 500.0, 2),
             confidenceScore: confidence.band,
             confidenceNumeric: confidence.score,
             confidenceFactors: confidence.factors,
@@ -309,6 +316,8 @@ public enum PacePredictor {
             predictedSplitFormatted: formatSeconds(split),
             predictedTotalTimeSeconds: Py.round(total, 2),
             predictedTotalTimeFormatted: formatSeconds(total),
+            predictedSplitRangeSeconds: nil,
+            predictedTotalTimeRangeSeconds: nil,
             confidenceScore: .populationEstimate,
             confidenceNumeric: config.priorConfidenceNumeric,
             confidenceFactors: [.init(
@@ -355,6 +364,8 @@ public enum PacePredictor {
             predictedSplitFormatted: nil,
             predictedTotalTimeSeconds: nil,
             predictedTotalTimeFormatted: nil,
+            predictedSplitRangeSeconds: nil,
+            predictedTotalTimeRangeSeconds: nil,
             confidenceScore: .insufficientData,
             confidenceNumeric: 0,
             confidenceFactors: [],
