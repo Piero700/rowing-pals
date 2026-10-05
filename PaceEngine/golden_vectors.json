@@ -1,0 +1,5192 @@
+{
+  "schema_version": "anchor-impulse/1.3.1",
+  "generated_from": "pace_engine.py (Python reference implementation)",
+  "tolerance": {
+    "seconds": 0.02,
+    "note": "Python rounds half-to-even, Swift's .rounded() half-away-from-zero. Compare numbers within 0.02, not for exact equality."
+  },
+  "config": {
+    "window_days": 30,
+    "paul_constant": 5.0,
+    "reference_distance_m": 2000.0,
+    "load_knots": [
+      [
+        0.0,
+        3.0
+      ],
+      [
+        600.0,
+        0.0
+      ],
+      [
+        1800.0,
+        0.0
+      ],
+      [
+        3600.0,
+        -1.5
+      ]
+    ],
+    "floor_split_at_reference": 82.0,
+    "ceiling_split": 210.0,
+    "high_threshold": 75,
+    "medium_threshold": 50,
+    "recent_anchor_days": 14,
+    "stale_history_days": 10,
+    "min_sessions_comfortable": 6,
+    "min_sessions_minimum": 3,
+    "tier_spread_tolerance_s": 6.0,
+    "ratio_warn_log2": 2.0,
+    "ratio_severe_log2": 3.0,
+    "interval_suspicion_m": {
+      "AN": 3000.0,
+      "TR": 10000.0
+    },
+    "split_mismatch_tolerance": 0.02,
+    "submaximal_anchor_method": "median",
+    "rpe_sensitivity": 1.2,
+    "rpe_max_correction": 3.0,
+    "rpe_contradiction_points": 2.5,
+    "fatigue_window_days": 7,
+    "fatigue_rpe_excess": 1.5,
+    "weight_adjust_exponent": 0.222,
+    "weight_adjust_reference_lb": 270.0,
+    "weight_trend_sensitivity": 0.0,
+    "weight_trend_min_kg": 1.5,
+    "prior_reference_age": 27.0,
+    "prior_male_2k_seconds": 440.0,
+    "prior_female_2k_seconds": 500.0,
+    "prior_male_reference_kg": 82.0,
+    "prior_female_reference_kg": 68.0,
+    "prior_confidence_numeric": 15,
+    "legacy_v1_formula": false
+  },
+  "tiers": {
+    "AN": {
+      "name": "AN",
+      "load": 3.0,
+      "offset": 0.0,
+      "ref_distance_m": 2000.0,
+      "paul_weight": 1.0,
+      "rate_lo": 28.0,
+      "rate_hi": 44.0,
+      "rpe_lo": 9.0,
+      "rpe_hi": 10.0,
+      "rank": 1
+    },
+    "TR": {
+      "name": "TR",
+      "load": 2.0,
+      "offset": 8.0,
+      "ref_distance_m": 4000.0,
+      "paul_weight": 0.85,
+      "rate_lo": 26.0,
+      "rate_hi": 36.0,
+      "rpe_lo": 7.0,
+      "rpe_hi": 8.5,
+      "rank": 2
+    },
+    "AT": {
+      "name": "AT",
+      "load": 1.5,
+      "offset": 13.0,
+      "ref_distance_m": 8000.0,
+      "paul_weight": 0.5,
+      "rate_lo": 20.0,
+      "rate_hi": 30.0,
+      "rpe_lo": 5.5,
+      "rpe_hi": 7.0,
+      "rank": 3
+    },
+    "UT1": {
+      "name": "UT1",
+      "load": 1.2,
+      "offset": 17.0,
+      "ref_distance_m": 12000.0,
+      "paul_weight": 0.25,
+      "rate_lo": 18.0,
+      "rate_hi": 26.0,
+      "rpe_lo": 4.0,
+      "rpe_hi": 5.5,
+      "rank": 4
+    },
+    "UT2": {
+      "name": "UT2",
+      "load": 1.0,
+      "offset": 22.0,
+      "ref_distance_m": 16000.0,
+      "paul_weight": 0.15,
+      "rate_lo": 14.0,
+      "rate_hi": 22.0,
+      "rpe_lo": 2.0,
+      "rpe_hi": 4.0,
+      "rank": 5
+    }
+  },
+  "cases": [
+    {
+      "name": "coherent_athlete_2k",
+      "as_of": "2026-09-17",
+      "target_distance_m": 2000,
+      "config_overrides": {},
+      "athlete": null,
+      "history": [
+        {
+          "id": "w0-0",
+          "date": "2026-09-17",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "time_s": 4064.0,
+          "stroke_rate": 19,
+          "tag": "UT2"
+        },
+        {
+          "id": "w0-1",
+          "date": "2026-09-16",
+          "distance_m": 14000,
+          "split_s": 126.9,
+          "time_s": 3553.2,
+          "stroke_rate": 20,
+          "tag": "UT2"
+        },
+        {
+          "id": "w0-2",
+          "date": "2026-09-15",
+          "distance_m": 12000,
+          "split_s": 122.0,
+          "time_s": 2928.0,
+          "stroke_rate": 22,
+          "tag": "UT1"
+        },
+        {
+          "id": "w0-3",
+          "date": "2026-09-14",
+          "distance_m": 8000,
+          "split_s": 118.0,
+          "time_s": 1888.0,
+          "stroke_rate": 26,
+          "tag": "AT"
+        },
+        {
+          "id": "w0-4",
+          "date": "2026-09-13",
+          "distance_m": 18000,
+          "split_s": 127.1,
+          "time_s": 4575.6,
+          "stroke_rate": 18,
+          "tag": "UT2"
+        },
+        {
+          "id": "w1-0",
+          "date": "2026-09-10",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "time_s": 4064.0,
+          "stroke_rate": 19,
+          "tag": "UT2"
+        },
+        {
+          "id": "w1-1",
+          "date": "2026-09-09",
+          "distance_m": 14000,
+          "split_s": 126.9,
+          "time_s": 3553.2,
+          "stroke_rate": 20,
+          "tag": "UT2"
+        },
+        {
+          "id": "w1-2",
+          "date": "2026-09-08",
+          "distance_m": 12000,
+          "split_s": 122.0,
+          "time_s": 2928.0,
+          "stroke_rate": 22,
+          "tag": "UT1"
+        },
+        {
+          "id": "w1-3",
+          "date": "2026-09-07",
+          "distance_m": 8000,
+          "split_s": 118.0,
+          "time_s": 1888.0,
+          "stroke_rate": 26,
+          "tag": "AT"
+        },
+        {
+          "id": "w1-4",
+          "date": "2026-09-06",
+          "distance_m": 18000,
+          "split_s": 127.1,
+          "time_s": 4575.6,
+          "stroke_rate": 18,
+          "tag": "UT2"
+        },
+        {
+          "id": "w2-0",
+          "date": "2026-09-03",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "time_s": 4064.0,
+          "stroke_rate": 19,
+          "tag": "UT2"
+        },
+        {
+          "id": "w2-1",
+          "date": "2026-09-02",
+          "distance_m": 14000,
+          "split_s": 126.9,
+          "time_s": 3553.2,
+          "stroke_rate": 20,
+          "tag": "UT2"
+        },
+        {
+          "id": "w2-2",
+          "date": "2026-09-01",
+          "distance_m": 12000,
+          "split_s": 122.0,
+          "time_s": 2928.0,
+          "stroke_rate": 22,
+          "tag": "UT1"
+        },
+        {
+          "id": "w2-3",
+          "date": "2026-08-31",
+          "distance_m": 8000,
+          "split_s": 118.0,
+          "time_s": 1888.0,
+          "stroke_rate": 26,
+          "tag": "AT"
+        },
+        {
+          "id": "w2-4",
+          "date": "2026-08-30",
+          "distance_m": 18000,
+          "split_s": 127.1,
+          "time_s": 4575.6,
+          "stroke_rate": 18,
+          "tag": "UT2"
+        },
+        {
+          "id": "w3-0",
+          "date": "2026-08-27",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "time_s": 4064.0,
+          "stroke_rate": 19,
+          "tag": "UT2"
+        },
+        {
+          "id": "w3-1",
+          "date": "2026-08-26",
+          "distance_m": 14000,
+          "split_s": 126.9,
+          "time_s": 3553.2,
+          "stroke_rate": 20,
+          "tag": "UT2"
+        },
+        {
+          "id": "w3-2",
+          "date": "2026-08-25",
+          "distance_m": 12000,
+          "split_s": 122.0,
+          "time_s": 2928.0,
+          "stroke_rate": 22,
+          "tag": "UT1"
+        },
+        {
+          "id": "w3-3",
+          "date": "2026-08-24",
+          "distance_m": 8000,
+          "split_s": 118.0,
+          "time_s": 1888.0,
+          "stroke_rate": 26,
+          "tag": "AT"
+        },
+        {
+          "id": "w3-4",
+          "date": "2026-08-23",
+          "distance_m": 18000,
+          "split_s": 127.1,
+          "time_s": 4575.6,
+          "stroke_rate": 18,
+          "tag": "UT2"
+        },
+        {
+          "id": "6k-tr",
+          "date": "2026-09-08",
+          "distance_m": 6000,
+          "time_s": 1385.8,
+          "stroke_rate": 30,
+          "tag": "TR"
+        }
+      ],
+      "expected": {
+        "predicted_split_seconds": 105.0,
+        "predicted_total_time_seconds": 419.99,
+        "predicted_split_formatted": "1:45.0",
+        "predicted_total_time_formatted": "7:00.0",
+        "confidence_score": "High",
+        "confidence_numeric": 80,
+        "anchor_tier": "TR",
+        "anchor_method": "closest_distance",
+        "anchor_session_ids": [
+          "6k-tr"
+        ],
+        "components": {
+          "anchor_split": 115.48,
+          "paul_adjustment": -2.49,
+          "intensity_offset": -8.0,
+          "rpe_correction": 0.0,
+          "two_k_equivalent": 105.0,
+          "projection_to_target": 0.0,
+          "weight_trend_correction": 0.0,
+          "volume_modifier": 0.0,
+          "clamp_adjustment": 0.0
+        },
+        "load_trimp_lite": 1282.1,
+        "load_modifier_seconds": 0.0,
+        "spread_seconds": 0.0,
+        "two_k_equivalent_by_tier": {
+          "TR": 105.0,
+          "AT": 105.0,
+          "UT1": 105.0,
+          "UT2": 105.0
+        },
+        "weight_adjusted_total_seconds": null,
+        "age_graded_total_seconds": null,
+        "flags": []
+      }
+    },
+    {
+      "name": "coherent_athlete_5k",
+      "as_of": "2026-09-17",
+      "target_distance_m": 5000,
+      "config_overrides": {},
+      "athlete": null,
+      "history": [
+        {
+          "id": "w0-0",
+          "date": "2026-09-17",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "time_s": 4064.0,
+          "stroke_rate": 19,
+          "tag": "UT2"
+        },
+        {
+          "id": "w0-1",
+          "date": "2026-09-16",
+          "distance_m": 14000,
+          "split_s": 126.9,
+          "time_s": 3553.2,
+          "stroke_rate": 20,
+          "tag": "UT2"
+        },
+        {
+          "id": "w0-2",
+          "date": "2026-09-15",
+          "distance_m": 12000,
+          "split_s": 122.0,
+          "time_s": 2928.0,
+          "stroke_rate": 22,
+          "tag": "UT1"
+        },
+        {
+          "id": "w0-3",
+          "date": "2026-09-14",
+          "distance_m": 8000,
+          "split_s": 118.0,
+          "time_s": 1888.0,
+          "stroke_rate": 26,
+          "tag": "AT"
+        },
+        {
+          "id": "w0-4",
+          "date": "2026-09-13",
+          "distance_m": 18000,
+          "split_s": 127.1,
+          "time_s": 4575.6,
+          "stroke_rate": 18,
+          "tag": "UT2"
+        },
+        {
+          "id": "w1-0",
+          "date": "2026-09-10",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "time_s": 4064.0,
+          "stroke_rate": 19,
+          "tag": "UT2"
+        },
+        {
+          "id": "w1-1",
+          "date": "2026-09-09",
+          "distance_m": 14000,
+          "split_s": 126.9,
+          "time_s": 3553.2,
+          "stroke_rate": 20,
+          "tag": "UT2"
+        },
+        {
+          "id": "w1-2",
+          "date": "2026-09-08",
+          "distance_m": 12000,
+          "split_s": 122.0,
+          "time_s": 2928.0,
+          "stroke_rate": 22,
+          "tag": "UT1"
+        },
+        {
+          "id": "w1-3",
+          "date": "2026-09-07",
+          "distance_m": 8000,
+          "split_s": 118.0,
+          "time_s": 1888.0,
+          "stroke_rate": 26,
+          "tag": "AT"
+        },
+        {
+          "id": "w1-4",
+          "date": "2026-09-06",
+          "distance_m": 18000,
+          "split_s": 127.1,
+          "time_s": 4575.6,
+          "stroke_rate": 18,
+          "tag": "UT2"
+        },
+        {
+          "id": "w2-0",
+          "date": "2026-09-03",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "time_s": 4064.0,
+          "stroke_rate": 19,
+          "tag": "UT2"
+        },
+        {
+          "id": "w2-1",
+          "date": "2026-09-02",
+          "distance_m": 14000,
+          "split_s": 126.9,
+          "time_s": 3553.2,
+          "stroke_rate": 20,
+          "tag": "UT2"
+        },
+        {
+          "id": "w2-2",
+          "date": "2026-09-01",
+          "distance_m": 12000,
+          "split_s": 122.0,
+          "time_s": 2928.0,
+          "stroke_rate": 22,
+          "tag": "UT1"
+        },
+        {
+          "id": "w2-3",
+          "date": "2026-08-31",
+          "distance_m": 8000,
+          "split_s": 118.0,
+          "time_s": 1888.0,
+          "stroke_rate": 26,
+          "tag": "AT"
+        },
+        {
+          "id": "w2-4",
+          "date": "2026-08-30",
+          "distance_m": 18000,
+          "split_s": 127.1,
+          "time_s": 4575.6,
+          "stroke_rate": 18,
+          "tag": "UT2"
+        },
+        {
+          "id": "w3-0",
+          "date": "2026-08-27",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "time_s": 4064.0,
+          "stroke_rate": 19,
+          "tag": "UT2"
+        },
+        {
+          "id": "w3-1",
+          "date": "2026-08-26",
+          "distance_m": 14000,
+          "split_s": 126.9,
+          "time_s": 3553.2,
+          "stroke_rate": 20,
+          "tag": "UT2"
+        },
+        {
+          "id": "w3-2",
+          "date": "2026-08-25",
+          "distance_m": 12000,
+          "split_s": 122.0,
+          "time_s": 2928.0,
+          "stroke_rate": 22,
+          "tag": "UT1"
+        },
+        {
+          "id": "w3-3",
+          "date": "2026-08-24",
+          "distance_m": 8000,
+          "split_s": 118.0,
+          "time_s": 1888.0,
+          "stroke_rate": 26,
+          "tag": "AT"
+        },
+        {
+          "id": "w3-4",
+          "date": "2026-08-23",
+          "distance_m": 18000,
+          "split_s": 127.1,
+          "time_s": 4575.6,
+          "stroke_rate": 18,
+          "tag": "UT2"
+        },
+        {
+          "id": "6k-tr",
+          "date": "2026-09-08",
+          "distance_m": 6000,
+          "time_s": 1385.8,
+          "stroke_rate": 30,
+          "tag": "TR"
+        }
+      ],
+      "expected": {
+        "predicted_split_seconds": 111.61,
+        "predicted_total_time_seconds": 1116.07,
+        "predicted_split_formatted": "1:51.6",
+        "predicted_total_time_formatted": "18:36.1",
+        "confidence_score": "High",
+        "confidence_numeric": 80,
+        "anchor_tier": "TR",
+        "anchor_method": "closest_distance",
+        "anchor_session_ids": [
+          "6k-tr"
+        ],
+        "components": {
+          "anchor_split": 115.48,
+          "paul_adjustment": -2.49,
+          "intensity_offset": -8.0,
+          "rpe_correction": 0.0,
+          "two_k_equivalent": 105.0,
+          "projection_to_target": 6.61,
+          "weight_trend_correction": 0.0,
+          "volume_modifier": 0.0,
+          "clamp_adjustment": 0.0
+        },
+        "load_trimp_lite": 1282.1,
+        "load_modifier_seconds": 0.0,
+        "spread_seconds": 0.0,
+        "two_k_equivalent_by_tier": {
+          "TR": 105.0,
+          "AT": 105.0,
+          "UT1": 105.0,
+          "UT2": 105.0
+        },
+        "weight_adjusted_total_seconds": null,
+        "age_graded_total_seconds": null,
+        "flags": []
+      }
+    },
+    {
+      "name": "coherent_athlete_6k",
+      "as_of": "2026-09-17",
+      "target_distance_m": 6000,
+      "config_overrides": {},
+      "athlete": null,
+      "history": [
+        {
+          "id": "w0-0",
+          "date": "2026-09-17",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "time_s": 4064.0,
+          "stroke_rate": 19,
+          "tag": "UT2"
+        },
+        {
+          "id": "w0-1",
+          "date": "2026-09-16",
+          "distance_m": 14000,
+          "split_s": 126.9,
+          "time_s": 3553.2,
+          "stroke_rate": 20,
+          "tag": "UT2"
+        },
+        {
+          "id": "w0-2",
+          "date": "2026-09-15",
+          "distance_m": 12000,
+          "split_s": 122.0,
+          "time_s": 2928.0,
+          "stroke_rate": 22,
+          "tag": "UT1"
+        },
+        {
+          "id": "w0-3",
+          "date": "2026-09-14",
+          "distance_m": 8000,
+          "split_s": 118.0,
+          "time_s": 1888.0,
+          "stroke_rate": 26,
+          "tag": "AT"
+        },
+        {
+          "id": "w0-4",
+          "date": "2026-09-13",
+          "distance_m": 18000,
+          "split_s": 127.1,
+          "time_s": 4575.6,
+          "stroke_rate": 18,
+          "tag": "UT2"
+        },
+        {
+          "id": "w1-0",
+          "date": "2026-09-10",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "time_s": 4064.0,
+          "stroke_rate": 19,
+          "tag": "UT2"
+        },
+        {
+          "id": "w1-1",
+          "date": "2026-09-09",
+          "distance_m": 14000,
+          "split_s": 126.9,
+          "time_s": 3553.2,
+          "stroke_rate": 20,
+          "tag": "UT2"
+        },
+        {
+          "id": "w1-2",
+          "date": "2026-09-08",
+          "distance_m": 12000,
+          "split_s": 122.0,
+          "time_s": 2928.0,
+          "stroke_rate": 22,
+          "tag": "UT1"
+        },
+        {
+          "id": "w1-3",
+          "date": "2026-09-07",
+          "distance_m": 8000,
+          "split_s": 118.0,
+          "time_s": 1888.0,
+          "stroke_rate": 26,
+          "tag": "AT"
+        },
+        {
+          "id": "w1-4",
+          "date": "2026-09-06",
+          "distance_m": 18000,
+          "split_s": 127.1,
+          "time_s": 4575.6,
+          "stroke_rate": 18,
+          "tag": "UT2"
+        },
+        {
+          "id": "w2-0",
+          "date": "2026-09-03",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "time_s": 4064.0,
+          "stroke_rate": 19,
+          "tag": "UT2"
+        },
+        {
+          "id": "w2-1",
+          "date": "2026-09-02",
+          "distance_m": 14000,
+          "split_s": 126.9,
+          "time_s": 3553.2,
+          "stroke_rate": 20,
+          "tag": "UT2"
+        },
+        {
+          "id": "w2-2",
+          "date": "2026-09-01",
+          "distance_m": 12000,
+          "split_s": 122.0,
+          "time_s": 2928.0,
+          "stroke_rate": 22,
+          "tag": "UT1"
+        },
+        {
+          "id": "w2-3",
+          "date": "2026-08-31",
+          "distance_m": 8000,
+          "split_s": 118.0,
+          "time_s": 1888.0,
+          "stroke_rate": 26,
+          "tag": "AT"
+        },
+        {
+          "id": "w2-4",
+          "date": "2026-08-30",
+          "distance_m": 18000,
+          "split_s": 127.1,
+          "time_s": 4575.6,
+          "stroke_rate": 18,
+          "tag": "UT2"
+        },
+        {
+          "id": "w3-0",
+          "date": "2026-08-27",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "time_s": 4064.0,
+          "stroke_rate": 19,
+          "tag": "UT2"
+        },
+        {
+          "id": "w3-1",
+          "date": "2026-08-26",
+          "distance_m": 14000,
+          "split_s": 126.9,
+          "time_s": 3553.2,
+          "stroke_rate": 20,
+          "tag": "UT2"
+        },
+        {
+          "id": "w3-2",
+          "date": "2026-08-25",
+          "distance_m": 12000,
+          "split_s": 122.0,
+          "time_s": 2928.0,
+          "stroke_rate": 22,
+          "tag": "UT1"
+        },
+        {
+          "id": "w3-3",
+          "date": "2026-08-24",
+          "distance_m": 8000,
+          "split_s": 118.0,
+          "time_s": 1888.0,
+          "stroke_rate": 26,
+          "tag": "AT"
+        },
+        {
+          "id": "w3-4",
+          "date": "2026-08-23",
+          "distance_m": 18000,
+          "split_s": 127.1,
+          "time_s": 4575.6,
+          "stroke_rate": 18,
+          "tag": "UT2"
+        },
+        {
+          "id": "6k-tr",
+          "date": "2026-09-08",
+          "distance_m": 6000,
+          "time_s": 1385.8,
+          "stroke_rate": 30,
+          "tag": "TR"
+        }
+      ],
+      "expected": {
+        "predicted_split_seconds": 112.92,
+        "predicted_total_time_seconds": 1355.06,
+        "predicted_split_formatted": "1:52.9",
+        "predicted_total_time_formatted": "22:35.1",
+        "confidence_score": "High",
+        "confidence_numeric": 80,
+        "anchor_tier": "TR",
+        "anchor_method": "closest_distance",
+        "anchor_session_ids": [
+          "6k-tr"
+        ],
+        "components": {
+          "anchor_split": 115.48,
+          "paul_adjustment": -2.49,
+          "intensity_offset": -8.0,
+          "rpe_correction": 0.0,
+          "two_k_equivalent": 105.0,
+          "projection_to_target": 7.92,
+          "weight_trend_correction": 0.0,
+          "volume_modifier": 0.0,
+          "clamp_adjustment": 0.0
+        },
+        "load_trimp_lite": 1282.1,
+        "load_modifier_seconds": 0.0,
+        "spread_seconds": 0.0,
+        "two_k_equivalent_by_tier": {
+          "TR": 105.0,
+          "AT": 105.0,
+          "UT1": 105.0,
+          "UT2": 105.0
+        },
+        "weight_adjusted_total_seconds": null,
+        "age_graded_total_seconds": null,
+        "flags": []
+      }
+    },
+    {
+      "name": "single_ut2_15k",
+      "as_of": "2026-09-17",
+      "target_distance_m": 2000,
+      "config_overrides": {},
+      "athlete": null,
+      "history": [
+        {
+          "id": "u",
+          "date": "2026-09-15",
+          "distance_m": 15000,
+          "split_s": 126.9,
+          "stroke_rate": 19,
+          "tag": "UT2"
+        }
+      ],
+      "expected": {
+        "predicted_split_seconds": 105.42,
+        "predicted_total_time_seconds": 421.67,
+        "predicted_split_formatted": "1:45.4",
+        "predicted_total_time_formatted": "7:01.7",
+        "confidence_score": "Low",
+        "confidence_numeric": 5,
+        "anchor_tier": "UT2",
+        "anchor_method": "duration_weighted_median",
+        "anchor_session_ids": [
+          "u"
+        ],
+        "components": {
+          "anchor_split": 126.9,
+          "paul_adjustment": 0.07,
+          "intensity_offset": -22.0,
+          "rpe_correction": 0.0,
+          "two_k_equivalent": 104.97,
+          "projection_to_target": 0.0,
+          "weight_trend_correction": 0.0,
+          "volume_modifier": 0.45,
+          "clamp_adjustment": 0.0
+        },
+        "load_trimp_lite": 63.5,
+        "load_modifier_seconds": 0.45,
+        "spread_seconds": 0.0,
+        "two_k_equivalent_by_tier": {
+          "UT2": 104.97
+        },
+        "weight_adjusted_total_seconds": null,
+        "age_graded_total_seconds": null,
+        "flags": [
+          "load_estimate_damped"
+        ]
+      }
+    },
+    {
+      "name": "single_an_2k_test",
+      "as_of": "2026-09-17",
+      "target_distance_m": 2000,
+      "config_overrides": {},
+      "athlete": null,
+      "history": [
+        {
+          "id": "t",
+          "date": "2026-09-14",
+          "distance_m": 2000,
+          "time_s": 420.0,
+          "stroke_rate": 34,
+          "tag": "AN"
+        }
+      ],
+      "expected": {
+        "predicted_split_seconds": 105.48,
+        "predicted_total_time_seconds": 421.93,
+        "predicted_split_formatted": "1:45.5",
+        "predicted_total_time_formatted": "7:01.9",
+        "confidence_score": "Medium",
+        "confidence_numeric": 70,
+        "anchor_tier": "AN",
+        "anchor_method": "closest_distance",
+        "anchor_session_ids": [
+          "t"
+        ],
+        "components": {
+          "anchor_split": 105.0,
+          "paul_adjustment": -0.0,
+          "intensity_offset": -0.0,
+          "rpe_correction": 0.0,
+          "two_k_equivalent": 105.0,
+          "projection_to_target": 0.0,
+          "weight_trend_correction": 0.0,
+          "volume_modifier": 0.48,
+          "clamp_adjustment": 0.0
+        },
+        "load_trimp_lite": 21.0,
+        "load_modifier_seconds": 0.48,
+        "spread_seconds": 0.0,
+        "two_k_equivalent_by_tier": {
+          "AN": 105.0
+        },
+        "weight_adjusted_total_seconds": null,
+        "age_graded_total_seconds": null,
+        "flags": [
+          "load_estimate_damped"
+        ]
+      }
+    },
+    {
+      "name": "ut1_only",
+      "as_of": "2026-09-17",
+      "target_distance_m": 2000,
+      "config_overrides": {},
+      "athlete": null,
+      "history": [
+        {
+          "id": "a1",
+          "date": "2026-09-16",
+          "distance_m": 12000,
+          "split_s": 122.0,
+          "stroke_rate": 22,
+          "tag": "UT1"
+        },
+        {
+          "id": "a2",
+          "date": "2026-09-15",
+          "distance_m": 12000,
+          "split_s": 122.0,
+          "stroke_rate": 22,
+          "tag": "UT1"
+        },
+        {
+          "id": "a3",
+          "date": "2026-09-14",
+          "distance_m": 12000,
+          "split_s": 122.0,
+          "stroke_rate": 22,
+          "tag": "UT1"
+        },
+        {
+          "id": "a4",
+          "date": "2026-09-13",
+          "distance_m": 12000,
+          "split_s": 122.0,
+          "stroke_rate": 22,
+          "tag": "UT1"
+        },
+        {
+          "id": "a5",
+          "date": "2026-09-12",
+          "distance_m": 12000,
+          "split_s": 122.0,
+          "stroke_rate": 22,
+          "tag": "UT1"
+        },
+        {
+          "id": "a6",
+          "date": "2026-09-11",
+          "distance_m": 12000,
+          "split_s": 122.0,
+          "stroke_rate": 22,
+          "tag": "UT1"
+        },
+        {
+          "id": "a7",
+          "date": "2026-09-10",
+          "distance_m": 12000,
+          "split_s": 122.0,
+          "stroke_rate": 22,
+          "tag": "UT1"
+        }
+      ],
+      "expected": {
+        "predicted_split_seconds": 105.95,
+        "predicted_total_time_seconds": 423.8,
+        "predicted_split_formatted": "1:46.0",
+        "predicted_total_time_formatted": "7:03.8",
+        "confidence_score": "Low",
+        "confidence_numeric": 27,
+        "anchor_tier": "UT1",
+        "anchor_method": "duration_weighted_median",
+        "anchor_session_ids": [
+          "a1",
+          "a2",
+          "a3",
+          "a4",
+          "a5",
+          "a6",
+          "a7"
+        ],
+        "components": {
+          "anchor_split": 122.0,
+          "paul_adjustment": -0.0,
+          "intensity_offset": -17.0,
+          "rpe_correction": 0.0,
+          "two_k_equivalent": 105.0,
+          "projection_to_target": 0.0,
+          "weight_trend_correction": 0.0,
+          "volume_modifier": 0.95,
+          "clamp_adjustment": 0.0
+        },
+        "load_trimp_lite": 409.9,
+        "load_modifier_seconds": 0.95,
+        "spread_seconds": 0.0,
+        "two_k_equivalent_by_tier": {
+          "UT1": 105.0
+        },
+        "weight_adjusted_total_seconds": null,
+        "age_graded_total_seconds": null,
+        "flags": []
+      }
+    },
+    {
+      "name": "mistagged_6k_tier_disagreement",
+      "as_of": "2026-09-17",
+      "target_distance_m": 2000,
+      "config_overrides": {},
+      "athlete": null,
+      "history": [
+        {
+          "id": "w0-0",
+          "date": "2026-09-17",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "time_s": 4064.0,
+          "stroke_rate": 19,
+          "tag": "UT2"
+        },
+        {
+          "id": "w0-1",
+          "date": "2026-09-16",
+          "distance_m": 14000,
+          "split_s": 126.9,
+          "time_s": 3553.2,
+          "stroke_rate": 20,
+          "tag": "UT2"
+        },
+        {
+          "id": "w0-2",
+          "date": "2026-09-15",
+          "distance_m": 12000,
+          "split_s": 122.0,
+          "time_s": 2928.0,
+          "stroke_rate": 22,
+          "tag": "UT1"
+        },
+        {
+          "id": "w0-3",
+          "date": "2026-09-14",
+          "distance_m": 8000,
+          "split_s": 118.0,
+          "time_s": 1888.0,
+          "stroke_rate": 26,
+          "tag": "AT"
+        },
+        {
+          "id": "w0-4",
+          "date": "2026-09-13",
+          "distance_m": 18000,
+          "split_s": 127.1,
+          "time_s": 4575.6,
+          "stroke_rate": 18,
+          "tag": "UT2"
+        },
+        {
+          "id": "w1-0",
+          "date": "2026-09-10",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "time_s": 4064.0,
+          "stroke_rate": 19,
+          "tag": "UT2"
+        },
+        {
+          "id": "w1-1",
+          "date": "2026-09-09",
+          "distance_m": 14000,
+          "split_s": 126.9,
+          "time_s": 3553.2,
+          "stroke_rate": 20,
+          "tag": "UT2"
+        },
+        {
+          "id": "w1-2",
+          "date": "2026-09-08",
+          "distance_m": 12000,
+          "split_s": 122.0,
+          "time_s": 2928.0,
+          "stroke_rate": 22,
+          "tag": "UT1"
+        },
+        {
+          "id": "w1-3",
+          "date": "2026-09-07",
+          "distance_m": 8000,
+          "split_s": 118.0,
+          "time_s": 1888.0,
+          "stroke_rate": 26,
+          "tag": "AT"
+        },
+        {
+          "id": "w1-4",
+          "date": "2026-09-06",
+          "distance_m": 18000,
+          "split_s": 127.1,
+          "time_s": 4575.6,
+          "stroke_rate": 18,
+          "tag": "UT2"
+        },
+        {
+          "id": "w2-0",
+          "date": "2026-09-03",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "time_s": 4064.0,
+          "stroke_rate": 19,
+          "tag": "UT2"
+        },
+        {
+          "id": "w2-1",
+          "date": "2026-09-02",
+          "distance_m": 14000,
+          "split_s": 126.9,
+          "time_s": 3553.2,
+          "stroke_rate": 20,
+          "tag": "UT2"
+        },
+        {
+          "id": "w2-2",
+          "date": "2026-09-01",
+          "distance_m": 12000,
+          "split_s": 122.0,
+          "time_s": 2928.0,
+          "stroke_rate": 22,
+          "tag": "UT1"
+        },
+        {
+          "id": "w2-3",
+          "date": "2026-08-31",
+          "distance_m": 8000,
+          "split_s": 118.0,
+          "time_s": 1888.0,
+          "stroke_rate": 26,
+          "tag": "AT"
+        },
+        {
+          "id": "w2-4",
+          "date": "2026-08-30",
+          "distance_m": 18000,
+          "split_s": 127.1,
+          "time_s": 4575.6,
+          "stroke_rate": 18,
+          "tag": "UT2"
+        },
+        {
+          "id": "w3-0",
+          "date": "2026-08-27",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "time_s": 4064.0,
+          "stroke_rate": 19,
+          "tag": "UT2"
+        },
+        {
+          "id": "w3-1",
+          "date": "2026-08-26",
+          "distance_m": 14000,
+          "split_s": 126.9,
+          "time_s": 3553.2,
+          "stroke_rate": 20,
+          "tag": "UT2"
+        },
+        {
+          "id": "w3-2",
+          "date": "2026-08-25",
+          "distance_m": 12000,
+          "split_s": 122.0,
+          "time_s": 2928.0,
+          "stroke_rate": 22,
+          "tag": "UT1"
+        },
+        {
+          "id": "w3-3",
+          "date": "2026-08-24",
+          "distance_m": 8000,
+          "split_s": 118.0,
+          "time_s": 1888.0,
+          "stroke_rate": 26,
+          "tag": "AT"
+        },
+        {
+          "id": "w3-4",
+          "date": "2026-08-23",
+          "distance_m": 18000,
+          "split_s": 127.1,
+          "time_s": 4575.6,
+          "stroke_rate": 18,
+          "tag": "UT2"
+        },
+        {
+          "id": "6k-bad",
+          "date": "2026-09-08",
+          "distance_m": 6000,
+          "time_s": 1260.0,
+          "stroke_rate": 30,
+          "tag": "TR"
+        }
+      ],
+      "expected": {
+        "predicted_split_seconds": 94.51,
+        "predicted_total_time_seconds": 378.06,
+        "predicted_split_formatted": "1:34.5",
+        "predicted_total_time_formatted": "6:18.1",
+        "confidence_score": "Medium",
+        "confidence_numeric": 70,
+        "anchor_tier": "TR",
+        "anchor_method": "closest_distance",
+        "anchor_session_ids": [
+          "6k-bad"
+        ],
+        "components": {
+          "anchor_split": 105.0,
+          "paul_adjustment": -2.49,
+          "intensity_offset": -8.0,
+          "rpe_correction": 0.0,
+          "two_k_equivalent": 94.51,
+          "projection_to_target": 0.0,
+          "weight_trend_correction": 0.0,
+          "volume_modifier": 0.0,
+          "clamp_adjustment": 0.0
+        },
+        "load_trimp_lite": 1277.9,
+        "load_modifier_seconds": 0.0,
+        "spread_seconds": 10.49,
+        "two_k_equivalent_by_tier": {
+          "TR": 94.51,
+          "AT": 105.0,
+          "UT1": 105.0,
+          "UT2": 105.0
+        },
+        "weight_adjusted_total_seconds": null,
+        "age_graded_total_seconds": null,
+        "flags": [
+          "tier_disagreement"
+        ]
+      }
+    },
+    {
+      "name": "intervals_undeclared",
+      "as_of": "2026-09-17",
+      "target_distance_m": 2000,
+      "config_overrides": {},
+      "athlete": null,
+      "history": [
+        {
+          "id": "8x500",
+          "date": "2026-09-13",
+          "distance_m": 4000,
+          "split_s": 96.0,
+          "stroke_rate": 34,
+          "tag": "AN"
+        }
+      ],
+      "expected": {
+        "predicted_split_seconds": 91.47,
+        "predicted_total_time_seconds": 365.87,
+        "predicted_split_formatted": "1:31.5",
+        "predicted_total_time_formatted": "6:05.9",
+        "confidence_score": "Medium",
+        "confidence_numeric": 55,
+        "anchor_tier": "AN",
+        "anchor_method": "closest_distance",
+        "anchor_session_ids": [
+          "8x500"
+        ],
+        "components": {
+          "anchor_split": 96.0,
+          "paul_adjustment": -5.0,
+          "intensity_offset": -0.0,
+          "rpe_correction": 0.0,
+          "two_k_equivalent": 91.0,
+          "projection_to_target": 0.0,
+          "weight_trend_correction": 0.0,
+          "volume_modifier": 0.47,
+          "clamp_adjustment": 0.0
+        },
+        "load_trimp_lite": 38.4,
+        "load_modifier_seconds": 0.47,
+        "spread_seconds": 0.0,
+        "two_k_equivalent_by_tier": {
+          "AN": 91.0
+        },
+        "weight_adjusted_total_seconds": null,
+        "age_graded_total_seconds": null,
+        "flags": [
+          "interval_structure_ambiguous",
+          "load_estimate_damped"
+        ]
+      }
+    },
+    {
+      "name": "intervals_declared",
+      "as_of": "2026-09-17",
+      "target_distance_m": 2000,
+      "config_overrides": {},
+      "athlete": null,
+      "history": [
+        {
+          "id": "8x500",
+          "date": "2026-09-13",
+          "distance_m": 4000,
+          "rep_distance_m": 500,
+          "split_s": 96.0,
+          "stroke_rate": 34,
+          "tag": "AN"
+        }
+      ],
+      "expected": {
+        "predicted_split_seconds": 106.47,
+        "predicted_total_time_seconds": 425.87,
+        "predicted_split_formatted": "1:46.5",
+        "predicted_total_time_formatted": "7:05.9",
+        "confidence_score": "Medium",
+        "confidence_numeric": 70,
+        "anchor_tier": "AN",
+        "anchor_method": "closest_distance",
+        "anchor_session_ids": [
+          "8x500"
+        ],
+        "components": {
+          "anchor_split": 96.0,
+          "paul_adjustment": 10.0,
+          "intensity_offset": -0.0,
+          "rpe_correction": 0.0,
+          "two_k_equivalent": 106.0,
+          "projection_to_target": 0.0,
+          "weight_trend_correction": 0.0,
+          "volume_modifier": 0.47,
+          "clamp_adjustment": 0.0
+        },
+        "load_trimp_lite": 38.4,
+        "load_modifier_seconds": 0.47,
+        "spread_seconds": 0.0,
+        "two_k_equivalent_by_tier": {
+          "AN": 106.0
+        },
+        "weight_adjusted_total_seconds": null,
+        "age_graded_total_seconds": null,
+        "flags": [
+          "load_estimate_damped"
+        ]
+      }
+    },
+    {
+      "name": "empty_history",
+      "as_of": "2026-09-17",
+      "target_distance_m": 2000,
+      "config_overrides": {},
+      "athlete": null,
+      "history": [],
+      "expected": {
+        "predicted_split_seconds": null,
+        "predicted_total_time_seconds": null,
+        "predicted_split_formatted": null,
+        "predicted_total_time_formatted": null,
+        "confidence_score": "Insufficient Data",
+        "confidence_numeric": 0,
+        "anchor_tier": null,
+        "anchor_method": null,
+        "anchor_session_ids": null,
+        "components": {},
+        "load_trimp_lite": 0.0,
+        "load_modifier_seconds": 0.0,
+        "spread_seconds": 0.0,
+        "two_k_equivalent_by_tier": {},
+        "weight_adjusted_total_seconds": null,
+        "age_graded_total_seconds": null,
+        "flags": [
+          "cold_start"
+        ]
+      }
+    },
+    {
+      "name": "zero_target",
+      "as_of": "2026-09-17",
+      "target_distance_m": 0,
+      "config_overrides": {},
+      "athlete": null,
+      "history": [
+        {
+          "id": "w0-0",
+          "date": "2026-09-17",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "time_s": 4064.0,
+          "stroke_rate": 19,
+          "tag": "UT2"
+        },
+        {
+          "id": "w0-1",
+          "date": "2026-09-16",
+          "distance_m": 14000,
+          "split_s": 126.9,
+          "time_s": 3553.2,
+          "stroke_rate": 20,
+          "tag": "UT2"
+        },
+        {
+          "id": "w0-2",
+          "date": "2026-09-15",
+          "distance_m": 12000,
+          "split_s": 122.0,
+          "time_s": 2928.0,
+          "stroke_rate": 22,
+          "tag": "UT1"
+        },
+        {
+          "id": "w0-3",
+          "date": "2026-09-14",
+          "distance_m": 8000,
+          "split_s": 118.0,
+          "time_s": 1888.0,
+          "stroke_rate": 26,
+          "tag": "AT"
+        },
+        {
+          "id": "w0-4",
+          "date": "2026-09-13",
+          "distance_m": 18000,
+          "split_s": 127.1,
+          "time_s": 4575.6,
+          "stroke_rate": 18,
+          "tag": "UT2"
+        },
+        {
+          "id": "w1-0",
+          "date": "2026-09-10",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "time_s": 4064.0,
+          "stroke_rate": 19,
+          "tag": "UT2"
+        },
+        {
+          "id": "w1-1",
+          "date": "2026-09-09",
+          "distance_m": 14000,
+          "split_s": 126.9,
+          "time_s": 3553.2,
+          "stroke_rate": 20,
+          "tag": "UT2"
+        },
+        {
+          "id": "w1-2",
+          "date": "2026-09-08",
+          "distance_m": 12000,
+          "split_s": 122.0,
+          "time_s": 2928.0,
+          "stroke_rate": 22,
+          "tag": "UT1"
+        },
+        {
+          "id": "w1-3",
+          "date": "2026-09-07",
+          "distance_m": 8000,
+          "split_s": 118.0,
+          "time_s": 1888.0,
+          "stroke_rate": 26,
+          "tag": "AT"
+        },
+        {
+          "id": "w1-4",
+          "date": "2026-09-06",
+          "distance_m": 18000,
+          "split_s": 127.1,
+          "time_s": 4575.6,
+          "stroke_rate": 18,
+          "tag": "UT2"
+        },
+        {
+          "id": "w2-0",
+          "date": "2026-09-03",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "time_s": 4064.0,
+          "stroke_rate": 19,
+          "tag": "UT2"
+        },
+        {
+          "id": "w2-1",
+          "date": "2026-09-02",
+          "distance_m": 14000,
+          "split_s": 126.9,
+          "time_s": 3553.2,
+          "stroke_rate": 20,
+          "tag": "UT2"
+        },
+        {
+          "id": "w2-2",
+          "date": "2026-09-01",
+          "distance_m": 12000,
+          "split_s": 122.0,
+          "time_s": 2928.0,
+          "stroke_rate": 22,
+          "tag": "UT1"
+        },
+        {
+          "id": "w2-3",
+          "date": "2026-08-31",
+          "distance_m": 8000,
+          "split_s": 118.0,
+          "time_s": 1888.0,
+          "stroke_rate": 26,
+          "tag": "AT"
+        },
+        {
+          "id": "w2-4",
+          "date": "2026-08-30",
+          "distance_m": 18000,
+          "split_s": 127.1,
+          "time_s": 4575.6,
+          "stroke_rate": 18,
+          "tag": "UT2"
+        },
+        {
+          "id": "w3-0",
+          "date": "2026-08-27",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "time_s": 4064.0,
+          "stroke_rate": 19,
+          "tag": "UT2"
+        },
+        {
+          "id": "w3-1",
+          "date": "2026-08-26",
+          "distance_m": 14000,
+          "split_s": 126.9,
+          "time_s": 3553.2,
+          "stroke_rate": 20,
+          "tag": "UT2"
+        },
+        {
+          "id": "w3-2",
+          "date": "2026-08-25",
+          "distance_m": 12000,
+          "split_s": 122.0,
+          "time_s": 2928.0,
+          "stroke_rate": 22,
+          "tag": "UT1"
+        },
+        {
+          "id": "w3-3",
+          "date": "2026-08-24",
+          "distance_m": 8000,
+          "split_s": 118.0,
+          "time_s": 1888.0,
+          "stroke_rate": 26,
+          "tag": "AT"
+        },
+        {
+          "id": "w3-4",
+          "date": "2026-08-23",
+          "distance_m": 18000,
+          "split_s": 127.1,
+          "time_s": 4575.6,
+          "stroke_rate": 18,
+          "tag": "UT2"
+        },
+        {
+          "id": "6k-tr",
+          "date": "2026-09-08",
+          "distance_m": 6000,
+          "time_s": 1385.8,
+          "stroke_rate": 30,
+          "tag": "TR"
+        }
+      ],
+      "expected": {
+        "predicted_split_seconds": null,
+        "predicted_total_time_seconds": null,
+        "predicted_split_formatted": null,
+        "predicted_total_time_formatted": null,
+        "confidence_score": "Insufficient Data",
+        "confidence_numeric": 0,
+        "anchor_tier": null,
+        "anchor_method": null,
+        "anchor_session_ids": null,
+        "components": {},
+        "load_trimp_lite": 0.0,
+        "load_modifier_seconds": 0.0,
+        "spread_seconds": 0.0,
+        "two_k_equivalent_by_tier": {},
+        "weight_adjusted_total_seconds": null,
+        "age_graded_total_seconds": null,
+        "flags": [
+          "invalid_target_distance"
+        ]
+      }
+    },
+    {
+      "name": "negative_target",
+      "as_of": "2026-09-17",
+      "target_distance_m": -2000,
+      "config_overrides": {},
+      "athlete": null,
+      "history": [
+        {
+          "id": "w0-0",
+          "date": "2026-09-17",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "time_s": 4064.0,
+          "stroke_rate": 19,
+          "tag": "UT2"
+        },
+        {
+          "id": "w0-1",
+          "date": "2026-09-16",
+          "distance_m": 14000,
+          "split_s": 126.9,
+          "time_s": 3553.2,
+          "stroke_rate": 20,
+          "tag": "UT2"
+        },
+        {
+          "id": "w0-2",
+          "date": "2026-09-15",
+          "distance_m": 12000,
+          "split_s": 122.0,
+          "time_s": 2928.0,
+          "stroke_rate": 22,
+          "tag": "UT1"
+        },
+        {
+          "id": "w0-3",
+          "date": "2026-09-14",
+          "distance_m": 8000,
+          "split_s": 118.0,
+          "time_s": 1888.0,
+          "stroke_rate": 26,
+          "tag": "AT"
+        },
+        {
+          "id": "w0-4",
+          "date": "2026-09-13",
+          "distance_m": 18000,
+          "split_s": 127.1,
+          "time_s": 4575.6,
+          "stroke_rate": 18,
+          "tag": "UT2"
+        },
+        {
+          "id": "w1-0",
+          "date": "2026-09-10",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "time_s": 4064.0,
+          "stroke_rate": 19,
+          "tag": "UT2"
+        },
+        {
+          "id": "w1-1",
+          "date": "2026-09-09",
+          "distance_m": 14000,
+          "split_s": 126.9,
+          "time_s": 3553.2,
+          "stroke_rate": 20,
+          "tag": "UT2"
+        },
+        {
+          "id": "w1-2",
+          "date": "2026-09-08",
+          "distance_m": 12000,
+          "split_s": 122.0,
+          "time_s": 2928.0,
+          "stroke_rate": 22,
+          "tag": "UT1"
+        },
+        {
+          "id": "w1-3",
+          "date": "2026-09-07",
+          "distance_m": 8000,
+          "split_s": 118.0,
+          "time_s": 1888.0,
+          "stroke_rate": 26,
+          "tag": "AT"
+        },
+        {
+          "id": "w1-4",
+          "date": "2026-09-06",
+          "distance_m": 18000,
+          "split_s": 127.1,
+          "time_s": 4575.6,
+          "stroke_rate": 18,
+          "tag": "UT2"
+        },
+        {
+          "id": "w2-0",
+          "date": "2026-09-03",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "time_s": 4064.0,
+          "stroke_rate": 19,
+          "tag": "UT2"
+        },
+        {
+          "id": "w2-1",
+          "date": "2026-09-02",
+          "distance_m": 14000,
+          "split_s": 126.9,
+          "time_s": 3553.2,
+          "stroke_rate": 20,
+          "tag": "UT2"
+        },
+        {
+          "id": "w2-2",
+          "date": "2026-09-01",
+          "distance_m": 12000,
+          "split_s": 122.0,
+          "time_s": 2928.0,
+          "stroke_rate": 22,
+          "tag": "UT1"
+        },
+        {
+          "id": "w2-3",
+          "date": "2026-08-31",
+          "distance_m": 8000,
+          "split_s": 118.0,
+          "time_s": 1888.0,
+          "stroke_rate": 26,
+          "tag": "AT"
+        },
+        {
+          "id": "w2-4",
+          "date": "2026-08-30",
+          "distance_m": 18000,
+          "split_s": 127.1,
+          "time_s": 4575.6,
+          "stroke_rate": 18,
+          "tag": "UT2"
+        },
+        {
+          "id": "w3-0",
+          "date": "2026-08-27",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "time_s": 4064.0,
+          "stroke_rate": 19,
+          "tag": "UT2"
+        },
+        {
+          "id": "w3-1",
+          "date": "2026-08-26",
+          "distance_m": 14000,
+          "split_s": 126.9,
+          "time_s": 3553.2,
+          "stroke_rate": 20,
+          "tag": "UT2"
+        },
+        {
+          "id": "w3-2",
+          "date": "2026-08-25",
+          "distance_m": 12000,
+          "split_s": 122.0,
+          "time_s": 2928.0,
+          "stroke_rate": 22,
+          "tag": "UT1"
+        },
+        {
+          "id": "w3-3",
+          "date": "2026-08-24",
+          "distance_m": 8000,
+          "split_s": 118.0,
+          "time_s": 1888.0,
+          "stroke_rate": 26,
+          "tag": "AT"
+        },
+        {
+          "id": "w3-4",
+          "date": "2026-08-23",
+          "distance_m": 18000,
+          "split_s": 127.1,
+          "time_s": 4575.6,
+          "stroke_rate": 18,
+          "tag": "UT2"
+        },
+        {
+          "id": "6k-tr",
+          "date": "2026-09-08",
+          "distance_m": 6000,
+          "time_s": 1385.8,
+          "stroke_rate": 30,
+          "tag": "TR"
+        }
+      ],
+      "expected": {
+        "predicted_split_seconds": null,
+        "predicted_total_time_seconds": null,
+        "predicted_split_formatted": null,
+        "predicted_total_time_formatted": null,
+        "confidence_score": "Insufficient Data",
+        "confidence_numeric": 0,
+        "anchor_tier": null,
+        "anchor_method": null,
+        "anchor_session_ids": null,
+        "components": {},
+        "load_trimp_lite": 0.0,
+        "load_modifier_seconds": 0.0,
+        "spread_seconds": 0.0,
+        "two_k_equivalent_by_tier": {},
+        "weight_adjusted_total_seconds": null,
+        "age_graded_total_seconds": null,
+        "flags": [
+          "invalid_target_distance"
+        ]
+      }
+    },
+    {
+      "name": "zero_distance_session",
+      "as_of": "2026-09-17",
+      "target_distance_m": 2000,
+      "config_overrides": {},
+      "athlete": null,
+      "history": [
+        {
+          "id": "z",
+          "date": "2026-09-17",
+          "distance_m": 0,
+          "time_s": 600.0,
+          "tag": "UT2"
+        }
+      ],
+      "expected": {
+        "predicted_split_seconds": null,
+        "predicted_total_time_seconds": null,
+        "predicted_split_formatted": null,
+        "predicted_total_time_formatted": null,
+        "confidence_score": "Insufficient Data",
+        "confidence_numeric": 0,
+        "anchor_tier": null,
+        "anchor_method": null,
+        "anchor_session_ids": null,
+        "components": {},
+        "load_trimp_lite": 0.0,
+        "load_modifier_seconds": 0.0,
+        "spread_seconds": 0.0,
+        "two_k_equivalent_by_tier": {},
+        "weight_adjusted_total_seconds": null,
+        "age_graded_total_seconds": null,
+        "flags": [
+          "cold_start"
+        ]
+      }
+    },
+    {
+      "name": "stale_history_only",
+      "as_of": "2026-09-17",
+      "target_distance_m": 2000,
+      "config_overrides": {},
+      "athlete": null,
+      "history": [
+        {
+          "id": "old",
+          "date": "2026-05-20",
+          "distance_m": 2000,
+          "time_s": 420.0,
+          "tag": "AN"
+        }
+      ],
+      "expected": {
+        "predicted_split_seconds": null,
+        "predicted_total_time_seconds": null,
+        "predicted_split_formatted": null,
+        "predicted_total_time_formatted": null,
+        "confidence_score": "Insufficient Data",
+        "confidence_numeric": 0,
+        "anchor_tier": null,
+        "anchor_method": null,
+        "anchor_session_ids": null,
+        "components": {},
+        "load_trimp_lite": 0.0,
+        "load_modifier_seconds": 0.0,
+        "spread_seconds": 0.0,
+        "two_k_equivalent_by_tier": {},
+        "weight_adjusted_total_seconds": null,
+        "age_graded_total_seconds": null,
+        "flags": [
+          "history_outside_window"
+        ]
+      }
+    },
+    {
+      "name": "future_session_ignored",
+      "as_of": "2026-09-17",
+      "target_distance_m": 2000,
+      "config_overrides": {},
+      "athlete": null,
+      "history": [
+        {
+          "id": "w0-0",
+          "date": "2026-09-17",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "time_s": 4064.0,
+          "stroke_rate": 19,
+          "tag": "UT2"
+        },
+        {
+          "id": "w0-1",
+          "date": "2026-09-16",
+          "distance_m": 14000,
+          "split_s": 126.9,
+          "time_s": 3553.2,
+          "stroke_rate": 20,
+          "tag": "UT2"
+        },
+        {
+          "id": "w0-2",
+          "date": "2026-09-15",
+          "distance_m": 12000,
+          "split_s": 122.0,
+          "time_s": 2928.0,
+          "stroke_rate": 22,
+          "tag": "UT1"
+        },
+        {
+          "id": "w0-3",
+          "date": "2026-09-14",
+          "distance_m": 8000,
+          "split_s": 118.0,
+          "time_s": 1888.0,
+          "stroke_rate": 26,
+          "tag": "AT"
+        },
+        {
+          "id": "w0-4",
+          "date": "2026-09-13",
+          "distance_m": 18000,
+          "split_s": 127.1,
+          "time_s": 4575.6,
+          "stroke_rate": 18,
+          "tag": "UT2"
+        },
+        {
+          "id": "w1-0",
+          "date": "2026-09-10",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "time_s": 4064.0,
+          "stroke_rate": 19,
+          "tag": "UT2"
+        },
+        {
+          "id": "w1-1",
+          "date": "2026-09-09",
+          "distance_m": 14000,
+          "split_s": 126.9,
+          "time_s": 3553.2,
+          "stroke_rate": 20,
+          "tag": "UT2"
+        },
+        {
+          "id": "w1-2",
+          "date": "2026-09-08",
+          "distance_m": 12000,
+          "split_s": 122.0,
+          "time_s": 2928.0,
+          "stroke_rate": 22,
+          "tag": "UT1"
+        },
+        {
+          "id": "w1-3",
+          "date": "2026-09-07",
+          "distance_m": 8000,
+          "split_s": 118.0,
+          "time_s": 1888.0,
+          "stroke_rate": 26,
+          "tag": "AT"
+        },
+        {
+          "id": "w1-4",
+          "date": "2026-09-06",
+          "distance_m": 18000,
+          "split_s": 127.1,
+          "time_s": 4575.6,
+          "stroke_rate": 18,
+          "tag": "UT2"
+        },
+        {
+          "id": "w2-0",
+          "date": "2026-09-03",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "time_s": 4064.0,
+          "stroke_rate": 19,
+          "tag": "UT2"
+        },
+        {
+          "id": "w2-1",
+          "date": "2026-09-02",
+          "distance_m": 14000,
+          "split_s": 126.9,
+          "time_s": 3553.2,
+          "stroke_rate": 20,
+          "tag": "UT2"
+        },
+        {
+          "id": "w2-2",
+          "date": "2026-09-01",
+          "distance_m": 12000,
+          "split_s": 122.0,
+          "time_s": 2928.0,
+          "stroke_rate": 22,
+          "tag": "UT1"
+        },
+        {
+          "id": "w2-3",
+          "date": "2026-08-31",
+          "distance_m": 8000,
+          "split_s": 118.0,
+          "time_s": 1888.0,
+          "stroke_rate": 26,
+          "tag": "AT"
+        },
+        {
+          "id": "w2-4",
+          "date": "2026-08-30",
+          "distance_m": 18000,
+          "split_s": 127.1,
+          "time_s": 4575.6,
+          "stroke_rate": 18,
+          "tag": "UT2"
+        },
+        {
+          "id": "w3-0",
+          "date": "2026-08-27",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "time_s": 4064.0,
+          "stroke_rate": 19,
+          "tag": "UT2"
+        },
+        {
+          "id": "w3-1",
+          "date": "2026-08-26",
+          "distance_m": 14000,
+          "split_s": 126.9,
+          "time_s": 3553.2,
+          "stroke_rate": 20,
+          "tag": "UT2"
+        },
+        {
+          "id": "w3-2",
+          "date": "2026-08-25",
+          "distance_m": 12000,
+          "split_s": 122.0,
+          "time_s": 2928.0,
+          "stroke_rate": 22,
+          "tag": "UT1"
+        },
+        {
+          "id": "w3-3",
+          "date": "2026-08-24",
+          "distance_m": 8000,
+          "split_s": 118.0,
+          "time_s": 1888.0,
+          "stroke_rate": 26,
+          "tag": "AT"
+        },
+        {
+          "id": "w3-4",
+          "date": "2026-08-23",
+          "distance_m": 18000,
+          "split_s": 127.1,
+          "time_s": 4575.6,
+          "stroke_rate": 18,
+          "tag": "UT2"
+        },
+        {
+          "id": "6k-tr",
+          "date": "2026-09-08",
+          "distance_m": 6000,
+          "time_s": 1385.8,
+          "stroke_rate": 30,
+          "tag": "TR"
+        },
+        {
+          "id": "tomorrow",
+          "date": "2026-09-18",
+          "distance_m": 2000,
+          "time_s": 360.0,
+          "tag": "AN"
+        }
+      ],
+      "expected": {
+        "predicted_split_seconds": 105.0,
+        "predicted_total_time_seconds": 419.99,
+        "predicted_split_formatted": "1:45.0",
+        "predicted_total_time_formatted": "7:00.0",
+        "confidence_score": "High",
+        "confidence_numeric": 80,
+        "anchor_tier": "TR",
+        "anchor_method": "closest_distance",
+        "anchor_session_ids": [
+          "6k-tr"
+        ],
+        "components": {
+          "anchor_split": 115.48,
+          "paul_adjustment": -2.49,
+          "intensity_offset": -8.0,
+          "rpe_correction": 0.0,
+          "two_k_equivalent": 105.0,
+          "projection_to_target": 0.0,
+          "weight_trend_correction": 0.0,
+          "volume_modifier": 0.0,
+          "clamp_adjustment": 0.0
+        },
+        "load_trimp_lite": 1282.1,
+        "load_modifier_seconds": 0.0,
+        "spread_seconds": 0.0,
+        "two_k_equivalent_by_tier": {
+          "TR": 105.0,
+          "AT": 105.0,
+          "UT1": 105.0,
+          "UT2": 105.0
+        },
+        "weight_adjusted_total_seconds": null,
+        "age_graded_total_seconds": null,
+        "flags": [
+          "future_dated_session"
+        ]
+      }
+    },
+    {
+      "name": "world_record_clamp",
+      "as_of": "2026-09-17",
+      "target_distance_m": 2000,
+      "config_overrides": {},
+      "athlete": null,
+      "history": [
+        {
+          "id": "typo",
+          "date": "2026-09-16",
+          "distance_m": 2000,
+          "split_s": 60.0,
+          "stroke_rate": 34,
+          "tag": "AN"
+        }
+      ],
+      "expected": {
+        "predicted_split_seconds": 82.0,
+        "predicted_total_time_seconds": 328.0,
+        "predicted_split_formatted": "1:22.0",
+        "predicted_total_time_formatted": "5:28.0",
+        "confidence_score": "Low",
+        "confidence_numeric": 49,
+        "anchor_tier": "AN",
+        "anchor_method": "closest_distance",
+        "anchor_session_ids": [
+          "typo"
+        ],
+        "components": {
+          "anchor_split": 60.0,
+          "paul_adjustment": -0.0,
+          "intensity_offset": -0.0,
+          "rpe_correction": 0.0,
+          "two_k_equivalent": 60.0,
+          "projection_to_target": 0.0,
+          "weight_trend_correction": 0.0,
+          "volume_modifier": 0.49,
+          "clamp_adjustment": 21.51
+        },
+        "load_trimp_lite": 12.0,
+        "load_modifier_seconds": 0.49,
+        "spread_seconds": 0.0,
+        "two_k_equivalent_by_tier": {
+          "AN": 60.0
+        },
+        "weight_adjusted_total_seconds": null,
+        "age_graded_total_seconds": null,
+        "flags": [
+          "clamped_to_physiological_floor",
+          "load_estimate_damped"
+        ]
+      }
+    },
+    {
+      "name": "split_time_disagreement",
+      "as_of": "2026-09-17",
+      "target_distance_m": 2000,
+      "config_overrides": {},
+      "athlete": null,
+      "history": [
+        {
+          "id": "d",
+          "date": "2026-09-16",
+          "distance_m": 10000,
+          "time_s": 2600.0,
+          "split_s": 118.0,
+          "stroke_rate": 20,
+          "tag": "UT2"
+        }
+      ],
+      "expected": {
+        "predicted_split_seconds": 108.97,
+        "predicted_total_time_seconds": 435.89,
+        "predicted_split_formatted": "1:49.0",
+        "predicted_total_time_formatted": "7:15.9",
+        "confidence_score": "Low",
+        "confidence_numeric": 5,
+        "anchor_tier": "UT2",
+        "anchor_method": "duration_weighted_median",
+        "anchor_session_ids": [
+          "d"
+        ],
+        "components": {
+          "anchor_split": 130.0,
+          "paul_adjustment": 0.51,
+          "intensity_offset": -22.0,
+          "rpe_correction": 0.0,
+          "two_k_equivalent": 108.51,
+          "projection_to_target": 0.0,
+          "weight_trend_correction": 0.0,
+          "volume_modifier": 0.46,
+          "clamp_adjustment": 0.0
+        },
+        "load_trimp_lite": 43.3,
+        "load_modifier_seconds": 0.46,
+        "spread_seconds": 0.0,
+        "two_k_equivalent_by_tier": {
+          "UT2": 108.51
+        },
+        "weight_adjusted_total_seconds": null,
+        "age_graded_total_seconds": null,
+        "flags": [
+          "load_estimate_damped"
+        ]
+      }
+    },
+    {
+      "name": "stroke_rate_mismatch",
+      "as_of": "2026-09-17",
+      "target_distance_m": 2000,
+      "config_overrides": {},
+      "athlete": null,
+      "history": [
+        {
+          "id": "odd",
+          "date": "2026-09-16",
+          "distance_m": 10000,
+          "split_s": 125.0,
+          "stroke_rate": 36,
+          "tag": "UT2"
+        }
+      ],
+      "expected": {
+        "predicted_split_seconds": 103.97,
+        "predicted_total_time_seconds": 415.9,
+        "predicted_split_formatted": "1:44.0",
+        "predicted_total_time_formatted": "6:55.9",
+        "confidence_score": "Low",
+        "confidence_numeric": 5,
+        "anchor_tier": "UT2",
+        "anchor_method": "duration_weighted_median",
+        "anchor_session_ids": [
+          "odd"
+        ],
+        "components": {
+          "anchor_split": 125.0,
+          "paul_adjustment": 0.51,
+          "intensity_offset": -22.0,
+          "rpe_correction": 0.0,
+          "two_k_equivalent": 103.51,
+          "projection_to_target": 0.0,
+          "weight_trend_correction": 0.0,
+          "volume_modifier": 0.47,
+          "clamp_adjustment": 0.0
+        },
+        "load_trimp_lite": 41.7,
+        "load_modifier_seconds": 0.47,
+        "spread_seconds": 0.0,
+        "two_k_equivalent_by_tier": {
+          "UT2": 103.51
+        },
+        "weight_adjusted_total_seconds": null,
+        "age_graded_total_seconds": null,
+        "flags": [
+          "anchor_tag_rate_mismatch",
+          "load_estimate_damped"
+        ]
+      }
+    },
+    {
+      "name": "duplicate_ids",
+      "as_of": "2026-09-17",
+      "target_distance_m": 2000,
+      "config_overrides": {},
+      "athlete": null,
+      "history": [
+        {
+          "id": "w0-0",
+          "date": "2026-09-17",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "time_s": 4064.0,
+          "stroke_rate": 19,
+          "tag": "UT2"
+        },
+        {
+          "id": "w0-1",
+          "date": "2026-09-16",
+          "distance_m": 14000,
+          "split_s": 126.9,
+          "time_s": 3553.2,
+          "stroke_rate": 20,
+          "tag": "UT2"
+        },
+        {
+          "id": "w0-2",
+          "date": "2026-09-15",
+          "distance_m": 12000,
+          "split_s": 122.0,
+          "time_s": 2928.0,
+          "stroke_rate": 22,
+          "tag": "UT1"
+        },
+        {
+          "id": "w0-3",
+          "date": "2026-09-14",
+          "distance_m": 8000,
+          "split_s": 118.0,
+          "time_s": 1888.0,
+          "stroke_rate": 26,
+          "tag": "AT"
+        },
+        {
+          "id": "w0-4",
+          "date": "2026-09-13",
+          "distance_m": 18000,
+          "split_s": 127.1,
+          "time_s": 4575.6,
+          "stroke_rate": 18,
+          "tag": "UT2"
+        },
+        {
+          "id": "w1-0",
+          "date": "2026-09-10",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "time_s": 4064.0,
+          "stroke_rate": 19,
+          "tag": "UT2"
+        },
+        {
+          "id": "w1-1",
+          "date": "2026-09-09",
+          "distance_m": 14000,
+          "split_s": 126.9,
+          "time_s": 3553.2,
+          "stroke_rate": 20,
+          "tag": "UT2"
+        },
+        {
+          "id": "w1-2",
+          "date": "2026-09-08",
+          "distance_m": 12000,
+          "split_s": 122.0,
+          "time_s": 2928.0,
+          "stroke_rate": 22,
+          "tag": "UT1"
+        },
+        {
+          "id": "w1-3",
+          "date": "2026-09-07",
+          "distance_m": 8000,
+          "split_s": 118.0,
+          "time_s": 1888.0,
+          "stroke_rate": 26,
+          "tag": "AT"
+        },
+        {
+          "id": "w1-4",
+          "date": "2026-09-06",
+          "distance_m": 18000,
+          "split_s": 127.1,
+          "time_s": 4575.6,
+          "stroke_rate": 18,
+          "tag": "UT2"
+        },
+        {
+          "id": "w2-0",
+          "date": "2026-09-03",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "time_s": 4064.0,
+          "stroke_rate": 19,
+          "tag": "UT2"
+        },
+        {
+          "id": "w2-1",
+          "date": "2026-09-02",
+          "distance_m": 14000,
+          "split_s": 126.9,
+          "time_s": 3553.2,
+          "stroke_rate": 20,
+          "tag": "UT2"
+        },
+        {
+          "id": "w2-2",
+          "date": "2026-09-01",
+          "distance_m": 12000,
+          "split_s": 122.0,
+          "time_s": 2928.0,
+          "stroke_rate": 22,
+          "tag": "UT1"
+        },
+        {
+          "id": "w2-3",
+          "date": "2026-08-31",
+          "distance_m": 8000,
+          "split_s": 118.0,
+          "time_s": 1888.0,
+          "stroke_rate": 26,
+          "tag": "AT"
+        },
+        {
+          "id": "w2-4",
+          "date": "2026-08-30",
+          "distance_m": 18000,
+          "split_s": 127.1,
+          "time_s": 4575.6,
+          "stroke_rate": 18,
+          "tag": "UT2"
+        },
+        {
+          "id": "w3-0",
+          "date": "2026-08-27",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "time_s": 4064.0,
+          "stroke_rate": 19,
+          "tag": "UT2"
+        },
+        {
+          "id": "w3-1",
+          "date": "2026-08-26",
+          "distance_m": 14000,
+          "split_s": 126.9,
+          "time_s": 3553.2,
+          "stroke_rate": 20,
+          "tag": "UT2"
+        },
+        {
+          "id": "w3-2",
+          "date": "2026-08-25",
+          "distance_m": 12000,
+          "split_s": 122.0,
+          "time_s": 2928.0,
+          "stroke_rate": 22,
+          "tag": "UT1"
+        },
+        {
+          "id": "w3-3",
+          "date": "2026-08-24",
+          "distance_m": 8000,
+          "split_s": 118.0,
+          "time_s": 1888.0,
+          "stroke_rate": 26,
+          "tag": "AT"
+        },
+        {
+          "id": "w3-4",
+          "date": "2026-08-23",
+          "distance_m": 18000,
+          "split_s": 127.1,
+          "time_s": 4575.6,
+          "stroke_rate": 18,
+          "tag": "UT2"
+        },
+        {
+          "id": "6k-tr",
+          "date": "2026-09-08",
+          "distance_m": 6000,
+          "time_s": 1385.8,
+          "stroke_rate": 30,
+          "tag": "TR"
+        },
+        {
+          "id": "w0-0",
+          "date": "2026-09-17",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "time_s": 4064.0,
+          "stroke_rate": 19,
+          "tag": "UT2"
+        },
+        {
+          "id": "w0-1",
+          "date": "2026-09-16",
+          "distance_m": 14000,
+          "split_s": 126.9,
+          "time_s": 3553.2,
+          "stroke_rate": 20,
+          "tag": "UT2"
+        }
+      ],
+      "expected": {
+        "predicted_split_seconds": 105.0,
+        "predicted_total_time_seconds": 419.99,
+        "predicted_split_formatted": "1:45.0",
+        "predicted_total_time_formatted": "7:00.0",
+        "confidence_score": "High",
+        "confidence_numeric": 80,
+        "anchor_tier": "TR",
+        "anchor_method": "closest_distance",
+        "anchor_session_ids": [
+          "6k-tr"
+        ],
+        "components": {
+          "anchor_split": 115.48,
+          "paul_adjustment": -2.49,
+          "intensity_offset": -8.0,
+          "rpe_correction": 0.0,
+          "two_k_equivalent": 105.0,
+          "projection_to_target": 0.0,
+          "weight_trend_correction": 0.0,
+          "volume_modifier": 0.0,
+          "clamp_adjustment": 0.0
+        },
+        "load_trimp_lite": 1282.1,
+        "load_modifier_seconds": 0.0,
+        "spread_seconds": 0.0,
+        "two_k_equivalent_by_tier": {
+          "TR": 105.0,
+          "AT": 105.0,
+          "UT1": 105.0,
+          "UT2": 105.0
+        },
+        "weight_adjusted_total_seconds": null,
+        "age_graded_total_seconds": null,
+        "flags": [
+          "duplicate_sessions_removed"
+        ]
+      }
+    },
+    {
+      "name": "rpe_ut2_mid",
+      "as_of": "2026-09-17",
+      "target_distance_m": 2000,
+      "config_overrides": {},
+      "athlete": null,
+      "history": [
+        {
+          "id": "u1",
+          "date": "2026-09-16",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "stroke_rate": 19,
+          "tag": "UT2",
+          "rpe": 3
+        },
+        {
+          "id": "u2",
+          "date": "2026-09-15",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "stroke_rate": 19,
+          "tag": "UT2",
+          "rpe": 3
+        },
+        {
+          "id": "u3",
+          "date": "2026-09-14",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "stroke_rate": 19,
+          "tag": "UT2",
+          "rpe": 3
+        },
+        {
+          "id": "u4",
+          "date": "2026-09-13",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "stroke_rate": 19,
+          "tag": "UT2",
+          "rpe": 3
+        },
+        {
+          "id": "u5",
+          "date": "2026-09-12",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "stroke_rate": 19,
+          "tag": "UT2",
+          "rpe": 3
+        },
+        {
+          "id": "u6",
+          "date": "2026-09-11",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "stroke_rate": 19,
+          "tag": "UT2",
+          "rpe": 3
+        },
+        {
+          "id": "u7",
+          "date": "2026-09-10",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "stroke_rate": 19,
+          "tag": "UT2",
+          "rpe": 3
+        }
+      ],
+      "expected": {
+        "predicted_split_seconds": 105.63,
+        "predicted_total_time_seconds": 422.52,
+        "predicted_split_formatted": "1:45.6",
+        "predicted_total_time_formatted": "7:02.5",
+        "confidence_score": "Low",
+        "confidence_numeric": 20,
+        "anchor_tier": "UT2",
+        "anchor_method": "duration_weighted_median",
+        "anchor_session_ids": [
+          "u1",
+          "u2",
+          "u3",
+          "u4",
+          "u5",
+          "u6",
+          "u7"
+        ],
+        "components": {
+          "anchor_split": 127.0,
+          "paul_adjustment": -0.0,
+          "intensity_offset": -22.0,
+          "rpe_correction": 0.0,
+          "two_k_equivalent": 105.0,
+          "projection_to_target": 0.0,
+          "weight_trend_correction": 0.0,
+          "volume_modifier": 0.63,
+          "clamp_adjustment": 0.0
+        },
+        "load_trimp_lite": 474.1,
+        "load_modifier_seconds": 0.63,
+        "spread_seconds": 0.0,
+        "two_k_equivalent_by_tier": {
+          "UT2": 105.0
+        },
+        "weight_adjusted_total_seconds": null,
+        "age_graded_total_seconds": null,
+        "flags": []
+      }
+    },
+    {
+      "name": "rpe_ut2_harder",
+      "as_of": "2026-09-17",
+      "target_distance_m": 2000,
+      "config_overrides": {},
+      "athlete": null,
+      "history": [
+        {
+          "id": "u1",
+          "date": "2026-09-16",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "stroke_rate": 19,
+          "tag": "UT2",
+          "rpe": 4
+        },
+        {
+          "id": "u2",
+          "date": "2026-09-15",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "stroke_rate": 19,
+          "tag": "UT2",
+          "rpe": 4
+        },
+        {
+          "id": "u3",
+          "date": "2026-09-14",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "stroke_rate": 19,
+          "tag": "UT2",
+          "rpe": 4
+        },
+        {
+          "id": "u4",
+          "date": "2026-09-13",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "stroke_rate": 19,
+          "tag": "UT2",
+          "rpe": 4
+        },
+        {
+          "id": "u5",
+          "date": "2026-09-12",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "stroke_rate": 19,
+          "tag": "UT2",
+          "rpe": 4
+        },
+        {
+          "id": "u6",
+          "date": "2026-09-11",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "stroke_rate": 19,
+          "tag": "UT2",
+          "rpe": 4
+        },
+        {
+          "id": "u7",
+          "date": "2026-09-10",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "stroke_rate": 19,
+          "tag": "UT2",
+          "rpe": 4
+        }
+      ],
+      "expected": {
+        "predicted_split_seconds": 106.83,
+        "predicted_total_time_seconds": 427.32,
+        "predicted_split_formatted": "1:46.8",
+        "predicted_total_time_formatted": "7:07.3",
+        "confidence_score": "Low",
+        "confidence_numeric": 20,
+        "anchor_tier": "UT2",
+        "anchor_method": "duration_weighted_median",
+        "anchor_session_ids": [
+          "u1",
+          "u2",
+          "u3",
+          "u4",
+          "u5",
+          "u6",
+          "u7"
+        ],
+        "components": {
+          "anchor_split": 127.0,
+          "paul_adjustment": -0.0,
+          "intensity_offset": -22.0,
+          "rpe_correction": 1.2,
+          "two_k_equivalent": 106.2,
+          "projection_to_target": 0.0,
+          "weight_trend_correction": 0.0,
+          "volume_modifier": 0.63,
+          "clamp_adjustment": 0.0
+        },
+        "load_trimp_lite": 474.1,
+        "load_modifier_seconds": 0.63,
+        "spread_seconds": 0.0,
+        "two_k_equivalent_by_tier": {
+          "UT2": 106.2
+        },
+        "weight_adjusted_total_seconds": null,
+        "age_graded_total_seconds": null,
+        "flags": []
+      }
+    },
+    {
+      "name": "rpe_ut2_easier",
+      "as_of": "2026-09-17",
+      "target_distance_m": 2000,
+      "config_overrides": {},
+      "athlete": null,
+      "history": [
+        {
+          "id": "u1",
+          "date": "2026-09-16",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "stroke_rate": 19,
+          "tag": "UT2",
+          "rpe": 2
+        },
+        {
+          "id": "u2",
+          "date": "2026-09-15",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "stroke_rate": 19,
+          "tag": "UT2",
+          "rpe": 2
+        },
+        {
+          "id": "u3",
+          "date": "2026-09-14",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "stroke_rate": 19,
+          "tag": "UT2",
+          "rpe": 2
+        },
+        {
+          "id": "u4",
+          "date": "2026-09-13",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "stroke_rate": 19,
+          "tag": "UT2",
+          "rpe": 2
+        },
+        {
+          "id": "u5",
+          "date": "2026-09-12",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "stroke_rate": 19,
+          "tag": "UT2",
+          "rpe": 2
+        },
+        {
+          "id": "u6",
+          "date": "2026-09-11",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "stroke_rate": 19,
+          "tag": "UT2",
+          "rpe": 2
+        },
+        {
+          "id": "u7",
+          "date": "2026-09-10",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "stroke_rate": 19,
+          "tag": "UT2",
+          "rpe": 2
+        }
+      ],
+      "expected": {
+        "predicted_split_seconds": 104.43,
+        "predicted_total_time_seconds": 417.72,
+        "predicted_split_formatted": "1:44.4",
+        "predicted_total_time_formatted": "6:57.7",
+        "confidence_score": "Low",
+        "confidence_numeric": 20,
+        "anchor_tier": "UT2",
+        "anchor_method": "duration_weighted_median",
+        "anchor_session_ids": [
+          "u1",
+          "u2",
+          "u3",
+          "u4",
+          "u5",
+          "u6",
+          "u7"
+        ],
+        "components": {
+          "anchor_split": 127.0,
+          "paul_adjustment": -0.0,
+          "intensity_offset": -22.0,
+          "rpe_correction": -1.2,
+          "two_k_equivalent": 103.8,
+          "projection_to_target": 0.0,
+          "weight_trend_correction": 0.0,
+          "volume_modifier": 0.63,
+          "clamp_adjustment": 0.0
+        },
+        "load_trimp_lite": 474.1,
+        "load_modifier_seconds": 0.63,
+        "spread_seconds": 0.0,
+        "two_k_equivalent_by_tier": {
+          "UT2": 103.8
+        },
+        "weight_adjusted_total_seconds": null,
+        "age_graded_total_seconds": null,
+        "flags": []
+      }
+    },
+    {
+      "name": "rpe_ut2_contradiction",
+      "as_of": "2026-09-17",
+      "target_distance_m": 2000,
+      "config_overrides": {},
+      "athlete": null,
+      "history": [
+        {
+          "id": "u1",
+          "date": "2026-09-16",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "stroke_rate": 19,
+          "tag": "UT2",
+          "rpe": 9
+        },
+        {
+          "id": "u2",
+          "date": "2026-09-15",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "stroke_rate": 19,
+          "tag": "UT2",
+          "rpe": 9
+        },
+        {
+          "id": "u3",
+          "date": "2026-09-14",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "stroke_rate": 19,
+          "tag": "UT2",
+          "rpe": 9
+        },
+        {
+          "id": "u4",
+          "date": "2026-09-13",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "stroke_rate": 19,
+          "tag": "UT2",
+          "rpe": 9
+        },
+        {
+          "id": "u5",
+          "date": "2026-09-12",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "stroke_rate": 19,
+          "tag": "UT2",
+          "rpe": 9
+        },
+        {
+          "id": "u6",
+          "date": "2026-09-11",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "stroke_rate": 19,
+          "tag": "UT2",
+          "rpe": 9
+        },
+        {
+          "id": "u7",
+          "date": "2026-09-10",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "stroke_rate": 19,
+          "tag": "UT2",
+          "rpe": 9
+        }
+      ],
+      "expected": {
+        "predicted_split_seconds": 105.63,
+        "predicted_total_time_seconds": 422.52,
+        "predicted_split_formatted": "1:45.6",
+        "predicted_total_time_formatted": "7:02.5",
+        "confidence_score": "Low",
+        "confidence_numeric": 10,
+        "anchor_tier": "UT2",
+        "anchor_method": "duration_weighted_median",
+        "anchor_session_ids": [
+          "u1",
+          "u2",
+          "u3",
+          "u4",
+          "u5",
+          "u6",
+          "u7"
+        ],
+        "components": {
+          "anchor_split": 127.0,
+          "paul_adjustment": -0.0,
+          "intensity_offset": -22.0,
+          "rpe_correction": 0.0,
+          "two_k_equivalent": 105.0,
+          "projection_to_target": 0.0,
+          "weight_trend_correction": 0.0,
+          "volume_modifier": 0.63,
+          "clamp_adjustment": 0.0
+        },
+        "load_trimp_lite": 474.1,
+        "load_modifier_seconds": 0.63,
+        "spread_seconds": 0.0,
+        "two_k_equivalent_by_tier": {
+          "UT2": 105.0
+        },
+        "weight_adjusted_total_seconds": null,
+        "age_graded_total_seconds": null,
+        "flags": [
+          "anchor_tag_rpe_mismatch"
+        ]
+      }
+    },
+    {
+      "name": "rpe_an_exempt",
+      "as_of": "2026-09-17",
+      "target_distance_m": 2000,
+      "config_overrides": {},
+      "athlete": null,
+      "history": [
+        {
+          "id": "t",
+          "date": "2026-09-15",
+          "distance_m": 2000,
+          "time_s": 420.0,
+          "tag": "AN",
+          "rpe": 8
+        }
+      ],
+      "expected": {
+        "predicted_split_seconds": 105.48,
+        "predicted_total_time_seconds": 421.93,
+        "predicted_split_formatted": "1:45.5",
+        "predicted_total_time_formatted": "7:01.9",
+        "confidence_score": "Medium",
+        "confidence_numeric": 70,
+        "anchor_tier": "AN",
+        "anchor_method": "closest_distance",
+        "anchor_session_ids": [
+          "t"
+        ],
+        "components": {
+          "anchor_split": 105.0,
+          "paul_adjustment": -0.0,
+          "intensity_offset": -0.0,
+          "rpe_correction": 0.0,
+          "two_k_equivalent": 105.0,
+          "projection_to_target": 0.0,
+          "weight_trend_correction": 0.0,
+          "volume_modifier": 0.48,
+          "clamp_adjustment": 0.0
+        },
+        "load_trimp_lite": 21.0,
+        "load_modifier_seconds": 0.48,
+        "spread_seconds": 0.0,
+        "two_k_equivalent_by_tier": {
+          "AN": 105.0
+        },
+        "weight_adjusted_total_seconds": null,
+        "age_graded_total_seconds": null,
+        "flags": [
+          "load_estimate_damped"
+        ]
+      }
+    },
+    {
+      "name": "rpe_sparse_coverage",
+      "as_of": "2026-09-17",
+      "target_distance_m": 2000,
+      "config_overrides": {},
+      "athlete": null,
+      "history": [
+        {
+          "id": "u1",
+          "date": "2026-09-16",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "stroke_rate": 19,
+          "tag": "UT2",
+          "rpe": 5.0
+        },
+        {
+          "id": "u2",
+          "date": "2026-09-15",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "stroke_rate": 19,
+          "tag": "UT2"
+        },
+        {
+          "id": "u3",
+          "date": "2026-09-14",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "stroke_rate": 19,
+          "tag": "UT2"
+        },
+        {
+          "id": "u4",
+          "date": "2026-09-13",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "stroke_rate": 19,
+          "tag": "UT2"
+        },
+        {
+          "id": "u5",
+          "date": "2026-09-12",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "stroke_rate": 19,
+          "tag": "UT2"
+        },
+        {
+          "id": "u6",
+          "date": "2026-09-11",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "stroke_rate": 19,
+          "tag": "UT2"
+        },
+        {
+          "id": "u7",
+          "date": "2026-09-10",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "stroke_rate": 19,
+          "tag": "UT2"
+        },
+        {
+          "id": "u8",
+          "date": "2026-09-09",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "stroke_rate": 19,
+          "tag": "UT2"
+        },
+        {
+          "id": "u9",
+          "date": "2026-09-08",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "stroke_rate": 19,
+          "tag": "UT2"
+        },
+        {
+          "id": "u10",
+          "date": "2026-09-07",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "stroke_rate": 19,
+          "tag": "UT2"
+        },
+        {
+          "id": "u11",
+          "date": "2026-09-06",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "stroke_rate": 19,
+          "tag": "UT2"
+        },
+        {
+          "id": "u12",
+          "date": "2026-09-05",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "stroke_rate": 19,
+          "tag": "UT2"
+        },
+        {
+          "id": "u13",
+          "date": "2026-09-04",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "stroke_rate": 19,
+          "tag": "UT2"
+        },
+        {
+          "id": "u14",
+          "date": "2026-09-03",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "stroke_rate": 19,
+          "tag": "UT2"
+        },
+        {
+          "id": "u15",
+          "date": "2026-09-02",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "stroke_rate": 19,
+          "tag": "UT2"
+        },
+        {
+          "id": "u16",
+          "date": "2026-09-01",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "stroke_rate": 19,
+          "tag": "UT2"
+        },
+        {
+          "id": "u17",
+          "date": "2026-08-31",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "stroke_rate": 19,
+          "tag": "UT2"
+        },
+        {
+          "id": "u18",
+          "date": "2026-08-30",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "stroke_rate": 19,
+          "tag": "UT2"
+        },
+        {
+          "id": "u19",
+          "date": "2026-08-29",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "stroke_rate": 19,
+          "tag": "UT2"
+        }
+      ],
+      "expected": {
+        "predicted_split_seconds": 105.13,
+        "predicted_total_time_seconds": 420.51,
+        "predicted_split_formatted": "1:45.1",
+        "predicted_total_time_formatted": "7:00.5",
+        "confidence_score": "Low",
+        "confidence_numeric": 20,
+        "anchor_tier": "UT2",
+        "anchor_method": "duration_weighted_median",
+        "anchor_session_ids": [
+          "u1",
+          "u2",
+          "u3",
+          "u4",
+          "u5",
+          "u6",
+          "u7",
+          "u8",
+          "u9",
+          "u10",
+          "u11",
+          "u12",
+          "u13",
+          "u14",
+          "u15",
+          "u16",
+          "u17",
+          "u18",
+          "u19"
+        ],
+        "components": {
+          "anchor_split": 127.0,
+          "paul_adjustment": -0.0,
+          "intensity_offset": -22.0,
+          "rpe_correction": 0.13,
+          "two_k_equivalent": 105.13,
+          "projection_to_target": 0.0,
+          "weight_trend_correction": 0.0,
+          "volume_modifier": 0.0,
+          "clamp_adjustment": 0.0
+        },
+        "load_trimp_lite": 1286.9,
+        "load_modifier_seconds": 0.0,
+        "spread_seconds": 0.0,
+        "two_k_equivalent_by_tier": {
+          "UT2": 105.13
+        },
+        "weight_adjusted_total_seconds": null,
+        "age_graded_total_seconds": null,
+        "flags": []
+      }
+    },
+    {
+      "name": "rpe_fatigue",
+      "as_of": "2026-09-17",
+      "target_distance_m": 2000,
+      "config_overrides": {},
+      "athlete": null,
+      "history": [
+        {
+          "id": "w0-0",
+          "date": "2026-09-17",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "time_s": 4064.0,
+          "stroke_rate": 19,
+          "tag": "UT2",
+          "rpe": 5.5
+        },
+        {
+          "id": "w0-1",
+          "date": "2026-09-16",
+          "distance_m": 14000,
+          "split_s": 126.9,
+          "time_s": 3553.2,
+          "stroke_rate": 20,
+          "tag": "UT2",
+          "rpe": 5.5
+        },
+        {
+          "id": "w0-2",
+          "date": "2026-09-15",
+          "distance_m": 12000,
+          "split_s": 122.0,
+          "time_s": 2928.0,
+          "stroke_rate": 22,
+          "tag": "UT1"
+        },
+        {
+          "id": "w0-3",
+          "date": "2026-09-14",
+          "distance_m": 8000,
+          "split_s": 118.0,
+          "time_s": 1888.0,
+          "stroke_rate": 26,
+          "tag": "AT"
+        },
+        {
+          "id": "w0-4",
+          "date": "2026-09-13",
+          "distance_m": 18000,
+          "split_s": 127.1,
+          "time_s": 4575.6,
+          "stroke_rate": 18,
+          "tag": "UT2",
+          "rpe": 5.5
+        },
+        {
+          "id": "w1-0",
+          "date": "2026-09-10",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "time_s": 4064.0,
+          "stroke_rate": 19,
+          "tag": "UT2",
+          "rpe": 5.5
+        },
+        {
+          "id": "w1-1",
+          "date": "2026-09-09",
+          "distance_m": 14000,
+          "split_s": 126.9,
+          "time_s": 3553.2,
+          "stroke_rate": 20,
+          "tag": "UT2"
+        },
+        {
+          "id": "w1-2",
+          "date": "2026-09-08",
+          "distance_m": 12000,
+          "split_s": 122.0,
+          "time_s": 2928.0,
+          "stroke_rate": 22,
+          "tag": "UT1"
+        },
+        {
+          "id": "w1-3",
+          "date": "2026-09-07",
+          "distance_m": 8000,
+          "split_s": 118.0,
+          "time_s": 1888.0,
+          "stroke_rate": 26,
+          "tag": "AT"
+        },
+        {
+          "id": "w1-4",
+          "date": "2026-09-06",
+          "distance_m": 18000,
+          "split_s": 127.1,
+          "time_s": 4575.6,
+          "stroke_rate": 18,
+          "tag": "UT2"
+        },
+        {
+          "id": "w2-0",
+          "date": "2026-09-03",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "time_s": 4064.0,
+          "stroke_rate": 19,
+          "tag": "UT2"
+        },
+        {
+          "id": "w2-1",
+          "date": "2026-09-02",
+          "distance_m": 14000,
+          "split_s": 126.9,
+          "time_s": 3553.2,
+          "stroke_rate": 20,
+          "tag": "UT2"
+        },
+        {
+          "id": "w2-2",
+          "date": "2026-09-01",
+          "distance_m": 12000,
+          "split_s": 122.0,
+          "time_s": 2928.0,
+          "stroke_rate": 22,
+          "tag": "UT1"
+        },
+        {
+          "id": "w2-3",
+          "date": "2026-08-31",
+          "distance_m": 8000,
+          "split_s": 118.0,
+          "time_s": 1888.0,
+          "stroke_rate": 26,
+          "tag": "AT"
+        },
+        {
+          "id": "w2-4",
+          "date": "2026-08-30",
+          "distance_m": 18000,
+          "split_s": 127.1,
+          "time_s": 4575.6,
+          "stroke_rate": 18,
+          "tag": "UT2"
+        },
+        {
+          "id": "w3-0",
+          "date": "2026-08-27",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "time_s": 4064.0,
+          "stroke_rate": 19,
+          "tag": "UT2"
+        },
+        {
+          "id": "w3-1",
+          "date": "2026-08-26",
+          "distance_m": 14000,
+          "split_s": 126.9,
+          "time_s": 3553.2,
+          "stroke_rate": 20,
+          "tag": "UT2"
+        },
+        {
+          "id": "w3-2",
+          "date": "2026-08-25",
+          "distance_m": 12000,
+          "split_s": 122.0,
+          "time_s": 2928.0,
+          "stroke_rate": 22,
+          "tag": "UT1"
+        },
+        {
+          "id": "w3-3",
+          "date": "2026-08-24",
+          "distance_m": 8000,
+          "split_s": 118.0,
+          "time_s": 1888.0,
+          "stroke_rate": 26,
+          "tag": "AT"
+        },
+        {
+          "id": "w3-4",
+          "date": "2026-08-23",
+          "distance_m": 18000,
+          "split_s": 127.1,
+          "time_s": 4575.6,
+          "stroke_rate": 18,
+          "tag": "UT2"
+        },
+        {
+          "id": "6k-tr",
+          "date": "2026-09-08",
+          "distance_m": 6000,
+          "time_s": 1385.8,
+          "stroke_rate": 30,
+          "tag": "TR"
+        }
+      ],
+      "expected": {
+        "predicted_split_seconds": 105.0,
+        "predicted_total_time_seconds": 419.99,
+        "predicted_split_formatted": "1:45.0",
+        "predicted_total_time_formatted": "7:00.0",
+        "confidence_score": "Medium",
+        "confidence_numeric": 72,
+        "anchor_tier": "TR",
+        "anchor_method": "closest_distance",
+        "anchor_session_ids": [
+          "6k-tr"
+        ],
+        "components": {
+          "anchor_split": 115.48,
+          "paul_adjustment": -2.49,
+          "intensity_offset": -8.0,
+          "rpe_correction": 0.0,
+          "two_k_equivalent": 105.0,
+          "projection_to_target": 0.0,
+          "weight_trend_correction": 0.0,
+          "volume_modifier": 0.0,
+          "clamp_adjustment": 0.0
+        },
+        "load_trimp_lite": 1282.1,
+        "load_modifier_seconds": 0.0,
+        "spread_seconds": 1.0,
+        "two_k_equivalent_by_tier": {
+          "TR": 105.0,
+          "AT": 105.0,
+          "UT1": 105.0,
+          "UT2": 106.0
+        },
+        "weight_adjusted_total_seconds": null,
+        "age_graded_total_seconds": null,
+        "flags": [
+          "elevated_recent_effort"
+        ]
+      }
+    },
+    {
+      "name": "rpe_capped_aggressive_config",
+      "as_of": "2026-09-17",
+      "target_distance_m": 2000,
+      "config_overrides": {
+        "rpe_sensitivity": 10.0
+      },
+      "athlete": null,
+      "history": [
+        {
+          "id": "c",
+          "date": "2026-09-16",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "rpe": 5
+        }
+      ],
+      "expected": {
+        "predicted_split_seconds": 108.44,
+        "predicted_total_time_seconds": 433.77,
+        "predicted_split_formatted": "1:48.4",
+        "predicted_total_time_formatted": "7:13.8",
+        "confidence_score": "Low",
+        "confidence_numeric": 5,
+        "anchor_tier": "UT2",
+        "anchor_method": "duration_weighted_median",
+        "anchor_session_ids": [
+          "c"
+        ],
+        "components": {
+          "anchor_split": 127.0,
+          "paul_adjustment": -0.0,
+          "intensity_offset": -22.0,
+          "rpe_correction": 3.0,
+          "two_k_equivalent": 108.0,
+          "projection_to_target": 0.0,
+          "weight_trend_correction": 0.0,
+          "volume_modifier": 0.44,
+          "clamp_adjustment": 0.0
+        },
+        "load_trimp_lite": 67.7,
+        "load_modifier_seconds": 0.44,
+        "spread_seconds": 0.0,
+        "two_k_equivalent_by_tier": {
+          "UT2": 108.0
+        },
+        "weight_adjusted_total_seconds": null,
+        "age_graded_total_seconds": null,
+        "flags": [
+          "load_estimate_damped"
+        ]
+      }
+    },
+    {
+      "name": "profile_does_not_change_prediction",
+      "as_of": "2026-09-17",
+      "target_distance_m": 2000,
+      "config_overrides": {},
+      "athlete": {
+        "age": 68,
+        "sex": "female",
+        "weight_kg": 55
+      },
+      "history": [
+        {
+          "id": "w0-0",
+          "date": "2026-09-17",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "time_s": 4064.0,
+          "stroke_rate": 19,
+          "tag": "UT2"
+        },
+        {
+          "id": "w0-1",
+          "date": "2026-09-16",
+          "distance_m": 14000,
+          "split_s": 126.9,
+          "time_s": 3553.2,
+          "stroke_rate": 20,
+          "tag": "UT2"
+        },
+        {
+          "id": "w0-2",
+          "date": "2026-09-15",
+          "distance_m": 12000,
+          "split_s": 122.0,
+          "time_s": 2928.0,
+          "stroke_rate": 22,
+          "tag": "UT1"
+        },
+        {
+          "id": "w0-3",
+          "date": "2026-09-14",
+          "distance_m": 8000,
+          "split_s": 118.0,
+          "time_s": 1888.0,
+          "stroke_rate": 26,
+          "tag": "AT"
+        },
+        {
+          "id": "w0-4",
+          "date": "2026-09-13",
+          "distance_m": 18000,
+          "split_s": 127.1,
+          "time_s": 4575.6,
+          "stroke_rate": 18,
+          "tag": "UT2"
+        },
+        {
+          "id": "w1-0",
+          "date": "2026-09-10",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "time_s": 4064.0,
+          "stroke_rate": 19,
+          "tag": "UT2"
+        },
+        {
+          "id": "w1-1",
+          "date": "2026-09-09",
+          "distance_m": 14000,
+          "split_s": 126.9,
+          "time_s": 3553.2,
+          "stroke_rate": 20,
+          "tag": "UT2"
+        },
+        {
+          "id": "w1-2",
+          "date": "2026-09-08",
+          "distance_m": 12000,
+          "split_s": 122.0,
+          "time_s": 2928.0,
+          "stroke_rate": 22,
+          "tag": "UT1"
+        },
+        {
+          "id": "w1-3",
+          "date": "2026-09-07",
+          "distance_m": 8000,
+          "split_s": 118.0,
+          "time_s": 1888.0,
+          "stroke_rate": 26,
+          "tag": "AT"
+        },
+        {
+          "id": "w1-4",
+          "date": "2026-09-06",
+          "distance_m": 18000,
+          "split_s": 127.1,
+          "time_s": 4575.6,
+          "stroke_rate": 18,
+          "tag": "UT2"
+        },
+        {
+          "id": "w2-0",
+          "date": "2026-09-03",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "time_s": 4064.0,
+          "stroke_rate": 19,
+          "tag": "UT2"
+        },
+        {
+          "id": "w2-1",
+          "date": "2026-09-02",
+          "distance_m": 14000,
+          "split_s": 126.9,
+          "time_s": 3553.2,
+          "stroke_rate": 20,
+          "tag": "UT2"
+        },
+        {
+          "id": "w2-2",
+          "date": "2026-09-01",
+          "distance_m": 12000,
+          "split_s": 122.0,
+          "time_s": 2928.0,
+          "stroke_rate": 22,
+          "tag": "UT1"
+        },
+        {
+          "id": "w2-3",
+          "date": "2026-08-31",
+          "distance_m": 8000,
+          "split_s": 118.0,
+          "time_s": 1888.0,
+          "stroke_rate": 26,
+          "tag": "AT"
+        },
+        {
+          "id": "w2-4",
+          "date": "2026-08-30",
+          "distance_m": 18000,
+          "split_s": 127.1,
+          "time_s": 4575.6,
+          "stroke_rate": 18,
+          "tag": "UT2"
+        },
+        {
+          "id": "w3-0",
+          "date": "2026-08-27",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "time_s": 4064.0,
+          "stroke_rate": 19,
+          "tag": "UT2"
+        },
+        {
+          "id": "w3-1",
+          "date": "2026-08-26",
+          "distance_m": 14000,
+          "split_s": 126.9,
+          "time_s": 3553.2,
+          "stroke_rate": 20,
+          "tag": "UT2"
+        },
+        {
+          "id": "w3-2",
+          "date": "2026-08-25",
+          "distance_m": 12000,
+          "split_s": 122.0,
+          "time_s": 2928.0,
+          "stroke_rate": 22,
+          "tag": "UT1"
+        },
+        {
+          "id": "w3-3",
+          "date": "2026-08-24",
+          "distance_m": 8000,
+          "split_s": 118.0,
+          "time_s": 1888.0,
+          "stroke_rate": 26,
+          "tag": "AT"
+        },
+        {
+          "id": "w3-4",
+          "date": "2026-08-23",
+          "distance_m": 18000,
+          "split_s": 127.1,
+          "time_s": 4575.6,
+          "stroke_rate": 18,
+          "tag": "UT2"
+        },
+        {
+          "id": "6k-tr",
+          "date": "2026-09-08",
+          "distance_m": 6000,
+          "time_s": 1385.8,
+          "stroke_rate": 30,
+          "tag": "TR"
+        }
+      ],
+      "expected": {
+        "predicted_split_seconds": 105.0,
+        "predicted_total_time_seconds": 419.99,
+        "predicted_split_formatted": "1:45.0",
+        "predicted_total_time_formatted": "7:00.0",
+        "confidence_score": "High",
+        "confidence_numeric": 80,
+        "anchor_tier": "TR",
+        "anchor_method": "closest_distance",
+        "anchor_session_ids": [
+          "6k-tr"
+        ],
+        "components": {
+          "anchor_split": 115.48,
+          "paul_adjustment": -2.49,
+          "intensity_offset": -8.0,
+          "rpe_correction": 0.0,
+          "two_k_equivalent": 105.0,
+          "projection_to_target": 0.0,
+          "weight_trend_correction": 0.0,
+          "volume_modifier": 0.0,
+          "clamp_adjustment": 0.0
+        },
+        "load_trimp_lite": 1282.1,
+        "load_modifier_seconds": 0.0,
+        "spread_seconds": 0.0,
+        "two_k_equivalent_by_tier": {
+          "TR": 105.0,
+          "AT": 105.0,
+          "UT1": 105.0,
+          "UT2": 105.0
+        },
+        "weight_adjusted_total_seconds": 351.61,
+        "age_graded_total_seconds": 348.83,
+        "flags": []
+      }
+    },
+    {
+      "name": "interpretation_weight_and_age",
+      "as_of": "2026-09-17",
+      "target_distance_m": 2000,
+      "config_overrides": {},
+      "athlete": {
+        "age": 55,
+        "sex": "male",
+        "weight_kg": 80
+      },
+      "history": [
+        {
+          "id": "w0-0",
+          "date": "2026-09-17",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "time_s": 4064.0,
+          "stroke_rate": 19,
+          "tag": "UT2"
+        },
+        {
+          "id": "w0-1",
+          "date": "2026-09-16",
+          "distance_m": 14000,
+          "split_s": 126.9,
+          "time_s": 3553.2,
+          "stroke_rate": 20,
+          "tag": "UT2"
+        },
+        {
+          "id": "w0-2",
+          "date": "2026-09-15",
+          "distance_m": 12000,
+          "split_s": 122.0,
+          "time_s": 2928.0,
+          "stroke_rate": 22,
+          "tag": "UT1"
+        },
+        {
+          "id": "w0-3",
+          "date": "2026-09-14",
+          "distance_m": 8000,
+          "split_s": 118.0,
+          "time_s": 1888.0,
+          "stroke_rate": 26,
+          "tag": "AT"
+        },
+        {
+          "id": "w0-4",
+          "date": "2026-09-13",
+          "distance_m": 18000,
+          "split_s": 127.1,
+          "time_s": 4575.6,
+          "stroke_rate": 18,
+          "tag": "UT2"
+        },
+        {
+          "id": "w1-0",
+          "date": "2026-09-10",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "time_s": 4064.0,
+          "stroke_rate": 19,
+          "tag": "UT2"
+        },
+        {
+          "id": "w1-1",
+          "date": "2026-09-09",
+          "distance_m": 14000,
+          "split_s": 126.9,
+          "time_s": 3553.2,
+          "stroke_rate": 20,
+          "tag": "UT2"
+        },
+        {
+          "id": "w1-2",
+          "date": "2026-09-08",
+          "distance_m": 12000,
+          "split_s": 122.0,
+          "time_s": 2928.0,
+          "stroke_rate": 22,
+          "tag": "UT1"
+        },
+        {
+          "id": "w1-3",
+          "date": "2026-09-07",
+          "distance_m": 8000,
+          "split_s": 118.0,
+          "time_s": 1888.0,
+          "stroke_rate": 26,
+          "tag": "AT"
+        },
+        {
+          "id": "w1-4",
+          "date": "2026-09-06",
+          "distance_m": 18000,
+          "split_s": 127.1,
+          "time_s": 4575.6,
+          "stroke_rate": 18,
+          "tag": "UT2"
+        },
+        {
+          "id": "w2-0",
+          "date": "2026-09-03",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "time_s": 4064.0,
+          "stroke_rate": 19,
+          "tag": "UT2"
+        },
+        {
+          "id": "w2-1",
+          "date": "2026-09-02",
+          "distance_m": 14000,
+          "split_s": 126.9,
+          "time_s": 3553.2,
+          "stroke_rate": 20,
+          "tag": "UT2"
+        },
+        {
+          "id": "w2-2",
+          "date": "2026-09-01",
+          "distance_m": 12000,
+          "split_s": 122.0,
+          "time_s": 2928.0,
+          "stroke_rate": 22,
+          "tag": "UT1"
+        },
+        {
+          "id": "w2-3",
+          "date": "2026-08-31",
+          "distance_m": 8000,
+          "split_s": 118.0,
+          "time_s": 1888.0,
+          "stroke_rate": 26,
+          "tag": "AT"
+        },
+        {
+          "id": "w2-4",
+          "date": "2026-08-30",
+          "distance_m": 18000,
+          "split_s": 127.1,
+          "time_s": 4575.6,
+          "stroke_rate": 18,
+          "tag": "UT2"
+        },
+        {
+          "id": "w3-0",
+          "date": "2026-08-27",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "time_s": 4064.0,
+          "stroke_rate": 19,
+          "tag": "UT2"
+        },
+        {
+          "id": "w3-1",
+          "date": "2026-08-26",
+          "distance_m": 14000,
+          "split_s": 126.9,
+          "time_s": 3553.2,
+          "stroke_rate": 20,
+          "tag": "UT2"
+        },
+        {
+          "id": "w3-2",
+          "date": "2026-08-25",
+          "distance_m": 12000,
+          "split_s": 122.0,
+          "time_s": 2928.0,
+          "stroke_rate": 22,
+          "tag": "UT1"
+        },
+        {
+          "id": "w3-3",
+          "date": "2026-08-24",
+          "distance_m": 8000,
+          "split_s": 118.0,
+          "time_s": 1888.0,
+          "stroke_rate": 26,
+          "tag": "AT"
+        },
+        {
+          "id": "w3-4",
+          "date": "2026-08-23",
+          "distance_m": 18000,
+          "split_s": 127.1,
+          "time_s": 4575.6,
+          "stroke_rate": 18,
+          "tag": "UT2"
+        },
+        {
+          "id": "6k-tr",
+          "date": "2026-09-08",
+          "distance_m": 6000,
+          "time_s": 1385.8,
+          "stroke_rate": 30,
+          "tag": "TR"
+        }
+      ],
+      "expected": {
+        "predicted_split_seconds": 105.0,
+        "predicted_total_time_seconds": 419.99,
+        "predicted_split_formatted": "1:45.0",
+        "predicted_total_time_formatted": "7:00.0",
+        "confidence_score": "High",
+        "confidence_numeric": 80,
+        "anchor_tier": "TR",
+        "anchor_method": "closest_distance",
+        "anchor_session_ids": [
+          "6k-tr"
+        ],
+        "components": {
+          "anchor_split": 115.48,
+          "paul_adjustment": -2.49,
+          "intensity_offset": -8.0,
+          "rpe_correction": 0.0,
+          "two_k_equivalent": 105.0,
+          "projection_to_target": 0.0,
+          "weight_trend_correction": 0.0,
+          "volume_modifier": 0.0,
+          "clamp_adjustment": 0.0
+        },
+        "load_trimp_lite": 1282.1,
+        "load_modifier_seconds": 0.0,
+        "spread_seconds": 0.0,
+        "two_k_equivalent_by_tier": {
+          "TR": 105.0,
+          "AT": 105.0,
+          "UT1": 105.0,
+          "UT2": 105.0
+        },
+        "weight_adjusted_total_seconds": 382.1,
+        "age_graded_total_seconds": 381.81,
+        "flags": []
+      }
+    },
+    {
+      "name": "weight_trend_off_by_default",
+      "as_of": "2026-09-17",
+      "target_distance_m": 2000,
+      "config_overrides": {},
+      "athlete": null,
+      "history": [
+        {
+          "id": "w0-0",
+          "date": "2026-09-17",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "time_s": 4064.0,
+          "stroke_rate": 19,
+          "tag": "UT2",
+          "bodyweight_kg": 74.0
+        },
+        {
+          "id": "w0-1",
+          "date": "2026-09-16",
+          "distance_m": 14000,
+          "split_s": 126.9,
+          "time_s": 3553.2,
+          "stroke_rate": 20,
+          "tag": "UT2",
+          "bodyweight_kg": 74.2
+        },
+        {
+          "id": "w0-2",
+          "date": "2026-09-15",
+          "distance_m": 12000,
+          "split_s": 122.0,
+          "time_s": 2928.0,
+          "stroke_rate": 22,
+          "tag": "UT1",
+          "bodyweight_kg": 74.4
+        },
+        {
+          "id": "w0-3",
+          "date": "2026-09-14",
+          "distance_m": 8000,
+          "split_s": 118.0,
+          "time_s": 1888.0,
+          "stroke_rate": 26,
+          "tag": "AT",
+          "bodyweight_kg": 74.6
+        },
+        {
+          "id": "w0-4",
+          "date": "2026-09-13",
+          "distance_m": 18000,
+          "split_s": 127.1,
+          "time_s": 4575.6,
+          "stroke_rate": 18,
+          "tag": "UT2",
+          "bodyweight_kg": 74.8
+        },
+        {
+          "id": "w1-0",
+          "date": "2026-09-10",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "time_s": 4064.0,
+          "stroke_rate": 19,
+          "tag": "UT2",
+          "bodyweight_kg": 75.4
+        },
+        {
+          "id": "w1-1",
+          "date": "2026-09-09",
+          "distance_m": 14000,
+          "split_s": 126.9,
+          "time_s": 3553.2,
+          "stroke_rate": 20,
+          "tag": "UT2",
+          "bodyweight_kg": 75.6
+        },
+        {
+          "id": "w1-2",
+          "date": "2026-09-08",
+          "distance_m": 12000,
+          "split_s": 122.0,
+          "time_s": 2928.0,
+          "stroke_rate": 22,
+          "tag": "UT1",
+          "bodyweight_kg": 75.8
+        },
+        {
+          "id": "w1-3",
+          "date": "2026-09-07",
+          "distance_m": 8000,
+          "split_s": 118.0,
+          "time_s": 1888.0,
+          "stroke_rate": 26,
+          "tag": "AT",
+          "bodyweight_kg": 76.0
+        },
+        {
+          "id": "w1-4",
+          "date": "2026-09-06",
+          "distance_m": 18000,
+          "split_s": 127.1,
+          "time_s": 4575.6,
+          "stroke_rate": 18,
+          "tag": "UT2",
+          "bodyweight_kg": 76.2
+        },
+        {
+          "id": "w2-0",
+          "date": "2026-09-03",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "time_s": 4064.0,
+          "stroke_rate": 19,
+          "tag": "UT2",
+          "bodyweight_kg": 76.8
+        },
+        {
+          "id": "w2-1",
+          "date": "2026-09-02",
+          "distance_m": 14000,
+          "split_s": 126.9,
+          "time_s": 3553.2,
+          "stroke_rate": 20,
+          "tag": "UT2",
+          "bodyweight_kg": 77.0
+        },
+        {
+          "id": "w2-2",
+          "date": "2026-09-01",
+          "distance_m": 12000,
+          "split_s": 122.0,
+          "time_s": 2928.0,
+          "stroke_rate": 22,
+          "tag": "UT1",
+          "bodyweight_kg": 77.2
+        },
+        {
+          "id": "w2-3",
+          "date": "2026-08-31",
+          "distance_m": 8000,
+          "split_s": 118.0,
+          "time_s": 1888.0,
+          "stroke_rate": 26,
+          "tag": "AT",
+          "bodyweight_kg": 77.4
+        },
+        {
+          "id": "w2-4",
+          "date": "2026-08-30",
+          "distance_m": 18000,
+          "split_s": 127.1,
+          "time_s": 4575.6,
+          "stroke_rate": 18,
+          "tag": "UT2",
+          "bodyweight_kg": 77.6
+        },
+        {
+          "id": "w3-0",
+          "date": "2026-08-27",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "time_s": 4064.0,
+          "stroke_rate": 19,
+          "tag": "UT2",
+          "bodyweight_kg": 78.2
+        },
+        {
+          "id": "w3-1",
+          "date": "2026-08-26",
+          "distance_m": 14000,
+          "split_s": 126.9,
+          "time_s": 3553.2,
+          "stroke_rate": 20,
+          "tag": "UT2",
+          "bodyweight_kg": 78.4
+        },
+        {
+          "id": "w3-2",
+          "date": "2026-08-25",
+          "distance_m": 12000,
+          "split_s": 122.0,
+          "time_s": 2928.0,
+          "stroke_rate": 22,
+          "tag": "UT1",
+          "bodyweight_kg": 78.6
+        },
+        {
+          "id": "w3-3",
+          "date": "2026-08-24",
+          "distance_m": 8000,
+          "split_s": 118.0,
+          "time_s": 1888.0,
+          "stroke_rate": 26,
+          "tag": "AT",
+          "bodyweight_kg": 78.8
+        },
+        {
+          "id": "w3-4",
+          "date": "2026-08-23",
+          "distance_m": 18000,
+          "split_s": 127.1,
+          "time_s": 4575.6,
+          "stroke_rate": 18,
+          "tag": "UT2",
+          "bodyweight_kg": 79.0
+        },
+        {
+          "id": "6k-tr",
+          "date": "2026-09-08",
+          "distance_m": 6000,
+          "time_s": 1385.8,
+          "stroke_rate": 30,
+          "tag": "TR",
+          "bodyweight_kg": 75.8
+        }
+      ],
+      "expected": {
+        "predicted_split_seconds": 105.0,
+        "predicted_total_time_seconds": 419.99,
+        "predicted_split_formatted": "1:45.0",
+        "predicted_total_time_formatted": "7:00.0",
+        "confidence_score": "High",
+        "confidence_numeric": 80,
+        "anchor_tier": "TR",
+        "anchor_method": "closest_distance",
+        "anchor_session_ids": [
+          "6k-tr"
+        ],
+        "components": {
+          "anchor_split": 115.48,
+          "paul_adjustment": -2.49,
+          "intensity_offset": -8.0,
+          "rpe_correction": 0.0,
+          "two_k_equivalent": 105.0,
+          "projection_to_target": 0.0,
+          "weight_trend_correction": 0.0,
+          "volume_modifier": 0.0,
+          "clamp_adjustment": 0.0
+        },
+        "load_trimp_lite": 1282.1,
+        "load_modifier_seconds": 0.0,
+        "spread_seconds": 0.0,
+        "two_k_equivalent_by_tier": {
+          "TR": 105.0,
+          "AT": 105.0,
+          "UT1": 105.0,
+          "UT2": 105.0
+        },
+        "weight_adjusted_total_seconds": null,
+        "age_graded_total_seconds": null,
+        "flags": [
+          "weight_change_not_applied"
+        ]
+      }
+    },
+    {
+      "name": "weight_trend_enabled_loss",
+      "as_of": "2026-09-17",
+      "target_distance_m": 2000,
+      "config_overrides": {
+        "weight_trend_sensitivity": 1.0
+      },
+      "athlete": null,
+      "history": [
+        {
+          "id": "w0-0",
+          "date": "2026-09-17",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "time_s": 4064.0,
+          "stroke_rate": 19,
+          "tag": "UT2",
+          "bodyweight_kg": 74.0
+        },
+        {
+          "id": "w0-1",
+          "date": "2026-09-16",
+          "distance_m": 14000,
+          "split_s": 126.9,
+          "time_s": 3553.2,
+          "stroke_rate": 20,
+          "tag": "UT2",
+          "bodyweight_kg": 74.2
+        },
+        {
+          "id": "w0-2",
+          "date": "2026-09-15",
+          "distance_m": 12000,
+          "split_s": 122.0,
+          "time_s": 2928.0,
+          "stroke_rate": 22,
+          "tag": "UT1",
+          "bodyweight_kg": 74.4
+        },
+        {
+          "id": "w0-3",
+          "date": "2026-09-14",
+          "distance_m": 8000,
+          "split_s": 118.0,
+          "time_s": 1888.0,
+          "stroke_rate": 26,
+          "tag": "AT",
+          "bodyweight_kg": 74.6
+        },
+        {
+          "id": "w0-4",
+          "date": "2026-09-13",
+          "distance_m": 18000,
+          "split_s": 127.1,
+          "time_s": 4575.6,
+          "stroke_rate": 18,
+          "tag": "UT2",
+          "bodyweight_kg": 74.8
+        },
+        {
+          "id": "w1-0",
+          "date": "2026-09-10",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "time_s": 4064.0,
+          "stroke_rate": 19,
+          "tag": "UT2",
+          "bodyweight_kg": 75.4
+        },
+        {
+          "id": "w1-1",
+          "date": "2026-09-09",
+          "distance_m": 14000,
+          "split_s": 126.9,
+          "time_s": 3553.2,
+          "stroke_rate": 20,
+          "tag": "UT2",
+          "bodyweight_kg": 75.6
+        },
+        {
+          "id": "w1-2",
+          "date": "2026-09-08",
+          "distance_m": 12000,
+          "split_s": 122.0,
+          "time_s": 2928.0,
+          "stroke_rate": 22,
+          "tag": "UT1",
+          "bodyweight_kg": 75.8
+        },
+        {
+          "id": "w1-3",
+          "date": "2026-09-07",
+          "distance_m": 8000,
+          "split_s": 118.0,
+          "time_s": 1888.0,
+          "stroke_rate": 26,
+          "tag": "AT",
+          "bodyweight_kg": 76.0
+        },
+        {
+          "id": "w1-4",
+          "date": "2026-09-06",
+          "distance_m": 18000,
+          "split_s": 127.1,
+          "time_s": 4575.6,
+          "stroke_rate": 18,
+          "tag": "UT2",
+          "bodyweight_kg": 76.2
+        },
+        {
+          "id": "w2-0",
+          "date": "2026-09-03",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "time_s": 4064.0,
+          "stroke_rate": 19,
+          "tag": "UT2",
+          "bodyweight_kg": 76.8
+        },
+        {
+          "id": "w2-1",
+          "date": "2026-09-02",
+          "distance_m": 14000,
+          "split_s": 126.9,
+          "time_s": 3553.2,
+          "stroke_rate": 20,
+          "tag": "UT2",
+          "bodyweight_kg": 77.0
+        },
+        {
+          "id": "w2-2",
+          "date": "2026-09-01",
+          "distance_m": 12000,
+          "split_s": 122.0,
+          "time_s": 2928.0,
+          "stroke_rate": 22,
+          "tag": "UT1",
+          "bodyweight_kg": 77.2
+        },
+        {
+          "id": "w2-3",
+          "date": "2026-08-31",
+          "distance_m": 8000,
+          "split_s": 118.0,
+          "time_s": 1888.0,
+          "stroke_rate": 26,
+          "tag": "AT",
+          "bodyweight_kg": 77.4
+        },
+        {
+          "id": "w2-4",
+          "date": "2026-08-30",
+          "distance_m": 18000,
+          "split_s": 127.1,
+          "time_s": 4575.6,
+          "stroke_rate": 18,
+          "tag": "UT2",
+          "bodyweight_kg": 77.6
+        },
+        {
+          "id": "w3-0",
+          "date": "2026-08-27",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "time_s": 4064.0,
+          "stroke_rate": 19,
+          "tag": "UT2",
+          "bodyweight_kg": 78.2
+        },
+        {
+          "id": "w3-1",
+          "date": "2026-08-26",
+          "distance_m": 14000,
+          "split_s": 126.9,
+          "time_s": 3553.2,
+          "stroke_rate": 20,
+          "tag": "UT2",
+          "bodyweight_kg": 78.4
+        },
+        {
+          "id": "w3-2",
+          "date": "2026-08-25",
+          "distance_m": 12000,
+          "split_s": 122.0,
+          "time_s": 2928.0,
+          "stroke_rate": 22,
+          "tag": "UT1",
+          "bodyweight_kg": 78.6
+        },
+        {
+          "id": "w3-3",
+          "date": "2026-08-24",
+          "distance_m": 8000,
+          "split_s": 118.0,
+          "time_s": 1888.0,
+          "stroke_rate": 26,
+          "tag": "AT",
+          "bodyweight_kg": 78.8
+        },
+        {
+          "id": "w3-4",
+          "date": "2026-08-23",
+          "distance_m": 18000,
+          "split_s": 127.1,
+          "time_s": 4575.6,
+          "stroke_rate": 18,
+          "tag": "UT2",
+          "bodyweight_kg": 79.0
+        },
+        {
+          "id": "6k-tr",
+          "date": "2026-09-08",
+          "distance_m": 6000,
+          "time_s": 1385.8,
+          "stroke_rate": 30,
+          "tag": "TR",
+          "bodyweight_kg": 75.8
+        }
+      ],
+      "expected": {
+        "predicted_split_seconds": 105.56,
+        "predicted_total_time_seconds": 422.24,
+        "predicted_split_formatted": "1:45.6",
+        "predicted_total_time_formatted": "7:02.2",
+        "confidence_score": "High",
+        "confidence_numeric": 80,
+        "anchor_tier": "TR",
+        "anchor_method": "closest_distance",
+        "anchor_session_ids": [
+          "6k-tr"
+        ],
+        "components": {
+          "anchor_split": 115.48,
+          "paul_adjustment": -2.49,
+          "intensity_offset": -8.0,
+          "rpe_correction": 0.0,
+          "two_k_equivalent": 105.0,
+          "projection_to_target": 0.0,
+          "weight_trend_correction": 0.56,
+          "volume_modifier": 0.0,
+          "clamp_adjustment": 0.0
+        },
+        "load_trimp_lite": 1282.1,
+        "load_modifier_seconds": 0.0,
+        "spread_seconds": 0.0,
+        "two_k_equivalent_by_tier": {
+          "TR": 105.0,
+          "AT": 105.0,
+          "UT1": 105.0,
+          "UT2": 105.0
+        },
+        "weight_adjusted_total_seconds": null,
+        "age_graded_total_seconds": null,
+        "flags": [
+          "weight_trend_applied"
+        ]
+      }
+    },
+    {
+      "name": "weight_trend_enabled_gain",
+      "as_of": "2026-09-17",
+      "target_distance_m": 2000,
+      "config_overrides": {
+        "weight_trend_sensitivity": 1.0
+      },
+      "athlete": null,
+      "history": [
+        {
+          "id": "w0-0",
+          "date": "2026-09-17",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "time_s": 4064.0,
+          "stroke_rate": 19,
+          "tag": "UT2",
+          "bodyweight_kg": 80.0
+        },
+        {
+          "id": "w0-1",
+          "date": "2026-09-16",
+          "distance_m": 14000,
+          "split_s": 126.9,
+          "time_s": 3553.2,
+          "stroke_rate": 20,
+          "tag": "UT2",
+          "bodyweight_kg": 79.8
+        },
+        {
+          "id": "w0-2",
+          "date": "2026-09-15",
+          "distance_m": 12000,
+          "split_s": 122.0,
+          "time_s": 2928.0,
+          "stroke_rate": 22,
+          "tag": "UT1",
+          "bodyweight_kg": 79.6
+        },
+        {
+          "id": "w0-3",
+          "date": "2026-09-14",
+          "distance_m": 8000,
+          "split_s": 118.0,
+          "time_s": 1888.0,
+          "stroke_rate": 26,
+          "tag": "AT",
+          "bodyweight_kg": 79.4
+        },
+        {
+          "id": "w0-4",
+          "date": "2026-09-13",
+          "distance_m": 18000,
+          "split_s": 127.1,
+          "time_s": 4575.6,
+          "stroke_rate": 18,
+          "tag": "UT2",
+          "bodyweight_kg": 79.2
+        },
+        {
+          "id": "w1-0",
+          "date": "2026-09-10",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "time_s": 4064.0,
+          "stroke_rate": 19,
+          "tag": "UT2",
+          "bodyweight_kg": 78.6
+        },
+        {
+          "id": "w1-1",
+          "date": "2026-09-09",
+          "distance_m": 14000,
+          "split_s": 126.9,
+          "time_s": 3553.2,
+          "stroke_rate": 20,
+          "tag": "UT2",
+          "bodyweight_kg": 78.4
+        },
+        {
+          "id": "w1-2",
+          "date": "2026-09-08",
+          "distance_m": 12000,
+          "split_s": 122.0,
+          "time_s": 2928.0,
+          "stroke_rate": 22,
+          "tag": "UT1",
+          "bodyweight_kg": 78.2
+        },
+        {
+          "id": "w1-3",
+          "date": "2026-09-07",
+          "distance_m": 8000,
+          "split_s": 118.0,
+          "time_s": 1888.0,
+          "stroke_rate": 26,
+          "tag": "AT",
+          "bodyweight_kg": 78.0
+        },
+        {
+          "id": "w1-4",
+          "date": "2026-09-06",
+          "distance_m": 18000,
+          "split_s": 127.1,
+          "time_s": 4575.6,
+          "stroke_rate": 18,
+          "tag": "UT2",
+          "bodyweight_kg": 77.8
+        },
+        {
+          "id": "w2-0",
+          "date": "2026-09-03",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "time_s": 4064.0,
+          "stroke_rate": 19,
+          "tag": "UT2",
+          "bodyweight_kg": 77.2
+        },
+        {
+          "id": "w2-1",
+          "date": "2026-09-02",
+          "distance_m": 14000,
+          "split_s": 126.9,
+          "time_s": 3553.2,
+          "stroke_rate": 20,
+          "tag": "UT2",
+          "bodyweight_kg": 77.0
+        },
+        {
+          "id": "w2-2",
+          "date": "2026-09-01",
+          "distance_m": 12000,
+          "split_s": 122.0,
+          "time_s": 2928.0,
+          "stroke_rate": 22,
+          "tag": "UT1",
+          "bodyweight_kg": 76.8
+        },
+        {
+          "id": "w2-3",
+          "date": "2026-08-31",
+          "distance_m": 8000,
+          "split_s": 118.0,
+          "time_s": 1888.0,
+          "stroke_rate": 26,
+          "tag": "AT",
+          "bodyweight_kg": 76.6
+        },
+        {
+          "id": "w2-4",
+          "date": "2026-08-30",
+          "distance_m": 18000,
+          "split_s": 127.1,
+          "time_s": 4575.6,
+          "stroke_rate": 18,
+          "tag": "UT2",
+          "bodyweight_kg": 76.4
+        },
+        {
+          "id": "w3-0",
+          "date": "2026-08-27",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "time_s": 4064.0,
+          "stroke_rate": 19,
+          "tag": "UT2",
+          "bodyweight_kg": 75.8
+        },
+        {
+          "id": "w3-1",
+          "date": "2026-08-26",
+          "distance_m": 14000,
+          "split_s": 126.9,
+          "time_s": 3553.2,
+          "stroke_rate": 20,
+          "tag": "UT2",
+          "bodyweight_kg": 75.6
+        },
+        {
+          "id": "w3-2",
+          "date": "2026-08-25",
+          "distance_m": 12000,
+          "split_s": 122.0,
+          "time_s": 2928.0,
+          "stroke_rate": 22,
+          "tag": "UT1",
+          "bodyweight_kg": 75.4
+        },
+        {
+          "id": "w3-3",
+          "date": "2026-08-24",
+          "distance_m": 8000,
+          "split_s": 118.0,
+          "time_s": 1888.0,
+          "stroke_rate": 26,
+          "tag": "AT",
+          "bodyweight_kg": 75.2
+        },
+        {
+          "id": "w3-4",
+          "date": "2026-08-23",
+          "distance_m": 18000,
+          "split_s": 127.1,
+          "time_s": 4575.6,
+          "stroke_rate": 18,
+          "tag": "UT2",
+          "bodyweight_kg": 75.0
+        },
+        {
+          "id": "6k-tr",
+          "date": "2026-09-08",
+          "distance_m": 6000,
+          "time_s": 1385.8,
+          "stroke_rate": 30,
+          "tag": "TR",
+          "bodyweight_kg": 78.2
+        }
+      ],
+      "expected": {
+        "predicted_split_seconds": 104.47,
+        "predicted_total_time_seconds": 417.87,
+        "predicted_split_formatted": "1:44.5",
+        "predicted_total_time_formatted": "6:57.9",
+        "confidence_score": "High",
+        "confidence_numeric": 80,
+        "anchor_tier": "TR",
+        "anchor_method": "closest_distance",
+        "anchor_session_ids": [
+          "6k-tr"
+        ],
+        "components": {
+          "anchor_split": 115.48,
+          "paul_adjustment": -2.49,
+          "intensity_offset": -8.0,
+          "rpe_correction": 0.0,
+          "two_k_equivalent": 105.0,
+          "projection_to_target": 0.0,
+          "weight_trend_correction": -0.53,
+          "volume_modifier": 0.0,
+          "clamp_adjustment": 0.0
+        },
+        "load_trimp_lite": 1282.1,
+        "load_modifier_seconds": 0.0,
+        "spread_seconds": 0.0,
+        "two_k_equivalent_by_tier": {
+          "TR": 105.0,
+          "AT": 105.0,
+          "UT1": 105.0,
+          "UT2": 105.0
+        },
+        "weight_adjusted_total_seconds": null,
+        "age_graded_total_seconds": null,
+        "flags": [
+          "weight_trend_applied"
+        ]
+      }
+    },
+    {
+      "name": "prior_male_reference",
+      "as_of": "2026-09-17",
+      "target_distance_m": 2000,
+      "config_overrides": {},
+      "athlete": {
+        "age": 27,
+        "sex": "male",
+        "weight_kg": 82
+      },
+      "history": [],
+      "expected": {
+        "predicted_split_seconds": 110.0,
+        "predicted_total_time_seconds": 440.0,
+        "predicted_split_formatted": "1:50.0",
+        "predicted_total_time_formatted": "7:20.0",
+        "confidence_score": "Population Estimate",
+        "confidence_numeric": 15,
+        "anchor_tier": null,
+        "anchor_method": null,
+        "anchor_session_ids": null,
+        "components": {
+          "population_2k_seconds": 440.0,
+          "two_k_equivalent": 110.0,
+          "projection_to_target": 0.0
+        },
+        "load_trimp_lite": 0.0,
+        "load_modifier_seconds": 0.0,
+        "spread_seconds": 0.0,
+        "two_k_equivalent_by_tier": {},
+        "weight_adjusted_total_seconds": 402.51,
+        "age_graded_total_seconds": 440.0,
+        "flags": [
+          "cold_start",
+          "population_estimate",
+          "prior_is_seed_data"
+        ]
+      }
+    },
+    {
+      "name": "prior_female_reference",
+      "as_of": "2026-09-17",
+      "target_distance_m": 2000,
+      "config_overrides": {},
+      "athlete": {
+        "age": 27,
+        "sex": "female",
+        "weight_kg": 68
+      },
+      "history": [],
+      "expected": {
+        "predicted_split_seconds": 125.0,
+        "predicted_total_time_seconds": 500.0,
+        "predicted_split_formatted": "2:05.0",
+        "predicted_total_time_formatted": "8:20.0",
+        "confidence_score": "Population Estimate",
+        "confidence_numeric": 15,
+        "anchor_tier": null,
+        "anchor_method": null,
+        "anchor_session_ids": null,
+        "components": {
+          "population_2k_seconds": 500.0,
+          "two_k_equivalent": 125.0,
+          "projection_to_target": 0.0
+        },
+        "load_trimp_lite": 0.0,
+        "load_modifier_seconds": 0.0,
+        "spread_seconds": 0.0,
+        "two_k_equivalent_by_tier": {},
+        "weight_adjusted_total_seconds": 438.78,
+        "age_graded_total_seconds": 500.0,
+        "flags": [
+          "cold_start",
+          "population_estimate",
+          "prior_is_seed_data"
+        ]
+      }
+    },
+    {
+      "name": "prior_nonbinary_only",
+      "as_of": "2026-09-17",
+      "target_distance_m": 2000,
+      "config_overrides": {},
+      "athlete": {
+        "sex": "nonbinary"
+      },
+      "history": [],
+      "expected": {
+        "predicted_split_seconds": 117.5,
+        "predicted_total_time_seconds": 470.0,
+        "predicted_split_formatted": "1:57.5",
+        "predicted_total_time_formatted": "7:50.0",
+        "confidence_score": "Population Estimate",
+        "confidence_numeric": 15,
+        "anchor_tier": null,
+        "anchor_method": null,
+        "anchor_session_ids": null,
+        "components": {
+          "population_2k_seconds": 470.0,
+          "two_k_equivalent": 117.5,
+          "projection_to_target": 0.0
+        },
+        "load_trimp_lite": 0.0,
+        "load_modifier_seconds": 0.0,
+        "spread_seconds": 0.0,
+        "two_k_equivalent_by_tier": {},
+        "weight_adjusted_total_seconds": null,
+        "age_graded_total_seconds": null,
+        "flags": [
+          "cold_start",
+          "population_estimate",
+          "prior_is_seed_data",
+          "sex_neutral_prior"
+        ]
+      }
+    },
+    {
+      "name": "prior_older_heavier_5k",
+      "as_of": "2026-09-17",
+      "target_distance_m": 5000,
+      "config_overrides": {},
+      "athlete": {
+        "age": 55,
+        "sex": "male",
+        "weight_kg": 100
+      },
+      "history": [],
+      "expected": {
+        "predicted_split_seconds": 122.39,
+        "predicted_total_time_seconds": 1223.95,
+        "predicted_split_formatted": "2:02.4",
+        "predicted_total_time_formatted": "20:23.9",
+        "confidence_score": "Population Estimate",
+        "confidence_numeric": 15,
+        "anchor_tier": null,
+        "anchor_method": null,
+        "anchor_session_ids": null,
+        "components": {
+          "population_2k_seconds": 463.14,
+          "two_k_equivalent": 115.78,
+          "projection_to_target": 6.61
+        },
+        "load_trimp_lite": 0.0,
+        "load_modifier_seconds": 0.0,
+        "spread_seconds": 0.0,
+        "two_k_equivalent_by_tier": {},
+        "weight_adjusted_total_seconds": 1170.09,
+        "age_graded_total_seconds": 1112.68,
+        "flags": [
+          "cold_start",
+          "population_estimate",
+          "prior_is_seed_data"
+        ]
+      }
+    },
+    {
+      "name": "prior_not_used_when_history_is_stale",
+      "as_of": "2026-09-17",
+      "target_distance_m": 2000,
+      "config_overrides": {},
+      "athlete": {
+        "sex": "male",
+        "age": 30
+      },
+      "history": [
+        {
+          "id": "old",
+          "date": "2026-08-03",
+          "distance_m": 2000,
+          "time_s": 390.0,
+          "tag": "AN"
+        }
+      ],
+      "expected": {
+        "predicted_split_seconds": null,
+        "predicted_total_time_seconds": null,
+        "predicted_split_formatted": null,
+        "predicted_total_time_formatted": null,
+        "confidence_score": "Insufficient Data",
+        "confidence_numeric": 0,
+        "anchor_tier": null,
+        "anchor_method": null,
+        "anchor_session_ids": null,
+        "components": {},
+        "load_trimp_lite": 0.0,
+        "load_modifier_seconds": 0.0,
+        "spread_seconds": 0.0,
+        "two_k_equivalent_by_tier": {},
+        "weight_adjusted_total_seconds": null,
+        "age_graded_total_seconds": null,
+        "flags": [
+          "history_outside_window"
+        ]
+      }
+    },
+    {
+      "name": "prior_implausible_profile_dropped",
+      "as_of": "2026-09-17",
+      "target_distance_m": 2000,
+      "config_overrides": {},
+      "athlete": {
+        "age": 400,
+        "weight_kg": -3
+      },
+      "history": [],
+      "expected": {
+        "predicted_split_seconds": null,
+        "predicted_total_time_seconds": null,
+        "predicted_split_formatted": null,
+        "predicted_total_time_formatted": null,
+        "confidence_score": "Insufficient Data",
+        "confidence_numeric": 0,
+        "anchor_tier": null,
+        "anchor_method": null,
+        "anchor_session_ids": null,
+        "components": {},
+        "load_trimp_lite": 0.0,
+        "load_modifier_seconds": 0.0,
+        "spread_seconds": 0.0,
+        "two_k_equivalent_by_tier": {},
+        "weight_adjusted_total_seconds": null,
+        "age_graded_total_seconds": null,
+        "flags": [
+          "cold_start"
+        ]
+      }
+    }
+  ],
+  "parsing": {
+    "format_seconds": [
+      {
+        "in": 0.4,
+        "out": "0:00.4"
+      },
+      {
+        "in": 59.96,
+        "out": "1:00.0"
+      },
+      {
+        "in": 105.0,
+        "out": "1:45.0"
+      },
+      {
+        "in": 419.96,
+        "out": "7:00.0"
+      },
+      {
+        "in": 421.2,
+        "out": "7:01.2"
+      },
+      {
+        "in": 3599.99,
+        "out": "1:00:00.0"
+      },
+      {
+        "in": 5025.6,
+        "out": "1:23:45.6"
+      }
+    ],
+    "weight_adjustment_factor": [
+      {
+        "weight_kg": 55.0,
+        "out": 0.8371783083
+      },
+      {
+        "weight_kg": 68.0,
+        "out": 0.8775551688
+      },
+      {
+        "weight_kg": 80.0,
+        "out": 0.9097947514
+      },
+      {
+        "weight_kg": 100.0,
+        "out": 0.9559990263
+      },
+      {
+        "weight_kg": 122.47,
+        "out": 1.0000001089
+      }
+    ],
+    "age_performance_factor": [
+      {
+        "age": 12,
+        "out": 1.21
+      },
+      {
+        "age": 16,
+        "out": 1.11
+      },
+      {
+        "age": 18,
+        "out": 1.06
+      },
+      {
+        "age": 22,
+        "out": 1.0333333333
+      },
+      {
+        "age": 27,
+        "out": 1.0
+      },
+      {
+        "age": 30,
+        "out": 1.0
+      },
+      {
+        "age": 35,
+        "out": 1.0
+      },
+      {
+        "age": 40,
+        "out": 1.02
+      },
+      {
+        "age": 50,
+        "out": 1.06
+      },
+      {
+        "age": 55,
+        "out": 1.1
+      },
+      {
+        "age": 70,
+        "out": 1.22
+      },
+      {
+        "age": 85,
+        "out": 1.4
+      }
+    ],
+    "normalise_rpe": [
+      {
+        "in": 0,
+        "out": 0.0
+      },
+      {
+        "in": 3,
+        "out": 3.0
+      },
+      {
+        "in": 7.5,
+        "out": 7.5
+      },
+      {
+        "in": 10,
+        "out": 10.0
+      },
+      {
+        "in": 10.5,
+        "out": null
+      },
+      {
+        "in": 11,
+        "out": 3.5714285714285716
+      },
+      {
+        "in": 15,
+        "out": 6.428571428571429
+      },
+      {
+        "in": 20,
+        "out": 10.0
+      },
+      {
+        "in": 20.5,
+        "out": null
+      },
+      {
+        "in": -1,
+        "out": null
+      }
+    ]
+  }
+}
