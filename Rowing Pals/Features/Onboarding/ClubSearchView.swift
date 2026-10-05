@@ -509,7 +509,7 @@ struct ClubSearchView: View {
         let wasWaiting = myRequest?.isDeclined == false
         myRequest = membership.request
         if wasWaiting, membership.club != nil {
-            NotificationCenter.default.post(name: .rowerClubChanged, object: nil)
+            NotificationCenter.default.postRowerClubChanged()
             closeRoute()
         }
     }

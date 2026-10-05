@@ -39,14 +39,14 @@ final class TestsViewModel {
     @MainActor
     func loadOwnPBs() async {
         isLoading = true
-        defer { isLoading = false }
+        let perf = PerfLog.start()
+        defer { isLoading = false; PerfLog.done("Test results", since: perf) }
 
         guard let userId = try? await SupabaseService.shared.auth.session.user.id else { return }
-        // Before the club-tests migration has run, this is simply none.
-        clubTests = (try? await ClubTestService.mine()) ?? .none
-        let tests = StandardTest.all + clubTests.tests.map(\.asTest)
+        // The group cards load alongside everything else; they don't wait for the grid.
+        async let groups: Void = loadGroupBests(viewerId: userId)
 
-        struct ResultRow: Decodable {
+        nonisolated struct ResultRow: Decodable {
             let distanceKey: String
             let distanceM: Int
             let timeMs: Int
@@ -58,13 +58,22 @@ final class TestsViewModel {
             }
         }
 
-        guard let rows: [ResultRow] = try? await SupabaseService.shared
+        // The club's tests and your results, at once. Before the club-tests migration has run,
+        // the club's tests are simply none.
+        async let clubTestsRequest = try? await ClubTestService.mine()
+        async let resultsRequest: [ResultRow]? = try? await SupabaseService.shared
             .from("test_results")
             .select("distance_key, distance_m, time_ms")
             .eq("user_id", value: userId)
             .execute()
             .value
-        else { return }
+        let (myClubTests, resultRows) = await (clubTestsRequest, resultsRequest)
+        clubTests = myClubTests ?? .none
+        let tests = StandardTest.all + clubTests.tests.map(\.asTest)
+        guard let rows = resultRows else {
+            await groups
+            return
+        }
 
         var bestByKey: [String: ResultRow] = [:]
         for row in rows {
@@ -87,9 +96,8 @@ final class TestsViewModel {
             }
             return Tile(test: test, clubTest: clubTestsByKey[test.key], displayValue: display)
         }
-        async let predictions: Void = loadPredictions()
-        async let groups: Void = loadGroupBests(viewerId: userId)
-        _ = await (predictions, groups)
+        await loadPredictions()
+        await groups
     }
 
     @MainActor
@@ -100,7 +108,10 @@ final class TestsViewModel {
             groupCaption = nil
             return
         }
-        struct Row: Decodable {
+        // Known at once (the viewer context is cached), so the section takes its place before
+        // its numbers arrive and the grid below doesn't jump.
+        groupCaption = group.filters.captionText
+        nonisolated struct Row: Decodable {
             struct Author: Decodable {
                 let displayName: String
                 enum CodingKeys: String, CodingKey { case displayName = "display_name" }
@@ -125,9 +136,12 @@ final class TestsViewModel {
             .eq("category_at_time", value: group.level.rawValue)
             .execute()
             .value
-        else { return }
+        else {
+            // No numbers to show: hide the section rather than leave placeholders.
+            groupCaption = nil
+            return
+        }
 
-        groupCaption = group.filters.captionText
         groupBests = Self.groupBestKeys.compactMap { key in
             guard let test = StandardTest.all.first(where: { $0.key == key }) else { return nil }
             let results = rows.filter { $0.distanceKey == key }

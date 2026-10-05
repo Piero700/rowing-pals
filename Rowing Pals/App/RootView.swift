@@ -134,6 +134,10 @@ struct RootView: View {
     private func tab(_ tab: RootTab, @ViewBuilder content: () -> some View) -> some View {
         content()
             .opacity(selection == tab ? 1 : 0)
+            // Screens swap at once, like a standard iOS tab bar; only the bar's thumb slides.
+            // (The thumb's spring used to cross-fade all three screens, glass and all, for about
+            // half a second on every tab tap.)
+            .animation(nil, value: selection)
             .allowsHitTesting(selection == tab)
     }
 }

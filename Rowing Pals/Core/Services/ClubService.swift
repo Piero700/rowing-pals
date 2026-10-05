@@ -245,6 +245,6 @@ enum ClubService {
     private struct UserParam: Encodable { let p_user: UUID }
 
     private static func announce() {
-        NotificationCenter.default.post(name: .rowerClubChanged, object: nil)
+        NotificationCenter.default.postRowerClubChanged()
     }
 }

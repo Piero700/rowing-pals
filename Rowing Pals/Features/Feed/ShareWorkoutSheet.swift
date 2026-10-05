@@ -93,11 +93,6 @@ struct ShareWorkoutSheet: View {
     @MainActor
     private func loadPhoto() async -> UIImage? {
         guard let photoURL else { return nil }
-        let key = photoURL.absoluteString
-        if let cached = ImageCache.shared.image(for: key) { return cached }
-        guard let (data, _) = try? await URLSession.shared.data(from: photoURL),
-              let image = UIImage(data: data) else { return nil }
-        ImageCache.shared.set(image, for: key)
-        return image
+        return await ImageCache.shared.load(photoURL)
     }
 }

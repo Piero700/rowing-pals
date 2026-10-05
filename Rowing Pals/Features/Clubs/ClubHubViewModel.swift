@@ -36,7 +36,7 @@ final class ClubHubViewModel {
             membership = fresh
             if wasWaiting, fresh.club != nil {
                 wasAccepted = true
-                NotificationCenter.default.post(name: .rowerClubChanged, object: nil)
+                NotificationCenter.default.postRowerClubChanged()
             }
         } catch {
             errorMessage = error.localizedDescription

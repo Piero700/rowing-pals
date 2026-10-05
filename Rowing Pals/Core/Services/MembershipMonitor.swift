@@ -33,7 +33,7 @@ final class MembershipMonitor {
     func check() async {
         guard let now = await Self.snapshot() else { return }
         if let last, last != now {
-            NotificationCenter.default.post(name: .rowerClubChanged, object: nil)
+            NotificationCenter.default.postRowerClubChanged()
         }
         last = now
     }

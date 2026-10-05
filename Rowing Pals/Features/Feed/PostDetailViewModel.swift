@@ -113,7 +113,8 @@ final class PostDetailViewModel {
     @MainActor
     func load() async {
         isLoading = true
-        defer { isLoading = false }
+        let perf = PerfLog.start()
+        defer { isLoading = false; PerfLog.done("Workout", since: perf) }
 
         do {
             let userId = try await SupabaseService.shared.auth.session.user.id
@@ -298,6 +299,7 @@ final class PostDetailViewModel {
             .from("daily_totals")
             .select("day, session_count")
             .eq("user_id", value: userId)
+            .gte("day", value: StreakCalculator.earliestRelevantDay())
             .execute()
             .value
         else { return 0 }
@@ -330,34 +332,34 @@ final class PostDetailViewModel {
             .execute()
             .value
         guard let thisResult = matches.first else { return nil }
-        // A standard test, or one of a club's own (decision 28).
-        let test: StandardTest
-        if let standard = StandardTest.all.first(where: { $0.key == thisResult.distanceKey }) {
-            test = standard
-        } else if let clubTest = try? await ClubTestService.test(forKey: thisResult.distanceKey) {
-            test = clubTest.asTest
-        } else {
-            return nil
-        }
 
-        struct OwnRow: Decodable {
+        // Everything else at once: which test it is (a standard test is known here; a club's
+        // own needs a lookup, decision 28), the author's other results for it, and the two
+        // boards the rank is read from.
+        let standard = StandardTest.all.first { $0.key == thisResult.distanceKey }
+        nonisolated struct OwnRow: Decodable {
             let distanceM: Int
             let timeMs: Int
             enum CodingKeys: String, CodingKey { case distanceM = "distance_m"; case timeMs = "time_ms" }
         }
-        let ownResults: [OwnRow] = try await SupabaseService.shared
+        let key = thisResult.distanceKey
+        async let clubTestLookup: StandardTest? = standard == nil
+            ? (try? await ClubTestService.test(forKey: key))?.asTest
+            : nil
+        async let ownRequest: [OwnRow] = SupabaseService.shared
             .from("test_results")
             .select("distance_m, time_ms")
             .eq("user_id", value: authorId)
-            .eq("distance_key", value: thisResult.distanceKey)
+            .eq("distance_key", value: key)
             .execute()
             .value
+        async let overallRequest = boardRows(distanceKey: key, gender: thisResult.genderAtTime, category: nil)
+        async let categoryRequest = boardRows(distanceKey: key, gender: thisResult.genderAtTime, category: thisResult.categoryAtTime)
+        let (clubTest, ownResults, overallRows, categoryRows) = try await (clubTestLookup, ownRequest, overallRequest, categoryRequest)
+        guard let test = standard ?? clubTest else { return nil }
+
         let ownBest = test.isDurationBased ? ownResults.map(\.distanceM).max() : ownResults.map(\.timeMs).min()
         let isPersonalBest = test.isDurationBased ? ownBest == thisResult.distanceM : ownBest == thisResult.timeMs
-
-        async let overallRank = rank(of: authorId, distanceKey: thisResult.distanceKey, isDurationBased: test.isDurationBased, gender: thisResult.genderAtTime, category: nil)
-        async let categoryRank = rank(of: authorId, distanceKey: thisResult.distanceKey, isDurationBased: test.isDurationBased, gender: thisResult.genderAtTime, category: thisResult.categoryAtTime)
-        let (overall, category) = try await (overallRank, categoryRank)
 
         let genderWord = thisResult.genderAtTime == .male ? "men" : "women"
         let categoryLabel = "\(thisResult.categoryAtTime.rawValue) \(genderWord)"
@@ -368,39 +370,39 @@ final class PostDetailViewModel {
             // total time taken to finish — elapsed time, not a split.
             valueLabel: test.isDurationBased ? thisResult.distanceM.formattedMetres : thisResult.timeMs.formattedDurationMs,
             isPersonalBest: isPersonalBest,
-            overallRank: overall,
+            overallRank: rank(of: authorId, in: overallRows, isDurationBased: test.isDurationBased),
             categoryLabel: categoryLabel,
-            categoryRank: category
+            categoryRank: rank(of: authorId, in: categoryRows, isDurationBased: test.isDurationBased)
         )
     }
 
-    /// 1-based rank of `userId` among all rowers of `gender` (and, if
-    /// given, `category`) for `distanceKey` — best result per rower only,
-    /// same reduction rule as the test leaderboard (task 14).
-    private static func rank(of userId: UUID, distanceKey: String, isDurationBased: Bool, gender: RowerGender, category: RowerCategory?) async throws -> Int? {
-        struct Row: Decodable {
-            let userId: UUID
-            let distanceM: Int
-            let timeMs: Int
-            enum CodingKeys: String, CodingKey { case userId = "user_id"; case distanceM = "distance_m"; case timeMs = "time_ms" }
-        }
+    nonisolated struct BoardRow: Decodable {
+        let userId: UUID
+        let distanceM: Int
+        let timeMs: Int
+        enum CodingKeys: String, CodingKey { case userId = "user_id"; case distanceM = "distance_m"; case timeMs = "time_ms" }
+    }
 
+    /// Every result for `distanceKey` among rowers of `gender` (and, if given, `category`).
+    private static func boardRows(distanceKey: String, gender: RowerGender, category: RowerCategory?) async throws -> [BoardRow] {
         var query = SupabaseService.shared
             .from("test_results")
             .select("user_id, distance_m, time_ms")
             .eq("distance_key", value: distanceKey)
             .eq("gender_at_time", value: gender.rawValue)
         if let category { query = query.eq("category_at_time", value: category.rawValue) }
+        return try await query.execute().value
+    }
 
-        let rows: [Row] = try await query.execute().value
-
-        var bestByUser: [UUID: Row] = [:]
+    /// 1-based rank of `userId` on a board — best result per rower only, same reduction rule as
+    /// the test leaderboard (task 14).
+    nonisolated static func rank(of userId: UUID, in rows: [BoardRow], isDurationBased: Bool) -> Int? {
+        var bestByUser: [UUID: BoardRow] = [:]
         for row in rows {
             guard let existing = bestByUser[row.userId] else { bestByUser[row.userId] = row; continue }
             let isBetter = isDurationBased ? row.distanceM > existing.distanceM : row.timeMs < existing.timeMs
             if isBetter { bestByUser[row.userId] = row }
         }
-
         let orderedIds = bestByUser.values
             .sorted { isDurationBased ? $0.distanceM > $1.distanceM : $0.timeMs < $1.timeMs }
             .map(\.userId)

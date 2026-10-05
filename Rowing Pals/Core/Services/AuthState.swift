@@ -20,7 +20,11 @@ final class AuthState {
 
     init() {
         watchTask = Task {
-            for await (_, session) in SupabaseService.shared.auth.authStateChanges {
+            for await (event, session) in SupabaseService.shared.auth.authStateChanges {
+                // A different account (or none) is a different viewer.
+                if event == .signedIn || event == .signedOut || event == .initialSession {
+                    ViewerContext.shared.invalidate()
+                }
                 isSignedIn = session != nil
                 if session != nil {
                     await refreshOnboardingStatus()

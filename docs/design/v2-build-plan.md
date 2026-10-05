@@ -158,6 +158,15 @@ that they match the prototype.
    Contrast, full screen-by-screen comparison against the
    prototype, then task 19 (TestFlight).
 
+10. **Performance** (branch `t37-performance`, `docs/testing/performance.md`): one shared
+    "viewer context" (profile, club, clubmates, follows) instead of every screen re-fetching it;
+    the feed relies on the database's visibility rule (decision 33) instead of repeating it;
+    independent requests run together (Profile, Volume, Test results, the workout's test banner);
+    streak queries limited to two years; photos cached by stored file in memory and on disk and
+    decoded off the main thread; a cheap PB glow; instant tab switches. Each screen logs its load
+    time (`PerfLog`, category "perf"). Simulator, cold launch, before → after: Volume 325 → 77 ms,
+    Test results 873 → 371 ms, Profile 584 → 479 ms, Test board 198 → 116 ms, workout 441 →
+    270 ms, feed 1,089 → ~700 ms (most of it the app's first connection after launch).
 10. **Coaching and the v4 canvas** (decisions 34–41): canvas catch-up, then coaching Phases 1–3 in
     `docs/design/coaching-build-plan.md`. Catch-up BUILT (branch `t36-canvas-catch-up`, `docs/testing/canvas-catch-up.md`); next: coaching Phase 1.
 

@@ -194,6 +194,8 @@ final class SettingsViewModel {
                 return
             }
             original = (displayName, gender, category, weeklyTargetM)
+            // Name, gender and level feed the shared viewer context (rankings open on them).
+            ViewerContext.shared.invalidate()
 
             let details = AthletePrivateService.Details(birthDate: birthDate, weightKg: parsedWeight)
             if details != originalPrivate {

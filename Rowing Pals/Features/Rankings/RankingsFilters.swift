@@ -66,26 +66,8 @@ struct ViewerGroup: Equatable {
 
     /// Nil when the profile can't be read; the boards then fall back to `RankingsFilters.initial`.
     static func load() async -> ViewerGroup? {
-        struct Row: Decodable {
-            struct Club: Decodable { let name: String }
-            let gender: RowerGender?
-            let category: RowerCategory
-            let club: Club?
-            enum CodingKeys: String, CodingKey {
-                case gender, category
-                case club = "clubs"
-            }
-        }
-        guard let userId = try? await SupabaseService.shared.auth.session.user.id,
-              let row: Row = try? await SupabaseService.shared
-                .from("profiles")
-                .select("gender, category, clubs(name)")
-                .eq("id", value: userId)
-                .single()
-                .execute()
-                .value
-        else { return nil }
-        return ViewerGroup(gender: row.gender, level: row.category, clubName: row.club?.name)
+        guard let viewer = try? await ViewerContext.shared.current() else { return nil }
+        return ViewerGroup(gender: viewer.gender, level: viewer.category, clubName: viewer.clubName)
     }
 }
 

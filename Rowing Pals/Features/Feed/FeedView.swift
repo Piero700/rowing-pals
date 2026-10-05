@@ -56,13 +56,13 @@ struct FeedView: View {
             .padding(.horizontal, Tokens.Spacing.screen)
         }
         .scrollIndicators(.hidden)
-        .scrollsToTopOnReselect(reselects) { await viewModel.reload() }
+        .scrollsToTopOnReselect(reselects) { ViewerContext.shared.invalidate(); await viewModel.reload() }
         .safeAreaInset(edge: .top, spacing: 0) { header }
         .background(Tokens.Base.ground)
         .tracksFloatingBar()
         .ignoresSafeArea(edges: .bottom)
         .task { await viewModel.loadInitial() }
-        .refreshable { await viewModel.reload() }
+        .refreshable { ViewerContext.shared.invalidate(); await viewModel.reload() }
         .onReceive(NotificationCenter.default.publisher(for: .rowerClubChanged)) { _ in
             Task { await viewModel.clubChanged() }
         }

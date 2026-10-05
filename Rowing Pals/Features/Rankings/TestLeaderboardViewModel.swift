@@ -81,7 +81,8 @@ final class TestLeaderboardViewModel {
     private func performReload() async {
         guard !Task.isCancelled else { return }
         isLoading = true
-        defer { isLoading = false }
+        let perf = PerfLog.start()
+        defer { isLoading = false; if !Task.isCancelled { PerfLog.done("Test board", since: perf) } }
 
         do {
             let scopeIds = try await filters.scope.userIds()
@@ -182,6 +183,7 @@ final class TestLeaderboardViewModel {
                     .from("daily_totals")
                     .select("user_id, day, session_count")
                     .in("user_id", values: sorted.map(\.userId))
+                    .gte("day", value: StreakCalculator.earliestRelevantDay())
                     .execute()
                     .value) ?? []
                 for row in streakRows where row.sessionCount > 0 {
