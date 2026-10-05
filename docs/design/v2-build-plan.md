@@ -178,7 +178,10 @@ that they match the prototype.
     coach, no Log button for coach-only accounts and off every board and Crewmates, Coaches in
     Your crew, the "has coaches" notice, Profile visibility and Edit profile to the canvas,
     Coaching's Rowers list (pro-rata target, flags, 2k and prediction, squad filter and sort),
-    one rower's page, squads, coaches read-only on posts. Next: Phase 2 (set workouts).
+    one rower's page, squads, coaches read-only on posts. Coaching Phase 2 BUILT (decisions 49–52,
+    branch `t40-coaching-phase2`, `docs/testing/coaching-phase2.md`): set workouts, Today's
+    workout on Feed and Log, linked sessions, done / partly / not yet, splits against each rower's
+    target, the New workouts alert. Waiting on the phone test. Next: Phase 3 (attendance).
 
 ## Waiting on the user
 

@@ -44,7 +44,10 @@ Artboards: `CoachMakeCoach`, `CoachOnboarding`, `CoachJoinNotice`, `CoachCrew`, 
   (volume chart, zone mix, effort trend, tests with W/kg, attendance history, posts, age and
   bodyweight); squads (list, create, rename, members, delete).
 
-## Phase 2 — Set workouts (brief phase 2)
+## Phase 2 — Set workouts (brief phase 2) — BUILT, branch `t40-coaching-phase2`
+Built 2026-10-06 (decisions 49–52; checklist `docs/testing/coaching-phase2.md`). The coaching
+migration gained section 5b; run the whole file again on staging, and redeploy `send-push`.
+Waiting on the user's phone test before merging.
 Artboards: `CoachWorkouts`, `CoachWorkoutNew`, `CoachWorkoutResults`, `RowerFeedCoaching`,
 `RowerLogCoaching`.
 - Create (title, date, optional time, description, zone, optional pieces with reps/rest/rate/
@@ -65,8 +68,8 @@ Artboards: `CoachPractices`, `CoachPracticeNew`, `CoachPracticeRegister`, `Coach
 
 ## Questions to settle at the start of each phase
 - ~~Phase 1: what "behind target" means mid-week~~ — pro-rata (decision 43).
-- Phase 2: what "partly" means for a linked session; whether a test-day workout posts to the
-  test's leaderboard automatically.
+- ~~Phase 2: what "partly" means; whether a test-day workout posts to the test's leaderboard~~ —
+  decisions 49 and 50.
 - Phase 3: what "check in" proves (a tap during the window, no location).
 
 Each phase: new branch; decisions recorded; build plan updated; click-by-click checklist in
