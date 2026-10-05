@@ -38,4 +38,16 @@ enum SocialScope: Int, CaseIterable {
         case .myClub: return viewer.clubmateIds
         }
     }
+
+    /// `userIds()` without coach-only accounts, who never appear on a leaderboard, a test
+    /// board or a club ranking (decision 39).
+    func rankedUserIds() async throws -> [UUID] {
+        let viewer = try await ViewerContext.shared.current()
+        return Self.ranked(try await userIds(), nonRowerIds: viewer.nonRowerIds, viewerId: viewer.userId, viewerIsRower: viewer.isRower)
+    }
+
+    /// `ids` without coach-only accounts — the viewer included when they're one.
+    static func ranked(_ ids: [UUID], nonRowerIds: Set<UUID>, viewerId: UUID, viewerIsRower: Bool) -> [UUID] {
+        ids.filter { !nonRowerIds.contains($0) && ($0 != viewerId || viewerIsRower) }
+    }
 }

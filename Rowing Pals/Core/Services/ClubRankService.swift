@@ -24,6 +24,8 @@ enum ClubRankService {
             .from("profiles")
             .select("id")
             .eq("club_id", value: clubId)
+            // Coach-only accounts are never ranked (decision 39).
+            .eq("is_rower", value: true)
             .execute()
             .value
         let ids = members.map(\.id)

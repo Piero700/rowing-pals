@@ -22,7 +22,11 @@ Artboards: `RankingsVolume`, `RankingsTests`, `RankingsFilters`, `Settings`, `Po
   bodyweight (decision 35).
 - Workout screen: drop "Photo-verified". (Decision 38.)
 
-## Phase 1 — Coaches, squads, the overview and privacy (brief phase 1)
+## Phase 1 — Coaches, squads, the overview and privacy (brief phase 1) — BUILT, branch `t39-coaching-phase1`
+Built 2026-10-05 (decisions 43–47; checklist `docs/testing/coaching-phase1.md`). Waiting on: the
+migration run on staging, then the user's phone test before merging. Left for later phases, on
+purpose: attendance figures (Rowers list, one rower's page, the sort) and the Workouts /
+Practices tabs. Predictions show "±Ns" from the engine's new range (v1.5, decision 48).
 Artboards: `CoachMakeCoach`, `CoachOnboarding`, `CoachJoinNotice`, `CoachCrew`, `CoachOnlyFeed`,
 `SettingsProfile`, `SettingsPrivacy`, `CoachRowers`, `CoachSortSheet`, `CoachRower`, `CoachSquads`,
 `CoachSquadEdit`.
@@ -60,7 +64,7 @@ Artboards: `CoachPractices`, `CoachPracticeNew`, `CoachPracticeRegister`, `Coach
   term, term dates set by coaches. Optional reminder push with its Settings switch.
 
 ## Questions to settle at the start of each phase
-- Phase 1: what "behind target" means mid-week (pro-rata or end of week).
+- ~~Phase 1: what "behind target" means mid-week~~ — pro-rata (decision 43).
 - Phase 2: what "partly" means for a linked session; whether a test-day workout posts to the
   test's leaderboard automatically.
 - Phase 3: what "check in" proves (a tap during the window, no location).

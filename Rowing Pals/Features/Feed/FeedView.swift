@@ -13,12 +13,12 @@ struct FeedView: View {
     /// What opens over the feed: a workout, or a post's comments thread.
     private enum Cover: Identifiable {
         case post(UUID)
-        case comments(UUID, subtitle: String)
+        case comments(UUID, subtitle: String, canComment: Bool)
 
         var id: String {
             switch self {
             case .post(let id): "post-\(id)"
-            case .comments(let id, _): "comments-\(id)"
+            case .comments(let id, _, _): "comments-\(id)"
             }
         }
     }
@@ -72,8 +72,8 @@ struct FeedView: View {
                 PostDetailView(sessionId: id) { count in
                     viewModel.setCommentCount(count, on: id)
                 }
-            case .comments(let id, let subtitle):
-                CommentsView(sessionId: id, subtitle: subtitle) { count in
+            case .comments(let id, let subtitle, let canComment):
+                CommentsView(sessionId: id, subtitle: subtitle, canComment: canComment) { count in
                     viewModel.setCommentCount(count, on: id)
                 }
             }
@@ -150,11 +150,16 @@ struct FeedView: View {
                     reactions: viewModel.reactionSummaries(for: post),
                     onOpen: { cover = .post(post.id) },
                     onOpenComments: {
-                        cover = .comments(post.id, subtitle: "\(post.author.displayName) · \(post.workoutLabel ?? "Training")")
+                        cover = .comments(
+                            post.id,
+                            subtitle: "\(post.author.displayName) · \(post.workoutLabel ?? "Training")",
+                            canComment: !viewModel.readOnlyPostIds.contains(post.id)
+                        )
                     },
                     onToggleReaction: { kind in
                         Task { await viewModel.toggleReaction(kind: kind, on: post.id) }
-                    }
+                    },
+                    canInteract: !viewModel.readOnlyPostIds.contains(post.id)
                 )
                 .padding(.bottom, Tokens.Spacing.loose)
                 .task { await viewModel.loadMoreIfNeeded(currentPost: post) }
@@ -173,7 +178,7 @@ struct FeedView: View {
             Text(body)
                 .textStyle(Typography.meta)
                 .foregroundStyle(Tokens.Ink.secondary)
-            if showsPostButton {
+            if showsPostButton && viewModel.viewerIsRower {
                 Button("Post a workout") { navigate(.log) }
                     .buttonStyle(.rpPrimary)
                     .padding(.top, 4)

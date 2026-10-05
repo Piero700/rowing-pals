@@ -12,7 +12,6 @@ struct SettingsView: View {
     @State private var viewModel = SettingsViewModel()
     @Environment(\.dismiss) private var dismiss
     @State private var isShowingTerms = false
-    @State private var isShowingPrivacy = false
     @State private var isShowingDeleteConfirmation = false
     @State private var isShowingPrivacyPolicy = false
     /// Whether iOS allows alerts, re-read on return from the iOS Settings app.
@@ -73,11 +72,22 @@ struct SettingsView: View {
                     notificationsGroup
 
                     group("Privacy") {
-                        row(title: "Profile visibility", subtitle: nil) {
-                            value(viewModel.isPrivate ? "Private" : "Public")
-                            chevron
-                        } action: { isShowingPrivacy = true }
+                        NavigationLink {
+                            ProfileVisibilityView(viewModel: viewModel)
+                        } label: {
+                            rowContent(title: "Profile visibility", subtitle: nil) {
+                                value(viewModel.isPrivate ? "Private" : "Public")
+                                chevron
+                            }
+                        }
+                        .buttonStyle(IconPressStyle())
                     }
+                    // SettingsPrivacy (decisions 34–35).
+                    Text("Your club’s coaches can always see your training, age and bodyweight.")
+                        .textStyle(Typography.meta)
+                        .foregroundStyle(Tokens.Ink.secondary)
+                        .padding(.horizontal, 4)
+                        .padding(.top, Tokens.Spacing.tight)
 
                     group("Account") {
                         NavigationLink {
@@ -147,10 +157,6 @@ struct SettingsView: View {
             .task { await viewModel.load() }
             .sheet(isPresented: $isShowingTerms) {
                 TermsOfServiceView()
-            }
-            .sheet(isPresented: $isShowingPrivacy) {
-                privacySheet
-                    .presentationDetents([.medium])
             }
             .sheet(isPresented: $isShowingPrivacyPolicy) {
                 PrivacyPolicyView()
@@ -359,42 +365,6 @@ struct SettingsView: View {
         .padding(.horizontal, Tokens.Spacing.card)
         .padding(.vertical, Tokens.Spacing.loose)
         .frame(minHeight: Tokens.Size.row)
-    }
-
-
-    /// The prototype's privacy sheet (docs/design/
-    /// rowing-pals-redesign-handoff-v2.md §2 Screen 07): one switch, with
-    /// copy that says exactly what each state means.
-    private var privacySheet: some View {
-        NavigationStack {
-            Form {
-                Section {
-                    Toggle("Private account", isOn: Binding(
-                        get: { viewModel.isPrivate },
-                        set: { newValue in Task { await viewModel.setPrivate(newValue) } }
-                    ))
-                    .disabled(viewModel.isSavingPrivacy)
-                } footer: {
-                    if viewModel.isPrivate {
-                        Text("Only people you approve can see your sessions, stats, personal bests, followers and following. Anyone can still send a request. People who already follow you keep following. Your sessions won't appear on leaderboards for anyone who doesn't follow you, and being in the same club doesn't give anyone access.")
-                    } else {
-                        Text("Anyone can see your sessions and stats, and follow you without asking. Switching to private later means new followers need your approval.")
-                    }
-                }
-                if let error = viewModel.saveError {
-                    Section {
-                        Text(error).foregroundStyle(Tokens.System.error)
-                    }
-                }
-            }
-            .navigationTitle("Profile visibility")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") { isShowingPrivacy = false }
-                }
-            }
-        }
     }
 }
 

@@ -66,7 +66,7 @@ struct PostDetailView: View {
             onCommentCountChange(count)
         }
         .fullScreenCover(isPresented: $isShowingAllComments) {
-            CommentsView(thread: viewModel.thread, subtitle: threadSubtitle)
+            CommentsView(thread: viewModel.thread, subtitle: threadSubtitle, canComment: viewModel.canInteract)
         }
         .ignoresSafeArea(edges: .top)
         .task { await viewModel.load() }
@@ -467,25 +467,27 @@ struct PostDetailView: View {
                 reactionChip(reaction)
             }
             Spacer()
-            Button {
-                isShowingMoreReactions = true
-            } label: {
-                Image(systemName: "plus")
-                    .textStyle(Typography.rowTitle)
-                    .foregroundStyle(Tokens.Ink.secondary)
-                    .frame(width: 34, height: 34)
-                    .background {
-                        Circle().fill(Tokens.Ink.primary.opacity(0.08))
-                    }
-                    .frame(width: Tokens.Size.minTap, height: Tokens.Size.minTap)
-                .contentShape(Circle())
-            }
-            .accessibilityLabel("More reactions")
-            .buttonStyle(.plain)
-            .confirmationDialog("Add a reaction", isPresented: $isShowingMoreReactions, titleVisibility: .visible) {
-                ForEach(PostDetailViewModel.extraReactionKinds, id: \.self) { kind in
-                    Button("\(Self.emoji[kind] ?? "") \(kind.capitalized)") {
-                        Task { await viewModel.toggleReaction(kind: kind) }
+            if viewModel.canInteract {
+                Button {
+                    isShowingMoreReactions = true
+                } label: {
+                    Image(systemName: "plus")
+                        .textStyle(Typography.rowTitle)
+                        .foregroundStyle(Tokens.Ink.secondary)
+                        .frame(width: 34, height: 34)
+                        .background {
+                            Circle().fill(Tokens.Ink.primary.opacity(0.08))
+                        }
+                        .frame(width: Tokens.Size.minTap, height: Tokens.Size.minTap)
+                    .contentShape(Circle())
+                }
+                .accessibilityLabel("More reactions")
+                .buttonStyle(.plain)
+                .confirmationDialog("Add a reaction", isPresented: $isShowingMoreReactions, titleVisibility: .visible) {
+                    ForEach(PostDetailViewModel.extraReactionKinds, id: \.self) { kind in
+                        Button("\(Self.emoji[kind] ?? "") \(kind.capitalized)") {
+                            Task { await viewModel.toggleReaction(kind: kind) }
+                        }
                     }
                 }
             }
@@ -511,6 +513,7 @@ struct PostDetailView: View {
             }
         }
         .buttonStyle(.plain)
+        .disabled(!viewModel.canInteract)
     }
 
     // MARK: - Caption
@@ -632,8 +635,12 @@ struct PostDetailView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, Tokens.Spacing.headerHorizontal)
             }
-            CommentComposer(draft: $commentDraft) { text in
-                Task { await viewModel.thread.postComment(body: text) }
+            if viewModel.canInteract {
+                CommentComposer(draft: $commentDraft) { text in
+                    Task { await viewModel.thread.postComment(body: text) }
+                }
+            } else {
+                ReadOnlyPostNote()
             }
         }
     }

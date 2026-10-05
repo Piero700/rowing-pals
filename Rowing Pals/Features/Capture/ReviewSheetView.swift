@@ -481,7 +481,7 @@ struct ReviewSheetView: View {
                     .foregroundStyle(Tokens.Ink.secondary)
             }
         }
-        .tint(Tokens.Accent.success)
+        .tint(Tokens.Accent.brand)
         .padding(.horizontal, Tokens.Spacing.loose)
         .padding(.vertical, 8)
         .frame(minHeight: 66)

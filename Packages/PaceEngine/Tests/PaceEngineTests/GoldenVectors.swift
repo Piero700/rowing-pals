@@ -73,6 +73,8 @@ struct GoldenCase: Decodable, Sendable, CustomTestStringConvertible {
         let predictedTotalTimeSeconds: Double?
         let predictedSplitFormatted: String?
         let predictedTotalTimeFormatted: String?
+        let predictedSplitRangeSeconds: Double?
+        let predictedTotalTimeRangeSeconds: Double?
         let confidenceScore: String
         let confidenceNumeric: Int
         let anchorTier: String?
@@ -93,6 +95,8 @@ struct GoldenCase: Decodable, Sendable, CustomTestStringConvertible {
             case predictedTotalTimeSeconds = "predicted_total_time_seconds"
             case predictedSplitFormatted = "predicted_split_formatted"
             case predictedTotalTimeFormatted = "predicted_total_time_formatted"
+            case predictedSplitRangeSeconds = "predicted_split_range_seconds"
+            case predictedTotalTimeRangeSeconds = "predicted_total_time_range_seconds"
             case confidenceScore = "confidence_score"
             case confidenceNumeric = "confidence_numeric"
             case anchorTier = "anchor_tier"

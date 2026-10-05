@@ -36,6 +36,8 @@ nonisolated enum ClubRole: String, Codable, CaseIterable, Comparable {
     var canManageMembers: Bool { self >= .admin }
     /// Change roles and edit the club.
     var canEditClub: Bool { self >= .coOwner }
+    /// Make someone a coach, or stop — mirrors `set_club_coach` (decision 39).
+    var canMakeCoach: Bool { self >= .coOwner }
 
     /// Mirrors `remove_club_member` in docs/migrations/2026-09-30-clubs.sql.
     func canRemove(_ other: ClubRole) -> Bool { canManageMembers && other < self }

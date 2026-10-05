@@ -53,12 +53,21 @@ enum ClubService {
         let displayName: String
         let role: ClubRole
         let category: RowerCategory
+        /// Coaches the club (decision 39).
+        let isCoach: Bool
+        /// False for a coach-only account, who never appears in Crewmates (decision 34).
+        let isRower: Bool
+        /// When they joined this club; nil for anyone who joined before it was recorded.
+        let clubJoinedAt: Date?
 
         enum CodingKeys: String, CodingKey {
             case id
             case displayName = "display_name"
             case role = "club_role"
             case category
+            case isCoach = "is_coach"
+            case isRower = "is_rower"
+            case clubJoinedAt = "club_joined_at"
         }
 
         init(from decoder: Decoder) throws {
@@ -67,10 +76,22 @@ enum ClubService {
             displayName = try c.decode(String.self, forKey: .displayName)
             role = try c.decodeIfPresent(ClubRole.self, forKey: .role) ?? .member
             category = try c.decode(RowerCategory.self, forKey: .category)
+            isCoach = try c.decodeIfPresent(Bool.self, forKey: .isCoach) ?? false
+            isRower = try c.decodeIfPresent(Bool.self, forKey: .isRower) ?? true
+            clubJoinedAt = try c.decodeIfPresent(Date.self, forKey: .clubJoinedAt)
+        }
+
+        /// Under a coach's name: "Co-owner · Coach · Novice", "Coach · doesn't row".
+        var coachLine: String {
+            var parts: [String] = []
+            if role != .member { parts.append(role.label) }
+            parts.append("Coach")
+            parts.append(isRower ? category.rawValue.capitalized : "doesn’t row")
+            return parts.joined(separator: " · ")
         }
     }
 
-    private static let personColumns = "id, display_name, club_role, category"
+    private static let personColumns = "id, display_name, club_role, category, is_coach, is_rower, club_joined_at"
 
     // MARK: - Reading
 
@@ -117,6 +138,25 @@ enum ClubService {
             $0.role != $1.role ? $0.role > $1.role
                 : $0.displayName.localizedCaseInsensitiveCompare($1.displayName) == .orderedAscending
         }
+    }
+
+    /// The club's coaches, rowing or not (decision 39), owner first then alphabetical. Anyone
+    /// signed in can read this, so a rower is told before joining (decision 34).
+    static func coaches(of clubId: UUID) async throws -> [Person] {
+        let people: [Person] = try await SupabaseService.shared
+            .from("profiles").select(personColumns).eq("club_id", value: clubId).eq("is_coach", value: true)
+            .execute().value
+        return people.sorted {
+            $0.role != $1.role ? $0.role > $1.role
+                : $0.displayName.localizedCaseInsensitiveCompare($1.displayName) == .orderedAscending
+        }
+    }
+
+    /// Which club an invite code opens, without joining it.
+    static func club(forCode code: String) async throws -> UUID {
+        struct Params: Encodable { let p_code: String }
+        return try await SupabaseService.shared
+            .rpc("club_for_invite_code", params: Params(p_code: code)).execute().value
     }
 
     /// Rowers waiting to join `clubId`, oldest first. Admins and up only (the database hides
@@ -227,6 +267,15 @@ enum ClubService {
         struct Params: Encodable { let p_user: UUID; let p_role: ClubRole }
         try await SupabaseService.shared
             .rpc("set_club_role", params: Params(p_user: userId, p_role: role)).execute()
+    }
+
+    /// Makes a member a coach, or stops (owner and co-owners only, decision 39).
+    static func setCoach(_ isCoach: Bool, for userId: UUID) async throws {
+        struct Params: Encodable { let p_user: UUID; let p_on: Bool }
+        try await SupabaseService.shared
+            .rpc("set_club_coach", params: Params(p_user: userId, p_on: isCoach)).execute()
+        // Their coaching rights (and, if it's the signed-in rower, the Coaching entry) change.
+        announce()
     }
 
     static func remove(_ userId: UUID) async throws {

@@ -44,6 +44,18 @@ struct ClubSearchView: View {
     @Environment(\.scenePhase) private var scenePhase
     /// Onboarding's back button: the account exists by now, so going back means signing out.
     @State private var isConfirmingSignOut = false
+    /// "I'm a coach" at About you: no gender or level, no Log button (decision 34).
+    @State private var isCoachOnly = false
+    /// "<Club> has coaches", shown before joining a club that has any (decision 34).
+    @State private var coachNotice: CoachNotice?
+
+    private struct CoachNotice: Identifiable {
+        let id = UUID()
+        let clubName: String
+        let coaches: [CoachJoinNotice.Coach]
+        let actionTitle: String
+        let proceed: () -> Void
+    }
 
     private let genders: [RowerGender] = [.male, .female]
     private let categories: [RowerCategory] = [.novice, .senior]
@@ -60,6 +72,18 @@ struct ClubSearchView: View {
         }
         .animation(.snappy, value: isAboutYou)
         .background(Tokens.Base.ground)
+        .sheet(item: $coachNotice) { notice in
+            CoachJoinNotice(
+                clubName: notice.clubName,
+                coaches: notice.coaches,
+                actionTitle: notice.actionTitle,
+                onContinue: {
+                    coachNotice = nil
+                    notice.proceed()
+                },
+                onCancel: { coachNotice = nil }
+            )
+        }
         // Pushed from Your crew, the system bar would add a second back button over our own.
         .toolbar(.hidden, for: .navigationBar)
         .dismissesKeyboardOnTap()
@@ -143,13 +167,19 @@ struct ClubSearchView: View {
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
             stickyButton(clubButtonTitle, isEnabled: canContinueWithClub) {
-                isWithoutClub = false
-                joinedByCodeName = nil
-                if mode == .joinLater {
-                    // Level and gender were set at sign-up (user, 2026-10-04): join straight away.
-                    Task { await joinSelectedClub() }
-                } else {
-                    isAboutYou = true
+                guard let club = viewModel.selectedClub else { return }
+                let title = clubButtonTitle
+                Task {
+                    await afterCoachNotice(clubId: club.id, clubName: club.name, actionTitle: title) {
+                        isWithoutClub = false
+                        joinedByCodeName = nil
+                        if mode == .joinLater {
+                            // Level and gender were set at sign-up (user, 2026-10-04): join straight away.
+                            Task { await joinSelectedClub() }
+                        } else {
+                            isAboutYou = true
+                        }
+                    }
                 }
             }
         }
@@ -197,12 +227,50 @@ struct ClubSearchView: View {
         }
     }
 
-    /// "Have an invite code?": joins straight away. Joining later, that's it; at onboarding the
-    /// rower goes on to About you.
+    /// Runs `proceed` at once for a club without coaches; for one with coaches, first shows
+    /// "<Club> has coaches" and runs it only if the rower carries on (decision 34). If the
+    /// coaches can't be read, nothing is joined: nobody joins without being told.
+    private func afterCoachNotice(clubId: UUID, clubName: String, actionTitle: String, proceed: @escaping () -> Void) async {
+        saveError = nil
+        do {
+            let coaches = try await ClubService.coaches(of: clubId)
+            guard !coaches.isEmpty else {
+                proceed()
+                return
+            }
+            coachNotice = CoachNotice(
+                clubName: clubName,
+                coaches: coaches.map { CoachJoinNotice.Coach(id: $0.id, name: $0.displayName, detail: $0.coachLine) },
+                actionTitle: actionTitle,
+                proceed: proceed
+            )
+        } catch {
+            saveError = error.localizedDescription
+        }
+    }
+
+    /// "Have an invite code?": finds the club, says if it has coaches, then joins straight
+    /// away. Joining later, that's it; at onboarding the rower goes on to About you.
     private func joinWithCode() async {
         let code = inviteCode.trimmingCharacters(in: .whitespacesAndNewlines)
         inviteCode = ""
         guard !code.isEmpty else { return }
+        saveError = nil
+        do {
+            let clubId = try await ClubService.club(forCode: code)
+            let row: NameRow? = try? await SupabaseService.shared
+                .from("clubs").select("name").eq("id", value: clubId).single()
+                .execute().value
+            let name = row?.name ?? "this club"
+            await afterCoachNotice(clubId: clubId, clubName: name, actionTitle: "Join \(name)") {
+                Task { await joinWithCode(code) }
+            }
+        } catch {
+            saveError = error.localizedDescription
+        }
+    }
+
+    private func joinWithCode(_ code: String) async {
         saveError = nil
         do {
             let clubId = try await ClubService.join(code: code)
@@ -224,7 +292,7 @@ struct ClubSearchView: View {
     private struct NameRow: Decodable { let name: String }
 
     /// v3: "SET UP YOUR CREW" in the brand colour, a 33 pt title, then one muted line.
-    private func intro(title: String, body: String) -> some View {
+    private func intro(title: String, body: String?) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             Text("Set up your crew")
                 .textStyle(Typography.overline)
@@ -234,10 +302,14 @@ struct ClubSearchView: View {
                 .foregroundStyle(Tokens.Ink.primary)
                 .padding(.vertical, 8)
                 .accessibilityAddTraits(.isHeader)
-            Text(body)
-                .textStyle(Typography.bodyV3)
-                .foregroundStyle(Tokens.Ink.secondary)
-                .padding(.bottom, 16)
+            if let body {
+                Text(body)
+                    .textStyle(Typography.bodyV3)
+                    .foregroundStyle(Tokens.Ink.secondary)
+                    .padding(.bottom, 16)
+            } else {
+                Spacer().frame(height: Tokens.Spacing.tight)
+            }
         }
     }
 
@@ -347,27 +419,60 @@ struct ClubSearchView: View {
 
                 intro(
                     title: "About you",
-                    body: "Tests are ranked by gender and level, so every rower is compared fairly. You can change these any time in Settings."
+                    // CoachOnboarding has no line here; the note card below says it for a coach.
+                    body: isCoachOnly
+                        ? nil
+                        : "Tests are ranked by gender and level, so every rower is compared fairly. You can change these any time in Settings."
                 )
 
-                // Everyone gives both at sign-up, club or not, so joining a club later never
-                // needs to ask (user, 2026-10-04).
-                Text("Gender")
-                    .textStyle(Typography.fieldLabel)
+                // CoachOnboarding (decision 34): rowing, or coaching only.
+                Text("How will you use Rowing Pals?")
+                    .textStyle(Typography.sectionTitle)
                     .foregroundStyle(Tokens.Ink.secondary)
-                    .padding(.bottom, 6)
-                PillSegmentedControl(options: ["Male", "Female"], selection: $genderSelection)
+                    .padding(.horizontal, 4)
+                    .padding(.bottom, Tokens.Spacing.tight)
+                accountTypeCard(
+                    title: "I row",
+                    detail: "Log sessions and appear on leaderboards.",
+                    isSelected: !isCoachOnly
+                ) { isCoachOnly = false }
+                accountTypeCard(
+                    title: "I’m a coach",
+                    detail: "Coach a club. You won’t log sessions or appear on any leaderboard.",
+                    isSelected: isCoachOnly
+                ) { isCoachOnly = true }
+                    .padding(.top, Tokens.Spacing.tight)
 
-                Text("Level")
-                    .textStyle(Typography.fieldLabel)
-                    .foregroundStyle(Tokens.Ink.secondary)
-                    .padding(.top, 16)
-                    .padding(.bottom, 6)
-                PillSegmentedControl(options: ["Novice", "Senior"], selection: $categorySelection)
-                Text("Novice means you’re in your first season.")
+                if isCoachOnly {
+                    coachOnlyNote
+                        .padding(.top, Tokens.Spacing.group)
+                } else {
+                    // Everyone who rows gives both at sign-up, club or not, so joining a club
+                    // later never needs to ask (user, 2026-10-04).
+                    Text("Gender")
+                        .textStyle(Typography.fieldLabel)
+                        .foregroundStyle(Tokens.Ink.secondary)
+                        .padding(.top, Tokens.Spacing.group)
+                        .padding(.bottom, 6)
+                    PillSegmentedControl(options: ["Male", "Female"], selection: $genderSelection)
+
+                    Text("Level")
+                        .textStyle(Typography.fieldLabel)
+                        .foregroundStyle(Tokens.Ink.secondary)
+                        .padding(.top, 16)
+                        .padding(.bottom, 6)
+                    PillSegmentedControl(options: ["Novice", "Senior"], selection: $categorySelection)
+                    Text("Novice means you’re in your first season.")
+                        .textStyle(Typography.meta)
+                        .foregroundStyle(Tokens.Ink.secondary)
+                        .padding(.top, 8)
+                }
+
+                Text("You can change this later in Edit profile.")
                     .textStyle(Typography.meta)
                     .foregroundStyle(Tokens.Ink.secondary)
-                    .padding(.top, 8)
+                    .padding(.horizontal, 4)
+                    .padding(.top, Tokens.Spacing.loose)
 
                 if let saveError {
                     Text(saveError)
@@ -382,10 +487,56 @@ struct ClubSearchView: View {
         }
         .scrollIndicators(.hidden)
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            stickyButton(isWithoutClub ? "Start without a club" : "Start rowing", isEnabled: !isSaving) {
+            stickyButton(isCoachOnly ? "Start" : isWithoutClub ? "Start without a club" : "Start rowing", isEnabled: !isSaving) {
                 Task { await finishOnboarding() }
             }
         }
+    }
+
+    /// One account-type choice: a card with a brand ring and tick when chosen.
+    private func accountTypeCard(title: String, detail: String, isSelected: Bool, action: @escaping () -> Void) -> some View {
+        let shape = RoundedRectangle(cornerRadius: Tokens.Radius.input, style: .continuous)
+        return HStack(spacing: Tokens.Spacing.loose) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .textStyle(Typography.rowTitle)
+                    .foregroundStyle(Tokens.Ink.primary)
+                Text(detail)
+                    .textStyle(Typography.meta)
+                    .foregroundStyle(Tokens.Ink.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            Image(systemName: "checkmark")
+                .font(.system(size: 17, weight: .bold))
+                .foregroundStyle(Tokens.Accent.brand)
+                .frame(width: Tokens.Size.checkmark)
+                .opacity(isSelected ? 1 : 0)
+        }
+        .padding(Tokens.Spacing.card)
+        .background(shape.fill(Tokens.Surface.card))
+        .overlay { shape.strokeBorder(isSelected ? Tokens.Accent.brand : Tokens.Surface.line, lineWidth: 1.5) }
+        .asButton(action: action)
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
+    }
+
+    /// Coach only: what that means, in place of gender and level.
+    private var coachOnlyNote: some View {
+        let shape = RoundedRectangle(cornerRadius: Tokens.Radius.card, style: .continuous)
+        return HStack(alignment: .top, spacing: Tokens.Spacing.loose) {
+            Image(systemName: "list.clipboard")
+                .font(.system(size: 17, weight: .regular))
+                .foregroundStyle(Tokens.Ink.secondary)
+                .accessibilityHidden(true)
+            Text("No gender or level needed. You won’t have a Log button, and you’ll reach the Coaching area from Your crew once a club makes you a coach.")
+                .textStyle(Typography.meta)
+                .foregroundStyle(Tokens.Ink.secondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .padding(Tokens.Spacing.card)
+        .background(shape.fill(Tokens.Surface.card))
+        .overlay { shape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
     }
 
     // MARK: - Sticky primary button
@@ -450,12 +601,23 @@ struct ClubSearchView: View {
         defer { isSaving = false }
 
         struct ProfileUpdate: Encodable {
-            let gender: RowerGender
+            let gender: RowerGender?
             let category: RowerCategory
+            let isRower: Bool
             let onboardedAt: Date
             enum CodingKeys: String, CodingKey {
                 case gender, category
+                case isRower = "is_rower"
                 case onboardedAt = "onboarded_at"
+            }
+
+            // A coach-only account has no gender: send null rather than leaving the key out.
+            func encode(to encoder: Encoder) throws {
+                var c = encoder.container(keyedBy: CodingKeys.self)
+                try c.encode(gender, forKey: .gender)
+                try c.encode(category, forKey: .category)
+                try c.encode(isRower, forKey: .isRower)
+                try c.encode(onboardedAt, forKey: .onboardedAt)
             }
         }
 
@@ -463,8 +625,9 @@ struct ClubSearchView: View {
             _ = try await joinChosenClub()
             let userId = try await SupabaseService.shared.auth.session.user.id
             let update = ProfileUpdate(
-                gender: genders[genderSelection],
+                gender: isCoachOnly ? nil : genders[genderSelection],
                 category: categories[categorySelection],
+                isRower: !isCoachOnly,
                 onboardedAt: Date()
             )
             try await SupabaseService.shared
@@ -472,6 +635,8 @@ struct ClubSearchView: View {
                 .update(update)
                 .eq("id", value: userId)
                 .execute()
+            // The tab bar reads the account type from here (no Log button for a coach).
+            ViewerContext.shared.invalidate()
             await authState?.refreshOnboardingStatus()
         } catch {
             saveError = error.localizedDescription

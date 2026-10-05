@@ -60,6 +60,9 @@ enum PredictionService {
 
     // MARK: - Inputs
 
+    /// The columns `SessionRow` reads.
+    static let sessionColumns = "id, session_date, zone, rpe, segments(label, position, distance_m, time_ms, split_ms, rate, rep_distance_m)"
+
     /// One `sessions` row with its segments, as read for the engine.
     struct SessionRow: Decodable {
         struct SegmentRow: Decodable {
@@ -96,7 +99,7 @@ enum PredictionService {
         let earliest = calendar.date(byAdding: .day, value: -historyDays, to: asOf) ?? asOf
         let rows: [SessionRow] = try await SupabaseService.shared
             .from("sessions")
-            .select("id, session_date, zone, rpe, segments(label, position, distance_m, time_ms, split_ms, rate, rep_distance_m)")
+            .select(sessionColumns)
             .eq("user_id", value: userId)
             .eq("type", value: SessionType.erg.rawValue)
             .gte("session_date", value: isoDay(earliest, calendar: calendar))
@@ -140,7 +143,18 @@ enum PredictionService {
             .from("profiles").select("gender").eq("id", value: userId).single().execute().value
         let details = (try? await AthletePrivateService.mine()) ?? AthletePrivateService.Details()
 
-        let sex: String? = switch profile?.gender {
+        return athlete(gender: profile?.gender, details: details, asOf: asOf, calendar: calendar)
+    }
+
+    /// The engine's athlete input from a rower's gender and private details; nil with none.
+    /// Also used by Coaching for each rower a coach sees (decision 35).
+    static func athlete(
+        gender: RowerGender?,
+        details: AthletePrivateService.Details,
+        asOf: Date,
+        calendar: Calendar
+    ) -> AthleteProfile? {
+        let sex: String? = switch gender {
         case .male: "male"
         case .female: "female"
         case nil: nil
@@ -152,13 +166,13 @@ enum PredictionService {
         return AthleteProfile(age: age, sex: sex, weightKg: details.weightKg)
     }
 
-    private static func isoDay(_ date: Date, calendar: Calendar) -> String {
+    static func isoDay(_ date: Date, calendar: Calendar) -> String {
         let parts = calendar.dateComponents([.year, .month, .day], from: date)
         return String(format: "%04d-%02d-%02d", parts.year ?? 0, parts.month ?? 0, parts.day ?? 0)
     }
 
     /// `sessions.session_date` ("YYYY-MM-DD", the rower's local day) as that day in `calendar`.
-    private static func day(_ text: String, calendar: Calendar) -> Date? {
+    static func day(_ text: String, calendar: Calendar) -> Date? {
         let parts = text.split(separator: "-").compactMap { Int($0) }
         guard parts.count == 3 else { return nil }
         return calendar.date(from: DateComponents(year: parts[0], month: parts[1], day: parts[2]))

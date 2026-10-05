@@ -97,6 +97,26 @@ public struct EngineConfig: Sendable {
         (65.0, 0.1739), (75.0, 0.2652), (85.0, 0.4267),
     ]
 
+    // --- Prediction range (v1.5, SPEC.md §5.13) ------------------------------------------
+    // A "± seconds" around the predicted split, from the same evidence the confidence score
+    // reads, added in quadrature. Seed values, not fitted: tune after launch (§7.9).
+
+    /// Base doubt by anchor zone, seconds per 500m (±3 s over 2k from a fresh AN piece, ±9 s
+    /// from UT2 alone).
+    public var rangeBaseSplitS: [Tier.Name: Double] = [.an: 0.75, .tr: 1.0, .at: 1.5, .ut1: 2.0, .ut2: 2.25]
+    /// Per day the anchor is older than `recentAnchorDays`.
+    public var rangePerStaleDayS: Double = 0.05
+    /// Per doubling of distance the projection spans.
+    public var rangePerDoublingS: Double = 0.75
+    /// Share of the cross-zone spread, when two or more zones are logged.
+    public var rangeSpreadShare: Double = 0.5
+    /// At no history, scaled by (1 − load confidence).
+    public var rangeThinHistoryS: Double = 1.5
+    /// An AN/TR anchor that may have been intervals.
+    public var rangeIntervalAmbiguousS: Double = 3.0
+    /// Each of: the anchor's rate, the anchor's RPE contradicting its tag.
+    public var rangeTagMismatchS: Double = 1.0
+
     /// Reproduce the original v1.0 Step 3 arithmetic, for A/B measurement only.
     public var legacyV1Formula: Bool = false
 

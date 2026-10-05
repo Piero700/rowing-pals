@@ -24,6 +24,12 @@ struct Profile: Codable, Identifiable {
     var isPrivate: Bool
     /// Set when onboarding finishes, with or without a club (decision 24).
     var onboardedAt: Date?
+    /// Coaches their club (decision 39). Only the owner and co-owners change it, through
+    /// `set_club_coach`; it ends when the club changes.
+    var isCoach: Bool
+    /// "I row" (true) or "Coach only" (false): a coach-only account has no gender or level, no
+    /// Log button, and is never on a leaderboard or in Crewmates (decision 34).
+    var isRower: Bool
     let createdAt: Date
 
     enum CodingKeys: String, CodingKey {
@@ -37,6 +43,8 @@ struct Profile: Codable, Identifiable {
         case weeklyTargetM = "weekly_target_m"
         case isPrivate = "is_private"
         case onboardedAt = "onboarded_at"
+        case isCoach = "is_coach"
+        case isRower = "is_rower"
         case createdAt = "created_at"
     }
 
@@ -57,6 +65,9 @@ struct Profile: Codable, Identifiable {
         isPrivate = try c.decodeIfPresent(Bool.self, forKey: .isPrivate) ?? false
         // Absent before docs/migrations/2026-09-29-onboarding.sql has run.
         onboardedAt = try c.decodeIfPresent(Date.self, forKey: .onboardedAt)
+        // Absent before docs/migrations/2026-10-05-coaching.sql has run.
+        isCoach = try c.decodeIfPresent(Bool.self, forKey: .isCoach) ?? false
+        isRower = try c.decodeIfPresent(Bool.self, forKey: .isRower) ?? true
         createdAt = try c.decode(Date.self, forKey: .createdAt)
     }
 }

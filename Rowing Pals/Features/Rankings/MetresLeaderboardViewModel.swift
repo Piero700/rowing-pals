@@ -79,6 +79,8 @@ final class MetresLeaderboardViewModel {
     }
     /// My club with no club (decision 24): the board offers "Find a club" instead.
     var viewerHasNoClub = false
+    /// False for a coach-only account: never on a board, so no "You" card (decision 34).
+    var viewerIsRower = true
     var isLoading = false
     var errorMessage: String?
 
@@ -133,11 +135,12 @@ final class MetresLeaderboardViewModel {
     private func performReload() async {
         guard !Task.isCancelled else { return }
         isLoading = true
+        if let viewer = try? await ViewerContext.shared.current() { viewerIsRower = viewer.isRower }
         let perf = PerfLog.start()
         defer { isLoading = false; if !Task.isCancelled { PerfLog.done("Rankings volume", since: perf) } }
 
         do {
-            let scopeIds = try await filters.scope.userIds()
+            let scopeIds = try await filters.scope.rankedUserIds()
             guard !Task.isCancelled else { return }
             // My club always includes the viewer, so an empty scope there means no club.
             viewerHasNoClub = filters.scope == .myClub && scopeIds.isEmpty

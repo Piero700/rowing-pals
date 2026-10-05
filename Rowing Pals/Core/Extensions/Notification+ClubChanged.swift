@@ -7,7 +7,8 @@ import Foundation
 
 extension Notification.Name {
     /// The signed-in rower's club changed — joined, left, created, deleted or edited
-    /// (decisions 24–25). The feed, rankings and profile reload.
+    /// (decisions 24–25) — or their coaching status or account type did (decisions 34, 39).
+    /// The feed, rankings, profile and tab bar reload.
     static let rowerClubChanged = Notification.Name("rowerClubChanged")
 }
 

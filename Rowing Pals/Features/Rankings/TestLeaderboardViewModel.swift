@@ -85,7 +85,7 @@ final class TestLeaderboardViewModel {
         defer { isLoading = false; if !Task.isCancelled { PerfLog.done("Test board", since: perf) } }
 
         do {
-            let scopeIds = try await filters.scope.userIds()
+            let scopeIds = try await filters.scope.rankedUserIds()
             guard !Task.isCancelled else { return }
             guard !scopeIds.isEmpty else {
                 rows = []

@@ -71,8 +71,13 @@ final class ManageClubViewModel {
         await perform { inviteCode = try await ClubService.inviteCode(regenerate: true) }
     }
 
-    @MainActor func setRole(_ role: ClubRole, for person: ClubService.Person) async {
-        await perform { try await ClubService.setRole(role, for: person.id) }
+    /// The member sheet's Done: a new role, coaching on or off, or both.
+    @MainActor func save(role: ClubRole?, isCoach: Bool?, for person: ClubService.Person) async {
+        guard role != nil || isCoach != nil else { return }
+        await perform {
+            if let role { try await ClubService.setRole(role, for: person.id) }
+            if let isCoach { try await ClubService.setCoach(isCoach, for: person.id) }
+        }
     }
 
     @MainActor func remove(_ person: ClubService.Person) async {
