@@ -65,8 +65,11 @@ public func weightAdjustmentFactor(weightKg: Double, config: EngineConfig = .def
     return pow(pounds / config.weightAdjustReferenceLb, config.weightAdjustExponent)
 }
 
-/// Fractional slowdown in expected 2k time relative to the reference age. SEED CURVE.
-func agePenaltyFraction(age: Double, referenceAge: Double) -> Double {
+/// Fractional slowdown in expected 2k time relative to the reference age. From the reference
+/// age up it follows the FITTED curve (linear between knots from (reference age, 0), the last
+/// segment's slope past the last knot); below it, the SEED rule, which the rankings can't fit.
+func agePenaltyFraction(age: Double, referenceAge: Double,
+                        curve: [(age: Double, fraction: Double)]) -> Double {
     if age < referenceAge {
         if age >= 18.0 {
             let span = Py.max(referenceAge - 18.0, 1e-9)
@@ -74,19 +77,22 @@ func agePenaltyFraction(age: Double, referenceAge: Double) -> Double {
         }
         return 0.06 + 0.025 * (18.0 - age)
     }
-    var fraction = 0.0
-    for (lo, hi, rate) in [(35.0, 50.0, 0.004), (50.0, 70.0, 0.008), (70.0, 120.0, 0.012)] {
-        if age > lo {
-            fraction += (Py.min(age, hi) - lo) * rate
-        }
+    let points = [(age: referenceAge, fraction: 0.0)] + curve
+    guard points.count >= 2 else { return 0.0 }
+    for (start, end) in zip(points, points.dropFirst()) where age <= end.age {
+        return start.fraction + (end.fraction - start.fraction) * (age - start.age)
+            / Py.max(end.age - start.age, 1e-9)
     }
-    return fraction
+    let start = points[points.count - 2], end = points[points.count - 1]
+    return end.fraction + (end.fraction - start.fraction) * (age - end.age)
+        / Py.max(end.age - start.age, 1e-9)
 }
 
 /// Multiplier on expected 2k time relative to the reference age; 1.0 when unknown.
 public func agePerformanceFactor(age: Double?, config: EngineConfig = .default) -> Double {
     guard let age else { return 1.0 }
-    return 1.0 + agePenaltyFraction(age: age, referenceAge: config.priorReferenceAge)
+    return 1.0 + agePenaltyFraction(age: age, referenceAge: config.priorReferenceAge,
+                                    curve: config.priorAgeCurve)
 }
 
 /// A population estimate of 2k time in seconds, from demographics alone, with notes
@@ -99,11 +105,13 @@ func populationPrior2k(_ athlete: Athlete, config: EngineConfig) -> (seconds: Do
     if athlete.sex == "male" {
         base = config.priorMale2kSeconds
         referenceKg = config.priorMaleReferenceKg
-        notes.append("male population baseline \(formatSeconds(base) ?? "")")
+        notes.append("male population baseline \(formatSeconds(base) ?? "") "
+            + "(Concept2 rankings median, ages 19-29)")
     } else if athlete.sex == "female" {
         base = config.priorFemale2kSeconds
         referenceKg = config.priorFemaleReferenceKg
-        notes.append("female population baseline \(formatSeconds(base) ?? "")")
+        notes.append("female population baseline \(formatSeconds(base) ?? "") "
+            + "(Concept2 rankings median, ages 19-29)")
     } else {
         base = (config.priorMale2kSeconds + config.priorFemale2kSeconds) / 2.0
         referenceKg = (config.priorMaleReferenceKg + config.priorFemaleReferenceKg) / 2.0

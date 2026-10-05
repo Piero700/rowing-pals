@@ -1,4 +1,4 @@
-# Anchor & Impulse Pace Engine — Technical Specification v1.3.1
+# Anchor & Impulse Pace Engine — Technical Specification v1.4
 
 **Status:** Ready for implementation
 **Supersedes:** v1.3 (audit fixes — §8.9). v1.3 added perceived effort, age, sex and bodyweight (§2.1, §5.9–5.12)
@@ -326,41 +326,52 @@ Concept2 effect, or lower if cohort data shows an attenuated one.
 **Age grading (interpretation layer).** There's no official Concept2 age-grading formula.
 The nearest standard, the USRowing handicap (zero at age 27), has been
 [shown to over-credit older rowers](https://analytics.rowsandall.com/2018/03/08/aging-and-rowing-performance-part-4-a-look-at-the-usrowing-age-handicapping-system/)
-against the Concept2 rankings. The engine ships a deliberately simple **seed curve**,
-labelled as such in every output:
+against the Concept2 rankings. So from age 27 up the engine's curve is **fitted to the
+Concept2 rankings** (v1.4, §7.6): each 10-year band's median ranked 2k over the 19–29
+median, averaged across men and women and the 2025 and 2026 seasons, placed at the band's
+midpoint (`prior_age_curve`). Between knots it is linear, starting from 0% at 27; past
+the last knot it continues at the last segment's slope.
 
-| Age band | Expected-time adjustment |
+| Age | Expected-time adjustment |
 |---|---|
-| under 18 | +2.5% per year below 18, on top of the 18-year-old value |
-| 18 → 27 | linear from +6% to 0% |
-| 27 → 35 | flat (reference) |
-| 35 → 50 | +0.4% per year |
-| 50 → 70 | +0.8% per year |
-| 70+ | +1.2% per year |
+| under 18 | +2.5% per year below 18, on top of the 18-year-old value (seed) |
+| 18 → 27 | linear from +6% to 0% (seed) |
+| 27 | 0% (reference) |
+| 35 | +5.87% |
+| 45 | +8.92% |
+| 55 | +11.90% |
+| 65 | +17.39% |
+| 75 | +26.52% |
+| 85 | +42.67% (then +1.6% per year) |
 
-`age_graded_time = actual_time ÷ age_factor`. At 55 the factor is 1.10, so a 7:00.0
-grades to 6:21.8.
+Under 27 is still the seed rule: ranked juniors are a strongly selected group (the 12–18
+median is as fast as the 19–29 median), which says nothing about a typical 16-year-old.
+
+`age_graded_time = actual_time ÷ age_factor`. At 55 the factor is 1.119, so a 7:00.0
+grades to 6:15.3.
 
 **Cold-start prior.** A user with a profile and *no rowing history at all* gets a
 **Population Estimate** instead of a blank. A user whose history is merely older than the
-30-day window does not — their own stale result beats a seed number — and gets
+30-day window does not — their own stale result beats a population number — and gets
 `Insufficient Data` with `history_outside_window`:
 
 ```
 prior_2k = baseline(sex) × (reference_kg / weight_kg) ^ 0.222 × age_factor(age)
 ```
 
-| Seed baseline | 2k | Reference weight |
+| Baseline (age 27) | 2k | Reference weight |
 |---|---|---|
-| Male | 7:20.0 | 82 kg |
-| Female | 8:20.0 | 68 kg |
-| Sex-neutral (any other answer, or blank with other fields given) | 7:50.0 | 75 kg |
+| Male | 6:58.6 | 82 kg |
+| Female | 8:03.5 | 68 kg |
+| Sex-neutral (any other answer, or blank with other fields given) | 7:31.1 | 75 kg |
 
-These are **seed values** — plausible mid-pack recreational times, not fitted. The
+The baselines are the **median** all-weights 19–29 ranked 2k, averaged over the 2025 and
+2026 seasons (§7.6): "mid-pack among rowers who log a ranked 2k", which is fitter than the
+general population. The reference weights are assumed, not fitted. The
 result is shaped so the UI can't mistake it for a prediction: its own confidence band
 (`Population Estimate`, numeric 15), a null anchor, the flags `population_estimate` and
-`prior_is_seed_data`, and an `estimate_basis` list explaining each adjustment. The first
-logged session replaces it.
+`prior_from_concept2_rankings`, and an `estimate_basis` list explaining each adjustment.
+The first logged session replaces it.
 
 Weight applies at full strength here, unlike in §5.11's trend term, because comparing
 different people is exactly what the Concept2 formula was built for.
@@ -400,7 +411,7 @@ different people is exactly what the Concept2 formula was built for.
                          "method": "Concept2: Wf = (lbs / 270) ^ 0.222" },
     "age_graded": { "factor": 1.04, "reference_age": 27,
                     "total_time_formatted": "6:43.8",
-                    "method": "seed curve, not an official standard" }
+                    "method": "fitted to Concept2 rankings medians (2025-26), not an official standard" }
   },
   "diagnostics": { "two_k_equivalent_by_tier": { "TR": 105.0, "AT": 105.0,
                                                  "UT1": 105.0, "UT2": 105.0 },
@@ -451,10 +462,26 @@ and warns, but there's still no pace term for acute load: a user who logs a 30k 
 before a test gets the same predicted time as one who rested, with a warning only if they
 also reported high RPE.
 
-**7.6 The cold-start prior and age curve are seed data.** Neither is fitted. The Concept2
-online rankings publish times by age, sex and weight class; fitting both from percentile
-data is a straightforward pre-launch job and should replace the seeds before any user
-sees a Population Estimate.
+**7.6 The cold-start prior and age curve are fitted to a self-selected group.** Since
+v1.4 both come from the Concept2 Online Rankings (2000m RowErg, 2025 and 2026 seasons,
+all countries, non-adaptive), read on 2026-10-05 into
+`PaceEngine/data/concept2_2k_rankings_percentiles.csv` and reproduced by
+`python3 fit_population_prior.py`, which prints every constant. Its limits:
+
+- **Who ranks.** Rowers who chose to log a ranked 2k are fitter than people in general,
+  so the baselines are mid-pack *for that group*. The median (not the 25th or 75th
+  percentile) was chosen, by Piero, 2026-10-05.
+- **Under 27 is not fitted.** The ranked junior median is as fast as the 19–29 one, a
+  selection effect, so the seed rule stays.
+- **The age curve is pooled.** Men's and women's ratios are averaged; the 80–89 knot
+  rests on few rowers (women's 80–89 median moved 1:17 between seasons).
+- **Weight is not fitted.** Only lightweight/heavyweight is published, not bodyweight.
+  The 19–29 lightweight/heavyweight median ratio (men 1.033, women 1.038) is consistent
+  with Concept2's 0.222 exponent, which stays; the 82/68 kg reference weights are assumed.
+- **The reference age stays 27** while the baselines come from the 19–29 band.
+
+Refresh by re-reading the rankings pages into the CSV, re-running the script and
+pasting its output into `EngineConfig`.
 
 **7.7 Weight trend can't tell fat from muscle.** Hence off by default (§5.11). Logging
 body-composition data, or simply asking the user whether a weight change was
@@ -553,9 +580,17 @@ cheap and catches the most common data-quality failure.
 | 9 | Crash when every tier rating was contradicted | TypeError (introduced by fix 1, caught by suite) | Display RPE kept, coverage forced to 0 |
 | 10 | Clamped (impossible) result shown at Medium confidence | "5:28.0, Medium" from a typo'd split | Any clamp caps confidence at Low |
 
+### 8.10 v1.4 fitted population prior
+The cold-start baselines (7:20.0 / 8:20.0 → 6:58.6 / 8:03.5) and the age curve from 27
+up are fitted from the Concept2 rankings medians (§5.12, §7.6). The flag
+`prior_is_seed_data` is renamed `prior_from_concept2_rankings`. No anchored prediction
+changes: the prior is used only with no history at all, and age only feeds the prior and
+the age-graded score.
+
 ## 9. Test coverage
 
-v1.3.1 adds 11 audit regressions (88 total), one per bug in §8.9. v1.3 added 34, most importantly: identical predictions across wildly
+v1.4 adds 2 checks for the fitted age curve (passes through every knot, continuous at
+the reference age; 90 total). v1.3.1 added 11 audit regressions, one per bug in §8.9. v1.3 added 34, most importantly: identical predictions across wildly
 different demographics; symmetric, capped RPE corrections; RPE contradictions flagged
 rather than applied; fatigue affecting confidence but not pace; the weight factor
 matching Concept2's formula exactly; weight trend off by default; a monotonic age curve;

@@ -37,11 +37,11 @@ func interpretation(
             totalTimeSeconds: Py.round(graded, 2),
             totalTimeFormatted: formatSeconds(graded),
             splitFormatted: formatSeconds(graded / targetDistance * 500.0),
-            method: "seed curve, not an official standard"
+            method: "fitted to Concept2 rankings medians (2025-26), not an official standard"
         )
         block.notes.append(
-            "Age grading uses an unvalidated seed curve. Treat it as indicative until "
-                + "it is fitted against the Concept2 rankings."
+            "Age grading follows the median ranked 2k at each age, from rowers who chose "
+                + "to log a ranked result. Treat it as indicative, not an official standard."
         )
     }
 

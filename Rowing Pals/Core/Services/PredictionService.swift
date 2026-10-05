@@ -16,8 +16,8 @@ import Supabase
 /// warm-up and cool-down sent as one 6k "AN" would read as an all-out 6k); the session's own
 /// calendar day; the post's id; its effort rating; an interval's rep distance.
 enum PredictionService {
-    /// The cold-start Population Estimate stays hidden until its seed values are fitted
-    /// (decision 30): until then it is shown as "no prediction yet".
+    /// The cold-start Population Estimate stays hidden (decision 30): it is shown as "no
+    /// prediction yet". Its values are fitted (engine v1.4); showing it is the user's call.
     static let showsPopulationEstimate = false
 
     /// Days of history read: the engine's 30-day window, plus enough to tell a lapsed rower

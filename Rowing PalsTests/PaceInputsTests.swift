@@ -86,7 +86,7 @@ struct PaceInputsTests {
     }
 
     @Test func aPopulationEstimateIsNotShownYet() {
-        // Decision 30: until the seed values are fitted, a cold-start estimate is "no prediction".
+        // Decision 30: while the estimate is switched off, a cold-start estimate is "no prediction".
         let prediction = PacePredictor.predict(history: [], targetDistance: 2000, asOf: Date(),
                                                athlete: AthleteProfile(age: 27, sex: "male", weightKg: 82))
         #expect(prediction.confidenceScore == .populationEstimate)

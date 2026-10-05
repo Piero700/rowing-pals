@@ -67,9 +67,10 @@ The two traps this structure exists to avoid
     see. `ref_distance_m` is what closes it: the offset and the Paul term are now measured
     from the same origin, per tier.
 
-Every constant below is a seed value chosen to be internally consistent and to match
-standard coaching rules of thumb. None of them are fitted. `diagnose_history()` is the
-harness for fitting them against a real cohort; see SPEC.md §6.2.
+Every model constant below is a seed value chosen to be internally consistent and to
+match standard coaching rules of thumb. None of them are fitted. `diagnose_history()` is
+the harness for fitting them against a real cohort; see SPEC.md §6.2. The exception is the
+cold-start population prior, fitted from the Concept2 rankings (SPEC.md §7.6).
 """
 
 from __future__ import annotations
@@ -79,7 +80,7 @@ from dataclasses import dataclass, field, replace
 from datetime import date, datetime, timedelta
 from typing import Any, Iterable, Mapping, Sequence
 
-SCHEMA_VERSION = "anchor-impulse/1.3.1"
+SCHEMA_VERSION = "anchor-impulse/1.4"
 
 __all__ = [
     "SCHEMA_VERSION",
@@ -290,16 +291,27 @@ class EngineConfig:
 
     # --- Cold-start population prior ---------------------------------------------------
     #
-    # SEED VALUES. These are plausible mid-pack recreational 2k times, NOT fitted from the
-    # Concept2 rankings. They exist so a brand-new user sees something instead of a blank,
-    # and every result built from them is labelled "Population Estimate". Replace with
-    # percentile data before launch. See SPEC.md §7.6.
+    # FITTED from the Concept2 Online Rankings, 2000m RowErg, 2025 and 2026 seasons: the
+    # MEDIAN ranked 2k by sex and age band (data/concept2_2k_rankings_percentiles.csv,
+    # reproduced by fit_population_prior.py). "Mid-pack among rowers who log a ranked 2k",
+    # a self-selected and fitter-than-average group. Every result built from these is
+    # labelled "Population Estimate". See SPEC.md §7.6.
     prior_reference_age: float = 27.0
-    prior_male_2k_seconds: float = 440.0      # 7:20 at reference age and weight
-    prior_female_2k_seconds: float = 500.0    # 8:20 at reference age and weight
+    prior_male_2k_seconds: float = 418.6      # 6:58.6, all-weights 19-29 median
+    prior_female_2k_seconds: float = 483.5    # 8:03.5, all-weights 19-29 median
+    # Not fitted: assumed typical bodyweights for the baselines above. The rankings'
+    # lightweight/heavyweight medians are consistent with the 0.222 exponent.
     prior_male_reference_kg: float = 82.0
     prior_female_reference_kg: float = 68.0
     prior_confidence_numeric: int = 15
+    # Age curve from the reference age up, as (age, fractional slowdown vs the reference
+    # age): each 10-year band's median over the 19-29 median, pooled across sexes and
+    # seasons, at the band's midpoint. Linear between knots, from (reference age, 0), and
+    # extended past the last knot at the last segment's slope.
+    prior_age_curve: tuple[tuple[float, float], ...] = (
+        (35.0, 0.0587), (45.0, 0.0892), (55.0, 0.119),
+        (65.0, 0.1739), (75.0, 0.2652), (85.0, 0.4267),
+    )
 
     # Reproduce the original v1.0 Step 3 arithmetic, for A/B measurement only.
     legacy_v1_formula: bool = False
@@ -902,20 +914,21 @@ def weight_adjustment_factor(weight_kg: float, config: EngineConfig = None) -> f
     return (pounds / config.weight_adjust_reference_lb) ** config.weight_adjust_exponent
 
 
-def _age_penalty_fraction(age: float, reference_age: float) -> float:
+def _age_penalty_fraction(age: float, reference_age: float,
+                          curve: Sequence[tuple[float, float]]) -> float:
     """Fractional slowdown in expected 2k time relative to the reference age.
 
-    SEED CURVE. There is no official Concept2 age-grading formula; the nearest standard
-    (the USRowing handicap, zero at age 27) has been shown to over-credit older rowers
-    against the Concept2 rankings. This curve is deliberately simple and sits slightly
-    less generous than that standard. Fit it from the rankings before launch.
+    There is no official Concept2 age-grading formula. From the reference age up, the
+    curve is FITTED from the Concept2 rankings medians (`prior_age_curve`): linear
+    between knots starting from (reference age, 0), and past the last knot at the last
+    segment's slope.
+
+    Below the reference age it is still the SEED rule, because the rankings can't fit it:
+    ranked juniors are a strongly selected group whose median is as fast as the 19-29
+    median, which says nothing about a typical 16-year-old.
 
         under 18   +2.5% per year below 18, on top of the 18-year-old value
         18 -> ref  linear from +6% at 18 to 0% at the reference age
-        ref -> 35  flat
-        35 -> 50   +0.4% per year
-        50 -> 70   +0.8% per year
-        70+        +1.2% per year
     """
     if age < reference_age:
         if age >= 18.0:
@@ -923,11 +936,14 @@ def _age_penalty_fraction(age: float, reference_age: float) -> float:
             return 0.06 * (reference_age - age) / span
         return 0.06 + 0.025 * (18.0 - age)
 
-    fraction = 0.0
-    for lo, hi, rate in ((35.0, 50.0, 0.004), (50.0, 70.0, 0.008), (70.0, 120.0, 0.012)):
-        if age > lo:
-            fraction += (min(age, hi) - lo) * rate
-    return fraction
+    points = [(reference_age, 0.0)] + [tuple(knot) for knot in curve]
+    if len(points) < 2:
+        return 0.0
+    for (a0, f0), (a1, f1) in zip(points, points[1:]):
+        if age <= a1:
+            return f0 + (f1 - f0) * (age - a0) / max(a1 - a0, 1e-9)
+    (a0, f0), (a1, f1) = points[-2], points[-1]
+    return f1 + (f1 - f0) * (age - a1) / max(a1 - a0, 1e-9)
 
 
 def age_performance_factor(age: float | None, config: EngineConfig = None) -> float:
@@ -935,7 +951,8 @@ def age_performance_factor(age: float | None, config: EngineConfig = None) -> fl
     config = config or DEFAULT_CONFIG
     if age is None:
         return 1.0
-    return 1.0 + _age_penalty_fraction(age, config.prior_reference_age)
+    return 1.0 + _age_penalty_fraction(age, config.prior_reference_age,
+                                       config.prior_age_curve)
 
 
 def _population_prior_2k(athlete: Athlete, config: EngineConfig) -> tuple[float, list[str]]:
@@ -949,10 +966,12 @@ def _population_prior_2k(athlete: Athlete, config: EngineConfig) -> tuple[float,
 
     if athlete.sex == "male":
         base, ref_kg = config.prior_male_2k_seconds, config.prior_male_reference_kg
-        notes.append(f"male population baseline {format_seconds(base)}")
+        notes.append(f"male population baseline {format_seconds(base)} "
+                     "(Concept2 rankings median, ages 19-29)")
     elif athlete.sex == "female":
         base, ref_kg = config.prior_female_2k_seconds, config.prior_female_reference_kg
-        notes.append(f"female population baseline {format_seconds(base)}")
+        notes.append(f"female population baseline {format_seconds(base)} "
+                     "(Concept2 rankings median, ages 19-29)")
     else:
         base = (config.prior_male_2k_seconds + config.prior_female_2k_seconds) / 2.0
         ref_kg = (config.prior_male_reference_kg + config.prior_female_reference_kg) / 2.0
@@ -1039,11 +1058,12 @@ def _interpretation(split_s: float, target: float, athlete: Athlete,
             "total_time_seconds": round(graded, 2),
             "total_time_formatted": format_seconds(graded),
             "split_formatted": format_seconds(graded / target * 500.0),
-            "method": "seed curve, not an official standard",
+            "method": "fitted to Concept2 rankings medians (2025-26), "
+                      "not an official standard",
         }
         block["notes"].append(
-            "Age grading uses an unvalidated seed curve. Treat it as indicative until "
-            "it is fitted against the Concept2 rankings."
+            "Age grading follows the median ranked 2k at each age, from rowers who chose "
+            "to log a ranked result. Treat it as indicative, not an official standard."
         )
 
     return block
@@ -1593,7 +1613,7 @@ def _population_estimate_result(
     split = min(max(s2k + projection, config.floor_split_at_reference + projection),
                 config.ceiling_split)
     total = split * target / 500.0
-    flags = flags + ["population_estimate", "prior_is_seed_data"]
+    flags = flags + ["population_estimate", "prior_from_concept2_rankings"]
     if profile.sex is None:
         flags.append("sex_neutral_prior")
 
@@ -2117,8 +2137,14 @@ def _run_self_test() -> None:
     check("age curve is monotonic from the reference age downward",
           all(age_performance_factor(a) >= age_performance_factor(a + 1)
               for a in range(8, 27)))
-    check("age-graded output is labelled as unvalidated",
-          "seed" in at_55["interpretation"]["age_graded"]["method"])
+    check("age-graded output names its source and is not an official standard",
+          "Concept2 rankings" in at_55["interpretation"]["age_graded"]["method"]
+          and "not an official standard" in at_55["interpretation"]["age_graded"]["method"])
+    check("age curve passes through every fitted knot",
+          all(abs(age_performance_factor(a) - (1.0 + f)) < 1e-12
+              for a, f in DEFAULT_CONFIG.prior_age_curve))
+    check("age curve is continuous at the reference age",
+          abs(age_performance_factor(26.999) - age_performance_factor(27.0)) < 1e-4)
 
     print("\n" + "=" * 78)
     print("10. Cold start with a profile")
@@ -2136,11 +2162,11 @@ def _run_self_test() -> None:
           male_prior["confidence_score"] == "Population Estimate"
           and "population_estimate" in male_prior["flags"]
           and male_prior["anchor"] is None)
-    check("the reference male prior reproduces its seed value",
+    check("the reference male prior reproduces its fitted baseline",
           abs(male_prior["predicted_total_time_seconds"]
               - DEFAULT_CONFIG.prior_male_2k_seconds) < 0.05)
-    check("population estimate is flagged as seed data",
-          "prior_is_seed_data" in male_prior["flags"])
+    check("population estimate is flagged with its source",
+          "prior_from_concept2_rankings" in male_prior["flags"])
     heavier_prior = predict_test_piece([], 2000, as_of,
                                        athlete={"sex": "male", "weight_kg": 100})
     check("a heavier athlete's prior is faster (weight^-0.222)",
