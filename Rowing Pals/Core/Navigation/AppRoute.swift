@@ -42,6 +42,9 @@ enum AppRoute: Hashable, Identifiable {
     /// The club's squads; and one squad to edit, or a new one (nil).
     case squads
     case squadEdit(UUID?)
+    /// Set a workout; one workout's results (decision 39).
+    case newWorkout
+    case workoutResults(UUID)
     /// A rower's results at one test (a coach opening a test row).
     case pbHistory(StandardTest, UUID)
 

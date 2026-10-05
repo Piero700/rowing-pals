@@ -239,6 +239,12 @@ def build() -> dict:
                                              85)],
         "normalise_rpe": [{"in": v, "out": pe._normalise_rpe(v)}
                           for v in (0, 3, 7.5, 10, 10.5, 11, 15, 20, 20.5, -1)],
+        "zone_target_split": [{"s2k": s2k, "tag": tag, "distance_m": d,
+                               "out": round(pe.zone_target_split(s2k, tag, d), 10)}
+                              for s2k, tag, d in ((105.0, "UT2", 16000), (105.0, "UT2", 12000),
+                                                  (110.5, "UT1", 10000), (101.0, "AT", 2000),
+                                                  (101.0, "TR", 1000), (98.0, "AN", 500),
+                                                  (120.0, "AN", 2000))],
     }
 
     return {

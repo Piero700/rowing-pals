@@ -42,6 +42,11 @@ struct FeedView: View {
                     .padding(.horizontal, 2)
                     .padding(.vertical, Tokens.Spacing.loose)
 
+                ForEach(viewModel.todaysWorkouts) { today in
+                    TodaysWorkoutCard(today: today) { navigate(.log) }
+                        .padding(.bottom, Tokens.Spacing.loose)
+                }
+
                 content
 
                 if viewModel.isLoadingMore {

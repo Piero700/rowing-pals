@@ -39,10 +39,12 @@ struct ReviewSheetView: View {
 
     /// A photographed session passes both photos; a manual entry passes nil
     /// for both.
-    init(selfieJPEG: Data?, initialMonitorPhoto: Data?, onPosted: @escaping () -> Void) {
+    init(selfieJPEG: Data?, initialMonitorPhoto: Data?, linkedWorkout: CoachWorkout? = nil, onPosted: @escaping () -> Void) {
         self.initialMonitorPhoto = initialMonitorPhoto
         self.onPosted = onPosted
-        _viewModel = State(initialValue: ReviewSheetViewModel(selfieJPEG: selfieJPEG, startsBlank: initialMonitorPhoto == nil))
+        _viewModel = State(initialValue: ReviewSheetViewModel(
+            selfieJPEG: selfieJPEG, startsBlank: initialMonitorPhoto == nil, linkedWorkout: linkedWorkout
+        ))
     }
 
     @Environment(\.dismiss) private var dismissScreen

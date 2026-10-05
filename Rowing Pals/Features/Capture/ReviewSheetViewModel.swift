@@ -61,6 +61,10 @@ final class ReviewSheetViewModel {
     /// "Include this session in your volume totals" — the leaderboards. Off
     /// still counts the session in your own profile and streak.
     var includeOnLeaderboards = true
+    /// The coach's workout this session is for, when "Link this session" was on (decision 39).
+    /// Its zone is pre-chosen; on a test day its test is, so a qualifying result goes to the
+    /// test's leaderboard like any other (decision 50).
+    let linkedWorkout: CoachWorkout?
     var isProcessingPhoto = false
     var isPosting = false
     var postError: String?
@@ -98,6 +102,12 @@ final class ReviewSheetViewModel {
     @MainActor
     func loadClubTests() async {
         clubTests = (try? await ClubTestService.mine().tests) ?? []
+        // A test day's test, once the club's own tests are known (decision 50). A manual entry
+        // can't be a test, so it stays Training.
+        if !isManual, let key = linkedWorkout?.testKey, sessionKind.test == nil,
+           let test = (StandardTest.all + clubTests.map(\.asTest)).first(where: { $0.key == key }) {
+            sessionKind = .test(test)
+        }
     }
 
     /// Why the chosen session type can't be posted right now, if it can't.
@@ -150,8 +160,12 @@ final class ReviewSheetViewModel {
     /// single blank piece to type into.
     /// `startsBlank` is false when a session without a selfie begins from a library photo: that
     /// photo becomes the first piece instead of a blank one.
-    init(selfieJPEG: Data?, startsBlank: Bool = true) {
+    init(selfieJPEG: Data?, startsBlank: Bool = true, linkedWorkout: CoachWorkout? = nil) {
         self.selfieJPEG = selfieJPEG
+        self.linkedWorkout = linkedWorkout
+        if let zone = linkedWorkout?.zone.flatMap(TrainingZone.init(rawValue:)) {
+            self.zone = zone
+        }
         if selfieJPEG == nil && startsBlank {
             segments = [DraftSegment(manualLabel: .main)]
         }
@@ -312,6 +326,7 @@ final class ReviewSheetViewModel {
         let capturedAt: Date
         let sessionDate: String
         let isNewPB: Bool
+        let workoutId: UUID?
 
         enum CodingKeys: String, CodingKey {
             case id
@@ -328,6 +343,7 @@ final class ReviewSheetViewModel {
             case loggedLate = "logged_late"
             case capturedAt = "captured_at"
             case sessionDate = "session_date"
+            case workoutId = "workout_id"
         }
     }
 
@@ -514,7 +530,8 @@ final class ReviewSheetViewModel {
                 loggedLate: false,
                 capturedAt: Date(),
                 sessionDate: sessionDate,
-                isNewPB: isNewPB
+                isNewPB: isNewPB,
+                workoutId: linkedWorkout?.id
             )
             try await SupabaseService.shared.from("sessions").insert(newSession).execute()
 

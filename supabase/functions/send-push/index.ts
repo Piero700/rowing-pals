@@ -14,7 +14,7 @@
 
 import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2"
 
-type Kind = "comment" | "reply" | "pb" | "club_post" | "club_invite"
+type Kind = "comment" | "reply" | "pb" | "club_post" | "club_invite" | "new_workout"
 
 interface NotificationRow {
   id: string
@@ -25,6 +25,8 @@ interface NotificationRow {
   session_id: string | null
   comment_id: string | null
   club_id?: string | null
+  // A coach's set workout (docs/migrations/2026-10-05-coaching.sql, decision 39).
+  workout_id?: string | null
 }
 
 interface DeviceToken {
@@ -79,13 +81,14 @@ Deno.serve(async (req) => {
   const body = {
     aps: {
       alert,
-      "thread-id": row.session_id ?? row.club_id ?? row.id,
+      "thread-id": row.session_id ?? row.workout_id ?? row.club_id ?? row.id,
       "interruption-level": "active",
       sound: "default",
     },
     // The app opens the post, or Your club for an invitation.
     ...(row.session_id ? { session_id: row.session_id } : {}),
     ...(row.club_id ? { club_id: row.club_id } : {}),
+    ...(row.workout_id ? { workout_id: row.workout_id } : {}),
     kind: row.kind,
   }
 
@@ -105,6 +108,19 @@ async function composeAlert(admin: SupabaseClient, row: NotificationRow) {
     if (!club) return null
     const actor = await displayName(admin, row.actor_id)
     return { title: club.name as string, body: `${actor} invited you to join. Tap to answer.` }
+  }
+  if (row.kind === "new_workout") {
+    const { data: workout } = await admin
+      .from("coach_workouts")
+      .select("title, workout_date, start_time")
+      .eq("id", row.workout_id)
+      .maybeSingle()
+    if (!workout) return null
+    const coach = await displayName(admin, row.actor_id)
+    return {
+      title: "New workout from your coach",
+      body: `${coach}: ${workout.title} · ${when(workout.workout_date, workout.start_time)}`,
+    }
   }
   if (!row.session_id) return null
 
@@ -165,6 +181,14 @@ async function displayName(admin: SupabaseClient, userId: string) {
 function describe(label: string | null, type: string) {
   if (label) return label
   return type === "water" ? "water session" : "session"
+}
+
+/// "Tue 7 Oct, 06:30" or "Sat 11 Oct" — the workout's own day, written as UK dates.
+function when(day: string, time: string | null) {
+  const [y, m, d] = day.split("-").map(Number)
+  const date = new Date(Date.UTC(y, m - 1, d))
+  const text = date.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" })
+  return time ? `${text.replace(",", "")}, ${time.slice(0, 5)}` : text.replace(",", "")
 }
 
 function snippet(text: string) {

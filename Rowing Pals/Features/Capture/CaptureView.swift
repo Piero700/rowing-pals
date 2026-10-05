@@ -33,6 +33,17 @@ struct CaptureView: View {
     /// "Flip camera": which camera fills the frame. The rear photo is always the monitor.
     @State private var isFrontPrimary = false
     @State private var libraryItem: PhotosPickerItem?
+    /// The workouts the rower's coaches set for today, and which one this session is for
+    /// (RowerLogCoaching, decision 39). Linking is on by default.
+    @State private var todaysWorkouts: [TodaysWorkout] = []
+    @State private var chosenWorkout = 0
+    @State private var linksWorkout = true
+
+    /// The workout the session will be linked to, if any.
+    private var linkedWorkout: CoachWorkout? {
+        guard linksWorkout, todaysWorkouts.indices.contains(chosenWorkout) else { return nil }
+        return todaysWorkouts[chosenWorkout].workout
+    }
 
     private struct InitialCapture: Hashable {
         let id = UUID()
@@ -74,15 +85,19 @@ struct CaptureView: View {
         .background(Tokens.Base.ground)
         .toolbar(.hidden, for: .navigationBar)
         .onAppear { viewModel.start() }
+        .task { todaysWorkouts = await WorkoutService.today() }
         .onDisappear { viewModel.stop() }
         .navigationDestination(item: $initialCapture) { capture in
-            ReviewSheetView(selfieJPEG: capture.frontJPEG, initialMonitorPhoto: capture.rearJPEG, onPosted: onPosted)
+            ReviewSheetView(selfieJPEG: capture.frontJPEG, initialMonitorPhoto: capture.rearJPEG,
+                            linkedWorkout: linkedWorkout, onPosted: onPosted)
         }
         .navigationDestination(item: $libraryStart) { start in
-            ReviewSheetView(selfieJPEG: nil, initialMonitorPhoto: start.jpeg, onPosted: onPosted)
+            ReviewSheetView(selfieJPEG: nil, initialMonitorPhoto: start.jpeg,
+                            linkedWorkout: linkedWorkout, onPosted: onPosted)
         }
         .navigationDestination(isPresented: $isManualEntry) {
-            ReviewSheetView(selfieJPEG: nil, initialMonitorPhoto: nil, onPosted: onPosted)
+            ReviewSheetView(selfieJPEG: nil, initialMonitorPhoto: nil,
+                            linkedWorkout: linkedWorkout, onPosted: onPosted)
         }
         .sheet(isPresented: $isShowingCornerPicker) {
             InsetCornerPickerView(selection: $insetCorner)
@@ -132,6 +147,13 @@ struct CaptureView: View {
                     .accessibilityHint("Press and hold to move it to another corner")
                     .accessibilityAction(named: "Move preview") { isShowingCornerPicker = true }
 
+                if todaysWorkouts.indices.contains(chosenWorkout) {
+                    workoutPanel(todaysWorkouts[chosenWorkout])
+                        .padding(10)
+                        .frame(width: geometry.size.width, height: geometry.size.height,
+                               alignment: insetCorner.isBottom ? .top : .bottom)
+                }
+
                 if case .failed(let message) = viewModel.phase {
                     failureOverlay(message)
                         .frame(width: geometry.size.width, height: geometry.size.height)
@@ -160,6 +182,65 @@ struct CaptureView: View {
         } else {
             PhotoPlaceholder(cornerRadius: Tokens.Radius.photoInset, caption: isFrontPrimary ? "REAR" : "FRONT")
         }
+    }
+
+    /// RowerLogCoaching: today's workout over the camera, and "Link this session" (on by default).
+    /// With more than one workout today, tapping the title chooses which.
+    private func workoutPanel(_ today: TodaysWorkout) -> some View {
+        VStack(alignment: .leading, spacing: Tokens.Spacing.tight) {
+            Menu {
+                ForEach(Array(todaysWorkouts.enumerated()), id: \.element.id) { index, item in
+                    Button(item.workout.title) { chosenWorkout = index }
+                }
+            } label: {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Today’s workout")
+                        .textStyle(Typography.kicker)
+                        .foregroundStyle(Tokens.Accent.brand)
+                    HStack(spacing: 4) {
+                        Text("\(today.workout.title) · \(today.zoneText)")
+                            .textStyle(Typography.rowTitle)
+                            .foregroundStyle(Tokens.Ink.primary)
+                            .lineLimit(1)
+                        if todaysWorkouts.count > 1 {
+                            Image(systemName: "chevron.up.chevron.down")
+                                .textStyle(Typography.pill)
+                                .foregroundStyle(Tokens.Ink.secondary)
+                        }
+                    }
+                    if let detail = panelDetail(today) {
+                        Text(detail)
+                            .textStyle(Typography.meta)
+                            .tabularNumerals()
+                            .foregroundStyle(Tokens.Ink.secondary)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .disabled(todaysWorkouts.count < 2)
+            HStack(spacing: Tokens.Spacing.loose) {
+                Text("Link this session")
+                    .textStyle(Typography.detail)
+                    .foregroundStyle(Tokens.Ink.primary)
+                Spacer(minLength: 0)
+                Toggle("Link this session to today’s workout", isOn: $linksWorkout)
+                    .labelsHidden()
+                    .tint(Tokens.Accent.brand)
+            }
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, Tokens.Spacing.loose)
+        .glassSurface(in: RoundedRectangle(cornerRadius: Tokens.Radius.input, style: .continuous))
+    }
+
+    /// "Rate 18–20 · split 2:05".
+    private func panelDetail(_ today: TodaysWorkout) -> String? {
+        var parts: [String] = []
+        if let rate = today.rateText { parts.append("Rate \(rate)") }
+        if let split = today.targetSplitMs { parts.append("split \(WorkoutRules.splitText(split))") }
+        guard !parts.isEmpty else { return nil }
+        let text = parts.joined(separator: " · ")
+        return text.prefix(1).uppercased() + text.dropFirst()
     }
 
     private func failureOverlay(_ message: String) -> some View {

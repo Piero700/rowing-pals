@@ -43,6 +43,7 @@ struct GoldenVectorTests {
         let parsing = vectors.parsing
         #expect(parsing.formatSeconds.count + parsing.weightAdjustmentFactor.count
             + parsing.agePerformanceFactor.count + parsing.normaliseRPE.count == 34)
+        #expect(parsing.zoneTargetSplit.count == 7)
     }
 
     @Test("Prediction case", arguments: vectors.cases)
@@ -118,6 +119,13 @@ struct GoldenVectorTests {
     @Test("age_performance_factor", arguments: vectors.parsing.agePerformanceFactor)
     func ageFactorCheck(_ check: Parsing.AgeCheck) {
         expectClose(agePerformanceFactor(age: check.age), check.output, "age_performance_factor", within: 1e-9)
+    }
+
+    @Test("zone_target_split", arguments: vectors.parsing.zoneTargetSplit)
+    func zoneTargetCheck(_ check: Parsing.ZoneTargetCheck) throws {
+        let zone = try #require(Tier.Name(rawValue: check.tag))
+        expectClose(zoneTargetSplit(twoKSplit: check.s2k, zone: zone, distanceM: check.distanceM), check.output,
+                    "zone_target_split", within: 1e-9)
     }
 
     @Test("normalise_rpe", arguments: vectors.parsing.normaliseRPE)

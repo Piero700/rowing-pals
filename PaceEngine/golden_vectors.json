@@ -5302,6 +5302,50 @@
         "in": -1,
         "out": null
       }
+    ],
+    "zone_target_split": [
+      {
+        "s2k": 105.0,
+        "tag": "UT2",
+        "distance_m": 16000,
+        "out": 127.0
+      },
+      {
+        "s2k": 105.0,
+        "tag": "UT2",
+        "distance_m": 12000,
+        "out": 126.6887218755
+      },
+      {
+        "s2k": 110.5,
+        "tag": "UT1",
+        "distance_m": 10000,
+        "out": 127.1712069927
+      },
+      {
+        "s2k": 101.0,
+        "tag": "AT",
+        "distance_m": 2000,
+        "out": 109.0
+      },
+      {
+        "s2k": 101.0,
+        "tag": "TR",
+        "distance_m": 1000,
+        "out": 100.5
+      },
+      {
+        "s2k": 98.0,
+        "tag": "AN",
+        "distance_m": 500,
+        "out": 88.0
+      },
+      {
+        "s2k": 120.0,
+        "tag": "AN",
+        "distance_m": 2000,
+        "out": 120.0
+      }
     ]
   }
 }

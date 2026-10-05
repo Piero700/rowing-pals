@@ -1,4 +1,4 @@
--- Coaching (decisions 34, 35, 39, 40, 45–47). Run once in the Supabase SQL editor, staging first.
+-- Coaching (decisions 34, 35, 39, 40, 45–47, 49–52). Run once in the Supabase SQL editor, staging first.
 -- Safe to run again. RUN THIS BEFORE INSTALLING A BUILD THAT INCLUDES IT.
 --
 -- One file for the whole coaching section (decision 39): Phase 1 uses the coach flag, the
@@ -9,7 +9,7 @@
 --   2. Who coaches whom: helper functions
 --   3. Coaches read their club's rowers — read-only (decision 40)
 --   4. Squads
---   5. Set workouts (tables only; Phase 2)
+--   5. Set workouts (tables; writing them from Phase 2, section 5b)
 --   6. Practices and attendance (tables only; Phase 3)
 --
 -- No second foreign key between clubs and profiles (it would make `clubs(name)` embeds
@@ -320,7 +320,7 @@ begin
   on conflict do nothing;
 end $$;
 
--- MARK: - 5. Set workouts (Phase 2 adds the write functions)
+-- MARK: - 5. Set workouts
 
 create table if not exists coach_workouts (
   id           uuid primary key default gen_random_uuid(),
@@ -385,6 +385,160 @@ create policy read_coach_or_assigned on coach_workout_targets for select to auth
     select 1 from coach_workouts w
     where w.id = workout_id and (is_club_coach(w.club_id) or workout_is_for_me(w.id))
   ));
+
+-- MARK: - 5b. Set workouts: writing them (Phase 2, decisions 39, 49, 50)
+
+-- "New workouts" in Settings → Notifications (decision 36): on unless the rower turns it off.
+alter table notification_settings add column if not exists new_workouts boolean not null default true;
+
+-- The outbox learns a fifth kind: a coach set you a workout.
+do $$
+begin
+  if to_regclass('public.notifications') is null then
+    raise notice 'No notifications table: run 2026-09-26-notifications.sql, then this file again, for workout alerts.';
+    return;
+  end if;
+  alter table notifications add column if not exists workout_id uuid references coach_workouts on delete cascade;
+  alter table notifications drop constraint if exists notifications_kind_check;
+  alter table notifications add constraint notifications_kind_check
+    check (kind in ('comment', 'reply', 'pb', 'club_post', 'club_invite', 'new_workout'));
+end $$;
+
+-- Every rowing member a workout is for. Internal: the alerts and the coach's counts use it.
+create or replace function workout_audience(p_workout uuid)
+returns setof uuid
+language sql stable security definer set search_path = public as $$
+  select p.id
+  from coach_workouts w
+  join profiles p on p.club_id = w.club_id and p.is_rower
+  where w.id = p_workout
+    and (
+      w.audience = 'club'
+      or exists (select 1 from coach_workout_targets t where t.workout_id = w.id and t.user_id = p.id)
+      or exists (
+        select 1 from coach_workout_targets t
+        join squad_members sm on sm.squad_id = t.squad_id and sm.user_id = p.id
+        where t.workout_id = w.id
+      )
+    );
+$$;
+
+-- For the coach's Workouts tab and a workout's results: who each workout is for, in one call.
+-- Only the club's coaches get rows back.
+create or replace function workout_audiences(p_workouts uuid[])
+returns table (workout_id uuid, user_id uuid)
+language sql stable security definer set search_path = public as $$
+  select w.id, a.id
+  from coach_workouts w
+  cross join lateral workout_audience(w.id) as a(id)
+  where w.id = any(coalesce(p_workouts, '{}')) and is_club_coach(w.club_id);
+$$;
+
+-- The rower's own workouts between two days (Today's workout on Feed and Log). A coach who
+-- rows sees here only the workouts set for them, not every workout they can read.
+create or replace function my_workouts(p_from date, p_to date)
+returns setof coach_workouts
+language sql stable security definer set search_path = public as $$
+  select w.* from coach_workouts w
+  where w.workout_date between p_from and p_to
+    and auth.uid() in (select workout_audience(w.id))
+  order by w.workout_date, w.start_time nulls first, w.created_at;
+$$;
+
+-- Set a workout (coaches only). Squads and rowers outside the club are ignored; at least one
+-- must remain. Everyone it's for hears "New workout from your coach", unless they've turned
+-- New workouts off or either has blocked the other.
+create or replace function create_workout(
+  p_title text, p_date date, p_start_time time, p_description text, p_zone text,
+  p_test_key text, p_pieces jsonb, p_audience text, p_squads uuid[], p_rowers uuid[]
+)
+returns uuid
+language plpgsql security definer set search_path = public as $$
+declare
+  v_club uuid;
+  v_id uuid;
+begin
+  select club_id into v_club from profiles where id = auth.uid();
+  if v_club is null or not is_club_coach(v_club) then
+    raise exception 'Only your club''s coaches can set workouts.';
+  end if;
+  if coalesce(char_length(btrim(p_title)), 0) = 0 then raise exception 'Give the workout a title.'; end if;
+  if p_audience not in ('club', 'squads', 'rowers') then raise exception 'Choose who the workout is for.'; end if;
+  if jsonb_typeof(coalesce(p_pieces, '[]'::jsonb)) <> 'array' then raise exception 'Pieces must be a list.'; end if;
+  if p_test_key is not null
+     and p_test_key not in ('500m', '1k', '2k', '5k', '6k', '10k', '4min', '30min', '60min')
+     and not exists (select 1 from club_tests ct where ct.club_id = v_club and 'club:' || ct.id::text = p_test_key) then
+    raise exception 'That test isn''t one of your club''s tests.';
+  end if;
+
+  insert into coach_workouts (club_id, created_by, title, workout_date, start_time, description, zone,
+                              test_key, pieces, audience)
+  values (v_club, auth.uid(), btrim(p_title), p_date, p_start_time,
+          nullif(btrim(coalesce(p_description, '')), ''), p_zone, p_test_key,
+          coalesce(p_pieces, '[]'::jsonb), p_audience)
+  returning id into v_id;
+
+  if p_audience = 'squads' then
+    insert into coach_workout_targets (workout_id, squad_id)
+      select v_id, s.id from squads s where s.id = any(coalesce(p_squads, '{}')) and s.club_id = v_club;
+    if not found then raise exception 'Choose at least one squad.'; end if;
+  elsif p_audience = 'rowers' then
+    insert into coach_workout_targets (workout_id, user_id)
+      select v_id, p.id from profiles p
+      where p.id = any(coalesce(p_rowers, '{}')) and p.club_id = v_club and p.is_rower;
+    if not found then raise exception 'Choose at least one rower.'; end if;
+  end if;
+
+  begin
+    insert into notifications (recipient_id, actor_id, kind, club_id, workout_id)
+    select a.id, auth.uid(), 'new_workout', v_club, v_id
+    from workout_audience(v_id) as a(id)
+    left join notification_settings ns on ns.user_id = a.id
+    where a.id <> auth.uid()
+      and coalesce(ns.new_workouts, true)
+      and not exists (
+        select 1 from blocks b
+        where (b.blocker_id = a.id and b.blocked_id = auth.uid())
+           or (b.blocker_id = auth.uid() and b.blocked_id = a.id)
+      );
+  exception when others then
+    -- An alert problem must never stop a workout being set.
+    raise warning 'create_workout alerts: %', sqlerrm;
+  end;
+  return v_id;
+end $$;
+
+-- Delete a workout (its club's coaches). Sessions linked to it stay, unlinked.
+create or replace function delete_workout(p_workout uuid)
+returns void
+language plpgsql security definer set search_path = public as $$
+declare
+  v_club uuid;
+begin
+  select club_id into v_club from coach_workouts where id = p_workout;
+  if v_club is null then return; end if;
+  if not is_club_coach(v_club) then raise exception 'Only your club''s coaches can delete workouts.'; end if;
+  delete from coach_workouts where id = p_workout;
+end $$;
+
+-- A session may only be linked to a workout set for the rower who posts it.
+create or replace function sessions_check_workout()
+returns trigger
+language plpgsql security definer set search_path = public as $$
+begin
+  if new.workout_id is not null
+     and (tg_op = 'INSERT' or new.workout_id is distinct from old.workout_id)
+     and auth.uid() is not null
+     and not (new.user_id = auth.uid() and auth.uid() in (select workout_audience(new.workout_id))) then
+    raise exception 'That workout isn''t set for you.';
+  end if;
+  return new;
+end $$;
+
+drop trigger if exists sessions_before_write_check_workout on sessions;
+create trigger sessions_before_write_check_workout
+  before insert or update of workout_id on sessions
+  for each row execute function sessions_check_workout();
 
 -- MARK: - 6. Practices and attendance (Phase 3 adds the write functions)
 
@@ -521,5 +675,15 @@ revoke all on function delete_squad(uuid) from public, anon;
 grant execute on function delete_squad(uuid) to authenticated;
 revoke all on function set_squad_members(uuid, uuid[]) from public, anon;
 grant execute on function set_squad_members(uuid, uuid[]) to authenticated;
+
+revoke all on function workout_audience(uuid) from public, anon, authenticated;
+revoke all on function workout_audiences(uuid[]) from public, anon;
+grant execute on function workout_audiences(uuid[]) to authenticated;
+revoke all on function my_workouts(date, date) from public, anon;
+grant execute on function my_workouts(date, date) to authenticated;
+revoke all on function create_workout(text, date, time, text, text, text, jsonb, text, uuid[], uuid[]) from public, anon;
+grant execute on function create_workout(text, date, time, text, text, text, jsonb, text, uuid[], uuid[]) to authenticated;
+revoke all on function delete_workout(uuid) from public, anon;
+grant execute on function delete_workout(uuid) to authenticated;
 
 commit;

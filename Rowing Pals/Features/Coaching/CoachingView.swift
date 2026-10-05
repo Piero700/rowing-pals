@@ -5,13 +5,20 @@
 
 import SwiftUI
 
-/// Coaching (CoachRowers, decisions 34, 39, 43): a full-screen area for a club's coaches,
-/// opened from Your crew or Profile → Club. Phase 1 is the **Rowers** list — every rowing member
-/// with this week against their target, their 2k and prediction, and flags — filtered by squad
-/// and sorted; Squads sits top right. The Workouts and Practices tabs, and attendance, arrive
-/// with Phases 2 and 3.
+/// Coaching (CoachRowers, CoachWorkouts; decisions 34, 39, 43): a full-screen area for a club's
+/// coaches, opened from Your crew or Profile → Club. **Rowers** — every rowing member with this
+/// week against their target, their 2k and prediction, and flags — filtered by squad and
+/// sorted; **Workouts** — the workouts the club's coaches have set, and New workout. Squads sits
+/// top right. The Practices tab and attendance arrive with Phase 3.
 struct CoachingView: View {
     @State private var viewModel = CoachingViewModel()
+    @State private var workouts = WorkoutsViewModel()
+    @State private var tab: Tab = .rowers
+
+    private enum Tab: Int, CaseIterable {
+        case rowers, workouts
+        var label: String { self == .rowers ? "Rowers" : "Workouts" }
+    }
     @State private var isShowingFilters = false
     @Environment(\.dismiss) private var dismiss
     @Environment(\.navigate) private var navigate
@@ -21,7 +28,15 @@ struct CoachingView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
-                if let roster = viewModel.roster {
+                PillSegmentedControl(
+                    options: Tab.allCases.map(\.label),
+                    selection: Binding(get: { tab.rawValue }, set: { tab = Tab(rawValue: $0) ?? .rowers })
+                )
+                .padding(.bottom, Tokens.Spacing.loose)
+
+                if tab == .workouts {
+                    workoutsContent
+                } else if let roster = viewModel.roster {
                     content(roster)
                 } else if viewModel.isLoading {
                     ProgressView()
@@ -45,10 +60,13 @@ struct CoachingView: View {
         .background(Tokens.Base.ground)
         .toolbar(.hidden, for: .navigationBar)
         // Also on coming back from Squads, so a changed squad shows at once.
-        .onAppear { Task { await viewModel.load() } }
+        .onAppear {
+            Task { await viewModel.load() }
+            Task { await workouts.load() }
+        }
         .refreshable {
             ViewerContext.shared.invalidate()
-            await viewModel.load()
+            if tab == .workouts { await workouts.load() } else { await viewModel.load() }
         }
         .onReceive(NotificationCenter.default.publisher(for: .rowerClubChanged)) { _ in
             Task { await viewModel.load() }
@@ -136,6 +154,55 @@ struct CoachingView: View {
             .frame(maxWidth: .infinity)
             .multilineTextAlignment(.center)
             .padding(.top, Tokens.Spacing.loose)
+    }
+
+    // MARK: - Workouts
+
+    @ViewBuilder
+    private var workoutsContent: some View {
+        Button {
+            navigate(.newWorkout)
+        } label: {
+            Label("New workout", systemImage: "plus")
+        }
+        .buttonStyle(.rpPrimary)
+
+        if let error = workouts.errorMessage {
+            Text(error)
+                .textStyle(Typography.meta)
+                .foregroundStyle(Tokens.System.error)
+                .padding(.horizontal, 4)
+                .padding(.top, Tokens.Spacing.loose)
+        }
+        if workouts.hasLoaded && workouts.today.isEmpty && workouts.upcoming.isEmpty && workouts.past.isEmpty {
+            Text("No workouts yet. Set one and the rowers it's for are told, and see it on the day.")
+                .textStyle(Typography.meta)
+                .foregroundStyle(Tokens.Ink.secondary)
+                .padding(.horizontal, 4)
+                .padding(.top, Tokens.Spacing.group)
+        }
+        workoutSection("Today", workouts.today, isToday: true)
+        workoutSection("Upcoming", workouts.upcoming, isToday: false)
+        workoutSection("Past", workouts.past, isToday: false)
+    }
+
+    @ViewBuilder
+    private func workoutSection(_ title: String, _ items: [WorkoutsViewModel.Item], isToday: Bool) -> some View {
+        if !items.isEmpty {
+            Text(title)
+                .textStyle(Typography.sectionTitle)
+                .foregroundStyle(Tokens.Ink.secondary)
+                .padding(.horizontal, 4)
+                .padding(.top, Tokens.Spacing.group)
+                .padding(.bottom, Tokens.Spacing.tight)
+                .accessibilityAddTraits(.isHeader)
+            LazyVStack(spacing: Tokens.Spacing.tight) {
+                ForEach(items) { item in
+                    WorkoutCard(item: item, isToday: isToday)
+                        .asButton { navigate(.workoutResults(item.workout.id)) }
+                }
+            }
+        }
     }
 
     private func stat(_ value: Int, _ label: String) -> some View {

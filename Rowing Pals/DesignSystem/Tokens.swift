@@ -322,6 +322,8 @@ enum Typography {
     static let coachStat = Style(size: 22, weight: .bold, trackingEm: 0, uppercase: false)
     static let coachStatSmall = Style(size: 20, weight: .bold, trackingEm: 0, uppercase: false)
     static let chip = Style(size: 12, weight: .semibold, trackingEm: 0, uppercase: false)
+    /// "TODAY'S WORKOUT" over a set workout (RowerFeedCoaching, RowerLogCoaching).
+    static let kicker = Style(size: 12, weight: .medium, trackingEm: 0.02, uppercase: true)
     /// The time on a "Best in your group" card.
     static let groupBestValue = Style(size: 28, weight: .bold, trackingEm: 0, uppercase: false)
     /// The glyph in a small round button (the comment send arrow).

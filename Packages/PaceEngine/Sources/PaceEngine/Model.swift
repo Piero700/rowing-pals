@@ -89,6 +89,17 @@ func agePenaltyFraction(age: Double, referenceAge: Double,
 }
 
 /// Multiplier on expected 2k time relative to the reference age; 1.0 when unknown.
+/// `zone_target_split` (SPEC.md §5.14): the split an athlete whose 2k split is `twoKSplit`
+/// should row in `zone` over `distanceM` — the model of §2 run forwards. A coach's set workout
+/// uses it for each rower's personal target.
+public func zoneTargetSplit(twoKSplit: Double, zone: Tier.Name, distanceM: Double,
+                            config: EngineConfig = .default) -> Double {
+    let tier = Tier.named(zone)
+    return twoKSplit
+        + tier.paulWeight * config.paulConstant * log2(distanceM / tier.refDistanceM)
+        + tier.offset
+}
+
 public func agePerformanceFactor(age: Double?, config: EngineConfig = .default) -> Double {
     guard let age else { return 1.0 }
     return 1.0 + agePenaltyFraction(age: age, referenceAge: config.priorReferenceAge,

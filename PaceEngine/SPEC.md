@@ -400,6 +400,17 @@ A fresh all-out 2k with a full month of logging gives ±3 s over 2k; UT2 session
 Population estimates and empty results carry no range (`null`): a population estimate is
 about people like the rower, not the rower.
 
+### 5.14 Zone targets (v1.5)
+`zone_target_split(s2k, tag, distance_m)` runs the model of §2 forwards: the split an athlete
+whose 2k split is `s2k` should row in zone `tag` over `distance_m`:
+
+```
+target = s2k + w_T × 5 × log2(distance_m / ref_T) + g_T
+```
+
+A coach's set workout uses it for each rower's personal target split from their own predicted
+2k (the app's decision 51). Rowing exactly at the target recovers the same 2k (self-test).
+
 ---
 
 ## 6. Output contract

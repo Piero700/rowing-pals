@@ -158,16 +158,27 @@ struct Parsing: Decodable, Sendable {
         enum CodingKeys: String, CodingKey { case input = "in", output = "out" }
     }
 
+    struct ZoneTargetCheck: Decodable, Sendable, CustomTestStringConvertible {
+        let s2k: Double
+        let tag: String
+        let distanceM: Double
+        let output: Double
+        var testDescription: String { "zone_target_split(\(s2k), \(tag), \(distanceM))" }
+        enum CodingKeys: String, CodingKey { case s2k, tag, distanceM = "distance_m", output = "out" }
+    }
+
     let formatSeconds: [FormatCheck]
     let weightAdjustmentFactor: [WeightCheck]
     let agePerformanceFactor: [AgeCheck]
     let normaliseRPE: [RPECheck]
+    let zoneTargetSplit: [ZoneTargetCheck]
 
     enum CodingKeys: String, CodingKey {
         case formatSeconds = "format_seconds"
         case weightAdjustmentFactor = "weight_adjustment_factor"
         case agePerformanceFactor = "age_performance_factor"
         case normaliseRPE = "normalise_rpe"
+        case zoneTargetSplit = "zone_target_split"
     }
 }
 

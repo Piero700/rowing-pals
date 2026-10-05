@@ -38,6 +38,8 @@ final class FeedViewModel {
     var viewerClubName: String?
     /// False for a coach-only account: no "Post a workout" (decision 34).
     var viewerIsRower = true
+    /// The workouts the viewer's coaches set for today (RowerFeedCoaching, decision 39).
+    var todaysWorkouts: [TodaysWorkout] = []
     /// Posts the viewer sees only as the author's coach: read-only (decision 40).
     var readOnlyPostIds: Set<UUID> = []
     var isLoading = false
@@ -158,7 +160,10 @@ final class FeedViewModel {
         isLoading = true
         let perf = PerfLog.start()
         defer { isLoading = false; PerfLog.done("Feed", since: perf) }
-        await loadPage(offset: 0, replacing: true)
+        async let page: Void = loadPage(offset: 0, replacing: true)
+        async let workouts = WorkoutService.today()
+        let (_, today) = await (page, workouts)
+        todaysWorkouts = today
     }
 
     /// The viewer just joined a club (decision 24): forget the cached club and clubmates, then

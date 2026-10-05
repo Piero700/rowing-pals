@@ -93,6 +93,7 @@ __all__ = [
     "format_seconds",
     "weight_adjustment_factor",
     "age_performance_factor",
+    "zone_target_split",
 ]
 
 
@@ -1761,6 +1762,19 @@ def _empty_result(
 # Self-test / demonstration
 # --------------------------------------------------------------------------------------
 
+def zone_target_split(s2k: float, tag: str, distance_m: float,
+                      config: EngineConfig = DEFAULT_CONFIG) -> float:
+    """The split an athlete with a 2k split of `s2k` should row in zone `tag` over `distance_m`
+    (SPEC.md §5.14): the model of §2 run forwards. A coach's set workout uses it to give each
+    rower a personal target from their own predicted 2k.
+    """
+    tier = TIERS[tag]
+    return (s2k
+            + tier.paul_weight * config.paul_constant
+            * math.log2(distance_m / tier.ref_distance_m)
+            + tier.offset)
+
+
 def _pace_for(tag: str, distance_m: float, s2k: float,
               config: EngineConfig = DEFAULT_CONFIG) -> float:
     """Forward model: the split this athlete would row at this tier and distance.
@@ -1769,11 +1783,7 @@ def _pace_for(tag: str, distance_m: float, s2k: float,
     physiologically self-consistent by construction. Hand-written fixtures were how the
     original draft ended up asserting a 6k at 2k pace.
     """
-    tier = TIERS[tag]
-    return (s2k
-            + tier.paul_weight * config.paul_constant
-            * math.log2(distance_m / tier.ref_distance_m)
-            + tier.offset)
+    return zone_target_split(s2k, tag, distance_m, config)
 
 
 def _build_history(as_of: date, s2k: float = 105.0) -> list[dict[str, Any]]:
@@ -2373,6 +2383,17 @@ def _run_self_test() -> None:
     check("population estimates and empty results carry no range",
           prior["predicted_total_time_range_seconds"] is None
           and empty["predicted_total_time_range_seconds"] is None)
+
+    check("a UT2 target at its own reference distance is the 2k split plus the offset",
+          abs(zone_target_split(105.0, "UT2", 16000) - 127.0) < 1e-9)
+    check("an AN target at 2000m is the 2k split itself",
+          abs(zone_target_split(105.0, "AN", 2000) - 105.0) < 1e-9)
+    check("the target recovers the anchor: rowing it gives back the same 2k",
+          abs(predict_test_piece(
+              [{"id": f"t{i}", "date": (as_of - timedelta(days=i + 1)).isoformat(),
+                "distance_m": 8000, "split_s": round(zone_target_split(101.0, "AT", 8000), 2),
+                "tag": "AT", "stroke_rate": 24} for i in range(8)],
+              2000, as_of)["components"]["two_k_equivalent"] - 101.0) < 0.02)
 
     print("\n" + "=" * 78)
     print("12. Full output shape (with profile and RPE)")

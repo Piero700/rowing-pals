@@ -329,6 +329,8 @@ struct SettingsView: View {
                         subtitle: "New posts from \(viewModel.clubName ?? "your club")",
                         \.clubActivity
                     )
+                    divider
+                    toggleRow(title: "New workouts", subtitle: "When your coach sets you a workout", \.newWorkouts)
                 } else {
                     rowContent(title: "Notifications", subtitle: "Loading…") { ProgressView() }
                 }

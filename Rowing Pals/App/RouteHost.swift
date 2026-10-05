@@ -63,7 +63,7 @@ struct RouteHost: View {
     private static func drawsOwnChrome(_ route: AppRoute) -> Bool {
         switch route {
         case .post, .profile, .people, .findClub, .clubHub, .createClub, .editClub, .manageClub,
-             .coaching, .coachRower, .squads, .squadEdit, .pbHistory: true
+             .coaching, .coachRower, .squads, .squadEdit, .pbHistory, .newWorkout, .workoutResults: true
         default: false
         }
     }
@@ -97,6 +97,10 @@ struct RouteHost: View {
             SquadsView()
         case .squadEdit(let squadId):
             SquadEditView(squadId: squadId)
+        case .newWorkout:
+            NewWorkoutView()
+        case .workoutResults(let workoutId):
+            WorkoutResultsView(workoutId: workoutId)
         case .pbHistory(let test, let userId):
             PBHistoryView(test: test, userId: userId)
                 .toolbar(.hidden, for: .navigationBar)

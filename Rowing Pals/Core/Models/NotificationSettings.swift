@@ -16,9 +16,19 @@ nonisolated struct NotificationSettings: Codable, Equatable {
     var personalBests: Bool
     /// A clubmate posts.
     var clubActivity: Bool
+    /// A coach sets a workout for you (decision 36).
+    var newWorkouts: Bool
 
     static func defaults(for userId: UUID) -> NotificationSettings {
-        NotificationSettings(userId: userId, comments: true, personalBests: true, clubActivity: false)
+        NotificationSettings(userId: userId, comments: true, personalBests: true, clubActivity: false, newWorkouts: true)
+    }
+
+    init(userId: UUID, comments: Bool, personalBests: Bool, clubActivity: Bool, newWorkouts: Bool) {
+        self.userId = userId
+        self.comments = comments
+        self.personalBests = personalBests
+        self.clubActivity = clubActivity
+        self.newWorkouts = newWorkouts
     }
 
     enum CodingKeys: String, CodingKey {
@@ -26,5 +36,16 @@ nonisolated struct NotificationSettings: Codable, Equatable {
         case comments
         case personalBests = "personal_bests"
         case clubActivity = "club_activity"
+        case newWorkouts = "new_workouts"
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        userId = try c.decode(UUID.self, forKey: .userId)
+        comments = try c.decode(Bool.self, forKey: .comments)
+        personalBests = try c.decode(Bool.self, forKey: .personalBests)
+        clubActivity = try c.decode(Bool.self, forKey: .clubActivity)
+        // Absent before the coaching migration's Phase 2 section has run.
+        newWorkouts = try c.decodeIfPresent(Bool.self, forKey: .newWorkouts) ?? true
     }
 }

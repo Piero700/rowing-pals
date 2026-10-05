@@ -30,6 +30,9 @@ enum InsetCorner: String, CaseIterable, Identifiable {
 
     var id: String { rawValue }
 
+    /// Whether it sits along the bottom edge — the Log screen's workout panel then goes on top.
+    var isBottom: Bool { self == .bottomLeading || self == .bottomTrailing }
+
     var label: String {
         switch self {
         case .topLeading: "Top left"
