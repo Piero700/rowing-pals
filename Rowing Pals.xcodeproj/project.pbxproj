@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		7618FD0E3052101000711870 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = 7618FD0D3052101000711870 /* Supabase */; };
+		76B9F4CE3073C55100F7F6BA /* PaceEngine in Frameworks */ = {isa = PBXBuildFile; productRef = 76B9F4CD3073C55100F7F6BA /* PaceEngine */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -73,6 +74,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				7618FD0E3052101000711870 /* Supabase in Frameworks */,
+				76B9F4CE3073C55100F7F6BA /* PaceEngine in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -137,6 +139,7 @@
 			name = "Rowing Pals";
 			packageProductDependencies = (
 				7618FD0D3052101000711870 /* Supabase */,
+				76B9F4CD3073C55100F7F6BA /* PaceEngine */,
 			);
 			productName = "Rowing Pals";
 			productReference = 76BC2C373050B64E00D29DEB /* Rowing Pals.app */;
@@ -222,6 +225,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				7618FD0C3052101000711870 /* XCRemoteSwiftPackageReference "supabase-swift" */,
+				76B9F4CC3073C55100F7F6BA /* XCLocalSwiftPackageReference "Packages/PaceEngine" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 76BC2C383050B64E00D29DEB /* Products */;
@@ -753,6 +757,13 @@
 		};
 /* End XCConfigurationList section */
 
+/* Begin XCLocalSwiftPackageReference section */
+		76B9F4CC3073C55100F7F6BA /* XCLocalSwiftPackageReference "Packages/PaceEngine" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/PaceEngine;
+		};
+/* End XCLocalSwiftPackageReference section */
+
 /* Begin XCRemoteSwiftPackageReference section */
 		7618FD0C3052101000711870 /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
 			isa = XCRemoteSwiftPackageReference;
@@ -769,6 +780,10 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 7618FD0C3052101000711870 /* XCRemoteSwiftPackageReference "supabase-swift" */;
 			productName = Supabase;
+		};
+		76B9F4CD3073C55100F7F6BA /* PaceEngine */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = PaceEngine;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

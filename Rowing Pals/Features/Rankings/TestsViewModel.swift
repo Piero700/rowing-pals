@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import PaceEngine
 import Supabase
 
 /// Owns the distance picker's own-PB lookups — one per standard distance, then one per club
@@ -16,6 +17,9 @@ final class TestsViewModel {
         var clubTest: ClubTest?
         /// nil shows a quiet "—" — no result for this distance yet.
         let displayValue: String?
+        /// Your predicted time for a distance test (decision 31); nil for a timed test, or
+        /// when there isn't enough data for a prediction.
+        var predicted: String?
         var id: String { test.key }
     }
 
@@ -74,6 +78,25 @@ final class TestsViewModel {
                 test.isDurationBased ? row.distanceM.formattedMetres : row.timeMs.formattedDurationMs
             }
             return Tile(test: test, clubTest: clubTestsByKey[test.key], displayValue: display)
+        }
+        await loadPredictions()
+    }
+
+    /// The Pace Engine predicts a distance, so timed tests (4min, 30min, a club's 30s) get none.
+    @MainActor
+    private func loadPredictions() async {
+        let distances = tiles.compactMap { tile -> Double? in
+            if case .distance(let metres) = tile.test.target { Double(metres) } else { nil }
+        }
+        guard let predictions = try? await PredictionService.predictions(for: distances) else { return }
+        tiles = tiles.map { tile in
+            var tile = tile
+            if case .distance(let metres) = tile.test.target,
+               let prediction = predictions[Double(metres)],
+               PredictionService.isShowable(prediction) {
+                tile.predicted = prediction.predictedTotalTimeFormatted
+            }
+            return tile
         }
     }
 
