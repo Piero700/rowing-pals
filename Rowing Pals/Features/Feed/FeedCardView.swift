@@ -10,8 +10,8 @@ import SwiftUI
 /// numbers, caption, workout link, reactions, comments and share. A new PB glows.
 ///
 /// Only specific parts are tappable — never the whole card: the header opens the author's
-/// profile; the photo, workout link and comments open the post; the selfie inset swaps; each
-/// pill reacts. That keeps every tap unambiguous, including taps near the floating tab bar.
+/// profile; the photo and workout link open the post; the comments pill opens the thread; the
+/// selfie inset swaps; each pill reacts. That keeps every tap unambiguous, including taps near the floating tab bar.
 struct FeedCardView: View {
     let post: FeedPost
     /// Signed URL for any photo path on this post.
@@ -20,11 +20,13 @@ struct FeedCardView: View {
     var streakDays: Int = 0
     var reactions: [FeedViewModel.ReactionSummary] = []
     var onOpen: () -> Void = {}
+    var onOpenComments: () -> Void = {}
     var onToggleReaction: (String) -> Void = { _ in }
 
     @State private var page = 0
     @State private var isSelfiePrimary = false
     @State private var isShowingReactionPicker = false
+    @State private var isShowingShare = false
     @Environment(\.navigate) private var navigate
     /// Redesign phase B — per-device pace display preference.
     @AppStorage(PaceDisplay.storageKey) private var paceDisplay: PaceDisplay = .split
@@ -196,15 +198,10 @@ struct FeedCardView: View {
     /// The lead piece's own distance, time and pace (decision 16) — the most intense piece, not
     /// the whole session.
     private var metricTrio: some View {
-        let lead = post.leadSegment
-        let distance = lead?.distanceM ?? post.totalDistanceM
-        let time = lead?.timeMs ?? post.totalTimeMs
-        // A zero split means "not known" (a piece with no distance or time), shown as a dash.
-        let split = (lead?.splitMs ?? post.avgSplitMs).flatMap { $0 > 0 ? $0 : nil }
-        return HStack(alignment: .top, spacing: Tokens.Spacing.tight) {
-            metric("Distance", distance.formattedMetres)
-            metric("Time", time.formattedDurationMs)
-            metric(paceDisplay == .split ? "/500m" : "Watts", split.map { $0.formattedPace(display: paceDisplay) } ?? "—")
+        HStack(alignment: .top, spacing: Tokens.Spacing.tight) {
+            metric("Distance", post.leadDistanceM.formattedMetres)
+            metric("Time", post.leadTimeMs.formattedDurationMs)
+            metric(paceDisplay == .split ? "/500m" : "Watts", post.leadSplitMs.map { $0.formattedPace(display: paceDisplay) } ?? "—")
         }
     }
 
@@ -329,7 +326,7 @@ struct FeedCardView: View {
 
     private var actionRow: some View {
         HStack(spacing: Tokens.Spacing.tight) {
-            Button(action: onOpen) {
+            Button(action: onOpenComments) {
                 Label(
                     post.commentCount == 1 ? "1 comment" : "\(post.commentCount) comments",
                     systemImage: "bubble.left"
@@ -340,7 +337,9 @@ struct FeedCardView: View {
 
             Spacer(minLength: 0)
 
-            ShareLink(item: shareText) {
+            Button {
+                isShowingShare = true
+            } label: {
                 Image(systemName: "square.and.arrow.up")
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundStyle(Tokens.Ink.primary)
@@ -355,9 +354,10 @@ struct FeedCardView: View {
         .overlay(alignment: .top) {
             Rectangle().fill(Tokens.Surface.line).frame(height: 1)
         }
-    }
-
-    private var shareText: String {
-        "\(post.author.displayName) rowed \(post.totalDistanceM.formattedMetres) in \(post.totalTimeMs.formattedDurationMs) — \(post.workoutLabel ?? "Training") on Rowing Pals."
+        .sheet(isPresented: $isShowingShare) {
+            ShareWorkoutSheet(post: post, photoURL: post.pages.first.flatMap { photoURL($0.path) })
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
+        }
     }
 }

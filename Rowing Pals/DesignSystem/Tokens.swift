@@ -121,6 +121,10 @@ enum Tokens {
         static let estimate: CGFloat = 22
         static let photo: CGFloat = 22
         static let iconChoice: CGFloat = 20
+        /// One comment's bubble (workout screen and the comments thread).
+        static let comment: CGFloat = 20
+        /// The floating "Say something…" composer.
+        static let composer: CGFloat = 25
         /// An inset panel inside a card (PB history's selected result).
         static let panel: CGFloat = 20
         static let workoutLink: CGFloat = 18
@@ -160,6 +164,14 @@ enum Tokens {
         static let testTile: CGFloat = 106
         /// The camera badge on your own profile picture (decision 29).
         static let avatarBadge: CGFloat = 26
+        /// A comment's author picture.
+        static let commentAvatar: CGFloat = 30
+        /// The composer's height and its round send button.
+        static let composer: CGFloat = 50
+        static let sendButton: CGFloat = 38
+        /// The share-workout image card, in points; rendered at 3× for a 1080 px-wide image.
+        static let shareCardWidth: CGFloat = 360
+        static let shareCardHeight: CGFloat = 450
     }
 
     /// The new-PB celebration (docs/design/v2-decisions.md #12): an RGB-LED style glow that
@@ -243,6 +255,12 @@ enum Typography {
     static let segment = Style(size: 14, weight: .bold, trackingEm: 0, uppercase: false)
     static let pill = Style(size: 13, weight: .bold, trackingEm: 0, uppercase: false)
     static let button = Style(size: 16, weight: .bold, trackingEm: 0, uppercase: false)
+    /// The glyph in a small round button (the comment send arrow).
+    static let buttonGlyph = Style(size: 15, weight: .bold, trackingEm: 0, uppercase: false)
+    /// A comment: its author, its text and when it was written.
+    static let commentAuthor = Style(size: 13.5, weight: .semibold, trackingEm: 0, uppercase: false)
+    static let commentBody = Style(size: 13.5, weight: .regular, trackingEm: 0, uppercase: false)
+    static let commentTime = Style(size: 11.5, weight: .regular, trackingEm: 0, uppercase: false)
 
     // Pre-v3 styles, still used by screens not yet rebuilt in step 3.
 

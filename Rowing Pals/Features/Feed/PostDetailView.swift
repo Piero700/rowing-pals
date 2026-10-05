@@ -9,10 +9,10 @@ import SwiftUI
 /// §2 "post"/workout-detail, §3 "Workout-hero photo-first detail"): a full-bleed dual-camera
 /// photo up top with a floating back button and a glass "person pill", then the rest of the
 /// content scrolls up under a rounded sheet-lip edge — totals, a collapsible split breakdown,
-/// reactions, caption, an optional extra-photo gallery, up to 3 inline recent comments, and a
-/// sticky composer. The gold test-result banner (design-brief.md Screen 8) still renders first
-/// in the sheet when the post was a confirmed test. Reactions and comments still arrive live via
-/// Realtime (task 16) — this rebuild only restructures layout, `PostDetailViewModel` is untouched.
+/// reactions, caption, an optional extra-photo gallery, up to 3 inline recent comments ("View
+/// all" opens the full thread when there are more), and a sticky composer. The gold test-result
+/// banner (design-brief.md Screen 8) still renders first in the sheet when the post was a
+/// confirmed test. Reactions and comments arrive live via Realtime (task 16).
 struct PostDetailView: View {
     @State private var viewModel: PostDetailViewModel
     @State private var isSelfiePrimary = false
@@ -23,9 +23,11 @@ struct PostDetailView: View {
     @State private var isShowingReportConfirmation = false
     @State private var isShowingBlockConfirmation = false
     @State private var commentBeingReported: UUID?
+    @State private var isShowingAllComments = false
+    /// Called with the comment total whenever it changes, so the feed card underneath updates.
+    private let onCommentCountChange: (Int) -> Void
     @Environment(\.dismiss) private var dismiss
     @Environment(\.navigate) private var navigate
-    @FocusState private var isComposerFocused: Bool
     /// Redesign phase B — per-device display preferences, not synced to
     /// the profile. See DesignSystem/PaceDisplay.swift.
     @AppStorage(PaceDisplay.storageKey) private var paceDisplay: PaceDisplay = .split
@@ -42,8 +44,9 @@ struct PostDetailView: View {
     private static let lipOverlap: CGFloat = 28
     private static let maxInlineComments = 3
 
-    init(sessionId: UUID) {
+    init(sessionId: UUID, onCommentCountChange: @escaping (Int) -> Void = { _ in }) {
         _viewModel = State(initialValue: PostDetailViewModel(sessionId: sessionId))
+        self.onCommentCountChange = onCommentCountChange
     }
 
     var body: some View {
@@ -59,6 +62,12 @@ struct PostDetailView: View {
         .overlay(alignment: .bottom) {
             composer
         }
+        .onChange(of: viewModel.thread.comments.count) { _, count in
+            onCommentCountChange(count)
+        }
+        .fullScreenCover(isPresented: $isShowingAllComments) {
+            CommentsView(thread: viewModel.thread, subtitle: threadSubtitle)
+        }
         .ignoresSafeArea(edges: .top)
         .task { await viewModel.load() }
         .onDisappear { viewModel.stop() }
@@ -72,7 +81,7 @@ struct PostDetailView: View {
                     Task {
                         let sent: Bool
                         if let commentId = commentBeingReported {
-                            sent = await viewModel.reportComment(commentId, reason: reason)
+                            sent = await viewModel.thread.reportComment(commentId, reason: reason)
                         } else {
                             sent = await viewModel.reportPost(reason: reason)
                         }
@@ -567,68 +576,50 @@ struct PostDetailView: View {
 
     // MARK: - Comments
 
-    /// Up to 3 inline, most recent first-in-thread order (the full thread
-    /// is chronological ascending already) — a dedicated full-thread
-    /// screen is its own view per the handoff (§2 `comments`) and isn't
-    /// part of this layout rebuild, so once there are more than 3 this
-    /// just surfaces the total count rather than linking anywhere.
-    private var recentComments: [PostDetailViewModel.CommentDisplay] {
-        Array(viewModel.comments.suffix(Self.maxInlineComments))
+    /// The last 3 comments inline; with more, "View all" opens the full thread (handoff §2
+    /// `comments`), which shares this screen's `CommentThread`.
+    private var recentComments: [CommentThread.Entry] {
+        Array(viewModel.thread.comments.suffix(Self.maxInlineComments))
+    }
+
+    /// "Joe Bloggs · UT2" — the thread screen's line under its title.
+    private var threadSubtitle: String {
+        "\(viewModel.author?.displayName ?? "") · \(viewModel.workoutLabel ?? "Training")"
     }
 
     private var commentThread: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: Tokens.Spacing.gap) {
             HStack {
                 Text("COMMENTS")
                     .textStyle(Typography.label)
                     .foregroundStyle(Tokens.Ink.secondary)
-                if viewModel.comments.count > Self.maxInlineComments {
+                if viewModel.thread.comments.count > Self.maxInlineComments {
                     Spacer()
-                    Text("\(viewModel.comments.count) total")
-                        .textStyle(Typography.bodySecondary)
-                        .tabularNumerals()
-                        .foregroundStyle(Tokens.Ink.faint)
+                    Button {
+                        isShowingAllComments = true
+                    } label: {
+                        Text("View all \(viewModel.thread.comments.count)")
+                            .textStyle(Typography.pill)
+                            .tabularNumerals()
+                            .foregroundStyle(Tokens.Accent.brand)
+                            .frame(minHeight: Tokens.Size.minTap)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("View all \(viewModel.thread.comments.count) comments")
                 }
             }
 
-            if viewModel.comments.isEmpty {
+            if viewModel.thread.comments.isEmpty {
                 Text("No comments yet.")
                     .textStyle(Typography.bodySecondary)
                     .foregroundStyle(Tokens.Ink.secondary)
             }
 
             ForEach(recentComments) { comment in
-                HStack(alignment: .top, spacing: 10) {
-                    AvatarPlaceholder(diameter: 30, name: comment.authorName, userId: comment.authorId)
-                    VStack(alignment: .leading, spacing: 1) {
-                        HStack(spacing: 7) {
-                            Text(comment.authorName)
-                                .font(.system(size: 13.5, weight: .semibold))
-                                .foregroundStyle(Tokens.Ink.primary)
-                            Text(comment.createdAt.postedAgoLabel)
-                                .font(.system(size: 11.5))
-                                .foregroundStyle(Tokens.Ink.secondary.opacity(0.8))
-                        }
-                        Text(comment.body)
-                            .font(.system(size: 13.5))
-                            .foregroundStyle(Tokens.Ink.primary.opacity(0.85))
-                    }
-                    Spacer()
-                }
-                .padding(11)
-                .background {
-                    RoundedRectangle(cornerRadius: 20, style: .continuous)
-                        .fill(Tokens.Ink.primary.opacity(0.05))
-                }
-                .contextMenu {
-                    if !viewModel.isOwnComment(comment) {
-                        Button {
-                            commentBeingReported = comment.id
-                            isShowingReportReasons = true
-                        } label: {
-                            Label("Report comment", systemImage: "flag")
-                        }
-                    }
+                CommentRow(comment: comment, canReport: !viewModel.thread.isOwnComment(comment)) {
+                    commentBeingReported = comment.id
+                    isShowingReportReasons = true
                 }
             }
         }
@@ -637,36 +628,17 @@ struct PostDetailView: View {
     // MARK: - Composer
 
     private var composer: some View {
-        HStack(spacing: 10) {
-            TextField("Say something…", text: $commentDraft)
-                .textStyle(Typography.body)
-                .foregroundStyle(Tokens.Ink.primary)
-                .focused($isComposerFocused)
-            Spacer()
-            Button {
-                let text = commentDraft
-                commentDraft = ""
-                Task { await viewModel.postComment(body: text) }
-            } label: {
-                Image(systemName: "arrow.up")
-                    .font(.system(size: 15, weight: .bold))
-                    .foregroundStyle(Tokens.Base.dark)
-                    .frame(width: 38, height: 38)
-                    .background {
-                        Circle().fill(commentDraft.trimmingCharacters(in: .whitespaces).isEmpty ? Tokens.Accent.brand.opacity(0.4) : Tokens.Accent.brand)
-                    }
-                    .frame(width: Tokens.Size.minTap, height: Tokens.Size.minTap)
-                .contentShape(Circle())
+        VStack(spacing: 6) {
+            if let errorMessage = viewModel.thread.errorMessage {
+                Text(errorMessage)
+                    .textStyle(Typography.meta)
+                    .foregroundStyle(Tokens.System.error)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, Tokens.Spacing.headerHorizontal)
             }
-            .accessibilityLabel("Send comment")
-            .buttonStyle(.plain)
-            .disabled(commentDraft.trimmingCharacters(in: .whitespaces).isEmpty)
+            CommentComposer(draft: $commentDraft) { text in
+                Task { await viewModel.thread.postComment(body: text) }
+            }
         }
-        .padding(.leading, 16)
-        .padding(.trailing, 6)
-        .frame(height: 50)
-        .glassSurface(cornerRadius: 25)
-        .padding(.horizontal, 16)
-        .padding(.bottom, 24)
     }
 }
