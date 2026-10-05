@@ -132,7 +132,8 @@ that they match the prototype.
    `Features/Onboarding/ClubSearchView`.
 5. **H — Settings overhaul. DONE as far as decided:** the app-icon picker is out (decision 14)
    and so is CSV (decision 4); notifications, quiet hours, privacy and the account section are
-   built. Only "Who can comment" remains, waiting on the user. Original scope: App-icon picker (alternate icons; artwork already added), notification
+   built. "Who can comment" is settled as a rule, not a setting (decision 33, branch
+   `t34-post-visibility`; needs `2026-10-05-post-visibility.sql` on staging). Original scope: App-icon picker (alternate icons; artwork already added), notification
    toggles, privacy row (needs E), account section. **No CSV export** (decision 4). Quiet hours and
    "Who can comment" are placeholders: confirm before building.
 6. **I — Custom tests. BUILT as club tests** (decision 28) — see above.
@@ -152,13 +153,14 @@ that they match the prototype.
    `PaceEngine/fit_population_prior.py`); the Population Estimate stays off by the user's choice.
    After launch: tune the tier constants on a real cohort (SPEC.md §7.2) — there is no real data
    until rowers start posting, so this waits for the live app (user, 2026-10-05).
-9. **L — Polish and release.** Tab bar (user: "still not there" — get concrete detail before
-   changing it), light mode and Increase Contrast pass, full screen-by-screen comparison against the
+9. **L — Polish and release.** Tab bar: fine for now (user, 2026-10-05). Light mode already
+   exists (Settings → Appearance); what's left is a screen-by-screen check of it and of Increase
+   Contrast, full screen-by-screen comparison against the
    prototype, then task 19 (TestFlight).
 
 ## Waiting on the user
 
 - ~~The prediction algorithm (phase K)~~ — arrived and built; tuning waits for post-launch data.
-- Concrete description of what is still wrong with the tab bar (phase L).
-- Go-ahead on the placeholder "Who can comment".
+- ~~Concrete description of what is still wrong with the tab bar (phase L)~~ — not an issue for now (2026-10-05).
+- ~~Go-ahead on the placeholder "Who can comment"~~ — decision 33.
 - ~~Joining the paid Apple Developer Program~~ — done 2026-10-04; push alerts work.

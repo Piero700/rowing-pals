@@ -34,8 +34,8 @@ struct SettingsView: View {
 
     /// v3 Settings (`docs/design/v3/RP Screen.dc.html` §07): grouped cards of 66 pt rows —
     /// Appearance, Units and display, Notifications, Privacy, Account — then Delete account and
-    /// the version. Left out by decision: the app-icon section (14) and CSV export (15).
-    /// "Who can comment" waits for the user's go-ahead.
+    /// the version. Left out by decision: the app-icon section (14) and CSV export (15). No
+    /// "Who can comment" row: anyone who can see a post can comment on it (decision 33).
     var body: some View {
         NavigationStack {
             ScrollView {
