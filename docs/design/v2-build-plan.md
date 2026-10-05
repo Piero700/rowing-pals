@@ -150,14 +150,15 @@ that they match the prototype.
    Population prior DONE (engine v1.4, 2026-10-05): cold-start baselines and the age curve from
    27 up fitted from the Concept2 rankings medians (SPEC.md §7.6,
    `PaceEngine/fit_population_prior.py`); the Population Estimate stays off by the user's choice.
-   Still to do before launch: tune the tier constants on a real cohort (SPEC.md §7.2).
+   After launch: tune the tier constants on a real cohort (SPEC.md §7.2) — there is no real data
+   until rowers start posting, so this waits for the live app (user, 2026-10-05).
 9. **L — Polish and release.** Tab bar (user: "still not there" — get concrete detail before
    changing it), light mode and Increase Contrast pass, full screen-by-screen comparison against the
    prototype, then task 19 (TestFlight).
 
 ## Waiting on the user
 
-- The prediction algorithm (phase K).
+- ~~The prediction algorithm (phase K)~~ — arrived and built; tuning waits for post-launch data.
 - Concrete description of what is still wrong with the tab bar (phase L).
 - Go-ahead on the placeholder "Who can comment".
 - ~~Joining the paid Apple Developer Program~~ — done 2026-10-04; push alerts work.
