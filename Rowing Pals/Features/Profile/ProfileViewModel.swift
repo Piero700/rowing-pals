@@ -123,6 +123,8 @@ final class ProfileViewModel {
     var clubRole: ClubRole?
     /// Coaches their club: Profile → Club then shows Coaching (decision 39).
     var isCoach = false
+    /// False for a coach-only account, which has no level to show (decision 34).
+    var isRower = true
     /// "Join request pending · <club>".
     var pendingClubName: String?
     /// Clubs that have invited you and are waiting for an answer.
@@ -194,6 +196,7 @@ final class ProfileViewModel {
                 let isPrivate: Bool
                 /// Absent before docs/migrations/2026-10-05-coaching.sql.
                 let isCoach: Bool?
+                let isRower: Bool?
                 enum CodingKeys: String, CodingKey {
                     case displayName = "display_name"
                     case category
@@ -203,6 +206,7 @@ final class ProfileViewModel {
                     case weeklyTargetM = "weekly_target_m"
                     case isPrivate = "is_private"
                     case isCoach = "is_coach"
+                    case isRower = "is_rower"
                 }
             }
             // Round 1, all at once: the profile row, the follow state (or your own pending
@@ -231,6 +235,7 @@ final class ProfileViewModel {
             clubName = profile.club?.name
             clubRole = profile.club == nil ? nil : (profile.clubRole ?? .member)
             isCoach = profile.club != nil && (profile.isCoach ?? false)
+            isRower = profile.isRower ?? true
             weeklyTargetM = profile.weeklyTargetM
             isPrivateAccount = profile.isPrivate
             if let ownExtras {

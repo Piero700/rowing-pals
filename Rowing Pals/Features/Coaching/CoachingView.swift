@@ -44,7 +44,8 @@ struct CoachingView: View {
         .safeAreaInset(edge: .top, spacing: 0) { header }
         .background(Tokens.Base.ground)
         .toolbar(.hidden, for: .navigationBar)
-        .task { await viewModel.load() }
+        // Also on coming back from Squads, so a changed squad shows at once.
+        .onAppear { Task { await viewModel.load() } }
         .refreshable {
             ViewerContext.shared.invalidate()
             await viewModel.load()

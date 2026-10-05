@@ -14,8 +14,19 @@ struct VolumeBars: View {
     let weekStarts: [Date]
 
     var body: some View {
+        if weeks.allSatisfy({ $0 == 0 }) {
+            Text("No sessions in the last 8 weeks.")
+                .textStyle(Typography.meta)
+                .foregroundStyle(Tokens.Ink.secondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        } else {
+            bars
+        }
+    }
+
+    private var bars: some View {
         let tallest = max(weeks.max() ?? 0, 1)
-        VStack(spacing: Tokens.Spacing.tight) {
+        return VStack(spacing: Tokens.Spacing.tight) {
             HStack(alignment: .bottom, spacing: Tokens.Spacing.tight) {
                 ForEach(Array(weeks.enumerated()), id: \.offset) { index, metres in
                     let isThisWeek = index == weeks.count - 1

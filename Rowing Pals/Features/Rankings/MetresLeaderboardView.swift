@@ -33,8 +33,10 @@ struct MetresLeaderboardView: View {
                 )
                 .padding(.top, Tokens.Spacing.loose)
 
-                rankHeroCard
-                    .padding(.top, 12)
+                if viewModel.viewerIsRower {
+                    rankHeroCard
+                        .padding(.top, 12)
+                }
 
                 HStack(spacing: Tokens.Spacing.gap) {
                     RankingsFiltersPill(text: filterSummary) { isShowingFilters = true }

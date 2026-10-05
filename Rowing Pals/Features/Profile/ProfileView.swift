@@ -267,10 +267,11 @@ struct ProfileView: View {
         .padding(.bottom, 14)
     }
 
-    /// Your own profile: "Club · Level". Another rower's (v3 §08): the club alone.
+    /// Your own profile: "Club · Level". Another rower's (v3 §08), or a coach-only account's
+    /// (no level, decision 34): the club alone.
     private var identityMeta: String {
         let club = viewModel.clubName ?? "No club"
-        if isOtherRower { return club }
+        if isOtherRower || !viewModel.isRower { return club }
         let level = viewModel.categoryLabel.capitalized
         return level.isEmpty ? club : "\(club) · \(level)"
     }

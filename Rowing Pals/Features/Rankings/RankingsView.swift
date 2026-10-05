@@ -35,8 +35,10 @@ struct RankingsView: View {
             switch mode {
             case .volume:
                 MetresLeaderboardView(mode: $mode, reselects: reselects)
+                    .transition(.identity)
             case .tests:
                 TestsView(showsOwnTitle: false, mode: $mode, reselects: reselects)
+                    .transition(.identity)
             }
         }
         // The two boards swap at once rather than cross-fading under the control's spring.
