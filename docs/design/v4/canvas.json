@@ -1,0 +1,521 @@
+{
+  "v": 3,
+  "attachments": {},
+  "boards": {
+    "AboutYou.dc.html": {
+      "h": 852,
+      "is_interactive": true,
+      "title": "About you",
+      "w": 393,
+      "x": 946,
+      "y": 5088
+    },
+    "AddClubTest.dc.html": {
+      "h": 852,
+      "is_interactive": true,
+      "title": "Add a club test",
+      "w": 393,
+      "x": 2365,
+      "y": 3816
+    },
+    "AllPersonalBests.dc.html": {
+      "h": 852,
+      "is_interactive": true,
+      "title": "All personal bests",
+      "w": 393,
+      "x": 1419,
+      "y": 2544
+    },
+    "ClubTestBoard.dc.html": {
+      "h": 852,
+      "is_interactive": true,
+      "title": "Club test leaderboard",
+      "w": 393,
+      "x": 1892,
+      "y": 2544
+    },
+    "CoachAttendance.dc.html": {
+      "h": 1152,
+      "is_interactive": true,
+      "title": "Coaching · Attendance totals",
+      "w": 393,
+      "x": 1419,
+      "y": 13868
+    },
+    "CoachCrew.dc.html": {
+      "h": 1008,
+      "is_interactive": true,
+      "title": "Your crew · coach",
+      "w": 393,
+      "x": 0,
+      "y": 8572
+    },
+    "CoachJoinNotice.dc.html": {
+      "h": 860,
+      "is_interactive": true,
+      "title": "Joining a club with coaches",
+      "w": 393,
+      "x": 1419,
+      "y": 8572
+    },
+    "CoachMakeCoach.dc.html": {
+      "h": 860,
+      "is_interactive": true,
+      "title": "Manage club · make coach",
+      "w": 393,
+      "x": 473,
+      "y": 8572
+    },
+    "CoachOnboarding.dc.html": {
+      "h": 912,
+      "is_interactive": true,
+      "title": "Onboarding · I’m a coach",
+      "w": 393,
+      "x": 946,
+      "y": 8572
+    },
+    "CoachOnlyFeed.dc.html": {
+      "h": 860,
+      "is_interactive": true,
+      "title": "Feed · coach who doesn’t row",
+      "w": 393,
+      "x": 1892,
+      "y": 8572
+    },
+    "CoachPracticeNew.dc.html": {
+      "h": 1024,
+      "is_interactive": true,
+      "title": "Coaching · Edit practice",
+      "w": 393,
+      "x": 473,
+      "y": 13868
+    },
+    "CoachPracticeRegister.dc.html": {
+      "h": 1324,
+      "is_interactive": true,
+      "title": "Coaching · Register",
+      "w": 393,
+      "x": 946,
+      "y": 13868
+    },
+    "CoachPractices.dc.html": {
+      "h": 944,
+      "is_interactive": true,
+      "title": "Coaching · Practices",
+      "w": 393,
+      "x": 0,
+      "y": 13868
+    },
+    "CoachRower.dc.html": {
+      "h": 1836,
+      "is_interactive": true,
+      "title": "Coaching · One rower",
+      "w": 393,
+      "x": 946,
+      "y": 10000
+    },
+    "CoachRowers.dc.html": {
+      "h": 1452,
+      "is_interactive": true,
+      "title": "Coaching · Rowers",
+      "w": 393,
+      "x": 0,
+      "y": 10000
+    },
+    "CoachSortSheet.dc.html": {
+      "h": 860,
+      "is_interactive": true,
+      "title": "Coaching · Squad and sort",
+      "w": 393,
+      "x": 473,
+      "y": 10000
+    },
+    "CoachSquadEdit.dc.html": {
+      "h": 1012,
+      "is_interactive": true,
+      "title": "Coaching · Edit squad",
+      "w": 393,
+      "x": 1892,
+      "y": 10000
+    },
+    "CoachSquads.dc.html": {
+      "h": 852,
+      "is_interactive": true,
+      "title": "Coaching · Squads",
+      "w": 393,
+      "x": 1419,
+      "y": 10000
+    },
+    "CoachWorkoutNew.dc.html": {
+      "h": 1184,
+      "is_interactive": true,
+      "title": "Coaching · New workout",
+      "w": 393,
+      "x": 473,
+      "y": 12256
+    },
+    "CoachWorkoutResults.dc.html": {
+      "h": 1192,
+      "is_interactive": true,
+      "title": "Coaching · Workout results",
+      "w": 393,
+      "x": 946,
+      "y": 12256
+    },
+    "CoachWorkouts.dc.html": {
+      "h": 1164,
+      "is_interactive": true,
+      "title": "Coaching · Workouts",
+      "w": 393,
+      "x": 0,
+      "y": 12256
+    },
+    "CreateAccount.dc.html": {
+      "h": 852,
+      "is_interactive": true,
+      "title": "Create your account",
+      "w": 393,
+      "x": 0,
+      "y": 5088
+    },
+    "CreateClub.dc.html": {
+      "h": 852,
+      "is_interactive": true,
+      "title": "Create a club",
+      "w": 393,
+      "x": 1419,
+      "y": 3816
+    },
+    "FindAClub.dc.html": {
+      "h": 852,
+      "is_interactive": true,
+      "title": "Find a club · requested",
+      "w": 393,
+      "x": 946,
+      "y": 3816
+    },
+    "FindRowers.dc.html": {
+      "h": 852,
+      "is_interactive": true,
+      "title": "Find rowers",
+      "w": 393,
+      "x": 473,
+      "y": 2544
+    },
+    "LogWorkout.dc.html": {
+      "h": 852,
+      "is_interactive": true,
+      "title": "Log workout",
+      "w": 393,
+      "x": 0,
+      "y": 1272
+    },
+    "Main.dc.html": {
+      "h": 852,
+      "is_interactive": true,
+      "title": "Feed",
+      "w": 393,
+      "x": 0,
+      "y": 0
+    },
+    "ManageClub.dc.html": {
+      "h": 852,
+      "is_interactive": true,
+      "title": "Manage club",
+      "w": 393,
+      "x": 1892,
+      "y": 3816
+    },
+    "OnboardingClub.dc.html": {
+      "h": 852,
+      "is_interactive": true,
+      "title": "Find your club",
+      "w": 393,
+      "x": 473,
+      "y": 5088
+    },
+    "PBHistory.dc.html": {
+      "h": 852,
+      "is_interactive": true,
+      "title": "PB history",
+      "w": 393,
+      "x": 946,
+      "y": 2544
+    },
+    "PostDetail.dc.html": {
+      "h": 852,
+      "is_interactive": true,
+      "title": "Workout detail",
+      "w": 393,
+      "x": 946,
+      "y": 1272
+    },
+    "Profile.dc.html": {
+      "h": 852,
+      "is_interactive": true,
+      "title": "Profile",
+      "w": 393,
+      "x": 1419,
+      "y": 0
+    },
+    "RankingsFilters.dc.html": {
+      "h": 852,
+      "is_interactive": true,
+      "title": "Rankings · Filters",
+      "w": 393,
+      "x": 1892,
+      "y": 0
+    },
+    "RankingsTests.dc.html": {
+      "h": 852,
+      "is_interactive": true,
+      "title": "Rankings · Test results",
+      "w": 393,
+      "x": 946,
+      "y": 0
+    },
+    "RankingsVolume.dc.html": {
+      "h": 852,
+      "is_interactive": true,
+      "title": "Rankings · Volume",
+      "w": 393,
+      "x": 473,
+      "y": 0
+    },
+    "ReviewSession.dc.html": {
+      "h": 852,
+      "is_interactive": true,
+      "title": "Review session",
+      "w": 393,
+      "x": 473,
+      "y": 1272
+    },
+    "RowerFeedCoaching.dc.html": {
+      "h": 860,
+      "is_interactive": true,
+      "title": "Rower · Feed with today’s workout",
+      "w": 393,
+      "x": 1419,
+      "y": 12256
+    },
+    "RowerLogCoaching.dc.html": {
+      "h": 860,
+      "is_interactive": true,
+      "title": "Rower · Log, linked to workout",
+      "w": 393,
+      "x": 1892,
+      "y": 12256
+    },
+    "RowerPractice.dc.html": {
+      "h": 852,
+      "is_interactive": true,
+      "title": "Rower · Practice",
+      "w": 393,
+      "x": 1892,
+      "y": 13868
+    },
+    "RowerProfile.dc.html": {
+      "h": 852,
+      "is_interactive": true,
+      "title": "Rower profile",
+      "w": 393,
+      "x": 0,
+      "y": 2544
+    },
+    "Settings.dc.html": {
+      "h": 1792,
+      "is_interactive": true,
+      "title": "Settings",
+      "w": 393,
+      "x": 0,
+      "y": 6360
+    },
+    "SettingsPrivacy.dc.html": {
+      "h": 852,
+      "is_interactive": true,
+      "title": "Settings · Profile visibility",
+      "w": 393,
+      "x": 946,
+      "y": 6360
+    },
+    "SettingsProfile.dc.html": {
+      "h": 1264,
+      "is_interactive": true,
+      "title": "Settings · Edit profile",
+      "w": 393,
+      "x": 473,
+      "y": 6360
+    },
+    "YourCrew.dc.html": {
+      "h": 852,
+      "is_interactive": true,
+      "title": "Your crew · in a club",
+      "w": 393,
+      "x": 0,
+      "y": 3816
+    },
+    "YourCrewNoClub.dc.html": {
+      "h": 852,
+      "is_interactive": true,
+      "title": "Your crew · no club",
+      "w": 393,
+      "x": 473,
+      "y": 3816
+    }
+  },
+  "createdOnFiles": {
+    "at": "2026-10-04T17:57:13Z",
+    "v": 1
+  },
+  "designSystems": [],
+  "launch": {
+    "view": "canvas"
+  },
+  "notes": {
+    "about": {
+      "fill": "blue",
+      "size": 24,
+      "text": "Rowing Pals as built on 4 Oct 2026, in the app's own colours, type and spacing (DesignSystem/Tokens.swift). Each screen's Tweaks switch Dark / Light. Names and numbers are sample data.",
+      "w": 380,
+      "x": 2365,
+      "y": 299
+    },
+    "coach0": {
+      "kind": "title1",
+      "maxW": 2285,
+      "text": "Coaching (proposal) · entry and setup",
+      "w": 240,
+      "x": 0,
+      "y": 8272
+    },
+    "coach1": {
+      "kind": "title1",
+      "maxW": 2285,
+      "text": "Coaching (proposal) · rowers and squads",
+      "w": 240,
+      "x": 0,
+      "y": 9700
+    },
+    "coach2": {
+      "kind": "title1",
+      "maxW": 2285,
+      "text": "Coaching (proposal) · set workouts",
+      "w": 240,
+      "x": 0,
+      "y": 11956
+    },
+    "coach3": {
+      "kind": "title1",
+      "maxW": 2285,
+      "text": "Coaching (proposal) · attendance",
+      "w": 240,
+      "x": 0,
+      "y": 13568
+    },
+    "coachAbout": {
+      "fill": "purple",
+      "size": 24,
+      "text": "Coach section · design proposal (5 Oct 2026), not in the app. Built from the brief’s decisions 1–6. Predicted 2k, effort, zone mix and flags would come from the Pace Engine: the numbers shown are samples. Coaches see age and bodyweight; quiet hours removed.",
+      "w": 380,
+      "x": 2365,
+      "y": 8572
+    },
+    "row0": {
+      "kind": "title1",
+      "maxW": 2285,
+      "text": "Main tabs",
+      "w": 240,
+      "x": 0,
+      "y": -300
+    },
+    "row1": {
+      "kind": "title1",
+      "maxW": 1339,
+      "text": "Logging a session",
+      "w": 240,
+      "x": 0,
+      "y": 972
+    },
+    "row2": {
+      "kind": "title1",
+      "maxW": 2285,
+      "text": "Rowers and personal bests",
+      "w": 240,
+      "x": 0,
+      "y": 2244
+    },
+    "row3": {
+      "kind": "title1",
+      "maxW": 2758,
+      "text": "Clubs and club tests",
+      "w": 240,
+      "x": 0,
+      "y": 3516
+    },
+    "row4": {
+      "kind": "title1",
+      "maxW": 1339,
+      "text": "Getting started",
+      "w": 240,
+      "x": 0,
+      "y": 4788
+    },
+    "row5": {
+      "kind": "title1",
+      "maxW": 1339,
+      "text": "Settings",
+      "w": 240,
+      "x": 0,
+      "y": 6060
+    }
+  },
+  "order": [
+    "Main.dc.html",
+    "RankingsVolume.dc.html",
+    "RankingsTests.dc.html",
+    "Profile.dc.html",
+    "Settings.dc.html",
+    "LogWorkout.dc.html",
+    "ReviewSession.dc.html",
+    "PostDetail.dc.html",
+    "RowerProfile.dc.html",
+    "FindRowers.dc.html",
+    "PBHistory.dc.html",
+    "AllPersonalBests.dc.html",
+    "ClubTestBoard.dc.html",
+    "YourCrew.dc.html",
+    "YourCrewNoClub.dc.html",
+    "FindAClub.dc.html",
+    "CreateClub.dc.html",
+    "ManageClub.dc.html",
+    "AddClubTest.dc.html",
+    "CreateAccount.dc.html",
+    "OnboardingClub.dc.html",
+    "AboutYou.dc.html",
+    "RankingsFilters.dc.html",
+    "SettingsProfile.dc.html",
+    "SettingsPrivacy.dc.html",
+    "CoachCrew.dc.html",
+    "CoachMakeCoach.dc.html",
+    "CoachOnboarding.dc.html",
+    "CoachJoinNotice.dc.html",
+    "CoachOnlyFeed.dc.html",
+    "CoachRowers.dc.html",
+    "CoachSortSheet.dc.html",
+    "CoachRower.dc.html",
+    "CoachSquads.dc.html",
+    "CoachSquadEdit.dc.html",
+    "CoachWorkouts.dc.html",
+    "CoachWorkoutNew.dc.html",
+    "CoachWorkoutResults.dc.html",
+    "RowerFeedCoaching.dc.html",
+    "RowerLogCoaching.dc.html",
+    "CoachPractices.dc.html",
+    "CoachPracticeNew.dc.html",
+    "CoachPracticeRegister.dc.html",
+    "CoachAttendance.dc.html",
+    "RowerPractice.dc.html"
+  ],
+  "pages": [],
+  "title": "Rowing Pals — current app"
+}

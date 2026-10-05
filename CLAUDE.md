@@ -19,6 +19,9 @@ leaderboards.
 
 ## Read these first
 
+- `docs/design/v4/` — **the latest canvas (2026-10-05)**: the app as built plus the Coaching
+  section and updated Rankings/Settings screens (decisions 34–38). Where a screen is in v4, v4
+  wins over v3. Build order in `docs/design/coaching-build-plan.md`.
 - `docs/design/rowing-pals-v3-spec.md` + `docs/design/v3/` — **the current design (v3,
   2026-09-25), the visual source of truth for look, sizing and layout.** Exact per-screen
   values are in `docs/design/v3/RP Screen.dc.html`. **Read the relevant section before
@@ -141,6 +144,8 @@ After any change:
 3. Never report a task complete on the basis that the code looks right.
 
 ## Current focus
+
+Coaching and the v4 canvas, phases C1–C5 in `docs/design/coaching-build-plan.md`. Earlier:
 
 Implementing the v2 redesign in phases. Status and the remaining order are in
 `docs/design/v2-build-plan.md`; screens and components are in

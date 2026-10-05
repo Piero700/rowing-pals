@@ -158,6 +158,9 @@ that they match the prototype.
    Contrast, full screen-by-screen comparison against the
    prototype, then task 19 (TestFlight).
 
+10. **Coaching and the v4 canvas** (decisions 34–38): phases C1–C5 in
+    `docs/design/coaching-build-plan.md`. Next: C1.
+
 ## Waiting on the user
 
 - ~~The prediction algorithm (phase K)~~ — arrived and built; tuning waits for post-launch data.
