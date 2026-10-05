@@ -167,7 +167,7 @@ struct FeedView: View {
         VStack(alignment: .leading, spacing: Tokens.Spacing.gap) {
             if let title {
                 Text(title)
-                    .font(.system(size: 20, weight: .bold))
+                    .font(.system(size: 20, weight: .semibold))
                     .foregroundStyle(Tokens.Ink.primary)
             }
             Text(body)

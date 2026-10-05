@@ -74,7 +74,7 @@ struct FollowRequestsView: View {
                 Task { await viewModel.decline(person.id) }
             } label: {
                 Text("Decline")
-                    .font(.system(size: 11.5, weight: .bold))
+                    .textStyle(Typography.fieldLabel)
                     .foregroundStyle(Tokens.Ink.primary)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 8)
@@ -90,7 +90,7 @@ struct FollowRequestsView: View {
                 Task { await viewModel.accept(person.id) }
             } label: {
                 Text("Accept")
-                    .font(.system(size: 11.5, weight: .bold))
+                    .textStyle(Typography.fieldLabel)
                     .foregroundStyle(Tokens.Base.dark)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 8)

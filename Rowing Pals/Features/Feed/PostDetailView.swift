@@ -182,7 +182,7 @@ struct PostDetailView: View {
     /// directly on photo content rather than the sheet background.
     private func floatingIconStyle(_ systemImage: String) -> some View {
         Image(systemName: systemImage)
-            .font(.system(size: 16, weight: .bold))
+            .textStyle(Typography.cardTitle)
             .foregroundStyle(.white)
             .frame(width: 36, height: 36)
             .background {
@@ -232,11 +232,11 @@ struct PostDetailView: View {
             HStack(spacing: 8) {
                 AvatarPlaceholder(diameter: 28, streakDays: viewModel.authorStreakDays, name: viewModel.author?.displayName, userId: viewModel.author?.id)
                 Text(viewModel.author?.displayName ?? "")
-                    .font(.system(size: 14, weight: .semibold))
+                    .textStyle(Typography.rowTitle)
                     .foregroundStyle(Tokens.Ink.primary)
                     .lineLimit(1)
                 Image(systemName: "chevron.right")
-                    .font(.system(size: 11, weight: .bold))
+                    .textStyle(Typography.navLabel)
                     .foregroundStyle(Tokens.Ink.secondary)
             }
             .padding(.leading, 6)
@@ -302,14 +302,13 @@ struct PostDetailView: View {
     /// no "Personal best" clause if it wasn't, no rank clause for a rank
     /// that couldn't be computed.
     private func pbBanner(_ banner: PostDetailViewModel.TestBanner) -> some View {
-        VStack(alignment: .leading, spacing: 7) {
-            Text("\(banner.distanceLabel.uppercased()) TEST")
-                .font(.system(size: 10, weight: .bold))
-                .tracking(1.2)
+        VStack(alignment: .leading, spacing: 8) {
+            Text("\(banner.distanceLabel) test")
+                .textStyle(Typography.overline)
                 .foregroundStyle(Tokens.Accent.records)
             HStack(alignment: .lastTextBaseline, spacing: 10) {
                 Text(banner.valueLabel)
-                    .font(.system(size: 32, weight: .bold))
+                    .textStyle(Typography.bigResult)
                     .tabularNumerals()
                     .foregroundStyle(Tokens.Accent.records)
                 if banner.isPersonalBest {
@@ -354,13 +353,13 @@ struct PostDetailView: View {
                 // reaches the leaderboards, it just isn't shown.
                 if !viewModel.photoVerified, viewModel.loggedLate {
                     Text("Logged later")
-                        .font(.system(size: 11.5, weight: .semibold))
+                        .textStyle(Typography.fieldLabel)
                         .foregroundStyle(Tokens.Ink.primary.opacity(0.8))
                 }
             }
             HStack(alignment: .lastTextBaseline, spacing: 10) {
                 Text(viewModel.totalDistanceM.formattedMetres)
-                    .font(.system(size: 24, weight: .bold))
+                    .font(.system(size: 22, weight: .semibold))
                     .tabularNumerals()
                     .foregroundStyle(Tokens.Ink.primary)
                 Text(totalTimeAndSplitLabel)
@@ -403,7 +402,7 @@ struct PostDetailView: View {
                         .foregroundStyle(Tokens.Ink.faint)
                     Spacer()
                     Image(systemName: "chevron.down")
-                        .font(.system(size: 12, weight: .bold))
+                        .textStyle(Typography.fieldLabel)
                         .foregroundStyle(Tokens.Ink.secondary)
                         .rotationEffect(.degrees(isSplitBreakdownExpanded ? 180 : 0))
                 }
@@ -439,21 +438,21 @@ struct PostDetailView: View {
                 .minimumScaleFactor(0.75)
                 .frame(width: 64, alignment: .leading)
             Text(segment.distanceM.formattedMetres)
-                .font(.system(size: 13.5, weight: .semibold))
+                .textStyle(Typography.pill)
                 .tabularNumerals()
                 .foregroundStyle(Tokens.Ink.primary)
                 .frame(width: 60, alignment: .leading)
             Text(segment.timeMs.formattedDurationMs)
-                .font(.system(size: 13))
+                .textStyle(Typography.meta)
                 .tabularNumerals()
                 .foregroundStyle(Tokens.Ink.secondary)
                 .frame(maxWidth: .infinity, alignment: .leading)
             Text(segment.splitMs?.formattedPace(display: paceDisplay) ?? "—")
-                .font(.system(size: 13))
+                .textStyle(Typography.meta)
                 .tabularNumerals()
                 .foregroundStyle(Tokens.Ink.secondary)
             Text(segment.rate.map { "r\(Int($0.rounded()))" } ?? "—")
-                .font(.system(size: 13))
+                .textStyle(Typography.meta)
                 .tabularNumerals()
                 .foregroundStyle(Tokens.Ink.secondary.opacity(0.85))
                 .frame(width: 30, alignment: .trailing)
@@ -463,7 +462,7 @@ struct PostDetailView: View {
     // MARK: - Reactions
 
     private var reactionRow: some View {
-        HStack(spacing: 7) {
+        HStack(spacing: 8) {
             ForEach(viewModel.reactions) { reaction in
                 reactionChip(reaction)
             }
@@ -472,7 +471,7 @@ struct PostDetailView: View {
                 isShowingMoreReactions = true
             } label: {
                 Image(systemName: "plus")
-                    .font(.system(size: 15, weight: .semibold))
+                    .textStyle(Typography.rowTitle)
                     .foregroundStyle(Tokens.Ink.secondary)
                     .frame(width: 34, height: 34)
                     .background {
@@ -497,14 +496,14 @@ struct PostDetailView: View {
         Button {
             Task { await viewModel.toggleReaction(kind: reaction.kind) }
         } label: {
-            HStack(spacing: 5) {
+            HStack(spacing: 4) {
                 Text(Self.emoji[reaction.kind] ?? "•")
                 Text("\(reaction.count)")
                     .tabularNumerals()
                     .fontWeight(reaction.reactedByMe ? .semibold : .regular)
                     .foregroundStyle(reaction.reactedByMe ? Tokens.Accent.records : Tokens.Ink.secondary)
             }
-            .font(.system(size: 14))
+            .textStyle(Typography.detail)
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
             .background {

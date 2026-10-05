@@ -21,9 +21,7 @@ struct PredictionCard: View {
         VStack(alignment: .leading, spacing: 0) {
             HStack {
                 Text("\(title) · Predicted today")
-                    .font(.system(size: 10, weight: .bold))
-                    .tracking(1)
-                    .textCase(.uppercase)
+                    .textStyle(Typography.cardOverline)
                     .foregroundStyle(Tokens.Ink.secondary)
                 Spacer()
                 Button(action: onExplain) {
@@ -38,7 +36,7 @@ struct PredictionCard: View {
             }
             if let prediction, PredictionService.isShowable(prediction) {
                 Text(prediction.predictedTotalTimeFormatted ?? "—")
-                    .font(.system(size: 29, weight: .bold))
+                    .textStyle(Typography.bigResult)
                     .tabularNumerals()
                     .foregroundStyle(Tokens.Accent.records)
                 Text("\(prediction.predictedSplitFormatted ?? "—") /500m · \(Self.bandText(prediction.confidenceScore))")
@@ -54,7 +52,7 @@ struct PredictionCard: View {
                 }
             } else {
                 Text("—")
-                    .font(.system(size: 29, weight: .bold))
+                    .textStyle(Typography.bigResult)
                     .foregroundStyle(Tokens.Accent.records)
                 Text(emptyText)
                     .textStyle(Typography.meta)

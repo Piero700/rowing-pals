@@ -31,7 +31,7 @@ struct RouteHost: View {
                             dismiss()
                         } label: {
                             Image(systemName: "xmark")
-                                .font(.system(size: 14, weight: .bold))
+                                .textStyle(Typography.rowTitle)
                         }
                         .accessibilityLabel("Close")
                     }

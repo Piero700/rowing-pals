@@ -22,7 +22,7 @@ struct FilterChip: View {
             .minimumScaleFactor(0.75)
             .foregroundStyle(isSelected ? Tokens.Ink.primary : Tokens.Ink.secondary)
             .padding(.horizontal, 10)
-            .padding(.vertical, 7)
+            .padding(.vertical, 8)
             .background {
                 RoundedRectangle(cornerRadius: 14, style: .continuous)
                     .fill(Tokens.Ink.primary.opacity(isSelected ? 0.16 : 0.07))

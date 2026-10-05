@@ -21,7 +21,7 @@ struct TermsOfServiceView: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(alignment: .leading, spacing: 18) {
+                VStack(alignment: .leading, spacing: 16) {
                     section("Zero tolerance for abusive content and conduct") {
                         "Rowing Pals has zero tolerance for objectionable content or abusive " +
                         "behaviour of any kind — harassment, hate speech, nudity or sexual " +
@@ -85,7 +85,7 @@ struct TermsOfServiceView: View {
     private func section(_ title: String, _ body: () -> String) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(title)
-                .font(.system(size: 15, weight: .bold))
+                .textStyle(Typography.rowTitle)
                 .foregroundStyle(Tokens.Ink.primary)
             Text(body())
                 .textStyle(Typography.bodySecondary)

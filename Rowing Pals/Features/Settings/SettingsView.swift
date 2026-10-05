@@ -55,20 +55,18 @@ struct SettingsView: View {
                     }
 
                     group("Units and display") {
-                        row(title: "Leaderboard distance", subtitle: "Volume rankings only; everything else is metres.") {
+                        stackedRow(title: "Leaderboard distance", subtitle: "Volume rankings only; everything else is metres.") {
                             PillSegmentedControl(options: ["Metres", "km"], selection: Binding(
                                 get: { distanceUnit == .kilometres ? 1 : 0 },
                                 set: { distanceUnit = $0 == 1 ? .kilometres : .metres }
                             ), compact: true)
-                            .frame(width: 145)
                         }
                         divider
-                        row(title: "Pace shown as", subtitle: paceExample) {
+                        stackedRow(title: "Pace shown as", subtitle: paceExample) {
                             PillSegmentedControl(options: ["Split", "Watts"], selection: Binding(
                                 get: { paceDisplay == .watts ? 1 : 0 },
                                 set: { paceDisplay = $0 == 1 ? .watts : .split }
                             ), compact: true)
-                            .frame(width: 145)
                         }
                     }
 
@@ -85,11 +83,11 @@ struct SettingsView: View {
                         NavigationLink {
                             EditProfileView(viewModel: viewModel)
                         } label: {
-                            rowContent(title: "Edit profile", subtitle: "Name, gender, level, weekly target and private details") { chevron }
+                            rowContent(title: "Edit profile", subtitle: "Name, gender, level and weekly target") { chevron }
                         }
                         .buttonStyle(IconPressStyle())
                         divider
-                        row(title: "Log out", subtitle: nil) { EmptyView() } action: {
+                        row(title: "Log out", subtitle: nil, titleColor: Tokens.Accent.brand) { EmptyView() } action: {
                             Task { await viewModel.signOut() }
                         }
                     }
@@ -97,7 +95,7 @@ struct SettingsView: View {
                     group("Help") {
                         if let supportMailtoURL = Self.supportMailtoURL {
                             Link(destination: supportMailtoURL) {
-                                rowContent(title: "Contact us", subtitle: Self.supportEmail) { chevron }
+                                rowContent(title: "Contact us", subtitle: nil) { chevron }
                             }
                             divider
                         }
@@ -106,28 +104,41 @@ struct SettingsView: View {
                         row(title: "Privacy Policy", subtitle: nil) { chevron } action: { isShowingPrivacyPolicy = true }
                     }
 
-                    Button("Delete account") { isShowingDeleteConfirmation = true }
-                        .buttonStyle(.rpDestructive)
-                        .padding(.top, Tokens.Spacing.gap)
+                    // v4: a card of its own with centred red text, 24 pt below Help.
+                    Button { isShowingDeleteConfirmation = true } label: {
+                        Text("Delete account")
+                            .textStyle(Typography.rowTitle)
+                            .foregroundStyle(Tokens.System.error)
+                            .frame(maxWidth: .infinity, minHeight: Tokens.Size.rowCompact)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(IconPressStyle())
+                    .background(Self.cardShape.fill(Tokens.Surface.card))
+                    .clipShape(Self.cardShape)
+                    .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+                    .padding(.top, Tokens.Spacing.group)
                     if let deleteError = viewModel.deleteError {
                         Text(deleteError)
                             .textStyle(Typography.meta)
                             .foregroundStyle(Tokens.System.error)
-                            .padding(.top, 6)
+                            .padding(.top, Tokens.Spacing.tight)
+                            .padding(.horizontal, 4)
                     }
                     Text("Deleting your account removes every session, photo and comment permanently.")
                         .textStyle(Typography.meta)
                         .foregroundStyle(Tokens.Ink.secondary)
-                        .padding(.top, 6)
+                        .padding(.top, Tokens.Spacing.tight)
+                        .padding(.horizontal, 4)
 
                     Text(versionText)
                         .textStyle(Typography.meta)
                         .foregroundStyle(Tokens.Ink.secondary)
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, Tokens.Spacing.loose)
+                        .padding(.top, Tokens.Spacing.group)
                 }
                 .padding(.horizontal, Tokens.Spacing.screen)
-                .padding(.bottom, 22)
+                .padding(.top, 4)
+                .padding(.bottom, 40)
             }
             .scrollIndicators(.hidden)
             .safeAreaInset(edge: .top, spacing: 0) { ScreenHeader(title: "Settings") { dismiss() } }
@@ -177,9 +188,9 @@ struct SettingsView: View {
             Text(title)
                 .textStyle(Typography.sectionTitle)
                 .foregroundStyle(Tokens.Ink.secondary)
-                .padding(.horizontal, 2)
-                .padding(.top, Tokens.Spacing.sectionTop)
-                .padding(.bottom, Tokens.Spacing.sectionBottom)
+                .padding(.horizontal, 4)
+                .padding(.top, Tokens.Spacing.group)
+                .padding(.bottom, Tokens.Spacing.tight)
                 .accessibilityAddTraits(.isHeader)
             VStack(spacing: 0) { content() }
                 .background(Self.cardShape.fill(Tokens.Surface.card))
@@ -192,13 +203,16 @@ struct SettingsView: View {
         Rectangle().fill(Tokens.Surface.line).frame(height: 1)
     }
 
-    /// v3 row: title 14 bold, optional 12.8 subtitle, trailing control; at least 66 pt tall.
-    private func rowContent<Trailing: View>(title: String, subtitle: String?, @ViewBuilder trailing: () -> Trailing) -> some View {
-        HStack(spacing: Tokens.Spacing.gap) {
+    /// v4 row: title 15 semibold, optional 13 description, trailing control; 66 pt tall with a
+    /// description, 56 without.
+    private func rowContent<Trailing: View>(
+        title: String, subtitle: String?, titleColor: Color = Tokens.Ink.primary, @ViewBuilder trailing: () -> Trailing
+    ) -> some View {
+        HStack(spacing: Tokens.Spacing.loose) {
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
                     .textStyle(Typography.rowTitle)
-                    .foregroundStyle(Tokens.Ink.primary)
+                    .foregroundStyle(titleColor)
                 if let subtitle {
                     Text(subtitle)
                         .textStyle(Typography.meta)
@@ -209,28 +223,48 @@ struct SettingsView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             trailing()
         }
-        .padding(.horizontal, Tokens.Spacing.loose)
-        .padding(.vertical, 9)
-        .frame(minHeight: 66)
+        .padding(.horizontal, Tokens.Spacing.card)
+        .padding(.vertical, Tokens.Spacing.loose)
+        .frame(minHeight: subtitle == nil ? Tokens.Size.rowCompact : Tokens.Size.row)
         .contentShape(Rectangle())
+    }
+
+    /// v4 units row: title and description on top, the full-width control beneath.
+    private func stackedRow<Control: View>(title: String, subtitle: String, @ViewBuilder control: () -> Control) -> some View {
+        VStack(alignment: .leading, spacing: Tokens.Spacing.tight) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .textStyle(Typography.rowTitle)
+                    .foregroundStyle(Tokens.Ink.primary)
+                Text(subtitle)
+                    .textStyle(Typography.meta)
+                    .tabularNumerals()
+                    .foregroundStyle(Tokens.Ink.secondary)
+            }
+            control()
+        }
+        .padding(.horizontal, Tokens.Spacing.card)
+        .padding(.top, Tokens.Spacing.gap)
+        .padding(.bottom, Tokens.Spacing.loose)
     }
 
     /// A row that is itself a control (a whole-row button) when `action` is given.
     @ViewBuilder
     private func row<Trailing: View>(
-        title: String, subtitle: String?, @ViewBuilder trailing: () -> Trailing, action: (() -> Void)? = nil
+        title: String, subtitle: String?, titleColor: Color = Tokens.Ink.primary,
+        @ViewBuilder trailing: () -> Trailing, action: (() -> Void)? = nil
     ) -> some View {
         if let action {
-            Button(action: action) { rowContent(title: title, subtitle: subtitle, trailing: trailing) }
+            Button(action: action) { rowContent(title: title, subtitle: subtitle, titleColor: titleColor, trailing: trailing) }
                 .buttonStyle(IconPressStyle())
         } else {
-            rowContent(title: title, subtitle: subtitle, trailing: trailing)
+            rowContent(title: title, subtitle: subtitle, titleColor: titleColor, trailing: trailing)
         }
     }
 
     private func checkmark(_ isOn: Bool) -> some View {
         Image(systemName: "checkmark")
-            .font(.system(size: 15, weight: .bold))
+            .textStyle(Typography.rowTitle)
             .foregroundStyle(Tokens.Accent.brand)
             .opacity(isOn ? 1 : 0)
             .accessibilityHidden(!isOn)
@@ -238,13 +272,13 @@ struct SettingsView: View {
 
     private var chevron: some View {
         Image(systemName: "chevron.right")
-            .font(.system(size: 13, weight: .semibold))
+            .textStyle(Typography.pill)
             .foregroundStyle(Tokens.Ink.secondary)
     }
 
     private func value(_ text: String) -> some View {
         Text(text)
-            .font(.system(size: 12))
+            .textStyle(Typography.detail)
             .foregroundStyle(Tokens.Ink.secondary)
     }
 
@@ -320,10 +354,11 @@ struct SettingsView: View {
                     .foregroundStyle(Tokens.Ink.secondary)
             }
         }
-        .tint(Tokens.Accent.success)
-        .padding(.horizontal, Tokens.Spacing.loose)
-        .padding(.vertical, 9)
-        .frame(minHeight: 66)
+        // v4: switches are brand blue when on.
+        .tint(Tokens.Accent.brand)
+        .padding(.horizontal, Tokens.Spacing.card)
+        .padding(.vertical, Tokens.Spacing.loose)
+        .frame(minHeight: Tokens.Size.row)
     }
 
 

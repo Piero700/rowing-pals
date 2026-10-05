@@ -152,8 +152,8 @@ struct ManageClubView: View {
         Text(text)
             .textStyle(Typography.statLabel)
             .foregroundStyle(Tokens.Ink.secondary)
-            .padding(.horizontal, 9)
-            .padding(.vertical, 5)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
             .background(Capsule().fill(Tokens.Surface.raised))
             .lineLimit(1)
     }
@@ -273,8 +273,8 @@ struct ManageClubView: View {
                     Text("You")
                         .textStyle(Typography.statLabel)
                         .foregroundStyle(Tokens.Ink.secondary)
-                        .padding(.horizontal, 9)
-                        .padding(.vertical, 5)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
                         .background(Capsule().fill(Tokens.Surface.raised))
                 } else if viewModel.myRole.canRemove(person.role) || !viewModel.myRole.assignableRoles(for: person.role).isEmpty {
                     Button("Manage") { managedPerson = person }

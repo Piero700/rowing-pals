@@ -143,8 +143,8 @@ struct PBHistoryView: View {
                     .textStyle(Typography.pill)
                     .tabularNumerals()
                     .foregroundStyle(Tokens.Accent.records)
-                    .padding(.horizontal, 11)
-                    .padding(.vertical, 9)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
                     .background(Capsule().fill(Tokens.Accent.recordsSoft))
             }
         }
@@ -178,17 +178,17 @@ struct PBHistoryView: View {
                     .textStyle(Typography.statLabel)
                     .foregroundStyle(Tokens.Ink.secondary)
             }
-            .padding(.horizontal, 7)
+            .padding(.horizontal, 8)
             Text(test.isDurationBased ? "Distance · metres" : "Time · min:sec")
                 .textStyle(Typography.meta)
                 .foregroundStyle(Tokens.Ink.secondary)
-                .padding(.horizontal, 7)
+                .padding(.horizontal, 8)
                 .padding(.top, Tokens.Spacing.loose)
 
             chart
                 .frame(height: 230)
-                .padding(.top, 18)
-                .padding(.horizontal, 7)
+                .padding(.top, 16)
+                .padding(.horizontal, 8)
 
             if let selectedPoint {
                 selectedPanel(selectedPoint)
@@ -277,7 +277,7 @@ struct PBHistoryView: View {
                 AxisValueLabel {
                     if let raw = value.as(Double.self) {
                         Text(format(raw))
-                            .font(.system(size: 13))
+                            .textStyle(Typography.meta)
                             .monospacedDigit()
                             .foregroundStyle(Tokens.Ink.secondary)
                     }
@@ -289,7 +289,7 @@ struct PBHistoryView: View {
                 AxisValueLabel(anchor: value.index == 0 ? .topLeading : .topTrailing) {
                     if let date = value.as(Date.self) {
                         Text(date, format: .dateTime.month(.abbreviated).year(.twoDigits))
-                            .font(.system(size: 13))
+                            .textStyle(Typography.meta)
                             .foregroundStyle(Tokens.Ink.secondary)
                     }
                 }
@@ -449,8 +449,8 @@ struct PBHistoryView: View {
                 .tabularNumerals()
                 .foregroundStyle(isCurrent ? Tokens.Accent.brand : Tokens.Ink.primary)
         }
-        .padding(.vertical, 15)
-        .padding(.horizontal, 18)
+        .padding(.vertical, 16)
+        .padding(.horizontal, 16)
         .frame(minHeight: 68)
         .background(isCurrent ? Tokens.Accent.brandSoft : .clear)
         .asButton { selectedID = point.id }

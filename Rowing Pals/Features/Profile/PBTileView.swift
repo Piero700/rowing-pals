@@ -27,14 +27,14 @@ struct PBTileView: View {
                 .textStyle(Typography.metricValue)
                 .tabularNumerals()
                 .foregroundStyle(tile.hasResult ? Tokens.Accent.records : Tokens.Ink.secondary)
-                .padding(.top, 5)
+                .padding(.top, 4)
                 .padding(.bottom, 2)
             Text(tile.hasResult ? (footnote ?? "View PB history ›") : "No result yet")
                 .textStyle(Typography.statLabel)
                 .foregroundStyle(Tokens.Ink.faint)
         }
-        .padding(.vertical, 13)
-        .padding(.leading, 13)
+        .padding(.vertical, 12)
+        .padding(.leading, 12)
         .padding(.trailing, 24)
         .frame(maxWidth: .infinity, minHeight: 90, alignment: .topLeading)
         .overlay(alignment: .topTrailing) {
@@ -42,7 +42,7 @@ struct PBTileView: View {
                 Text("›")
                     .foregroundStyle(Tokens.Ink.secondary)
                     .padding(.top, 12)
-                    .padding(.trailing, 11)
+                    .padding(.trailing, 12)
             }
         }
         .background(shape.fill(Tokens.Surface.card))

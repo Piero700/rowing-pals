@@ -20,7 +20,7 @@ struct StatColumn: View {
                 .textStyle(Typography.label)
                 .foregroundStyle(Tokens.Ink.secondary)
             Text(value)
-                .font(.system(size: 16, weight: .semibold))
+                .textStyle(Typography.cardTitle)
                 .tabularNumerals()
                 .foregroundStyle(valueColor)
         }

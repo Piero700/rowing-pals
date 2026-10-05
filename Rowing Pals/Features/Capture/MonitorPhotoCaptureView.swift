@@ -67,7 +67,7 @@ struct MonitorPhotoCaptureView: View {
                         viewModel.phase = .ready
                     }
                 }
-                .font(.system(size: 15, weight: .semibold))
+                .textStyle(Typography.rowTitle)
                 .foregroundStyle(Tokens.Ink.primary)
             }
         case .configuring, .capturingFront:

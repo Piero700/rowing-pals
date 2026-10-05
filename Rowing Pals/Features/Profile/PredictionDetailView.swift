@@ -87,7 +87,7 @@ struct PredictionDetailView: View {
     private var headline: some View {
         VStack(alignment: .leading, spacing: 2) {
             Text(prediction.predictedTotalTimeFormatted ?? "—")
-                .font(.system(size: 35, weight: .bold))
+                .textStyle(Typography.bigResult)
                 .tabularNumerals()
                 .foregroundStyle(Tokens.Accent.records)
             Text("\(prediction.predictedSplitFormatted ?? "—") /500m · \(PredictionCard.bandText(prediction.confidenceScore))")
@@ -177,7 +177,7 @@ struct PredictionDetailView: View {
                         .foregroundStyle(Tokens.Ink.primary)
                 }
                 .padding(.horizontal, Tokens.Spacing.card)
-                .padding(.vertical, 11)
+                .padding(.vertical, 12)
                 if index < lines.count - 1 {
                     Rectangle().fill(Tokens.Surface.line).frame(height: 1)
                 }

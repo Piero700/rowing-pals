@@ -25,7 +25,7 @@ struct ConsistencyCalendarView: View {
                 .padding(.bottom, 14)
 
             HStack(alignment: .top, spacing: 8) {
-                VStack(spacing: 5) {
+                VStack(spacing: 4) {
                     ForEach(0..<7, id: \.self) { row in
                         Text(Self.dayLetters[row])
                             .font(.system(size: 10))
@@ -43,22 +43,22 @@ struct ConsistencyCalendarView: View {
                 legendItem(fill: Tokens.Accent.brand, border: Tokens.Accent.brand, width: 1, label: "Posted")
                 legendItem(fill: Tokens.Surface.raised, border: Tokens.Accent.records, width: 2, label: "Today")
             }
-            .padding(.top, 17)
+            .padding(.top, 16)
 
             Text(footnote)
                 .font(.system(size: 11))
                 .tabularNumerals()
                 .foregroundStyle(Tokens.Ink.secondary)
-                .padding(.top, 15)
+                .padding(.top, 16)
         }
     }
 
     private var grid: some View {
         let today = Calendar.current.startOfDay(for: Date())
         let lookup = Dictionary(days.map { ("\($0.column)-\($0.row)", $0) }, uniquingKeysWith: { first, _ in first })
-        return VStack(spacing: 5) {
+        return VStack(spacing: 4) {
             ForEach(0..<7, id: \.self) { row in
-                HStack(spacing: 5) {
+                HStack(spacing: 4) {
                     ForEach(0..<columns, id: \.self) { column in
                         cell(lookup["\(column)-\(row)"], today: today)
                     }
@@ -92,7 +92,7 @@ struct ConsistencyCalendarView: View {
     }
 
     private func legendItem(fill: Color, border: Color, width: CGFloat, label: String) -> some View {
-        HStack(spacing: 5) {
+        HStack(spacing: 4) {
             RoundedRectangle(cornerRadius: 3, style: .continuous)
                 .fill(fill)
                 .overlay { RoundedRectangle(cornerRadius: 3, style: .continuous).strokeBorder(border, lineWidth: width) }

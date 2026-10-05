@@ -34,24 +34,6 @@ struct TestLeaderboardView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 10) {
-                HStack(spacing: 10) {
-                    Button {
-                        dismiss()
-                    } label: {
-                        Image(systemName: "chevron.left")
-                            .foregroundStyle(Tokens.Ink.secondary)
-                    }
-                    Text(viewModel.test.label)
-                        .font(.system(size: 30, weight: .bold))
-                        .foregroundStyle(Tokens.Ink.primary)
-                    if onDelete != nil {
-                        Spacer(minLength: 0)
-                        GlassIconButton(systemImage: "trash", accessibilityLabel: "Delete test", tint: Tokens.System.error) {
-                            isConfirmingDelete = true
-                        }
-                    }
-                }
-                .padding(.top, 52)
 
                 if let deleteError {
                     Text(deleteError)
@@ -74,6 +56,16 @@ struct TestLeaderboardView: View {
                 Color.clear.frame(height: 100)
             }
             .padding(.horizontal, 14)
+        }
+        .safeAreaInset(edge: .top, spacing: 0) {
+            // v4: the shared header, title centred; a club test's delete button on the right.
+            ScreenHeader(title: viewModel.test.label, onBack: { dismiss() }) {
+                if onDelete != nil {
+                    GlassIconButton(systemImage: "trash", accessibilityLabel: "Delete test", tint: Tokens.System.error) {
+                        isConfirmingDelete = true
+                    }
+                }
+            }
         }
         .background(Tokens.Base.ground)
         .edgeSwipeToDismiss()
@@ -110,7 +102,7 @@ struct TestLeaderboardView: View {
         VStack(spacing: 6) {
             if let errorMessage = viewModel.errorMessage {
                 Text("Couldn't load this leaderboard")
-                    .font(.system(size: 16, weight: .semibold))
+                    .textStyle(Typography.cardTitle)
                     .foregroundStyle(Tokens.Ink.primary)
                 Text(errorMessage)
                     .textStyle(Typography.bodySecondary)
@@ -118,7 +110,7 @@ struct TestLeaderboardView: View {
                     .multilineTextAlignment(.center)
             } else {
                 Text("Nobody's set this test yet")
-                    .font(.system(size: 16, weight: .semibold))
+                    .textStyle(Typography.cardTitle)
                     .foregroundStyle(Tokens.Ink.primary)
                 Text("Post a \(viewModel.test.label) main piece to be the first.")
                     .textStyle(Typography.bodySecondary)
@@ -132,9 +124,9 @@ struct TestLeaderboardView: View {
 
     private func rowView(_ row: TestLeaderboardViewModel.Row) -> some View {
         let isPodium = row.rank <= 3
-        return HStack(spacing: 11) {
+        return HStack(spacing: 12) {
             Text("\(row.rank)")
-                .font(.system(size: 19, weight: .bold))
+                .font(.system(size: 20, weight: .semibold))
                 .tabularNumerals()
                 .foregroundStyle(isPodium ? Tokens.Accent.records : Tokens.Ink.secondary)
                 .frame(width: 24)
@@ -142,15 +134,14 @@ struct TestLeaderboardView: View {
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 6) {
                     Text(row.name)
-                        .font(.system(size: 14.5, weight: .semibold))
+                        .textStyle(Typography.rowTitle)
                         .foregroundStyle(Tokens.Ink.primary)
                         .lineLimit(1)
                     if viewModel.filters.level == nil {
                         Text(row.category.rawValue.uppercased())
-                            .font(.system(size: 9, weight: .semibold))
-                            .tracking(0.5)
+                            .textStyle(Typography.tag)
                             .foregroundStyle(Tokens.Ink.secondary)
-                            .padding(.horizontal, 5)
+                            .padding(.horizontal, 4)
                             .padding(.vertical, 2)
                             .background {
                                 RoundedRectangle(cornerRadius: 5, style: .continuous)
@@ -159,10 +150,9 @@ struct TestLeaderboardView: View {
                     }
                     if row.isRecentPB {
                         Text("PB")
-                            .font(.system(size: 9, weight: .bold))
-                            .tracking(0.5)
+                            .textStyle(Typography.tag)
                             .foregroundStyle(Tokens.Base.dark)
-                            .padding(.horizontal, 5)
+                            .padding(.horizontal, 4)
                             .padding(.vertical, 2)
                             .background {
                                 RoundedRectangle(cornerRadius: 5, style: .continuous)
@@ -171,18 +161,18 @@ struct TestLeaderboardView: View {
                     }
                 }
                 Text("\(row.club ?? "No club") · \(row.dateLabel)")
-                    .font(.system(size: 11.5))
+                    .textStyle(Typography.statLabel)
                     .foregroundStyle(Tokens.Ink.secondary)
                     .lineLimit(1)
             }
             Spacer()
             VStack(alignment: .trailing, spacing: 1) {
                 Text(row.primaryValue)
-                    .font(.system(size: 18, weight: .bold))
+                    .font(.system(size: 18, weight: .semibold))
                     .tabularNumerals()
                     .foregroundStyle(Tokens.Ink.primary)
                 Text(paceDisplay == .split ? "\(row.splitValue) /500m" : row.splitValue)
-                    .font(.system(size: 12))
+                    .textStyle(Typography.statLabel)
                     .tabularNumerals()
                     .foregroundStyle(Tokens.Ink.secondary)
             }

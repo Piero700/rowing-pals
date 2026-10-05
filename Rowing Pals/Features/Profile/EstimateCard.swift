@@ -16,9 +16,7 @@ struct EstimateCard: View {
         VStack(alignment: .leading, spacing: 0) {
             HStack {
                 Text(label)
-                    .font(.system(size: 10, weight: .bold))
-                    .tracking(1)
-                    .textCase(.uppercase)
+                    .textStyle(Typography.cardOverline)
                     .foregroundStyle(Tokens.Ink.secondary)
                 Spacer()
                 Image(systemName: "info.circle")
@@ -27,7 +25,7 @@ struct EstimateCard: View {
                     .accessibilityHidden(true)
             }
             Text("—")
-                .font(.system(size: 29, weight: .bold))
+                .textStyle(Typography.bigResult)
                 .foregroundStyle(Tokens.Accent.records)
             Text("Your estimate will appear here once the prediction algorithm is added.")
                 .textStyle(Typography.meta)
