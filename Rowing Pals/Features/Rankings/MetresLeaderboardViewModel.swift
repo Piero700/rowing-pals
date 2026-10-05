@@ -137,7 +137,7 @@ final class MetresLeaderboardViewModel {
         defer { isLoading = false; if !Task.isCancelled { PerfLog.done("Rankings volume", since: perf) } }
 
         do {
-            let scopeIds = try await filters.scope.userIds()
+            let scopeIds = try await filters.scope.rankedUserIds()
             guard !Task.isCancelled else { return }
             // My club always includes the viewer, so an empty scope there means no club.
             viewerHasNoClub = filters.scope == .myClub && scopeIds.isEmpty

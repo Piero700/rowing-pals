@@ -22,10 +22,17 @@ final class ViewerContext {
         let category: RowerCategory
         let clubId: UUID?
         let clubName: String?
+        let clubRole: ClubRole
+        /// Coaches their club (decision 39).
+        let isCoach: Bool
+        /// False for a coach-only account (decision 34).
+        let isRower: Bool
         /// Everyone in the viewer's club, the viewer included; empty without a club.
         let clubmateIds: [UUID]
         /// Accepted follows only — a pending request is not a follow.
         let followingIds: [UUID]
+        /// Coach-only accounts among the clubmates and follows: never on a leaderboard.
+        let nonRowerIds: Set<UUID>
     }
 
     static let shared = ViewerContext()
@@ -67,6 +74,28 @@ final class ViewerContext {
         inFlight = nil
     }
 
+    nonisolated private struct MemberRow: Decodable {
+        let id: UUID
+        let isRower: Bool?
+        enum CodingKeys: String, CodingKey {
+            case id
+            case isRower = "is_rower"
+        }
+    }
+
+    private static func clubmates(of clubId: UUID?) async throws -> [MemberRow] {
+        guard let clubId else { return [] }
+        return try await SupabaseService.shared
+            .from("profiles").select("id, is_rower").eq("club_id", value: clubId).execute().value
+    }
+
+    private static func coachOnly(among ids: [UUID]) async throws -> [MemberRow] {
+        guard !ids.isEmpty else { return [] }
+        return try await SupabaseService.shared
+            .from("profiles").select("id, is_rower").in("id", values: ids).eq("is_rower", value: false)
+            .execute().value
+    }
+
     private static func fetch() async throws -> Snapshot {
         let userId = try await SupabaseService.shared.auth.session.user.id
 
@@ -76,11 +105,17 @@ final class ViewerContext {
             let gender: RowerGender?
             let category: RowerCategory
             let clubId: UUID?
+            let clubRole: ClubRole?
+            let isCoach: Bool?
+            let isRower: Bool?
             let club: Club?
             enum CodingKeys: String, CodingKey {
                 case displayName = "display_name"
                 case gender, category
                 case clubId = "club_id"
+                case clubRole = "club_role"
+                case isCoach = "is_coach"
+                case isRower = "is_rower"
                 case club = "clubs"
             }
         }
@@ -90,7 +125,7 @@ final class ViewerContext {
         }
         async let profileRow: ProfileRow = SupabaseService.shared
             .from("profiles")
-            .select("display_name, gender, category, club_id, clubs(name)")
+            .select("display_name, gender, category, club_id, club_role, is_coach, is_rower, clubs(name)")
             .eq("id", value: userId)
             .single()
             .execute()
@@ -104,17 +139,13 @@ final class ViewerContext {
             .value
         let (profile, follows) = try await (profileRow, followRows)
 
-        var clubmateIds: [UUID] = []
-        if let clubId = profile.clubId {
-            nonisolated struct MemberRow: Decodable { let id: UUID }
-            let members: [MemberRow] = try await SupabaseService.shared
-                .from("profiles")
-                .select("id")
-                .eq("club_id", value: clubId)
-                .execute()
-                .value
-            clubmateIds = members.map(\.id)
-        }
+        // The clubmates, and which of the people followed are coach-only, at once.
+        let followingIds = follows.map(\.followeeId)
+        async let memberRows = clubmates(of: profile.clubId)
+        async let followedCoachRows = coachOnly(among: followingIds)
+        let (members, followedCoaches) = try await (memberRows, followedCoachRows)
+        let clubmateIds = members.map(\.id)
+        let nonRowerIds = Set((members + followedCoaches).filter { $0.isRower == false }.map(\.id))
 
         return Snapshot(
             userId: userId,
@@ -123,8 +154,12 @@ final class ViewerContext {
             category: profile.category,
             clubId: profile.clubId,
             clubName: profile.club?.name,
+            clubRole: profile.clubRole ?? .member,
+            isCoach: profile.isCoach ?? false,
+            isRower: profile.isRower ?? true,
             clubmateIds: clubmateIds,
-            followingIds: follows.map(\.followeeId)
+            followingIds: followingIds,
+            nonRowerIds: nonRowerIds
         )
     }
 }

@@ -54,6 +54,8 @@ struct RootView: View {
     /// Counts taps on a tab while it's already showing; that tab scrolls to the top and
     /// refreshes (decision 27).
     @State private var reselects: [RootTab: Int] = [:]
+    /// False for a coach-only account, which has no Log button (decision 34).
+    @State private var isRower = true
     @Environment(\.scenePhase) private var scenePhase
     @AppStorage(Appearance.storageKey) private var appearance: Appearance = .dark
 
@@ -80,6 +82,7 @@ struct RootView: View {
                         items: Self.items,
                         selection: $selection,
                         onReselect: { tab in reselects[tab, default: 0] += 1 },
+                        showsLog: isRower,
                         onTapLog: { isShowingPostSheet = true }
                     )
                 }
@@ -88,7 +91,8 @@ struct RootView: View {
             .environment(barVisibility)
             .environment(\.navigate, NavigateAction { route in
                 if route == .log {
-                    isShowingPostSheet = true
+                    // A coach-only account never logs a session.
+                    if isRower { isShowingPostSheet = true }
                 } else {
                     presentedRoute = route
                 }
@@ -101,6 +105,10 @@ struct RootView: View {
                 RouteHost(root: route)
             }
             .task { await push.start() }
+            .task { await loadAccountType() }
+            .onReceive(NotificationCenter.default.publisher(for: .rowerClubChanged)) { _ in
+                Task { await loadAccountType() }
+            }
             // An admin elsewhere can accept, remove or promote this rower; reload when they do.
             .task { await membershipMonitor.run() }
             .onChange(of: scenePhase) { _, phase in
@@ -110,6 +118,11 @@ struct RootView: View {
                 // Next run loop: on a launch from an alert, the window is still being set up.
                 Task { openPendingRoute() }
             }
+    }
+
+    private func loadAccountType() async {
+        guard let viewer = try? await ViewerContext.shared.current() else { return }
+        isRower = viewer.isRower
     }
 
     /// Opens a tapped alert's post over whatever is showing (see `AlertRoutePresenter`).

@@ -97,6 +97,8 @@ final class PostDetailViewModel {
     var authorFollowsViewer = false
     var isFollowBusy = false
     var isOwnPost = false
+    /// False when the viewer sees this post only as its author's coach (decision 40).
+    var canInteract = true
     var isBlocked = false
 
     var isLoading = false
@@ -229,6 +231,8 @@ final class PostDetailViewModel {
             async let following: FollowState = row.userId == userId ? .notFollowing : FollowService.state(to: row.userId)
             async let followsBack: Bool = row.userId == userId ? false : FollowService.isFollowedBy(row.userId)
             async let authorStreak: Int = Self.fetchStreak(userId: row.userId)
+            let postId = sessionId
+            async let readOnly: Set<UUID> = row.userId == userId ? [] : CoachingService.readOnlyPosts(among: [postId])
 
             let (_, bannerResult, reactionsResult, _, followingResult, followsBackResult, authorStreakResult) = try await (photos, banner, reactionSummaries, commentList, following, followsBack, authorStreak)
             testBanner = bannerResult
@@ -236,6 +240,7 @@ final class PostDetailViewModel {
             followState = followingResult
             authorFollowsViewer = followsBackResult
             authorStreakDays = authorStreakResult
+            canInteract = await readOnly.isEmpty
 
             subscribeRealtime()
             errorMessage = nil

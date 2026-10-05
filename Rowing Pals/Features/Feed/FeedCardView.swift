@@ -22,6 +22,9 @@ struct FeedCardView: View {
     var onOpen: () -> Void = {}
     var onOpenComments: () -> Void = {}
     var onToggleReaction: (String) -> Void = { _ in }
+    /// False on a post the viewer sees only as its author's coach (decision 40): reactions show
+    /// but can't be changed.
+    var canInteract = true
 
     @State private var page = 0
     @State private var isSelfiePrimary = false
@@ -274,18 +277,21 @@ struct FeedCardView: View {
                         .tabularNumerals()
                 }
                 .buttonStyle(.rpPill(isOn: reaction.isMine, minHeight: 40))
+                .disabled(!canInteract)
                 .accessibilityLabel("\(ReactionCatalog.kind(for: reaction.kind)?.name ?? reaction.kind), \(reaction.count)")
                 .accessibilityAddTraits(reaction.isMine ? .isSelected : [])
             }
-            Button {
-                isShowingReactionPicker = true
-            } label: {
-                // U+FE0E asks for the plain text glyph, not the colour emoji, as in v3.
-                Text("＋☺\u{FE0E}")
-                    .foregroundStyle(Tokens.Ink.secondary)
+            if canInteract {
+                Button {
+                    isShowingReactionPicker = true
+                } label: {
+                    // U+FE0E asks for the plain text glyph, not the colour emoji, as in v3.
+                    Text("＋☺\u{FE0E}")
+                        .foregroundStyle(Tokens.Ink.secondary)
+                }
+                .buttonStyle(.rpPill(isOn: false, minHeight: 40))
+                .accessibilityLabel("Choose a reaction")
             }
-            .buttonStyle(.rpPill(isOn: false, minHeight: 40))
-            .accessibilityLabel("Choose a reaction")
         }
     }
 

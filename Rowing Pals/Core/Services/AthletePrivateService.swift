@@ -8,8 +8,9 @@ import Supabase
 
 /// The rower's date of birth and bodyweight (decision 30): private inputs to the prediction
 /// algorithm, never shown on a profile. They live in `athlete_private`, which only the rower
-/// can read or write (docs/migrations/2026-10-05-pace-engine-inputs.sql) — not on `profiles`,
-/// which every signed-in rower can read.
+/// can write and only the rower and their club's coaches can read (decision 35;
+/// docs/migrations/2026-10-05-pace-engine-inputs.sql and 2026-10-05-coaching.sql) — not on
+/// `profiles`, which every signed-in rower can read.
 enum AthletePrivateService {
     struct Details: Equatable {
         var birthDate: Date?
@@ -52,6 +53,20 @@ enum AthletePrivateService {
             .eq("user_id", value: userId).execute().value
         guard let row = rows.first else { return Details() }
         return Details(birthDate: row.birthDate.flatMap(dayFormatter.date(from:)), weightKg: row.weightKg)
+    }
+
+    /// Other rowers' details, for a coach (decision 35). The database returns only the rowers
+    /// the caller coaches; anyone else is simply missing.
+    static func details(for userIds: [UUID]) async throws -> [UUID: Details] {
+        guard !userIds.isEmpty else { return [:] }
+        let rows: [Row] = try await SupabaseService.shared
+            .from("athlete_private").select("user_id, birth_date, weight_kg")
+            .in("user_id", values: userIds).execute().value
+        var details: [UUID: Details] = [:]
+        for row in rows {
+            details[row.userId] = Details(birthDate: row.birthDate.flatMap(dayFormatter.date(from:)), weightKg: row.weightKg)
+        }
+        return details
     }
 
     static func save(_ details: Details) async throws {

@@ -160,7 +160,7 @@ that they match the prototype.
 
 11. **Design sync** (decision 42, branch `t38-design-sync`, `docs/testing/design-sync.md`): the
     canvas's type scale, spacing, tab bar, centred titles and Settings layout. 90 hard-coded font
-    sizes moved onto tokens. Next: coaching Phase 1.
+    sizes moved onto tokens. The Review screen's leaderboard switch is now blue (decision 44).
 10. **Performance** (branch `t37-performance`, `docs/testing/performance.md`): one shared
     "viewer context" (profile, club, clubmates, follows) instead of every screen re-fetching it;
     the feed relies on the database's visibility rule (decision 33) instead of repeating it;
@@ -171,7 +171,14 @@ that they match the prototype.
     Test results 873 → 371 ms, Profile 584 → 479 ms, Test board 198 → 116 ms, workout 441 →
     270 ms, feed 1,089 → ~700 ms (most of it the app's first connection after launch).
 10. **Coaching and the v4 canvas** (decisions 34–41): canvas catch-up, then coaching Phases 1–3 in
-    `docs/design/coaching-build-plan.md`. Catch-up BUILT (branch `t36-canvas-catch-up`, `docs/testing/canvas-catch-up.md`); next: coaching Phase 1.
+    `docs/design/coaching-build-plan.md`. Catch-up BUILT (branch `t36-canvas-catch-up`, `docs/testing/canvas-catch-up.md`).
+    Coaching Phase 1 BUILT (decisions 43–47, branch `t39-coaching-phase1`,
+    `docs/testing/coaching-phase1.md`): coach flag and account type, Make coach, I row / I'm a
+    coach, no Log button for coach-only accounts and off every board and Crewmates, Coaches in
+    Your crew, the "has coaches" notice, Profile visibility and Edit profile to the canvas,
+    Coaching's Rowers list (pro-rata target, flags, 2k and prediction, squad filter and sort),
+    one rower's page, squads, coaches read-only on posts. Waiting on the staging migration and the
+    user's phone test. Next: Phase 2 (set workouts).
 
 ## Waiting on the user
 

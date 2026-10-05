@@ -16,6 +16,14 @@ import SwiftUI
 struct ClubHubView: View {
     @State private var viewModel = ClubHubViewModel()
     @State private var isConfirmingLeave = false
+    /// "<Club> has coaches", shown before accepting an invitation to a club with coaches.
+    @State private var inviteNotice: InviteNotice?
+
+    private struct InviteNotice: Identifiable {
+        let club: Club
+        let coaches: [CoachJoinNotice.Coach]
+        var id: UUID { club.id }
+    }
     @Environment(\.navigate) private var navigate
     @Environment(\.dismiss) private var dismiss
     @Environment(\.closeRoute) private var closeRoute
@@ -66,6 +74,18 @@ struct ClubHubView: View {
         .onChange(of: viewModel.wasAccepted) { _, accepted in
             if accepted { closeRoute() }
         }
+        .sheet(item: $inviteNotice) { notice in
+            CoachJoinNotice(
+                clubName: notice.club.name,
+                coaches: notice.coaches,
+                actionTitle: "Join \(notice.club.name)",
+                onContinue: {
+                    inviteNotice = nil
+                    Task { await viewModel.respond(to: notice.club, accept: true) }
+                },
+                onCancel: { inviteNotice = nil }
+            )
+        }
         .alert("Leave \(viewModel.membership?.club?.name ?? "your club")?", isPresented: $isConfirmingLeave) {
             Button("Leave", role: .destructive) { Task { await viewModel.leave() } }
             Button("Cancel", role: .cancel) {}
@@ -87,8 +107,20 @@ struct ClubHubView: View {
                 .padding(.top, Tokens.Spacing.loose)
         }
 
+        if !coaches.isEmpty {
+            SectionTitle("Coaches · \(coaches.count)")
+            peopleList(coaches) { $0.coachLine }
+        }
+
         SectionTitle("Crewmates · \(crewmates.count)")
         membersCard
+        if viewModel.members.contains(where: \.isCoach) {
+            Text("Coaches who don’t row never appear in Crewmates or on any leaderboard.")
+                .textStyle(Typography.meta)
+                .foregroundStyle(Tokens.Ink.secondary)
+                .padding(.horizontal, 4)
+                .padding(.top, Tokens.Spacing.tight)
+        }
 
         VStack(alignment: .leading, spacing: 6) {
             if membership.role == .owner {
@@ -106,7 +138,7 @@ struct ClubHubView: View {
     /// The club: name, description, members, place, join rule, focus and your role.
     private func clubCard(_ club: Club, membership: ClubService.Membership) -> some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text(membership.role == .member ? "You're a member" : "You're the \(membership.role.label.lowercased())")
+            Text(roleLine(membership))
                 .textStyle(Typography.overline)
                 .foregroundStyle(Tokens.Accent.brand)
             Text(club.name)
@@ -124,6 +156,12 @@ struct ClubHubView: View {
                 tag(club.focus.rawValue)
             }
             .padding(.top, 4)
+            // CoachCrew: a coach's way into Coaching (decision 39).
+            if isCoach {
+                Button("Coaching") { navigate(.coaching) }
+                    .buttonStyle(.rpPrimary)
+                    .padding(.top, Tokens.Spacing.loose)
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(Tokens.Spacing.card + 3)
@@ -142,9 +180,25 @@ struct ClubHubView: View {
             .lineLimit(1)
     }
 
-    /// Everyone in the club but you (user, 2026-10-04).
+    /// Everyone in the club but you (user, 2026-10-04), without coach-only accounts
+    /// (decision 39).
     private var crewmates: [ClubService.Person] {
-        viewModel.members.filter { $0.id != viewModel.myId }
+        viewModel.members.filter { $0.id != viewModel.myId && $0.isRower }
+    }
+
+    /// Every coach but you, rowing or not (decision 39).
+    private var coaches: [ClubService.Person] {
+        viewModel.members.filter { $0.id != viewModel.myId && $0.isCoach }
+    }
+
+    private var isCoach: Bool {
+        viewModel.members.first { $0.id == viewModel.myId }?.isCoach ?? false
+    }
+
+    /// "You're a member", "You're the owner · Coach".
+    private func roleLine(_ membership: ClubService.Membership) -> String {
+        let role = membership.role == .member ? "You’re a member" : "You’re the \(membership.role.label.lowercased())"
+        return isCoach ? "\(role) · Coach" : role
     }
 
     /// Everyone else in the club — owner first, then co-owners, admins, members — each opening
@@ -165,8 +219,17 @@ struct ClubHubView: View {
     }
 
     private var crewmatesList: some View {
+        peopleList(crewmates) { person in
+            person.role == .member
+                ? person.category.rawValue.capitalized
+                : "\(person.role.label) · \(person.category.rawValue.capitalized)"
+        }
+    }
+
+    /// A card of people, each opening their profile.
+    private func peopleList(_ people: [ClubService.Person], detail: @escaping (ClubService.Person) -> String) -> some View {
         VStack(spacing: 0) {
-            ForEach(Array(crewmates.enumerated()), id: \.element.id) { index, person in
+            ForEach(Array(people.enumerated()), id: \.element.id) { index, person in
                 HStack(spacing: Tokens.Spacing.gap) {
                     AvatarPlaceholder(diameter: 38, name: person.displayName, userId: person.id)
                     VStack(alignment: .leading, spacing: 1) {
@@ -174,9 +237,7 @@ struct ClubHubView: View {
                             .textStyle(Typography.name)
                             .foregroundStyle(Tokens.Ink.primary)
                             .lineLimit(1)
-                        Text(person.role == .member
-                             ? person.category.rawValue.capitalized
-                             : "\(person.role.label) · \(person.category.rawValue.capitalized)")
+                        Text(detail(person))
                             .textStyle(Typography.meta)
                             .foregroundStyle(Tokens.Ink.secondary)
                     }
@@ -188,7 +249,7 @@ struct ClubHubView: View {
                 .padding(12)
                 .asButton { navigate(.profile(person.id)) }
                 .accessibilityElement(children: .combine)
-                if index < crewmates.count - 1 {
+                if index < people.count - 1 {
                     Rectangle().fill(Tokens.Surface.line).frame(height: 1)
                 }
             }
@@ -196,6 +257,23 @@ struct ClubHubView: View {
         .background(Self.cardShape.fill(Tokens.Surface.card))
         .clipShape(Self.cardShape)
         .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+    }
+
+    /// Accepts at once for a club without coaches; otherwise says so first (decision 34).
+    private func acceptInvitation(_ club: Club) async {
+        do {
+            let coaches = try await ClubService.coaches(of: club.id)
+            if coaches.isEmpty {
+                await viewModel.respond(to: club, accept: true)
+            } else {
+                inviteNotice = InviteNotice(
+                    club: club,
+                    coaches: coaches.map { CoachJoinNotice.Coach(id: $0.id, name: $0.displayName, detail: $0.coachLine) }
+                )
+            }
+        } catch {
+            viewModel.errorMessage = error.localizedDescription
+        }
     }
 
     // MARK: - Without a club
@@ -287,7 +365,7 @@ struct ClubHubView: View {
                         Spacer(minLength: 0)
                         Button("Decline") { Task { await viewModel.respond(to: club, accept: false) } }
                             .buttonStyle(.rpText)
-                        Button("Join") { Task { await viewModel.respond(to: club, accept: true) } }
+                        Button("Join") { Task { await acceptInvitation(club) } }
                             .buttonStyle(.rpPill(isOn: true))
                     }
                     .padding(12)

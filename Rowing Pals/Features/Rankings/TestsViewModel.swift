@@ -103,7 +103,7 @@ final class TestsViewModel {
     @MainActor
     private func loadGroupBests(viewerId: UUID) async {
         guard let group = await ViewerGroup.load(), let gender = group.gender, group.clubName != nil,
-              let memberIds = try? await SocialScope.myClub.userIds(), !memberIds.isEmpty else {
+              let memberIds = try? await SocialScope.myClub.rankedUserIds(), !memberIds.isEmpty else {
             groupBests = []
             groupCaption = nil
             return

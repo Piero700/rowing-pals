@@ -17,6 +17,8 @@ struct CommentsView: View {
     var onCountChange: (Int) -> Void = { _ in }
     /// A thread made here is loaded and closed here; a shared one belongs to its owner.
     private let ownsThread: Bool
+    /// False on a post the viewer sees only as its author's coach (decision 40).
+    private let canComment: Bool
 
     @State private var draft = ""
     @State private var commentBeingReported: UUID?
@@ -27,17 +29,19 @@ struct CommentsView: View {
     private static let bottomID = "bottom"
 
     /// From the feed: a thread of its own.
-    init(sessionId: UUID, subtitle: String, onCountChange: @escaping (Int) -> Void = { _ in }) {
+    init(sessionId: UUID, subtitle: String, canComment: Bool = true, onCountChange: @escaping (Int) -> Void = { _ in }) {
         _thread = State(initialValue: CommentThread(sessionId: sessionId))
         self.subtitle = subtitle
         self.onCountChange = onCountChange
+        self.canComment = canComment
         ownsThread = true
     }
 
     /// From the workout screen: the same thread its inline comments show.
-    init(thread: CommentThread, subtitle: String) {
+    init(thread: CommentThread, subtitle: String, canComment: Bool = true) {
         _thread = State(initialValue: thread)
         self.subtitle = subtitle
+        self.canComment = canComment
         ownsThread = false
     }
 
@@ -80,8 +84,12 @@ struct CommentsView: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.horizontal, Tokens.Spacing.headerHorizontal)
                 }
-                CommentComposer(draft: $draft) { text in
-                    Task { await thread.postComment(body: text) }
+                if canComment {
+                    CommentComposer(draft: $draft) { text in
+                        Task { await thread.postComment(body: text) }
+                    }
+                } else {
+                    ReadOnlyPostNote()
                 }
             }
         }

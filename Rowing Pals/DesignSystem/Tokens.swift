@@ -183,6 +183,51 @@ enum Tokens {
         /// A settings row: with a description line, and without.
         static let row: CGFloat = 66
         static let rowCompact: CGFloat = 56
+        /// A coach-only account's bar has no Log button, so it sits 72 pt in from each side
+        /// (CoachOnlyFeed, decision 34).
+        static let navSideInsetNoLog: CGFloat = 72
+        /// Coaching (docs/design/v4/Coach*.dc.html): a rower card's picture, one rower's page
+        /// picture, the weekly-target bar, the volume chart, the zone-mix bar and its legend
+        /// swatches, a flag chip, an onboarding choice card's tick.
+        static let rowerCardAvatar: CGFloat = 40
+        static let rowerPageAvatar: CGFloat = 76
+        static let targetBar: CGFloat = 6
+        static let volumeChart: CGFloat = 120
+        static let effortChart: CGFloat = 100
+        static let zoneBar: CGFloat = 14
+        static let zoneSwatch: CGFloat = 10
+        static let chip: CGFloat = 24
+        static let checkmark: CGFloat = 22
+        /// The round icon at the top of a notice sheet ("UEA Boat Club has coaches").
+        static let noticeIcon: CGFloat = 56
+        /// The profile picture at the top of Edit profile (SettingsProfile).
+        static let editProfileAvatar: CGFloat = 88
+        /// The picture in a member's sheet (CoachMakeCoach).
+        static let memberSheetAvatar: CGFloat = 56
+        /// A round tick box in a squad's member list (CoachSquadEdit).
+        static let checkbox: CGFloat = 28
+    }
+
+    /// Coaching's own radii and the zone-mix shades (docs/design/v4/CoachRower.dc.html).
+    enum Coaching {
+        /// The three stat cards over the Rowers list.
+        static let statRadius: CGFloat = 24
+        /// A volume bar: rounder on top than at its foot.
+        static let barTopRadius: CGFloat = 8
+        static let barFootRadius: CGFloat = 4
+        static let swatchRadius: CGFloat = 3
+        /// A post's square on one rower's page.
+        static let postRadius: CGFloat = 12
+        /// The brand colour's strength for UT2, UT1, AT, TR and AN, easiest first.
+        static let zoneOpacities: [Double] = [1, 0.75, 0.55, 0.38, 0.24]
+        /// A past week's volume bar, against this week's in brand.
+        static let pastBarOpacity: Double = 0.22
+        /// The tint behind a flag card and a red chip.
+        static let flagCardTint: Double = 0.10
+        static let flagChipTint: Double = 0.14
+        static let effortLine: CGFloat = 3
+        static let effortDot: CGFloat = 3.5
+        static let effortDotLatest: CGFloat = 5
     }
 
     /// The new-PB celebration (docs/design/v2-decisions.md #12): an RGB-LED style glow that
@@ -272,6 +317,11 @@ enum Typography {
     /// A rower's level beside their name on a test board ("SENIOR").
     static let tag = Style(size: 11, weight: .semibold, trackingEm: 0.02, uppercase: true)
     static let button = Style(size: 17, weight: .semibold, trackingEm: 0, uppercase: false)
+    /// Coaching: a stat card's number (Rowers list), a 4-up stat on one rower's page, a flag
+    /// or info chip.
+    static let coachStat = Style(size: 22, weight: .bold, trackingEm: 0, uppercase: false)
+    static let coachStatSmall = Style(size: 20, weight: .bold, trackingEm: 0, uppercase: false)
+    static let chip = Style(size: 12, weight: .semibold, trackingEm: 0, uppercase: false)
     /// The time on a "Best in your group" card.
     static let groupBestValue = Style(size: 28, weight: .bold, trackingEm: 0, uppercase: false)
     /// The glyph in a small round button (the comment send arrow).

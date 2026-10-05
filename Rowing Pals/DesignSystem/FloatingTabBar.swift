@@ -30,6 +30,9 @@ struct FloatingTabBar<Tab: Hashable>: View {
     let items: [Item]
     @Binding var selection: Tab
     var onReselect: (Tab) -> Void = { _ in }
+    /// False for a coach-only account: no Log button, and the pill sits further in from the
+    /// sides (CoachOnlyFeed, decision 34).
+    var showsLog = true
     let onTapLog: () -> Void
 
     @Environment(FloatingBarVisibility.self) private var visibility
@@ -43,8 +46,10 @@ struct FloatingTabBar<Tab: Hashable>: View {
                 .scaleEffect(visibility.isExpanded ? 1 : 0.85, anchor: .bottom)
                 .allowsHitTesting(visibility.isExpanded)
 
-            logButton
-                .scaleEffect(visibility.isExpanded ? 1 : 0.86)
+            if showsLog {
+                logButton
+                    .scaleEffect(visibility.isExpanded ? 1 : 0.86)
+            }
         }
         // While the pill shows, the 4 pt gap between it and Log absorbs taps too, so nothing
         // along the bar reaches the post underneath. Hidden, the pill's area lets taps through.
@@ -55,7 +60,7 @@ struct FloatingTabBar<Tab: Hashable>: View {
                     .onTapGesture {}
             }
         }
-        .padding(.horizontal, Tokens.Size.navSideInset)
+        .padding(.horizontal, showsLog ? Tokens.Size.navSideInset : Tokens.Size.navSideInsetNoLog)
         .padding(.bottom, Tokens.Size.navBottomInset)
         .animation(reduceMotion ? nil : .easeOut(duration: 0.3), value: visibility.isExpanded)
     }

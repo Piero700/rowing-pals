@@ -35,6 +35,15 @@ enum AppRoute: Hashable, Identifiable {
     case editClub
     /// Requests, invites, members, roles and ownership — admins and up (decision 25).
     case manageClub
+    /// Coaching: the club's rowers, for its coaches (decisions 34, 39).
+    case coaching
+    /// One rower, as their coach sees them.
+    case coachRower(UUID)
+    /// The club's squads; and one squad to edit, or a new one (nil).
+    case squads
+    case squadEdit(UUID?)
+    /// A rower's results at one test (a coach opening a test row).
+    case pbHistory(StandardTest, UUID)
 
     var id: Self { self }
 }

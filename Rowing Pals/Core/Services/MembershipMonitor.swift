@@ -7,7 +7,8 @@ import Foundation
 import Supabase
 
 /// Notices when the signed-in rower's own club changes *anywhere* — an admin accepting their
-/// request on another phone, removing them, changing their role, declining — and posts
+/// request on another phone, removing them, changing their role or making them a coach,
+/// declining — and posts
 /// `.rowerClubChanged` so the feed, rankings and profile reload. Without it, only changes made
 /// on this phone reached those screens, so an accepted rower still read "You're not in a club"
 /// (decision 26). Runs from `RootView` on live updates and whenever the app comes back.
@@ -17,6 +18,8 @@ final class MembershipMonitor {
         let clubId: UUID?
         let role: String?
         let request: String?
+        let isCoach: Bool
+        let isRower: Bool
     }
 
     private var last: Snapshot?
@@ -43,6 +46,8 @@ final class MembershipMonitor {
         struct ProfileRow: Decodable {
             let club_id: UUID?
             let club_role: String?
+            let is_coach: Bool?
+            let is_rower: Bool?
         }
         struct RequestRow: Decodable {
             let club_id: UUID
@@ -53,6 +58,7 @@ final class MembershipMonitor {
         let requests: [RequestRow] = (try? await SupabaseService.shared
             .from("club_join_requests").select("*").eq("user_id", value: me).execute().value) ?? []
         let request = requests.first.map { "\($0.club_id) \($0.status ?? "pending")" }
-        return Snapshot(clubId: profile.club_id, role: profile.club_role, request: request)
+        return Snapshot(clubId: profile.club_id, role: profile.club_role, request: request,
+                        isCoach: profile.is_coach ?? false, isRower: profile.is_rower ?? true)
     }
 }

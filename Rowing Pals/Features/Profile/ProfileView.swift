@@ -557,6 +557,11 @@ struct ProfileView: View {
     private var clubEntry: some View {
         VStack(alignment: .leading, spacing: 6) {
             sectionTitle("Club")
+            // A coach's second way into Coaching, beside Your crew (decision 39).
+            if viewModel.isCoach {
+                Button("Coaching") { navigate(.coaching) }
+                    .buttonStyle(.rpPrimary)
+            }
             Button(clubEntryTitle) {
                 navigate(viewModel.clubRole?.canManageMembers == true ? .manageClub : .clubHub)
             }

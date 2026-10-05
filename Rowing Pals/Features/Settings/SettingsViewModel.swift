@@ -15,6 +15,12 @@ final class SettingsViewModel {
     var gender: RowerGender = .male
     var category: RowerCategory = .novice
     var weeklyTargetM = 20_000
+    /// The weekly target as typed, in km (decision 36); stored as whole metres.
+    var weeklyTargetText = ""
+    /// "I row" or "Coach only" (decision 34).
+    var isRower = true
+    /// For the photo at the top of Edit profile.
+    var userId: UUID?
     /// Private inputs to the prediction algorithm (decision 30), never shown anywhere.
     var birthDate: Date?
     /// Bodyweight as typed, in kg; empty when not given.
@@ -38,9 +44,8 @@ final class SettingsViewModel {
     /// For "New posts from UEA Boat Club"; nil when the rower has no club.
     var clubName: String?
 
-    private var userId: UUID?
     /// Loaded values, to detect whether Save has anything to do.
-    private var original: (displayName: String, gender: RowerGender, category: RowerCategory, weeklyTargetM: Int)?
+    private var original: (displayName: String, gender: RowerGender, category: RowerCategory, weeklyTargetM: Int, isRower: Bool)?
     private var originalPrivate = AthletePrivateService.Details()
 
     var hasUnsavedChanges: Bool {
@@ -48,7 +53,9 @@ final class SettingsViewModel {
         return displayName != original.displayName
             || gender != original.gender
             || category != original.category
-            || weeklyTargetM != original.weeklyTargetM
+            || (parsedWeeklyTargetM ?? original.weeklyTargetM) != original.weeklyTargetM
+            || weeklyTargetProblem != nil
+            || isRower != original.isRower
             || weightProblem != nil
             || AthletePrivateService.Details(birthDate: birthDate, weightKg: parsedWeight) != originalPrivate
     }
@@ -56,6 +63,26 @@ final class SettingsViewModel {
     private var parsedWeight: Double? {
         let text = weightText.trimmingCharacters(in: .whitespaces).replacingOccurrences(of: ",", with: ".")
         return text.isEmpty ? nil : Double(text)
+    }
+
+    /// The typed weekly target in whole metres; nil when it isn't a number.
+    private var parsedWeeklyTargetM: Int? {
+        let text = weeklyTargetText.trimmingCharacters(in: .whitespaces).replacingOccurrences(of: ",", with: ".")
+        guard let km = Double(text) else { return text.isEmpty ? 0 : nil }
+        return Int((km * 1000).rounded())
+    }
+
+    /// Why the typed weekly target can't be saved, or nil.
+    var weeklyTargetProblem: String? {
+        guard let metres = parsedWeeklyTargetM, (0...500_000).contains(metres) else {
+            return "Enter a weekly target between 0 and 500 km."
+        }
+        return nil
+    }
+
+    /// "60", or "42.5" for a part kilometre.
+    static func kilometresString(_ metres: Int) -> String {
+        metres % 1000 == 0 ? String(metres / 1000) : String(format: "%.1f", Double(metres) / 1000)
     }
 
     /// Why the typed weight can't be saved, or nil.
@@ -86,8 +113,10 @@ final class SettingsViewModel {
             gender = profile.gender ?? .male
             category = profile.category
             weeklyTargetM = profile.weeklyTargetM
+            weeklyTargetText = Self.kilometresString(profile.weeklyTargetM)
+            isRower = profile.isRower
             isPrivate = profile.isPrivate
-            original = (profile.displayName, gender, profile.category, profile.weeklyTargetM)
+            original = (profile.displayName, gender, profile.category, profile.weeklyTargetM, profile.isRower)
             // Before docs/migrations/2026-10-05-pace-engine-inputs.sql has run, there's nothing yet.
             let details = (try? await AthletePrivateService.mine()) ?? AthletePrivateService.Details()
             originalPrivate = details
@@ -153,10 +182,12 @@ final class SettingsViewModel {
         let gender: RowerGender
         let category: RowerCategory
         let weeklyTargetM: Int
+        let isRower: Bool
         enum CodingKeys: String, CodingKey {
             case displayName = "display_name"
             case gender, category
             case weeklyTargetM = "weekly_target_m"
+            case isRower = "is_rower"
         }
     }
 
@@ -168,10 +199,11 @@ final class SettingsViewModel {
     @MainActor
     func save() async {
         guard let userId, !displayName.trimmingCharacters(in: .whitespaces).isEmpty else { return }
-        if let weightProblem {
-            saveError = weightProblem
+        if let problem = weightProblem ?? weeklyTargetProblem {
+            saveError = problem
             return
         }
+        weeklyTargetM = parsedWeeklyTargetM ?? weeklyTargetM
         isSaving = true
         saveError = nil
         defer { isSaving = false }
@@ -184,7 +216,7 @@ final class SettingsViewModel {
             // greyed out Save here while never actually writing anything.
             let updated: [Profile] = try await SupabaseService.shared
                 .from("profiles")
-                .update(ProfileEdit(displayName: displayName, gender: gender, category: category, weeklyTargetM: weeklyTargetM))
+                .update(ProfileEdit(displayName: displayName, gender: gender, category: category, weeklyTargetM: weeklyTargetM, isRower: isRower))
                 .eq("id", value: userId)
                 .select()
                 .execute()
@@ -193,9 +225,15 @@ final class SettingsViewModel {
                 saveError = "Nothing was saved — this account may not have a profile row yet. Try signing out and back in."
                 return
             }
-            original = (displayName, gender, category, weeklyTargetM)
-            // Name, gender and level feed the shared viewer context (rankings open on them).
-            ViewerContext.shared.invalidate()
+            let accountTypeChanged = original?.isRower != isRower
+            original = (displayName, gender, category, weeklyTargetM, isRower)
+            if accountTypeChanged {
+                // Rankings, Crewmates and the Log button all change with it (decision 34).
+                NotificationCenter.default.postRowerClubChanged()
+            } else {
+                // Name, gender and level feed the shared viewer context (rankings open on them).
+                ViewerContext.shared.invalidate()
+            }
 
             let details = AthletePrivateService.Details(birthDate: birthDate, weightKg: parsedWeight)
             if details != originalPrivate {

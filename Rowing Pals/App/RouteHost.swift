@@ -19,6 +19,8 @@ struct RouteHost: View {
     /// here gets its own so scrolling it doesn't move a bar that isn't
     /// on screen.
     @State private var barVisibility = FloatingBarVisibility()
+    /// Coaching opens as a full-screen area of its own over whatever raised it (decision 39).
+    @State private var isShowingCoaching = false
 
     var body: some View {
         NavigationStack(path: $path) {
@@ -46,14 +48,22 @@ struct RouteHost: View {
         .environment(\.navigate, NavigateAction { route in
             // Log belongs to the tab screens; it can't be pushed here.
             guard route != .log else { return }
-            path.append(route)
+            if route == .coaching, root != .coaching {
+                isShowingCoaching = true
+            } else {
+                path.append(route)
+            }
         })
+        .fullScreenCover(isPresented: $isShowingCoaching) {
+            RouteHost(root: .coaching)
+        }
     }
 
     /// The workout, rower profile and people screens draw their own v3 back button and title.
     private static func drawsOwnChrome(_ route: AppRoute) -> Bool {
         switch route {
-        case .post, .profile, .people, .findClub, .clubHub, .createClub, .editClub, .manageClub: true
+        case .post, .profile, .people, .findClub, .clubHub, .createClub, .editClub, .manageClub,
+             .coaching, .coachRower, .squads, .squadEdit, .pbHistory: true
         default: false
         }
     }
@@ -79,6 +89,17 @@ struct RouteHost: View {
             ClubFormView(mode: .edit)
         case .manageClub:
             ManageClubView()
+        case .coaching:
+            CoachingView()
+        case .coachRower(let userId):
+            CoachRowerView(userId: userId)
+        case .squads:
+            SquadsView()
+        case .squadEdit(let squadId):
+            SquadEditView(squadId: squadId)
+        case .pbHistory(let test, let userId):
+            PBHistoryView(test: test, userId: userId)
+                .toolbar(.hidden, for: .navigationBar)
         case .post(let sessionId):
             PostDetailView(sessionId: sessionId)
                 .toolbar(.hidden, for: .navigationBar)

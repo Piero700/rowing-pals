@@ -34,6 +34,10 @@ struct ManageClubView: View {
                         Button("Edit club") { navigate(.editClub) }
                             .buttonStyle(.rpGlass)
                             .padding(.top, Tokens.Spacing.loose)
+                        // The owner and co-owners look after squads too, coach or not (decision 39).
+                        Button("Squads") { navigate(.squads) }
+                            .buttonStyle(.rpGlass)
+                            .padding(.top, Tokens.Spacing.loose)
                     }
                     if let error = viewModel.errorMessage {
                         Text(error)
@@ -81,10 +85,11 @@ struct ManageClubView: View {
             ClubMemberSheet(
                 person: person,
                 myRole: viewModel.myRole,
-                onSetRole: { role in Task { await viewModel.setRole(role, for: person) } },
+                isMe: person.id == viewModel.myId,
+                onSave: { role, isCoach in Task { await viewModel.save(role: role, isCoach: isCoach, for: person) } },
                 onRemove: { Task { await viewModel.remove(person) } }
             )
-            .presentationDetents([.medium])
+            .presentationDetents([.large])
         }
         .confirmationDialog("Hand over ownership to…", isPresented: $isChoosingNewOwner, titleVisibility: .visible) {
             ForEach(viewModel.otherMembers) { person in
@@ -268,8 +273,12 @@ struct ManageClubView: View {
         VStack(alignment: .leading, spacing: 0) {
             SectionTitle("Members · \(viewModel.members.count)")
             listCard(viewModel.members, empty: "No members yet.") { person in
-                personLabel(person, detail: person.role.label)
-                if person.id == viewModel.myId {
+                personLabel(person, detail: person.isCoach ? "\(person.role.label) · Coach" : person.role.label)
+                if viewModel.myRole.canMakeCoach {
+                    // The owner and co-owners can make anyone a coach, themselves included.
+                    Button("Manage") { managedPerson = person }
+                        .buttonStyle(.rpText)
+                } else if person.id == viewModel.myId {
                     Text("You")
                         .textStyle(Typography.statLabel)
                         .foregroundStyle(Tokens.Ink.secondary)

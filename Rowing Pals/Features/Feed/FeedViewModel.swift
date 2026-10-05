@@ -36,6 +36,10 @@ final class FeedViewModel {
     var viewerId: UUID?
     /// The viewer's club, for the Club tab's caption; nil when they have none.
     var viewerClubName: String?
+    /// False for a coach-only account: no "Post a workout" (decision 34).
+    var viewerIsRower = true
+    /// Posts the viewer sees only as the author's coach: read-only (decision 40).
+    var readOnlyPostIds: Set<UUID> = []
     var isLoading = false
     var isLoadingMore = false
     var errorMessage: String?
@@ -69,6 +73,7 @@ final class FeedViewModel {
         guard let viewer = try? await ViewerContext.shared.current() else { return }
         viewerId = viewer.userId
         viewerClubName = viewer.clubName
+        viewerIsRower = viewer.isRower
     }
 
     /// A join request still waiting on a club's answer (decision 26).
@@ -233,6 +238,8 @@ final class FeedViewModel {
             let (page, pendingName) = try await (pageRequest, pending)
 
             posts = replacing ? page : posts + page
+            let readOnly = await CoachingService.readOnlyPosts(among: page.map(\.id))
+            readOnlyPostIds = replacing ? readOnly : readOnlyPostIds.union(readOnly)
             pendingClubName = pendingName
             hasMorePages = page.count == Self.pageSize
             errorMessage = nil
