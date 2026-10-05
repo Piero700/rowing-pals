@@ -350,12 +350,9 @@ struct PostDetailView: View {
                     .textStyle(Typography.label)
                     .foregroundStyle(Tokens.Ink.secondary)
                 Spacer()
-                if viewModel.photoVerified {
-                    Label("Photo-verified", systemImage: "checkmark")
-                        .labelStyle(.titleAndIcon)
-                        .font(.system(size: 11.5, weight: .semibold))
-                        .foregroundStyle(Tokens.Accent.brand)
-                } else if viewModel.loggedLate {
+                // No "Photo-verified" label (decision 38): verification still decides what
+                // reaches the leaderboards, it just isn't shown.
+                if !viewModel.photoVerified, viewModel.loggedLate {
                     Text("Logged later")
                         .font(.system(size: 11.5, weight: .semibold))
                         .foregroundStyle(Tokens.Ink.primary.opacity(0.8))

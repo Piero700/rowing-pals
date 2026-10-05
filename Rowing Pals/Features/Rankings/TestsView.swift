@@ -38,6 +38,18 @@ struct TestsView: View {
                     RankingsHeader(mode: mode)
                 }
 
+                if !viewModel.groupBests.isEmpty {
+                    groupBestSection
+                }
+
+                if !viewModel.groupBests.isEmpty {
+                    Text("Your results")
+                        .textStyle(Typography.overline)
+                        .foregroundStyle(Tokens.Ink.secondary)
+                        .padding(.horizontal, 2)
+                        .padding(.bottom, -8)
+                }
+
                 LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 3), spacing: 10) {
                     ForEach(viewModel.tiles) { tile in
                         distanceTile(tile)
@@ -77,6 +89,88 @@ struct TestsView: View {
     private func deleteAction(for tile: TestsViewModel.Tile) -> (() async throws -> Void)? {
         guard let clubTest = tile.clubTest, viewModel.clubTests.canManage else { return nil }
         return { try await viewModel.delete(clubTest) }
+    }
+
+    // MARK: - Best in your group
+
+    /// v4 `RankingsTests`: a header with the group, then a gold card per test — the group's
+    /// best, who holds it, and how you stand. Tapping opens that test's board.
+    private var groupBestSection: some View {
+        VStack(alignment: .leading, spacing: Tokens.Spacing.tight) {
+            HStack(alignment: .firstTextBaseline) {
+                Text("Best in your group")
+                    .textStyle(Typography.overline)
+                    .foregroundStyle(Tokens.Ink.secondary)
+                Spacer()
+                if let caption = viewModel.groupCaption {
+                    Text(caption)
+                        .textStyle(Typography.statLabel)
+                        .foregroundStyle(Tokens.Ink.secondary)
+                }
+            }
+            .padding(.horizontal, 2)
+            HStack(spacing: Tokens.Spacing.gap) {
+                ForEach(viewModel.groupBests) { best in
+                    groupBestCard(best)
+                        .asButton {
+                            selectedTile = viewModel.tiles.first { $0.test.key == best.test.key }
+                        }
+                        .accessibilityLabel(groupBestAccessibility(best))
+                }
+            }
+        }
+        .padding(.top, Tokens.Spacing.tight)
+    }
+
+    private func groupBestCard(_ best: GroupBest) -> some View {
+        let shape = RoundedRectangle(cornerRadius: Tokens.Radius.input, style: .continuous)
+        return VStack(alignment: .leading, spacing: Tokens.Spacing.gap) {
+            HStack {
+                Text("\(best.test.label) · Best")
+                    .textStyle(Typography.label)
+                    .foregroundStyle(Tokens.Accent.rank)
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .textStyle(Typography.statLabel)
+                    .foregroundStyle(Tokens.Accent.rank)
+            }
+            HStack(spacing: Tokens.Spacing.tight) {
+                if let leader = best.leader {
+                    AvatarPlaceholder(diameter: Tokens.Size.commentAvatar, name: leader.name, userId: leader.userId)
+                    Text(best.leaderIsViewer ? "You" : leader.name)
+                        .textStyle(Typography.name)
+                        .foregroundStyle(Tokens.Ink.primary)
+                        .lineLimit(1)
+                } else {
+                    Text("No one yet")
+                        .textStyle(Typography.name)
+                        .foregroundStyle(Tokens.Ink.secondary)
+                }
+            }
+            Spacer(minLength: 0)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(best.leader?.timeMs.formattedDurationMs ?? "—")
+                    .textStyle(Typography.groupBestValue)
+                    .tabularNumerals()
+                    .foregroundStyle(Tokens.Ink.primary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+                Text(best.standing)
+                    .textStyle(Typography.statLabel)
+                    .tabularNumerals()
+                    .foregroundStyle(Tokens.Ink.secondary)
+                    .lineLimit(2)
+            }
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, minHeight: Tokens.Size.groupBestCard, alignment: .topLeading)
+        .background { shape.fill(Tokens.Accent.rankSoft) }
+        .overlay { shape.strokeBorder(Tokens.Accent.rank.opacity(0.35), lineWidth: 1) }
+    }
+
+    private func groupBestAccessibility(_ best: GroupBest) -> String {
+        guard let leader = best.leader else { return "\(best.test.label): \(best.standing)" }
+        return "\(best.test.label) best in your group: \(best.leaderIsViewer ? "you" : leader.name), \(leader.timeMs.formattedDurationMs). \(best.standing). Open the board"
     }
 
     /// The trailing "+ Add test" tile, the same size as a test tile.

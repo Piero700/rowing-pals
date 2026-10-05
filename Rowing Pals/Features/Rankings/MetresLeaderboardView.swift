@@ -5,11 +5,12 @@
 
 import SwiftUI
 
-/// Rankings → Volume, to v3 (`docs/design/v3/RP Screen.dc.html` §03): mode control, the lilac
-/// rank-hero card, Gender and Level selects, the scope control, a "This week · N rowers match"
-/// caption, and one leaderboard card of 72 pt rows (#1 in gold with ♛ and a gold edge bar, your
-/// row tinted brand). Also keeps Week / Month / Year and All / Erg / Water (decision 18) and
-/// scope My club / Following only (decision 17). Distances follow the km toggle (decision 3).
+/// Rankings → Volume, to v4 (`docs/design/v4/RankingsVolume.dc.html`): mode control, Week /
+/// Month / Year, the lilac rank-hero card ("Weekly volume · You · #2", the gap to the next place,
+/// the group leader), one filters pill naming the group ("Senior men · My club · Erg + water",
+/// decision 37) with the rower count, and one leaderboard card of 72 pt rows (#1 in gold with ♛
+/// and a gold edge bar, your row tinted brand). Opens on the viewer's own group; scope stays My
+/// club / Following (decision 17). Distances follow the km toggle (decision 3).
 struct MetresLeaderboardView: View {
     @Binding var mode: RankingsMode
     /// Goes up by one each time Rankings is tapped while already selected (decision 27).
@@ -17,11 +18,9 @@ struct MetresLeaderboardView: View {
 
     @State private var viewModel = MetresLeaderboardViewModel()
     @State private var isOwnRowVisible = true
+    @State private var isShowingFilters = false
     @AppStorage(DistanceUnit.storageKey) private var distanceUnit: DistanceUnit = .metres
     @Environment(\.navigate) private var navigate
-
-    /// v3 order without the cancelled app-wide "All": My club, then Following.
-    private static let scopes: [SocialScope] = [.myClub, .following]
 
     var body: some View {
         ScrollView {
@@ -38,28 +37,15 @@ struct MetresLeaderboardView: View {
                     .padding(.top, 13)
 
                 HStack(spacing: Tokens.Spacing.gap) {
-                    select(title: "Gender", value: genderLabel, options: [("All genders", nil), ("Male", .male), ("Female", .female)]) {
-                        viewModel.filters.gender = $0
-                    }
-                    select(title: "Level", value: levelLabel, options: [("All levels", nil), ("Novice", .novice), ("Senior", .senior)]) {
-                        viewModel.filters.level = $0
-                    }
+                    RankingsFiltersPill(text: filterSummary) { isShowingFilters = true }
+                    Spacer(minLength: 0)
+                    Text(rowerCount)
+                        .textStyle(Typography.meta)
+                        .tabularNumerals()
+                        .foregroundStyle(Tokens.Ink.secondary)
                 }
-                .padding(.top, 15)
-                .padding(.bottom, Tokens.Spacing.gap)
-
-                // v3 wording: "My club", "Following".
-                PillSegmentedControl(options: ["My club", "Following"], selection: scopeSelection)
-
-                sourcePills
-                    .padding(.top, Tokens.Spacing.loose)
-
-                Text(matchCaption)
-                    .textStyle(Typography.meta)
-                    .tabularNumerals()
-                    .foregroundStyle(Tokens.Ink.secondary)
-                    .padding(.horizontal, 2)
-                    .padding(.vertical, Tokens.Spacing.loose)
+                .padding(.top, Tokens.Spacing.loose + 4)
+                .padding(.bottom, Tokens.Spacing.loose)
 
                 if viewModel.rankedRows.isEmpty {
                     emptyCard
@@ -88,6 +74,9 @@ struct MetresLeaderboardView: View {
         .onReceive(NotificationCenter.default.publisher(for: .rowerClubChanged)) { _ in
             Task { await viewModel.reload() }
         }
+        .sheet(isPresented: $isShowingFilters) {
+            RankingsFiltersSheet(filters: $viewModel.filters, ownGroup: viewModel.ownGroup, source: $viewModel.source)
+        }
     }
 
     // MARK: - Controls
@@ -99,95 +88,27 @@ struct MetresLeaderboardView: View {
         )
     }
 
-    private var scopeSelection: Binding<Int> {
-        Binding(
-            get: { Self.scopes.firstIndex(of: viewModel.filters.scope) ?? 0 },
-            set: { viewModel.filters.scope = Self.scopes[$0] }
-        )
+    /// "Senior men · My club · Erg + water".
+    private var filterSummary: String {
+        "\(viewModel.filters.captionText) · \(viewModel.source.label)"
     }
 
-    private var genderLabel: String {
-        switch viewModel.filters.gender {
-        case .male: "Male"
-        case .female: "Female"
-        case nil: "All genders"
-        }
-    }
-
-    private var levelLabel: String {
-        switch viewModel.filters.level {
-        case .novice: "Novice"
-        case .senior: "Senior"
-        case nil: "All levels"
-        }
-    }
-
-    /// v3 select: 12 pt muted label over a 44 pt raised field (radius 15, 1 pt line).
-    private func select<Value>(
-        title: String, value: String, options: [(String, Value?)], onPick: @escaping (Value?) -> Void
-    ) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text(title)
-                .font(.system(size: 12))
-                .foregroundStyle(Tokens.Ink.secondary)
-            Menu {
-                ForEach(options.indices, id: \.self) { index in
-                    Button(options[index].0) { onPick(options[index].1) }
-                }
-            } label: {
-                HStack {
-                    Text(value)
-                        .font(.system(size: 15))
-                        .foregroundStyle(Tokens.Ink.primary)
-                        .lineLimit(1)
-                    Spacer(minLength: 4)
-                    Image(systemName: "chevron.up.chevron.down")
-                        .font(.system(size: 11, weight: .semibold))
-                        .foregroundStyle(Tokens.Ink.secondary)
-                }
-                .padding(Tokens.Spacing.loose)
-                .frame(maxWidth: .infinity, minHeight: Tokens.Size.minTap)
-                .background {
-                    RoundedRectangle(cornerRadius: Tokens.Radius.select, style: .continuous).fill(Tokens.Surface.raised)
-                }
-                .overlay {
-                    RoundedRectangle(cornerRadius: Tokens.Radius.select, style: .continuous)
-                        .strokeBorder(Tokens.Surface.line, lineWidth: 1)
-                }
-                .contentShape(RoundedRectangle(cornerRadius: Tokens.Radius.select, style: .continuous))
-            }
-            .accessibilityLabel("\(title): \(value)")
-        }
-        .frame(maxWidth: .infinity)
-    }
-
-    /// All / Erg / Water (decision 18) as glass pills.
-    private var sourcePills: some View {
-        HStack(spacing: Tokens.Spacing.tight) {
-            ForEach(MetresLeaderboardViewModel.Source.allCases, id: \.self) { source in
-                Button(source.label) { viewModel.source = source }
-                    .buttonStyle(.rpPill(isOn: viewModel.source == source, minHeight: 40))
-                    .accessibilityAddTraits(viewModel.source == source ? .isSelected : [])
-            }
-        }
-    }
-
-    private var matchCaption: String {
+    private var rowerCount: String {
         let count = viewModel.rankedRows.count
-        return "This \(viewModel.period.label.lowercased()) · \(count) rower\(count == 1 ? "" : "s") match"
+        return "\(count) rower\(count == 1 ? "" : "s")"
     }
 
     // MARK: - Rank hero
 
-    /// Lilac → card gradient card: "<period> volume · You", your total, how far to the next
-    /// place, and the overall leader.
+    /// Lilac → card gradient card: "<period> volume · You · #N", your total, how far to the
+    /// next place, and the group's leader.
     private var rankHeroCard: some View {
         let rows = viewModel.rankedRows
         let ownIndex = rows.firstIndex(where: \.isCurrentUser)
         let own = (ownIndex.map { rows[$0].metres } ?? 0).distanceParts(unit: distanceUnit)
         let shape = RoundedRectangle(cornerRadius: Tokens.Radius.card, style: .continuous)
         return VStack(alignment: .leading, spacing: 0) {
-            Text("\(periodAdjective) volume · You")
+            Text(heroTitle(rows: rows, ownIndex: ownIndex))
                 .textStyle(Typography.overline)
                 .foregroundStyle(Tokens.Accent.records)
             (Text(own.value) + Text(" \(own.unit)").font(.system(size: 16, weight: .bold)))
@@ -200,7 +121,7 @@ struct MetresLeaderboardView: View {
                 .foregroundStyle(Tokens.Ink.primary)
                 .padding(.vertical, Tokens.Spacing.tight)
             if let leader = rows.first {
-                Text("Overall leader · \(leader.isCurrentUser ? "You" : leader.name) · \(leader.metres.formattedDistance(unit: distanceUnit))")
+                Text("Group leader · \(leader.isCurrentUser ? "You" : leader.name) · \(leader.metres.formattedDistance(unit: distanceUnit))")
                     .font(.system(size: 12))
                     .tabularNumerals()
                     .foregroundStyle(Tokens.Ink.secondary)
@@ -219,6 +140,13 @@ struct MetresLeaderboardView: View {
         }
         .overlay { shape.strokeBorder(Tokens.Surface.line, lineWidth: 1) }
         .accessibilityElement(children: .combine)
+    }
+
+    /// "Weekly volume · You · #2"; no place when you haven't logged any metres here.
+    private func heroTitle(rows: [MetresLeaderboardViewModel.Row], ownIndex: Int?) -> String {
+        let title = "\(periodAdjective) volume · You"
+        guard let ownIndex else { return title }
+        return "\(title) · #\(rows[ownIndex].rank)"
     }
 
     private var periodAdjective: String {

@@ -38,8 +38,7 @@ final class PushNotificationService {
     }
 
     /// Runs each time the signed-in app appears. iOS shows its permission prompt only the
-    /// first time; after that this just re-registers (Apple can change the token) and keeps
-    /// the rower's time zone current for quiet hours.
+    /// first time; after that this just re-registers (Apple can change the token).
     func start() async {
         let center = UNUserNotificationCenter.current()
         if await center.notificationSettings().authorizationStatus == .notDetermined {
@@ -53,7 +52,6 @@ final class PushNotificationService {
         if canAlert {
             UIApplication.shared.registerForRemoteNotifications()
         }
-        await syncTimeZone()
     }
 
     func refreshAuthorizationStatus() async {
@@ -102,27 +100,6 @@ final class PushNotificationService {
             try await SupabaseService.shared.rpc("unregister_device_token", params: Params(token: token)).execute()
         } catch {
             logger.error("Withdrawing the device token failed: \(error.localizedDescription)")
-        }
-    }
-
-    /// Only the zone is written, so a rower's other choices are never overwritten.
-    func syncTimeZone() async {
-        guard let userId = try? await SupabaseService.shared.auth.session.user.id else { return }
-        struct Row: Encodable {
-            let userId: UUID
-            let timeZone: String
-            enum CodingKeys: String, CodingKey {
-                case userId = "user_id"
-                case timeZone = "time_zone"
-            }
-        }
-        do {
-            try await SupabaseService.shared
-                .from("notification_settings")
-                .upsert(Row(userId: userId, timeZone: TimeZone.current.identifier), onConflict: "user_id")
-                .execute()
-        } catch {
-            logger.error("Saving the time zone failed: \(error.localizedDescription)")
         }
     }
 

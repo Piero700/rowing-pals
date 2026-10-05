@@ -172,6 +172,8 @@ enum Tokens {
         /// The share-workout image card, in points; rendered at 3× for a 1080 px-wide image.
         static let shareCardWidth: CGFloat = 360
         static let shareCardHeight: CGFloat = 450
+        /// A "Best in your group" card on Test results (decision 37).
+        static let groupBestCard: CGFloat = 140
     }
 
     /// The new-PB celebration (docs/design/v2-decisions.md #12): an RGB-LED style glow that
@@ -255,6 +257,8 @@ enum Typography {
     static let segment = Style(size: 14, weight: .bold, trackingEm: 0, uppercase: false)
     static let pill = Style(size: 13, weight: .bold, trackingEm: 0, uppercase: false)
     static let button = Style(size: 16, weight: .bold, trackingEm: 0, uppercase: false)
+    /// The time on a "Best in your group" card.
+    static let groupBestValue = Style(size: 28, weight: .bold, trackingEm: 0, uppercase: false)
     /// The glyph in a small round button (the comment send arrow).
     static let buttonGlyph = Style(size: 15, weight: .bold, trackingEm: 0, uppercase: false)
     /// A comment: its author, its text and when it was written.

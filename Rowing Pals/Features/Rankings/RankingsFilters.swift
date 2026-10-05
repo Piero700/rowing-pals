@@ -4,138 +4,210 @@
 //
 
 import SwiftUI
+import Supabase
 
-/// The three independent, AND'd filter axes shared by both Rankings
-/// sub-tabs (Volume and Test results) — see
-/// docs/design/rowing-pals-redesign-handoff-v2.md §2 Screen 03. Presented
-/// through one "Filters" sheet rather than inline chips, with a caption
-/// line stating the composed filter.
+/// The filter axes shared by both Rankings boards (Volume and each test's board), AND'd
+/// together: gender, level and who's included. Since decision 37 both open on the viewer's own
+/// group — their gender and level in their club — and the Filters sheet widens it.
 ///
-/// Deliberately no "All clubs"/Global scope option, unlike the prototype —
-/// the user already cancelled that tier app-wide (see `SocialScope`'s doc
-/// comment: "maybe this will be for a v2"). Resurrecting it here would be a
-/// silent product decision this file isn't the place to make, so `scope`
-/// stays Following/My Club only, matching every other scope picker in the
-/// app.
+/// Deliberately no "All clubs" scope: app-wide rankings were cancelled (decision 17).
 struct RankingsFilters: Equatable {
-    var gender: RowerGender?   // nil = All
-    var level: RowerCategory?  // nil = All
+    var gender: RowerGender?   // nil = all
+    var level: RowerCategory?  // nil = all
     var scope: SocialScope = .myClub
 
+    /// Everyone in your club — what a rower with no gender on file gets.
     static let initial = RankingsFilters()
 
-    var captionText: String {
-        [genderLabel, levelLabel, scope.label].joined(separator: " · ")
-    }
-
-    private var genderLabel: String {
+    /// "Senior men", "Women", "Novice rowers", "All rowers".
+    var groupLabel: String {
+        let noun: String
         switch gender {
-        case .male: "Male"
-        case .female: "Female"
-        case nil: "All genders"
+        case .male: noun = "men"
+        case .female: noun = "women"
+        case nil: noun = "rowers"
+        }
+        switch level {
+        case .senior: return "Senior \(noun)"
+        case .novice: return "Novice \(noun)"
+        case nil: return gender == nil ? "All rowers" : noun.capitalized
         }
     }
 
-    private var levelLabel: String {
-        switch level {
-        case .novice: "Novice"
-        case .senior: "Senior"
-        case nil: "All levels"
+    var scopeLabel: String {
+        switch scope {
+        case .myClub: "My club"
+        case .following: "Following"
         }
+    }
+
+    /// "Senior men · My club".
+    var captionText: String {
+        "\(groupLabel) · \(scopeLabel)"
     }
 }
 
-/// The single "Filters" chip both Rankings sub-tabs show in place of their
-/// old inline chip rows, opening `RankingsFiltersSheet`.
-struct RankingsFiltersButton: View {
-    let filters: RankingsFilters
+/// The viewer's own group, which every board opens on (decision 37), and the sheet's Reset.
+struct ViewerGroup: Equatable {
+    let gender: RowerGender?
+    let level: RowerCategory
+    let clubName: String?
+
+    var filters: RankingsFilters {
+        RankingsFilters(gender: gender, level: gender == nil ? nil : level, scope: .myClub)
+    }
+
+    /// "Opens on your own group: senior men in UEA Boat Club."
+    var sentence: String {
+        let group = filters.groupLabel.lowercased()
+        guard let clubName else { return "Opens on your own group: \(group) in your club." }
+        return "Opens on your own group: \(group) in \(clubName)."
+    }
+
+    /// Nil when the profile can't be read; the boards then fall back to `RankingsFilters.initial`.
+    static func load() async -> ViewerGroup? {
+        struct Row: Decodable {
+            struct Club: Decodable { let name: String }
+            let gender: RowerGender?
+            let category: RowerCategory
+            let club: Club?
+            enum CodingKeys: String, CodingKey {
+                case gender, category
+                case club = "clubs"
+            }
+        }
+        guard let userId = try? await SupabaseService.shared.auth.session.user.id,
+              let row: Row = try? await SupabaseService.shared
+                .from("profiles")
+                .select("gender, category, clubs(name)")
+                .eq("id", value: userId)
+                .single()
+                .execute()
+                .value
+        else { return nil }
+        return ViewerGroup(gender: row.gender, level: row.category, clubName: row.club?.name)
+    }
+}
+
+/// The one glass pill a board shows in place of inline controls: a filter glyph and what's
+/// selected ("Senior men · My club · Erg + water"). Opens `RankingsFiltersSheet`.
+struct RankingsFiltersPill: View {
+    let text: String
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
             HStack(spacing: 6) {
-                Image(systemName: "slider.horizontal.3")
-                    .font(.system(size: 12, weight: .semibold))
-                Text("Filters")
-                    .font(.system(size: 12.5, weight: .semibold))
-            }
-            .foregroundStyle(Tokens.Ink.primary)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
-            .background {
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .fill(Tokens.Ink.primary.opacity(0.1))
+                Image(systemName: "line.3.horizontal.decrease")
+                    .textStyle(Typography.pill)
+                Text(text)
+                    .textStyle(Typography.pill)
+                    .lineLimit(1)
+                Image(systemName: "chevron.down")
+                    .textStyle(Typography.statLabel)
+                    .foregroundStyle(Tokens.Ink.secondary)
             }
         }
-        .buttonStyle(.plain)
-        Text(filters.captionText)
-            .textStyle(Typography.bodySecondary)
-            .foregroundStyle(Tokens.Ink.secondary)
+        .buttonStyle(.rpPill)
+        .accessibilityLabel("Filters: \(text)")
     }
 }
 
-/// The sheet itself — three stacked `PillSegmentedControl`s, one per axis.
+/// v4 `RankingsFilters` artboard: Reset · Filters · Done, then Gender, Level, Rowers and — on
+/// Volume only — Source, each a glass segmented control, and a line naming the group the board
+/// opens on.
 struct RankingsFiltersSheet: View {
     @Binding var filters: RankingsFilters
+    let ownGroup: ViewerGroup?
+    /// Volume's erg / water choice; nil on a test board.
+    var source: Binding<MetresLeaderboardViewModel.Source>?
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 22) {
-            HStack {
+        VStack(alignment: .leading, spacing: Tokens.Spacing.sectionTop) {
+            ZStack {
                 Text("Filters")
-                    .font(.system(size: 20, weight: .bold))
+                    .textStyle(Typography.navTitle)
                     .foregroundStyle(Tokens.Ink.primary)
-                Spacer()
-                Button("Done") { dismiss() }
-                    .font(.system(size: 15, weight: .semibold))
-                    .foregroundStyle(Tokens.Accent.brand)
+                    .accessibilityAddTraits(.isHeader)
+                HStack {
+                    Button("Reset", action: reset)
+                        .buttonStyle(.rpText)
+                    Spacer()
+                    Button("Done") { dismiss() }
+                        .buttonStyle(.rpText)
+                }
             }
 
-            axis(title: "Gender", options: ["All", "Male", "Female"], selection: genderSelection)
-            axis(title: "Level", options: ["All", "Novice", "Senior"], selection: levelSelection)
-            axis(title: "Scope", options: SocialScope.allCases.map(\.label), selection: scopeSelection)
+            axis("Gender", options: ["Men", "Women", "All"], selection: genderSelection)
+            axis("Level", options: ["Senior", "Novice", "All"], selection: levelSelection)
+            axis("Rowers", options: ["My club", "Following"], selection: scopeSelection)
+            if let source {
+                axis("Source", note: "Volume only", options: MetresLeaderboardViewModel.Source.allCases.map(\.label), selection: Binding(
+                    get: { source.wrappedValue.rawValue },
+                    set: { source.wrappedValue = MetresLeaderboardViewModel.Source(rawValue: $0) ?? .all }
+                ))
+            }
 
-            Spacer(minLength: 0)
+            if let ownGroup {
+                Text(ownGroup.sentence)
+                    .textStyle(Typography.meta)
+                    .foregroundStyle(Tokens.Ink.secondary)
+                    .padding(.horizontal, 4)
+            }
         }
-        .padding(20)
-        .padding(.top, 4)
-        .background(Tokens.Base.ground)
-        .presentationDetents([.medium])
+        .padding(.horizontal, Tokens.Spacing.screen)
+        .padding(.top, Tokens.Spacing.loose)
+        .frame(maxHeight: .infinity, alignment: .top)
+        .background(Tokens.Surface.card)
+        .presentationDetents([.height(source == nil ? 430 : 520)])
         .presentationDragIndicator(.visible)
     }
 
-    private func axis(title: String, options: [String], selection: Binding<Int>) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(title.uppercased())
-                .font(.system(size: 11, weight: .semibold))
-                .tracking(0.6)
-                .foregroundStyle(Tokens.Ink.faint)
+    private func reset() {
+        filters = ownGroup?.filters ?? .initial
+        source?.wrappedValue = .all
+    }
+
+    private func axis(_ title: String, note: String? = nil, options: [String], selection: Binding<Int>) -> some View {
+        VStack(alignment: .leading, spacing: Tokens.Spacing.tight) {
+            HStack(alignment: .firstTextBaseline) {
+                Text(title)
+                    .textStyle(Typography.overline)
+                    .foregroundStyle(Tokens.Ink.secondary)
+                Spacer()
+                if let note {
+                    Text(note)
+                        .textStyle(Typography.statLabel)
+                        .foregroundStyle(Tokens.Ink.secondary)
+                }
+            }
+            .padding(.horizontal, 4)
             PillSegmentedControl(options: options, selection: selection)
         }
     }
 
+    // Men | Women | All
     private var genderSelection: Binding<Int> {
         Binding(
-            get: { filters.gender == .male ? 1 : (filters.gender == .female ? 2 : 0) },
-            set: { filters.gender = $0 == 1 ? .male : ($0 == 2 ? .female : nil) }
+            get: { filters.gender == .male ? 0 : (filters.gender == .female ? 1 : 2) },
+            set: { filters.gender = $0 == 0 ? .male : ($0 == 1 ? .female : nil) }
         )
     }
 
+    // Senior | Novice | All
     private var levelSelection: Binding<Int> {
         Binding(
-            get: { filters.level == .novice ? 1 : (filters.level == .senior ? 2 : 0) },
-            set: { filters.level = $0 == 1 ? .novice : ($0 == 2 ? .senior : nil) }
+            get: { filters.level == .senior ? 0 : (filters.level == .novice ? 1 : 2) },
+            set: { filters.level = $0 == 0 ? .senior : ($0 == 1 ? .novice : nil) }
         )
     }
 
+    // My club | Following
     private var scopeSelection: Binding<Int> {
         Binding(
-            get: { filters.scope.rawValue },
-            set: { filters.scope = SocialScope(rawValue: $0) ?? .myClub }
+            get: { filters.scope == .myClub ? 0 : 1 },
+            set: { filters.scope = $0 == 0 ? .myClub : .following }
         )
     }
-}
-
-#Preview {
-    RankingsFiltersSheet(filters: .constant(.initial))
 }

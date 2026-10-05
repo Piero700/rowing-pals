@@ -10,11 +10,16 @@ Each phase: build, check on the simulator against its artboards, write a test ch
 `docs/testing/`, then the user confirms and it's merged. Server changes ship as one migration per
 phase in `docs/migrations/`, run on staging first.
 
-## Catch-up — Existing screens match the canvas (first)
+## Catch-up — Existing screens match the canvas (first) — BUILT, branch `t36-canvas-catch-up`
 Artboards: `RankingsVolume`, `RankingsTests`, `RankingsFilters`, `Settings`, `PostDetail`.
 - Rankings open on your own group; Volume rank card wording; Test results "Best in your group";
   Filters' Source (Volume only). (Decision 37.)
 - Settings: Match iPhone; remove Quiet hours; Privacy Policy link. (Decision 36.)
+  Quiet hours is gone from the app and from `send-push` (redeployed to staging 2026-10-05); its
+  `notification_settings` columns stay, unused. The Privacy Policy is an in-app page
+  (`DesignSystem/PrivacyPolicyView.swift`) that still needs the user's review, and a public web
+  copy before App Store submission. **Phase 1 must update it**: coaches will see age and
+  bodyweight (decision 35).
 - Workout screen: drop "Photo-verified". (Decision 38.)
 
 ## Phase 1 — Coaches, squads, the overview and privacy (brief phase 1)

@@ -33,13 +33,6 @@ interface DeviceToken {
   apns_env: "sandbox" | "production" | null
 }
 
-interface Settings {
-  quiet_hours_enabled: boolean
-  quiet_start: string
-  quiet_end: string
-  time_zone: string
-}
-
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } })
 
@@ -83,20 +76,12 @@ Deno.serve(async (req) => {
   const alert = await composeAlert(admin, row)
   if (!alert) return json({ skipped: "post no longer exists" })
 
-  const { data: settings } = await admin
-    .from("notification_settings")
-    .select("quiet_hours_enabled, quiet_start, quiet_end, time_zone")
-    .eq("user_id", row.recipient_id)
-    .maybeSingle()
-  const quiet = isQuietNow((settings as Settings | null) ?? defaultSettings, new Date())
-
   const body = {
     aps: {
       alert,
       "thread-id": row.session_id ?? row.club_id ?? row.id,
-      // Quiet hours: delivered silently to Notification Centre, screen stays dark.
-      "interruption-level": quiet ? "passive" : "active",
-      ...(quiet ? {} : { sound: "default" }),
+      "interruption-level": "active",
+      sound: "default",
     },
     // The app opens the post, or Your club for an invitation.
     ...(row.session_id ? { session_id: row.session_id } : {}),
@@ -107,9 +92,9 @@ Deno.serve(async (req) => {
   const jwt = await providerToken(keyId, teamId, privateKey)
   let delivered = 0
   for (const device of tokens as DeviceToken[]) {
-    if (await deliver(admin, jwt, device, body, quiet)) delivered++
+    if (await deliver(admin, jwt, device, body)) delivered++
   }
-  return json({ delivered, quiet })
+  return json({ delivered })
 })
 
 // MARK: - Alert text
@@ -216,43 +201,6 @@ function duration(ms: number) {
   return hours > 0 ? `${hours}:${two(minutes)}:${two(seconds)}` : `${minutes}:${two(seconds)}.${tenths % 10}`
 }
 
-// MARK: - Quiet hours
-
-const defaultSettings: Settings = {
-  quiet_hours_enabled: true,
-  quiet_start: "22:00:00",
-  quiet_end: "06:30:00",
-  time_zone: "Europe/London",
-}
-
-function minutesOf(time: string) {
-  const [h, m] = time.split(":").map(Number)
-  return h * 60 + m
-}
-
-/// Whether `now` falls in the rower's quiet hours, on their own clock. A window that
-/// crosses midnight (22:00–06:30) wraps; an empty one (start = end) is never quiet.
-function isQuietNow(settings: Settings, now: Date) {
-  if (!settings.quiet_hours_enabled) return false
-  let local: number
-  try {
-    const parts = new Intl.DateTimeFormat("en-GB", {
-      timeZone: settings.time_zone,
-      hour: "2-digit",
-      minute: "2-digit",
-      hourCycle: "h23",
-    }).formatToParts(now)
-    const get = (type: string) => Number(parts.find((p) => p.type === type)?.value ?? 0)
-    local = get("hour") * 60 + get("minute")
-  } catch {
-    return false
-  }
-  const start = minutesOf(settings.quiet_start)
-  const end = minutesOf(settings.quiet_end)
-  if (start === end) return false
-  return start < end ? local >= start && local < end : local >= start || local < end
-}
-
 // MARK: - APNs
 
 let cachedToken: { jwt: string; issuedAt: number } | null = null
@@ -289,7 +237,6 @@ async function deliver(
   jwt: string,
   device: DeviceToken,
   body: unknown,
-  quiet: boolean,
 ) {
   const order: ("sandbox" | "production")[] = device.apns_env
     ? [device.apns_env]
@@ -302,7 +249,7 @@ async function deliver(
         authorization: `bearer ${jwt}`,
         "apns-topic": device.bundle_id,
         "apns-push-type": "alert",
-        "apns-priority": quiet ? "5" : "10",
+        "apns-priority": "10",
         "content-type": "application/json",
       },
       body: JSON.stringify(body),
