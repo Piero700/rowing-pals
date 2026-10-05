@@ -169,15 +169,7 @@ final class MetresLeaderboardViewModel {
                 .in("id", values: scopeIds)
             if let gender = filters.gender { profileQuery = profileQuery.eq("gender", value: gender.rawValue) }
             if let level = filters.level { profileQuery = profileQuery.eq("category", value: level.rawValue) }
-            let profileRows: [ProfileRow] = try await profileQuery.execute().value
-            guard !Task.isCancelled else { return }
-
-            guard !profileRows.isEmpty else {
-                aggregates = [:]
-                rankedRows = []
-                errorMessage = nil
-                return
-            }
+            let profileRequest = profileQuery
 
             struct TotalRow: Decodable {
                 let userId: UUID
@@ -216,10 +208,13 @@ final class MetresLeaderboardViewModel {
                 }
             }
 
+            // The rowers, their distances and their streaks, all at once: totals and streaks are
+            // asked for the whole scope and matched to the rowers the filters keep.
+            async let profileRowsTask: [ProfileRow] = profileRequest.execute().value
             async let totalRowsTask: [TotalRow] = SupabaseService.shared
                 .from("daily_totals")
                 .select("user_id, ranked_distance_m, ranked_erg_distance_m, ranked_water_distance_m")
-                .in("user_id", values: profileRows.map(\.id))
+                .in("user_id", values: scopeIds)
                 .gte("day", value: Self.periodStartString(for: period))
                 .execute()
                 .value
@@ -229,13 +224,20 @@ final class MetresLeaderboardViewModel {
             async let streakRowsTask: [StreakRow] = (try? await SupabaseService.shared
                 .from("daily_totals")
                 .select("user_id, day, session_count")
-                .in("user_id", values: profileRows.map(\.id))
+                .in("user_id", values: scopeIds)
                 .gte("day", value: StreakCalculator.earliestRelevantDay())
                 .execute()
                 .value) ?? []
 
-            let (totalRows, streakRows) = try await (totalRowsTask, streakRowsTask)
+            let (profileRows, totalRows, streakRows) = try await (profileRowsTask, totalRowsTask, streakRowsTask)
             guard !Task.isCancelled else { return }
+
+            guard !profileRows.isEmpty else {
+                aggregates = [:]
+                rankedRows = []
+                errorMessage = nil
+                return
+            }
 
             var newAggregates: [UUID: Aggregate] = [:]
             for row in profileRows {

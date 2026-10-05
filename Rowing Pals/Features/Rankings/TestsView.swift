@@ -38,11 +38,11 @@ struct TestsView: View {
                     RankingsHeader(mode: mode)
                 }
 
-                if !viewModel.groupBests.isEmpty {
+                if viewModel.groupCaption != nil {
                     groupBestSection
                 }
 
-                if !viewModel.groupBests.isEmpty {
+                if viewModel.groupCaption != nil {
                     Text("Your results")
                         .textStyle(Typography.overline)
                         .foregroundStyle(Tokens.Ink.secondary)
@@ -67,12 +67,12 @@ struct TestsView: View {
             }
             .padding(.horizontal, 16)
         }
-        .scrollsToTopOnReselect(reselects) { await viewModel.loadOwnPBs() }
+        .scrollsToTopOnReselect(reselects) { ViewerContext.shared.invalidate(); await viewModel.loadOwnPBs() }
         .background(Tokens.Base.ground)
         .tracksFloatingBar()
         .ignoresSafeArea(edges: .bottom)
         .task { await viewModel.loadOwnPBs() }
-        .refreshable { await viewModel.loadOwnPBs() }
+        .refreshable { ViewerContext.shared.invalidate(); await viewModel.loadOwnPBs() }
         .fullScreenCover(item: $selectedTile) { tile in
             TestLeaderboardView(test: tile.test, onDelete: deleteAction(for: tile))
         }
@@ -110,12 +110,19 @@ struct TestsView: View {
             }
             .padding(.horizontal, 2)
             HStack(spacing: Tokens.Spacing.gap) {
-                ForEach(viewModel.groupBests) { best in
-                    groupBestCard(best)
-                        .asButton {
-                            selectedTile = viewModel.tiles.first { $0.test.key == best.test.key }
-                        }
-                        .accessibilityLabel(groupBestAccessibility(best))
+                if viewModel.groupBests.isEmpty {
+                    // Same size as the real cards while their numbers load.
+                    ForEach(TestsViewModel.groupBestKeys, id: \.self) { _ in
+                        groupBestPlaceholder
+                    }
+                } else {
+                    ForEach(viewModel.groupBests) { best in
+                        groupBestCard(best)
+                            .asButton {
+                                selectedTile = viewModel.tiles.first { $0.test.key == best.test.key }
+                            }
+                            .accessibilityLabel(groupBestAccessibility(best))
+                    }
                 }
             }
         }
@@ -166,6 +173,13 @@ struct TestsView: View {
         .frame(maxWidth: .infinity, minHeight: Tokens.Size.groupBestCard, alignment: .topLeading)
         .background { shape.fill(Tokens.Accent.rankSoft) }
         .overlay { shape.strokeBorder(Tokens.Accent.rank.opacity(0.35), lineWidth: 1) }
+    }
+
+    private var groupBestPlaceholder: some View {
+        RoundedRectangle(cornerRadius: Tokens.Radius.input, style: .continuous)
+            .fill(Tokens.Accent.rankSoft)
+            .frame(maxWidth: .infinity, minHeight: Tokens.Size.groupBestCard)
+            .accessibilityHidden(true)
     }
 
     private func groupBestAccessibility(_ best: GroupBest) -> String {

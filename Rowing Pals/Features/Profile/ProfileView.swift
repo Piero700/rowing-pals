@@ -104,7 +104,7 @@ struct ProfileView: View {
             .padding(.horizontal, Tokens.Spacing.screen)
         }
         .scrollIndicators(.hidden)
-        .scrollsToTopOnReselect(reselects) { await viewModel.load() }
+        .scrollsToTopOnReselect(reselects) { ViewerContext.shared.invalidate(); await viewModel.load() }
         .safeAreaInset(edge: .top, spacing: 0) {
             if viewing == nil {
                 header
@@ -117,7 +117,7 @@ struct ProfileView: View {
         .tracksFloatingBar()
         .ignoresSafeArea(edges: .bottom)
         .task { await viewModel.load() }
-        .refreshable { await viewModel.load() }
+        .refreshable { ViewerContext.shared.invalidate(); await viewModel.load() }
         .onReceive(NotificationCenter.default.publisher(for: .rowerClubChanged)) { _ in
             Task { await viewModel.load() }
         }

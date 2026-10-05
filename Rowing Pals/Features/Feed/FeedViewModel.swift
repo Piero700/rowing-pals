@@ -215,17 +215,21 @@ final class FeedViewModel {
             // One query for the page. Who may see each post — blocks either way, private
             // accounts, the post's Following / Club / Everyone setting — is the database's job
             // (decision 33's `can_view_session`), so the app doesn't repeat it in the query.
+            let scopeIds = userIds
+            let viewer = viewerId
+            let currentPending = pendingClubName
             async let pageRequest: [FeedPost] = SupabaseService.shared
                 .from("sessions")
                 .select(Self.selectColumns)
-                .in("user_id", values: userIds)
+                .in("user_id", values: scopeIds)
                 .order("posted_at", ascending: false)
                 .range(from: offset, to: offset + Self.pageSize - 1)
                 .execute()
                 .value
-            async let pending: String? = offset == 0 && viewerId != nil
-                ? Self.pendingClubName(for: viewerId ?? UUID())
-                : pendingClubName
+            async let pending: String? = {
+                guard offset == 0, let viewer else { return currentPending }
+                return await Self.pendingClubName(for: viewer)
+            }()
             let (page, pendingName) = try await (pageRequest, pending)
 
             posts = replacing ? page : posts + page

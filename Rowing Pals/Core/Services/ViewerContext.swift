@@ -70,7 +70,7 @@ final class ViewerContext {
     private static func fetch() async throws -> Snapshot {
         let userId = try await SupabaseService.shared.auth.session.user.id
 
-        struct ProfileRow: Decodable {
+        nonisolated struct ProfileRow: Decodable {
             struct Club: Decodable { let name: String }
             let displayName: String
             let gender: RowerGender?
@@ -84,7 +84,7 @@ final class ViewerContext {
                 case club = "clubs"
             }
         }
-        struct FollowRow: Decodable {
+        nonisolated struct FollowRow: Decodable {
             let followeeId: UUID
             enum CodingKeys: String, CodingKey { case followeeId = "followee_id" }
         }
@@ -106,7 +106,7 @@ final class ViewerContext {
 
         var clubmateIds: [UUID] = []
         if let clubId = profile.clubId {
-            struct MemberRow: Decodable { let id: UUID }
+            nonisolated struct MemberRow: Decodable { let id: UUID }
             let members: [MemberRow] = try await SupabaseService.shared
                 .from("profiles")
                 .select("id")

@@ -180,7 +180,7 @@ final class ProfileViewModel {
             profileUserId = userId
             isOwnProfile = userId == viewerId
 
-            struct ProfileRow: Decodable {
+            nonisolated struct ProfileRow: Decodable {
                 struct Club: Decodable { let name: String }
                 let displayName: String
                 let category: RowerCategory
@@ -200,70 +200,56 @@ final class ProfileViewModel {
                     case isPrivate = "is_private"
                 }
             }
-            let profile: ProfileRow = try await SupabaseService.shared
+            // Round 1, all at once: the profile row, the follow state (or your own pending
+            // requests and invitations), the follower counts and every stat. A private profile
+            // you may not see returns no stat rows anyway (the database's rule), so nothing
+            // extra is revealed by asking early.
+            let isOwn = isOwnProfile
+            async let profileRequest: ProfileRow = SupabaseService.shared
                 .from("profiles")
                 .select("*, clubs(name)")
                 .eq("id", value: userId)
                 .single()
                 .execute()
                 .value
+            async let ownExtrasRequest: OwnExtras? = isOwn ? Self.fetchOwnExtras(userId: userId) : nil
+            async let followRequest: (FollowState, Bool)? = isOwn ? nil : Self.fetchFollow(userId: userId)
+            async let countsRequest = FollowService.counts(for: userId)
+            async let streak = Self.fetchStreak(userId: userId)
+            async let dailyTotals = Self.fetchDailyTotals(userId: userId)
+            async let testResults = Self.fetchTestResults(userId: userId)
+            async let sessions = Self.fetchRecentSessions(userId: userId)
+
+            let (profile, ownExtras, follow) = try await (profileRequest, ownExtrasRequest, followRequest)
             displayName = profile.displayName
             categoryLabel = profile.category.rawValue.uppercased()
             clubName = profile.club?.name
             clubRole = profile.club == nil ? nil : (profile.clubRole ?? .member)
-            if userId == viewerId {
-                struct Pending: Decodable {
-                    struct Club: Decodable { let name: String }
-                    let clubs: Club
-                }
-                let pending: [Pending]? = try? await SupabaseService.shared
-                    .from("club_join_requests").select("clubs(name)").eq("user_id", value: userId)
-                    .eq("status", value: "pending").execute().value
-                pendingClubName = pending?.first?.clubs.name
-                // Invitations waiting for an answer (decision 26): shown in the app as well as
-                // by alert, which only arrives once push is switched on.
-                struct Invite: Decodable {
-                    struct Club: Decodable { let name: String }
-                    let clubs: Club
-                }
-                let invites: [Invite]? = try? await SupabaseService.shared
-                    .from("club_invites").select("clubs(name)").eq("user_id", value: userId)
-                    .eq("status", value: "pending").execute().value
-                invitingClubNames = invites?.map(\.clubs.name) ?? []
-            }
             weeklyTargetM = profile.weeklyTargetM
             isPrivateAccount = profile.isPrivate
-
-            if isOwnProfile {
+            if let ownExtras {
+                pendingClubName = ownExtras.pendingClubName
+                invitingClubNames = ownExtras.invitingClubNames
+                pendingRequestCount = ownExtras.followRequestCount
+            }
+            if isOwn {
                 followState = .notFollowing
                 followsYou = false
-                pendingRequestCount = (try? await FollowService.pendingRequestCount()) ?? 0
-            } else {
-                async let state = FollowService.state(to: userId)
-                async let back = FollowService.isFollowedBy(userId)
-                (followState, followsYou) = try await (state, back)
+            } else if let follow {
+                (followState, followsYou) = follow
             }
 
             // Private and not approved: show who they are and nothing else.
-            // Nothing below is fetched — the database would return empty
-            // rows anyway, but the lock card is the honest thing to show.
-            isLocked = !isOwnProfile && profile.isPrivate && followState != .following
+            isLocked = !isOwn && profile.isPrivate && followState != .following
             if isLocked {
                 resetStats()
                 errorMessage = nil
                 return
             }
 
-            let counts = try await FollowService.counts(for: userId)
+            let (counts, streakResult, totals, results, sessionRows) = try await (countsRequest, streak, dailyTotals, testResults, sessions)
             followerCount = counts.followers
             followingCount = counts.following
-
-            async let streak = Self.fetchStreak(userId: userId)
-            async let dailyTotals = Self.fetchDailyTotals(userId: userId)
-            async let testResults = Self.fetchTestResults(userId: userId)
-            async let sessions = Self.fetchRecentSessions(userId: userId)
-
-            let (streakResult, totals, results, sessionRows) = try await (streak, dailyTotals, testResults, sessions)
 
             streakDays = streakResult.activeDays
             restDaysUsedThisWeek = streakResult.restUsedThisWeek
@@ -279,28 +265,63 @@ final class ProfileViewModel {
             let weekStart = ClubRankService.weekStartString(for: Date())
             weekSessionCount = totals.filter { $0.day >= weekStart }.reduce(0) { $0 + $1.sessionCount }
 
-            // Best-effort: a failure leaves the ranks as dashes rather than failing the profile.
-            if !isOwnProfile, let clubId = profile.clubId {
-                clubRanks = try? await ClubRankService.ranks(for: userId, clubId: clubId)
-            } else {
-                clubRanks = nil
-            }
-
             photos = sessionRows.map {
                 ProfilePhoto(id: $0.id, distanceM: $0.totalDistanceM, monitorPath: $0.primarySegmentPath,
                              workoutLabel: $0.workoutLabel, totalTimeMs: $0.totalTimeMs)
             }
-            await fetchPhotoURLs(for: photos)
 
-            if isOwnProfile {
-                await loadPredictions()
-            }
+            // Round 2, together: photo links, and your predictions or their club ranks.
+            let clubId = profile.clubId
+            async let photoLinks: Void = fetchPhotoURLs(for: photos)
+            async let predictions: Void = isOwn ? loadPredictions() : ()
+            // Best-effort: a failure leaves the ranks as dashes rather than failing the profile.
+            async let ranks: ClubRankService.Ranks? = (!isOwn && clubId != nil)
+                ? (try? await ClubRankService.ranks(for: userId, clubId: clubId ?? UUID()))
+                : nil
+            let (_, _, rankResult) = await (photoLinks, predictions, ranks)
+            clubRanks = rankResult
 
             errorMessage = nil
         } catch {
             print("Profile load failed: \(error)")
             errorMessage = error.localizedDescription
         }
+    }
+
+    /// Your own profile's waiting items: a join request (decision 26), club invitations, and
+    /// how many people have asked to follow you.
+    struct OwnExtras {
+        let pendingClubName: String?
+        let invitingClubNames: [String]
+        let followRequestCount: Int
+    }
+
+    private static func fetchOwnExtras(userId: UUID) async -> OwnExtras {
+        struct ClubNameRow: Decodable {
+            struct Club: Decodable { let name: String }
+            let clubs: Club
+        }
+        async let pending: [ClubNameRow]? = try? await SupabaseService.shared
+            .from("club_join_requests").select("clubs(name)").eq("user_id", value: userId)
+            .eq("status", value: "pending").execute().value
+        // Invitations waiting for an answer (decision 26): shown in the app as well as by alert.
+        async let invites: [ClubNameRow]? = try? await SupabaseService.shared
+            .from("club_invites").select("clubs(name)").eq("user_id", value: userId)
+            .eq("status", value: "pending").execute().value
+        async let requests: Int? = try? await FollowService.pendingRequestCount()
+        let (pendingRows, inviteRows, requestCount) = await (pending, invites, requests)
+        return OwnExtras(
+            pendingClubName: pendingRows?.first?.clubs.name,
+            invitingClubNames: inviteRows?.map(\.clubs.name) ?? [],
+            followRequestCount: requestCount ?? 0
+        )
+    }
+
+    /// Whether you follow this rower (or have asked to), and whether they follow you.
+    private static func fetchFollow(userId: UUID) async throws -> (FollowState, Bool) {
+        async let state = FollowService.state(to: userId)
+        async let back = FollowService.isFollowedBy(userId)
+        return try await (state, back)
     }
 
     /// Best-effort: a failure leaves the cards saying so rather than failing the profile.
