@@ -22,9 +22,9 @@ Artboards: `RankingsVolume`, `RankingsTests`, `RankingsFilters`, `Settings`, `Po
   bodyweight (decision 35).
 - Workout screen: drop "Photo-verified". (Decision 38.)
 
-## Phase 1 — Coaches, squads, the overview and privacy (brief phase 1) — BUILT, branch `t39-coaching-phase1`
-Built 2026-10-05 (decisions 43–47; checklist `docs/testing/coaching-phase1.md`). Waiting on: the
-migration run on staging, then the user's phone test before merging. Left for later phases, on
+## Phase 1 — Coaches, squads, the overview and privacy (brief phase 1) — MERGED 2026-10-05
+Built 2026-10-05 (decisions 43–47; checklist `docs/testing/coaching-phase1.md`). Migration run on
+staging and tested on the user's phone; merged to `main`. Left for later phases, on
 purpose: attendance figures (Rowers list, one rower's page, the sort) and the Workouts /
 Practices tabs. Predictions show "±Ns" from the engine's new range (v1.5, decision 48).
 Artboards: `CoachMakeCoach`, `CoachOnboarding`, `CoachJoinNotice`, `CoachCrew`, `CoachOnlyFeed`,

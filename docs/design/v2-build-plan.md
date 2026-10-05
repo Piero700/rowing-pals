@@ -173,13 +173,12 @@ that they match the prototype.
     270 ms, feed 1,089 → ~700 ms (most of it the app's first connection after launch).
 10. **Coaching and the v4 canvas** (decisions 34–41): canvas catch-up, then coaching Phases 1–3 in
     `docs/design/coaching-build-plan.md`. Catch-up BUILT (branch `t36-canvas-catch-up`, `docs/testing/canvas-catch-up.md`).
-    Coaching Phase 1 BUILT (decisions 43–47, branch `t39-coaching-phase1`,
+    Coaching Phase 1 MERGED 2026-10-05 (decisions 43–48,
     `docs/testing/coaching-phase1.md`): coach flag and account type, Make coach, I row / I'm a
     coach, no Log button for coach-only accounts and off every board and Crewmates, Coaches in
     Your crew, the "has coaches" notice, Profile visibility and Edit profile to the canvas,
     Coaching's Rowers list (pro-rata target, flags, 2k and prediction, squad filter and sort),
-    one rower's page, squads, coaches read-only on posts. Waiting on the staging migration and the
-    user's phone test. Next: Phase 2 (set workouts).
+    one rower's page, squads, coaches read-only on posts. Next: Phase 2 (set workouts).
 
 ## Waiting on the user
 
