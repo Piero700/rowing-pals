@@ -136,8 +136,16 @@ that they match the prototype.
 6. **I — Custom tests. BUILT as club tests** (decision 28) — see above.
 7. **J — Feed extras.** Full-screen comments thread (`comments` table already exists), 12-emoji
    picker, share-workout preview.
-8. **K — Prediction cards.** Wire in the user's own algorithm once supplied. Until then only the
-   placeholder shown today. Do not write an algorithm.
+8. **K — Prediction cards.** The algorithm arrived 2026-10-05 as the Pace Engine
+   (`PaceEngine/`, Python source of truth). Phase 1 DONE: Swift port in `Packages/PaceEngine`,
+   all 38 golden cases + 34 parsing checks pass. Phase 2 part 1 DONE (decisions 30–31): zone,
+   effort and rep distance on posts; private date of birth and weight. Phase 2 part 2 DONE: the package
+   is in the app target; `PredictionService` feeds the engine each zoned erg session's main
+   segment(s) from the last 60 days; predictions show on the Profile 2k/5k cards, on the Test
+   results distance tiles, and in the "How we got this" sheet (`docs/testing/pace-engine.md`).
+   Still to do before launch: fit the cold-start seed values and the age curve from the Concept2
+   rankings (SPEC.md §7.6) — the Population Estimate stays off until then — and tune the tier
+   constants on a real cohort (SPEC.md §7.2).
 9. **L — Polish and release.** Tab bar (user: "still not there" — get concrete detail before
    changing it), light mode and Increase Contrast pass, full screen-by-screen comparison against the
    prototype, then task 19 (TestFlight).

@@ -84,7 +84,8 @@ struct ReviewSheetView: View {
                 }
 
                 sectionTitle("Splits")
-                workoutLabelPicker
+                zonePicker
+                effortPicker
                 splitsSummary
                     .padding(.top, Tokens.Spacing.loose)
 
@@ -183,7 +184,7 @@ struct ReviewSheetView: View {
                 let isMain = segment.label == .main
                 let shape = RoundedRectangle(cornerRadius: Tokens.Radius.input, style: .continuous)
                 HStack(spacing: 8) {
-                    Text(isMain ? (viewModel.sessionKind.testLabel ?? viewModel.workoutLabel.rawValue) : segment.label.rawValue.capitalized)
+                    Text(isMain ? (viewModel.sessionKind.testLabel ?? viewModel.zone.rawValue) : segment.label.rawValue.capitalized)
                         .font(.system(size: 12, weight: .bold))
                         .foregroundStyle(isMain ? Tokens.Accent.brand : Tokens.Ink.secondary)
                         .lineLimit(1)
@@ -252,32 +253,53 @@ struct ReviewSheetView: View {
         }
     }
 
-    // MARK: - Main workout label
+    // MARK: - Zone and effort
 
-    /// "Main workout label" — the badge on the main split. A test replaces
-    /// it with the test's own name, so the picker steps aside.
-    @ViewBuilder
-    private var workoutLabelPicker: some View {
+    /// The training zone (decision 31): the badge on the main split and the intensity the
+    /// predictions work from. A test pre-selects AN; a test's badge stays the test's own name.
+    private var zonePicker: some View {
         VStack(alignment: .leading, spacing: 6) {
-            fieldLabel("Main workout label")
-            if let testLabel = viewModel.sessionKind.testLabel {
-                menuRow(text: testLabel)
-                    .opacity(0.6)
-                Text("Set by the session type below.")
+            fieldLabel("Zone")
+            Menu {
+                Picker("Zone", selection: $viewModel.zone) {
+                    ForEach(TrainingZone.allCases) { zone in
+                        Text(zone.title).tag(zone)
+                    }
+                }
+            } label: {
+                menuRow(text: viewModel.zone.title)
+            }
+            if viewModel.sessionKind.test != nil {
+                Text("A test is an all-out effort, so AN is chosen. Change it if this wasn't flat out.")
                     .textStyle(Typography.bodySecondary)
                     .foregroundStyle(Tokens.Ink.secondary)
-            } else {
-                Menu {
-                    Picker("Main workout label", selection: $viewModel.workoutLabel) {
-                        ForEach(WorkoutLabel.allCases) { label in
-                            Text(label.rawValue).tag(label)
-                        }
-                    }
-                } label: {
-                    menuRow(text: viewModel.workoutLabel.rawValue)
-                }
             }
         }
+    }
+
+    /// How hard it felt, on the 0–10 scale. Optional; it sharpens your predictions.
+    private var effortPicker: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            fieldLabel("How hard did it feel? (optional)")
+            Menu {
+                Picker("How hard did it feel?", selection: $viewModel.rpe) {
+                    Text("Not rated").tag(Int?.none)
+                    ForEach(0...10, id: \.self) { value in
+                        Text(Self.effortTitle(value)).tag(Int?.some(value))
+                    }
+                }
+            } label: {
+                menuRow(text: viewModel.rpe.map(Self.effortTitle) ?? "Not rated")
+            }
+        }
+        .padding(.top, Tokens.Spacing.gap)
+    }
+
+    /// The Borg CR10 scale's words for each point.
+    private static func effortTitle(_ value: Int) -> String {
+        let words = ["Rest", "Very easy", "Easy", "Moderate", "Somewhat hard", "Hard",
+                     "Hard", "Very hard", "Very hard", "Extremely hard", "Maximal"]
+        return "\(value) · \(words[value])"
     }
 
     /// The closed look of a dropdown: value on the left, chevrons on the right.

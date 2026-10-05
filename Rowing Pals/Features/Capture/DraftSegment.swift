@@ -36,6 +36,9 @@ struct DraftSegment: Identifiable {
     /// monitor, then tap Confirm."). A manual segment has no monitor to
     /// check against, so it starts confirmed.
     var isRateConfirmed = false
+    /// An interval session's rep distance, read off the monitor's workout title
+    /// ("8x500m/1:00r" → 500). Nil for a continuous piece, a timed-rep workout or a manual entry.
+    var repDistanceM: Int?
     var isManual: Bool { photoJPEG == nil }
 
     /// Builds a segment from one photo's OCR output. Any field with no
@@ -61,6 +64,7 @@ struct DraftSegment: Identifiable {
         timeMs = resolve(fields.elapsedTimeMs, .time, default: 0)
         splitMs = resolve(fields.splitMs, .split, default: 0)
         rate = resolve(fields.rate, .rate, default: 0)
+        repDistanceM = fields.repDistanceM
 
         // The average is derived from distance and time, never read, so it
         // can't be "low confidence" — nothing for the rower to check.

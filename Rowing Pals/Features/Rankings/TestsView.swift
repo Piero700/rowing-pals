@@ -109,6 +109,14 @@ struct TestsView: View {
                 .foregroundStyle(Tokens.Ink.secondary)
                 .lineLimit(1)
                 .minimumScaleFactor(0.6)
+            if let predicted = tile.predicted {
+                Text("Predicted \(predicted)")
+                    .textStyle(Typography.statLabel)
+                    .tabularNumerals()
+                    .foregroundStyle(Tokens.Accent.records)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.6)
+            }
         }
         .padding(.horizontal, 6)
         .frame(maxWidth: .infinity, minHeight: Tokens.Size.testTile)

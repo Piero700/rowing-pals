@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import PaceEngine
 import Supabase
 
 /// Owns the profile screen's header, streak, season strip, PB board,
@@ -112,6 +113,9 @@ final class ProfileViewModel {
 
     var profileUserId: UUID?
     var isOwnProfile = true
+    /// Your own 2k and 5k predictions from the Pace Engine (decision 31), keyed by metres.
+    var predictions: [Double: Prediction] = [:]
+    var isLoadingPredictions = false
     var displayName = ""
     var categoryLabel = ""
     var clubName: String?
@@ -287,11 +291,23 @@ final class ProfileViewModel {
             }
             await fetchPhotoURLs(for: photos)
 
+            if isOwnProfile {
+                await loadPredictions()
+            }
+
             errorMessage = nil
         } catch {
             print("Profile load failed: \(error)")
             errorMessage = error.localizedDescription
         }
+    }
+
+    /// Best-effort: a failure leaves the cards saying so rather than failing the profile.
+    @MainActor
+    private func loadPredictions() async {
+        isLoadingPredictions = true
+        defer { isLoadingPredictions = false }
+        predictions = (try? await PredictionService.predictions(for: [2000, 5000])) ?? [:]
     }
 
     private func resetStats() {

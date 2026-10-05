@@ -84,7 +84,7 @@ Session types:
 - **Erg** — must be shot live in-app, dual camera, no gallery upload, within a capture window after finishing. Earns a `Photo-verified` badge.
 - **Water** — logged any time, manual distance and time, optional photo. Carries a `Logged later` marker and never gets the verified badge.
 
-Categories: **Novice** and **Senior** are experience levels in UK university rowing, not ages — a novice is in their first season. Self-declared, changeable at any time. **There is no weight class anywhere in this app.**
+Categories: **Novice** and **Senior** are experience levels in UK university rowing, not ages — a novice is in their first season. Self-declared, changeable at any time. **There are no weight classes for ranking.** Bodyweight and age are collected only as private inputs to the prediction algorithm (decision 30): never shown on a profile, never used to group or rank anyone.
 
 **Streaks** are day-based with two rest days per week that hold the run automatically. Every progression chart in the app is built from session summaries — one session, one data point — so nothing here needs per-stroke data.
 

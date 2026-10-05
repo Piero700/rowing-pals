@@ -34,11 +34,26 @@ struct ProfileView: View {
         var pickerSource: UIImagePickerController.SourceType { self == .camera ? .camera : .photoLibrary }
     }
 
+    /// A distance Profile predicts, and what to call it.
+    struct PredictedDistance: Identifiable, Hashable {
+        let title: String
+        let metres: Double
+        var id: Double { metres }
+    }
+
+    /// Decision 31: the 2k and 5k cards.
+    private static let predictedDistances = [
+        PredictedDistance(title: "2k", metres: 2000),
+        PredictedDistance(title: "5k", metres: 5000),
+    ]
+
     private let viewing: UUID?
     /// Goes up by one each time Profile is tapped while already selected (decision 27).
     private let reselects: Int
     @State private var viewModel: ProfileViewModel
     @State private var expandedTest: StandardTest?
+    /// The prediction whose "How we got this" sheet is open (decision 31).
+    @State private var explainedTarget: PredictedDistance?
     @State private var isShowingSettings = false
     @State private var isShowingAllPBs = false
     @State private var tab: Tab = .overview
@@ -105,6 +120,11 @@ struct ProfileView: View {
         .refreshable { await viewModel.load() }
         .onReceive(NotificationCenter.default.publisher(for: .rowerClubChanged)) { _ in
             Task { await viewModel.load() }
+        }
+        .sheet(item: $explainedTarget) { target in
+            if let prediction = viewModel.predictions[target.metres] {
+                PredictionDetailView(title: target.title, prediction: prediction)
+            }
         }
         .fullScreenCover(item: $expandedTest) { test in
             PBHistoryView(test: test, userId: viewing)
@@ -495,8 +515,13 @@ struct ProfileView: View {
 
             if viewModel.isOwnProfile {
                 VStack(spacing: Tokens.Spacing.gap) {
-                    EstimateCard(label: "2k · Estimated today")
-                    EstimateCard(label: "5k · Estimated today")
+                    ForEach(Self.predictedDistances, id: \.metres) { target in
+                        PredictionCard(
+                            title: target.title,
+                            prediction: viewModel.predictions[target.metres],
+                            isLoading: viewModel.isLoadingPredictions
+                        ) { explainedTarget = target }
+                    }
                 }
                 .padding(.top, Tokens.Spacing.loose)
             }

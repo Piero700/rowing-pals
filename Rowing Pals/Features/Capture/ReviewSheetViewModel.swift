@@ -43,10 +43,19 @@ final class ReviewSheetViewModel {
     /// (club + followers, not an app-wide public option — see
     /// `PostVisibility`) is the widest of the three, so it's the default.
     var visibility: PostVisibility = .everyone
-    /// The badge text on the main split. Replaced by the test's own label
-    /// when the session is posted as a test.
-    var workoutLabel: WorkoutLabel = .ut2
-    var sessionKind: SessionKind = .training
+    /// The training zone (decision 31): the badge on the main split, and the intensity the
+    /// Pace Engine predicts from. A test's badge is the test's own label instead.
+    var zone: TrainingZone = .ut2
+    /// A test is an all-out effort, so choosing one pre-selects AN; the rower can still change it.
+    var sessionKind: SessionKind = .training {
+        didSet {
+            if sessionKind.test != nil && oldValue.test == nil {
+                zone = .an
+            }
+        }
+    }
+    /// How hard it felt, Borg CR10 0–10. Optional (decision 31).
+    var rpe: Int?
     /// The rower's club tests (decision 28), offered after the standard ones.
     var clubTests: [ClubTest] = []
     /// "Include this session in your volume totals" — the leaderboards. Off
@@ -292,6 +301,8 @@ final class ReviewSheetViewModel {
         let caption: String?
         let visibility: PostVisibility
         let workoutLabel: String
+        let zone: String
+        let rpe: Int?
         let totalDistanceM: Int
         let totalTimeMs: Int
         let avgSplitMs: Int?
@@ -308,6 +319,7 @@ final class ReviewSheetViewModel {
             case type, caption, visibility
             case isNewPB = "is_new_pb"
             case workoutLabel = "workout_label"
+            case zone, rpe
             case totalDistanceM = "total_distance_m"
             case totalTimeMs = "total_time_ms"
             case avgSplitMs = "avg_split_ms"
@@ -338,10 +350,13 @@ final class ReviewSheetViewModel {
         let ocrConfidence: Double?
         let wasEdited: Bool
         let isLead: Bool
+        /// Interval rep distance read off the monitor (decision 31); omitted when nil.
+        let repDistanceM: Int?
 
         enum CodingKeys: String, CodingKey {
             case id
             case isLead = "is_lead"
+            case repDistanceM = "rep_distance_m"
             case sessionId = "session_id"
             case label, position
             case distanceM = "distance_m"
@@ -488,7 +503,9 @@ final class ReviewSheetViewModel {
                 type: .erg,
                 caption: caption.isEmpty ? nil : caption,
                 visibility: visibility,
-                workoutLabel: sessionKind.testLabel ?? workoutLabel.rawValue,
+                workoutLabel: sessionKind.testLabel ?? zone.rawValue,
+                zone: zone.rawValue,
+                rpe: rpe,
                 totalDistanceM: totalDistanceM,
                 totalTimeMs: totalTimeMs,
                 avgSplitMs: avgSplitMs,
@@ -515,7 +532,8 @@ final class ReviewSheetViewModel {
                     monitorPhotoPath: monitorPaths[index],
                     ocrConfidence: segment.isManual ? nil : segment.ocrConfidence,
                     wasEdited: segment.wasEdited,
-                    isLead: segment.id == leadID
+                    isLead: segment.id == leadID,
+                    repDistanceM: segment.repDistanceM
                 )
             }
             try await SupabaseService.shared.from("segments").insert(newSegments).execute()
