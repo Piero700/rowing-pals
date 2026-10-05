@@ -10,16 +10,24 @@ import SwiftUI
 /// button, the Following / Club control with a caption naming the scope, and v3 post cards.
 /// Tapping Feed in the tab bar while the feed is showing scrolls to the top and refreshes.
 struct FeedView: View {
-    /// `.fullScreenCover(item:)` requires `Identifiable` — `UUID` alone doesn't conform.
-    private struct SelectedPost: Identifiable {
-        let id: UUID
+    /// What opens over the feed: a workout, or a post's comments thread.
+    private enum Cover: Identifiable {
+        case post(UUID)
+        case comments(UUID, subtitle: String)
+
+        var id: String {
+            switch self {
+            case .post(let id): "post-\(id)"
+            case .comments(let id, _): "comments-\(id)"
+            }
+        }
     }
 
     /// Goes up by one each time Feed is tapped while already selected.
     var reselects = 0
 
     @State private var viewModel = FeedViewModel()
-    @State private var selectedPost: SelectedPost?
+    @State private var cover: Cover?
     @Environment(\.navigate) private var navigate
 
     var body: some View {
@@ -58,8 +66,17 @@ struct FeedView: View {
         .onReceive(NotificationCenter.default.publisher(for: .rowerClubChanged)) { _ in
             Task { await viewModel.clubChanged() }
         }
-        .fullScreenCover(item: $selectedPost) { post in
-            PostDetailView(sessionId: post.id)
+        .fullScreenCover(item: $cover) { cover in
+            switch cover {
+            case .post(let id):
+                PostDetailView(sessionId: id) { count in
+                    viewModel.setCommentCount(count, on: id)
+                }
+            case .comments(let id, let subtitle):
+                CommentsView(sessionId: id, subtitle: subtitle) { count in
+                    viewModel.setCommentCount(count, on: id)
+                }
+            }
         }
     }
 
@@ -131,7 +148,10 @@ struct FeedView: View {
                     selfieURL: viewModel.signedURL(forPath: FeedViewModel.selfiePath(userId: post.userId, sessionId: post.id)),
                     streakDays: viewModel.streakDays(forAuthor: post.userId),
                     reactions: viewModel.reactionSummaries(for: post),
-                    onOpen: { selectedPost = SelectedPost(id: post.id) },
+                    onOpen: { cover = .post(post.id) },
+                    onOpenComments: {
+                        cover = .comments(post.id, subtitle: "\(post.author.displayName) · \(post.workoutLabel ?? "Training")")
+                    },
                     onToggleReaction: { kind in
                         Task { await viewModel.toggleReaction(kind: kind, on: post.id) }
                     }

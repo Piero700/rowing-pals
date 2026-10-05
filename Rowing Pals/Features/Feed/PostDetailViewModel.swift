@@ -8,8 +8,9 @@ import Supabase
 
 /// Owns one post's full detail — every segment, the gold test-result
 /// banner (if the Main segment was confirmed as a test), reactions,
-/// comments, and follow status for its author. Reactions and comments
-/// arrive live via Supabase Realtime, not just on load.
+/// comments (through `thread`, shared with the full-screen thread), and
+/// follow status for its author. Reactions and comments arrive live via
+/// Supabase Realtime, not just on load.
 @Observable
 final class PostDetailViewModel {
     struct Author {
@@ -51,14 +52,6 @@ final class PostDetailViewModel {
         var reactedByMe: Bool
     }
 
-    struct CommentDisplay: Identifiable {
-        let id: UUID
-        let authorId: UUID
-        let authorName: String
-        let body: String
-        let createdAt: Date
-    }
-
     /// The four the design brief names explicitly, always shown even at
     /// zero; a viewer can react with more via the "+ " picker, and those
     /// only appear once somebody has actually used one.
@@ -95,7 +88,8 @@ final class PostDetailViewModel {
 
     var testBanner: TestBanner?
     var reactions: [ReactionSummary] = []
-    var comments: [CommentDisplay] = []
+    /// Shared with the full-screen thread when it's opened from here.
+    let thread: CommentThread
 
     /// Redesign phase E: not just following/not — a private author turns a
     /// follow into a pending request. The database decides which.
@@ -109,11 +103,11 @@ final class PostDetailViewModel {
     var errorMessage: String?
 
     private var ownUserId: UUID?
-    private var ownDisplayName = ""
     private var realtimeChannel: RealtimeChannelV2?
 
     init(sessionId: UUID) {
         self.sessionId = sessionId
+        self.thread = CommentThread(sessionId: sessionId)
     }
 
     @MainActor
@@ -230,19 +224,16 @@ final class PostDetailViewModel {
             async let photos: Void = fetchPhotoURLs(authorId: row.userId)
             async let banner = Self.loadTestBanner(sessionId: sessionId, authorId: row.userId)
             async let reactionSummaries = Self.loadReactions(sessionId: sessionId, viewerId: userId)
-            async let commentList = Self.loadComments(sessionId: sessionId)
+            async let commentList: Void = thread.load()
             async let following: FollowState = row.userId == userId ? .notFollowing : FollowService.state(to: row.userId)
             async let followsBack: Bool = row.userId == userId ? false : FollowService.isFollowedBy(row.userId)
-            async let ownName: String = row.userId == userId ? row.author.displayName : Self.fetchDisplayName(userId: userId)
             async let authorStreak: Int = Self.fetchStreak(userId: row.userId)
 
-            let (_, bannerResult, reactionsResult, commentsResult, followingResult, followsBackResult, ownNameResult, authorStreakResult) = try await (photos, banner, reactionSummaries, commentList, following, followsBack, ownName, authorStreak)
+            let (_, bannerResult, reactionsResult, _, followingResult, followsBackResult, authorStreakResult) = try await (photos, banner, reactionSummaries, commentList, following, followsBack, authorStreak)
             testBanner = bannerResult
             reactions = reactionsResult
-            comments = commentsResult
             followState = followingResult
             authorFollowsViewer = followsBackResult
-            ownDisplayName = ownNameResult
             authorStreakDays = authorStreakResult
 
             subscribeRealtime()
@@ -254,6 +245,7 @@ final class PostDetailViewModel {
     }
 
     func stop() {
+        thread.stop()
         guard let realtimeChannel else { return }
         Task { await SupabaseService.shared.removeChannel(realtimeChannel) }
     }
@@ -485,76 +477,6 @@ final class PostDetailViewModel {
         }
     }
 
-    // MARK: - Comments
-
-    private static func loadComments(sessionId: UUID) async throws -> [CommentDisplay] {
-        struct Row: Decodable {
-            struct Author: Decodable { let displayName: String
-                enum CodingKeys: String, CodingKey { case displayName = "display_name" }
-            }
-            let id: UUID
-            let userId: UUID
-            let body: String
-            let createdAt: Date
-            let author: Author
-            enum CodingKeys: String, CodingKey {
-                case id, body
-                case userId = "user_id"
-                case createdAt = "created_at"
-                case author = "profiles"
-            }
-        }
-        let rows: [Row] = try await SupabaseService.shared
-            .from("comments")
-            .select("id, user_id, body, created_at, profiles(display_name)")
-            .eq("session_id", value: sessionId)
-            .order("created_at", ascending: true)
-            .execute()
-            .value
-        return rows.map { CommentDisplay(id: $0.id, authorId: $0.userId, authorName: $0.author.displayName, body: $0.body, createdAt: $0.createdAt) }
-    }
-
-    @MainActor
-    func postComment(body: String) async {
-        let trimmed = body.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty, let userId = ownUserId else { return }
-        // Filtering, task 17 — checked before the insert, not after.
-        guard !TextFilterService.isBlocked(trimmed) else {
-            errorMessage = "That comment isn't allowed. Please rephrase it."
-            return
-        }
-        let newComment = Comment(id: UUID(), sessionId: sessionId, userId: userId, body: trimmed, createdAt: Date())
-        do {
-            try await SupabaseService.shared
-                .from("comments")
-                .insert(newComment)
-                .execute()
-            // Appended locally immediately, not left to the realtime echo —
-            // found via real device testing that the echo of a comment this
-            // same client just wrote isn't reliably arriving, so the post
-            // only ever showed up after a full reload. appendComment's own
-            // id-based dedup still guards against a double-add on the
-            // (now best-effort) chance the echo does also arrive.
-            appendComment(CommentDisplay(id: newComment.id, authorId: userId, authorName: ownDisplayName, body: trimmed, createdAt: newComment.createdAt))
-        } catch {
-            errorMessage = error.localizedDescription
-        }
-    }
-
-    private static func fetchDisplayName(userId: UUID) async throws -> String {
-        struct Row: Decodable { let displayName: String
-            enum CodingKeys: String, CodingKey { case displayName = "display_name" }
-        }
-        let row: Row = try await SupabaseService.shared
-            .from("profiles")
-            .select("display_name")
-            .eq("id", value: userId)
-            .single()
-            .execute()
-            .value
-        return row.displayName
-    }
-
     // MARK: - Follow
 
     /// Follow, request, unfollow or cancel a request — one tap, whichever
@@ -614,41 +536,18 @@ final class PostDetailViewModel {
         }
     }
 
-    @MainActor
-    func isOwnComment(_ comment: CommentDisplay) -> Bool {
-        comment.authorId == ownUserId
-    }
-
-    @MainActor
-    func reportComment(_ commentId: UUID, reason: String) async -> Bool {
-        guard let userId = ownUserId else { return false }
-        do {
-            try await SupabaseService.shared
-                .from("reports")
-                .insert(Report(id: UUID(), reporterId: userId, sessionId: nil, commentId: commentId, reason: reason, status: "open", createdAt: Date()))
-                .execute()
-            return true
-        } catch {
-            errorMessage = error.localizedDescription
-            return false
-        }
-    }
-
     // MARK: - Realtime
 
-    /// New reactions/comments from anyone (including another device signed
-    /// into this same account) arrive here without a manual refresh —
-    /// task 16's own verify step. Own-write echoes are naturally
-    /// idempotent: a reaction echo lands on state the optimistic update
-    /// already applied, and a comment echo is the *only* place a posted
-    /// comment gets appended at all (see `postComment`).
+    /// New reactions from anyone (including another device signed into this
+    /// same account) arrive here without a manual refresh — task 16's own
+    /// verify step. A reaction echo of this client's own write lands on state
+    /// the optimistic update already applied. Comments are `thread`'s job.
     @MainActor
     private func subscribeRealtime() {
         let channel = SupabaseService.shared.channel("post-detail-\(sessionId.uuidString)")
 
         let reactionInserts = channel.postgresChange(InsertAction.self, schema: "public", table: "reactions", filter: .eq("session_id", value: sessionId))
         let reactionDeletes = channel.postgresChange(DeleteAction.self, schema: "public", table: "reactions", filter: .eq("session_id", value: sessionId))
-        let commentInserts = channel.postgresChange(InsertAction.self, schema: "public", table: "comments", filter: .eq("session_id", value: sessionId))
 
         Task {
             try? await channel.subscribeWithError()
@@ -668,27 +567,6 @@ final class PostDetailViewModel {
                     self.applyReactionChange(kind: reaction.kind, userId: reaction.userId, isInsert: false)
                 }
             }
-            Task { [weak self] in
-                for await insertion in commentInserts {
-                    guard let self, let comment = try? insertion.decodeRecord(as: Comment.self, decoder: AnyJSON.decoder) else { continue }
-                    guard !self.comments.contains(where: { $0.id == comment.id }) else { continue }
-                    let authorName: String
-                    if comment.userId == self.author?.id {
-                        authorName = self.author?.displayName ?? "Someone"
-                    } else if let profile: Profile = try? await SupabaseService.shared.from("profiles").select().eq("id", value: comment.userId).single().execute().value {
-                        authorName = profile.displayName
-                    } else {
-                        authorName = "Someone"
-                    }
-                    self.appendComment(CommentDisplay(id: comment.id, authorId: comment.userId, authorName: authorName, body: comment.body, createdAt: comment.createdAt))
-                }
-            }
         }
-    }
-
-    @MainActor
-    private func appendComment(_ comment: CommentDisplay) {
-        guard !comments.contains(where: { $0.id == comment.id }) else { return }
-        comments.append(comment)
     }
 }

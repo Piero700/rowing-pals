@@ -126,6 +126,13 @@ final class FeedViewModel {
             .sorted { ReactionCatalog.sortIndex(for: $0.kind) < ReactionCatalog.sortIndex(for: $1.kind) }
     }
 
+    /// A post's comment total after the thread or the workout screen changed it.
+    @MainActor
+    func setCommentCount(_ count: Int, on postId: UUID) {
+        guard let index = posts.firstIndex(where: { $0.id == postId }) else { return }
+        posts[index].commentCounts = [FeedPost.CountRow(count: count)]
+    }
+
     /// Adds or removes the viewer's reaction of `kind`, showing it at once and undoing it if
     /// the write fails.
     @MainActor

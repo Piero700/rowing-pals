@@ -130,12 +130,16 @@ that they match the prototype.
    (owner / co-owner / admin / member), join requests, owner-only management, onboarding policy
    tags and "Join request pending". Needs schema (roles, policy, requests). Existing base:
    `Features/Onboarding/ClubSearchView`.
-5. **H — Settings overhaul.** App-icon picker (alternate icons; artwork already added), notification
+5. **H — Settings overhaul. DONE as far as decided:** the app-icon picker is out (decision 14)
+   and so is CSV (decision 4); notifications, quiet hours, privacy and the account section are
+   built. Only "Who can comment" remains, waiting on the user. Original scope: App-icon picker (alternate icons; artwork already added), notification
    toggles, privacy row (needs E), account section. **No CSV export** (decision 4). Quiet hours and
    "Who can comment" are placeholders: confirm before building.
 6. **I — Custom tests. BUILT as club tests** (decision 28) — see above.
-7. **J — Feed extras.** Full-screen comments thread (`comments` table already exists), 12-emoji
-   picker, share-workout preview.
+7. **J — Feed extras. BUILT** (decision 32, branch `t33-comments-share`): full-screen comments
+   thread (feed comments pill, and "View all" on the workout) and the share-workout image card
+   with preview. The 12-emoji picker was built with the v3 feed. No migration needed
+   (`docs/testing/comments-and-share.md`).
 8. **K — Prediction cards.** The algorithm arrived 2026-10-05 as the Pace Engine
    (`PaceEngine/`, Python source of truth). Phase 1 DONE: Swift port in `Packages/PaceEngine`,
    all 38 golden cases + 34 parsing checks pass. Phase 2 part 1 DONE (decisions 30–31): zone,

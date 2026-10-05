@@ -102,7 +102,8 @@ struct FeedPost: Decodable, Identifiable {
     let sessionPhotos: [SessionPhoto]
     /// Mutable so the feed can apply a reaction the moment it's tapped.
     var reactions: [ReactionRow]
-    let commentCounts: [CountRow]
+    /// Mutable so the card's count follows a comment written from the feed.
+    var commentCounts: [CountRow]
 
     var commentCount: Int { commentCounts.first?.count ?? 0 }
 
@@ -114,6 +115,14 @@ struct FeedPost: Decodable, Identifiable {
             ?? segments.first(where: { $0.label == .main })
             ?? orderedSegments.first
     }
+
+    /// The lead piece's own numbers (decision 16) — the most intense piece, not the whole
+    /// session — falling back to the session's when it has no pieces. Shown on the card and
+    /// the share image.
+    var leadDistanceM: Int { leadSegment?.distanceM ?? totalDistanceM }
+    var leadTimeMs: Int { leadSegment?.timeMs ?? totalTimeMs }
+    /// Nil when unknown: a zero split means a piece with no distance or time.
+    var leadSplitMs: Int? { (leadSegment?.splitMs ?? avgSplitMs).flatMap { $0 > 0 ? $0 : nil } }
 
     /// Carousel order (decision 11): the lead piece's monitor photo first, then the other
     /// pieces' monitor photos in position order, then the environment photos.
