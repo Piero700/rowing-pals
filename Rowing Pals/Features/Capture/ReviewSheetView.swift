@@ -149,21 +149,9 @@ struct ReviewSheetView: View {
 
     // MARK: - v3 chrome
 
-    /// Pushed-screen header: glass back button and "Review session".
+    /// The shared pushed-screen header: back and a centred "Review session".
     private var header: some View {
-        HStack(spacing: Tokens.Spacing.gap) {
-            GlassIconButton(systemImage: "chevron.left", accessibilityLabel: "Back") { dismissScreen() }
-            Text("Review session")
-                .textStyle(Typography.navTitle)
-                .foregroundStyle(Tokens.Ink.primary)
-                .accessibilityAddTraits(.isHeader)
-            Spacer(minLength: 0)
-        }
-        .padding(.top, 8)
-        .padding(.horizontal, Tokens.Spacing.headerHorizontal)
-        .padding(.bottom, 14)
-        .frame(minHeight: 58)
-        .background(Tokens.Base.ground)
+        ScreenHeader(title: "Review session") { dismissScreen() }
     }
 
     private func sectionTitle(_ text: String) -> some View {
@@ -179,13 +167,13 @@ struct ReviewSheetView: View {
     /// v3 split rows: a badge (the Main piece wears the workout label in brand), "distance ·
     /// time", and the pace — one per piece, in order.
     private var splitsSummary: some View {
-        VStack(spacing: 7) {
+        VStack(spacing: 8) {
             ForEach(viewModel.segments) { segment in
                 let isMain = segment.label == .main
                 let shape = RoundedRectangle(cornerRadius: Tokens.Radius.input, style: .continuous)
                 HStack(spacing: 8) {
                     Text(isMain ? (viewModel.sessionKind.testLabel ?? viewModel.zone.rawValue) : segment.label.rawValue.capitalized)
-                        .font(.system(size: 12, weight: .bold))
+                        .textStyle(Typography.fieldLabel)
                         .foregroundStyle(isMain ? Tokens.Accent.brand : Tokens.Ink.secondary)
                         .lineLimit(1)
                         .minimumScaleFactor(0.8)
@@ -198,7 +186,7 @@ struct ReviewSheetView: View {
                         .foregroundStyle(Tokens.Ink.secondary)
                     Spacer(minLength: 0)
                     Text(segment.splitMs > 0 ? segment.splitMs.formattedPace(display: paceDisplay) : "—")
-                        .font(.system(size: 13, weight: .bold))
+                        .textStyle(Typography.pill)
                         .tabularNumerals()
                         .foregroundStyle(Tokens.Ink.primary)
                 }
@@ -306,11 +294,11 @@ struct ReviewSheetView: View {
     private func menuRow(text: String) -> some View {
         HStack {
             Text(text)
-                .font(.system(size: 15))
+                .textStyle(Typography.detail)
                 .foregroundStyle(Tokens.Ink.primary)
             Spacer()
             Image(systemName: "chevron.up.chevron.down")
-                .font(.system(size: 12, weight: .semibold))
+                .textStyle(Typography.fieldLabel)
                 .foregroundStyle(Tokens.Ink.secondary)
         }
         .padding(Tokens.Spacing.loose)
@@ -328,7 +316,7 @@ struct ReviewSheetView: View {
     /// v3 field label: 12.5 pt, bold, muted.
     private func fieldLabel(_ text: String) -> some View {
         Text(text)
-            .font(.system(size: 12.5, weight: .bold))
+            .textStyle(Typography.fieldLabel)
             .foregroundStyle(Tokens.Ink.secondary)
     }
 
@@ -402,7 +390,7 @@ struct ReviewSheetView: View {
                 viewModel.removeGalleryPhoto(photo.id)
             } label: {
                 Image(systemName: "xmark")
-                    .font(.system(size: 11, weight: .bold))
+                    .textStyle(Typography.navLabel)
                     .foregroundStyle(.white)
                     .frame(width: 24, height: 24)
                     .background(Circle().fill(Color.black.opacity(0.6)))
@@ -486,7 +474,7 @@ struct ReviewSheetView: View {
         return Toggle(isOn: $viewModel.includeOnLeaderboards) {
             VStack(alignment: .leading, spacing: 2) {
                 Text("Include on leaderboards")
-                    .font(.system(size: 14, weight: .bold))
+                    .textStyle(Typography.rowTitle)
                     .foregroundStyle(Tokens.Ink.primary)
                 Text("Include this session in your volume totals.")
                     .textStyle(Typography.meta)
@@ -495,7 +483,7 @@ struct ReviewSheetView: View {
         }
         .tint(Tokens.Accent.success)
         .padding(.horizontal, Tokens.Spacing.loose)
-        .padding(.vertical, 9)
+        .padding(.vertical, 8)
         .frame(minHeight: 66)
         .background(shape.fill(Tokens.Surface.card))
         .overlay { shape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
@@ -528,7 +516,7 @@ struct ReviewSheetView: View {
                 .textStyle(Typography.overline)
                 .foregroundStyle(Tokens.Ink.secondary)
             (Text(viewModel.totalDistanceM > 0 ? viewModel.totalDistanceM.formattedWithGrouping : "—")
-                + Text(viewModel.totalDistanceM > 0 ? " m" : "").font(.system(size: 15)).foregroundColor(Tokens.Ink.secondary))
+                + Text(viewModel.totalDistanceM > 0 ? " m" : "").font(Typography.detail.font).foregroundColor(Tokens.Ink.secondary))
                 .textStyle(Typography.reviewResult)
                 .tabularNumerals()
                 .foregroundStyle(Tokens.Ink.primary)
@@ -548,7 +536,7 @@ struct ReviewSheetView: View {
         HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 2) {
                 Text("This looks like a \(test.label) test.")
-                    .font(.system(size: 14.5, weight: .semibold))
+                    .textStyle(Typography.rowTitle)
                     .foregroundStyle(Tokens.Ink.primary)
                 Text("Post it as a \(test.label) test and add it to the leaderboard?")
                     .textStyle(Typography.bodySecondary)
@@ -559,10 +547,10 @@ struct ReviewSheetView: View {
                 viewModel.decideTest(accepted: true)
             } label: {
                 Text("Yes")
-                    .font(.system(size: 14, weight: .bold))
+                    .textStyle(Typography.rowTitle)
                     .foregroundStyle(Tokens.Base.dark)
                     .padding(.horizontal, 16)
-                    .padding(.vertical, 9)
+                    .padding(.vertical, 8)
                     .background {
                         RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Tokens.Accent.brand)
                     }
@@ -571,10 +559,10 @@ struct ReviewSheetView: View {
                 viewModel.decideTest(accepted: false)
             } label: {
                 Text("No")
-                    .font(.system(size: 14, weight: .semibold))
+                    .textStyle(Typography.rowTitle)
                     .foregroundStyle(Tokens.Ink.primary.opacity(0.8))
                     .padding(.horizontal, 16)
-                    .padding(.vertical, 9)
+                    .padding(.vertical, 8)
                     .background {
                         RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Tokens.Ink.primary.opacity(0.1))
                     }

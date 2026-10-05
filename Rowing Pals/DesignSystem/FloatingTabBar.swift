@@ -91,7 +91,7 @@ struct FloatingTabBar<Tab: Hashable>: View {
                 // v3 icons sit in a 20 × 20 box drawn with a thin 1.9 stroke; SF Symbols at
                 // 17 pt regular fill that box at the same visual weight.
                 Image(systemName: item.systemImage)
-                    .font(.system(size: 17, weight: .regular))
+                    .textStyle(Typography.bodyV3)
                     .frame(width: 20, height: 20)
                 Text(item.label)
                     .textStyle(Typography.navLabel)
@@ -112,14 +112,16 @@ struct FloatingTabBar<Tab: Hashable>: View {
         .accessibilityAddTraits(isSelected ? [.isSelected, .isButton] : .isButton)
     }
 
-    /// Icon only (plus, 24 pt, brand) — the circle comes from the glass container.
+    /// v4: a solid brand circle with the plus in the on-brand colour and a soft brand glow
+    /// beneath it — the one filled control in the bar, so Log reads as the main action.
     private var logButton: some View {
         Button(action: onTapLog) {
             Image(systemName: "plus")
-                .font(.system(size: 24, weight: .semibold))
-                .foregroundStyle(Tokens.Accent.brand)
+                .font(.system(size: 22, weight: .semibold))
+                .foregroundStyle(Tokens.Ink.onBrand)
                 .frame(width: Tokens.Size.navHeight, height: Tokens.Size.navHeight)
-                .glassSurface(in: Circle())
+                .background { Circle().fill(Tokens.Accent.brand) }
+                .shadow(color: Tokens.Accent.brand.opacity(0.4), radius: 9, y: 6)
                 .contentShape(Circle())
         }
         .buttonStyle(IconPressStyle())

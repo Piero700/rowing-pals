@@ -57,7 +57,8 @@ leaderboards.
 
 ## Design system
 
-The design is **current, not permanent**. The values below describe the v2 design
+The design is **current, not permanent**. Since decision 42 the type scale and spacing follow
+the v4 canvas (Apple's iOS sizes, 8-point grid); the palette below is unchanged. The values below describe the v2 design
 (captured 2026-09-17, full spec in `docs/design/rowing-pals-redesign-handoff-v2.md`). When
 the user changes the design, update `DesignSystem/` and the docs; do not treat this section
 as a reason to refuse.
@@ -79,10 +80,10 @@ Current v2 palette (dark / light):
 
 | Token | Dark | Light | Job |
 |---|---|---|---|
-| `Accent.brand` | `#91B8FF` | `#214FA3` | Interactive elements, active tab, links, the Log button |
+| `Accent.brand` | `#91B8FF` | `#214FA3` | Interactive elements, active tab, links, the Log button (solid), Settings switches |
 | `Accent.records` | `#C6ADFF` | `#67409B` | Personal bests, avatars, the rank-hero card |
 | `Accent.rank` | `#EFC37C` | `#84500B` | The #1 leaderboard row and rank-movement indicators |
-| `Accent.success` | `#78D7AC` | `#176A4A` | Success confirmation and "on" toggle states |
+| `Accent.success` | `#78D7AC` | `#176A4A` | Success confirmation; the Review screen's "Include on leaderboards" switch |
 | `System.error` | `#FF766F` | `#C93C36` | Error/destructive text and controls |
 | `Ink.primary` / `.secondary` / `.faint` | `#F7F8FC` / `#BBC0CE` / `#A3ABBA` | `#111723` / `#3E4C61` / `#4E5C70` | Text levels |
 | `Base` | `#101114` | `#EDF0F5` | Screen/card ground |

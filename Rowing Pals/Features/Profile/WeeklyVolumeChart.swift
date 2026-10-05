@@ -43,21 +43,20 @@ struct WeeklyVolumeChart: View {
             Text("Monday–Sunday · Tap a bar for the total")
                 .font(.system(size: 11))
                 .foregroundStyle(Tokens.Ink.secondary)
-                .padding(.top, 15)
+                .padding(.top, 16)
         }
     }
 
     private var header: some View {
         let week = shownWeek
         return HStack(alignment: .top) {
-            VStack(alignment: .leading, spacing: 7) {
+            VStack(alignment: .leading, spacing: 8) {
                 Text(week.map { $0.isCurrentWeek ? "This week · In progress" : "Week of \(Self.dayMonth($0.weekStart))" } ?? "This week")
                     .textStyle(Typography.overline)
                     .foregroundStyle(Tokens.Ink.secondary)
                 (Text((week?.distanceM ?? 0).formattedWithGrouping)
                     + Text(" m").font(.system(size: 15, weight: .medium)).foregroundColor(Tokens.Ink.secondary))
-                    .font(.system(size: 30, weight: .bold))
-                    .tracking(-0.7)
+                    .textStyle(Typography.bigResult)
                     .tabularNumerals()
                     .foregroundStyle(Tokens.Ink.primary)
             }
@@ -88,7 +87,7 @@ struct WeeklyVolumeChart: View {
 
     private var bars: some View {
         GeometryReader { geometry in
-            HStack(alignment: .bottom, spacing: 5) {
+            HStack(alignment: .bottom, spacing: 4) {
                 ForEach(weeks) { week in
                     let fraction = CGFloat(week.distanceM) / CGFloat(axisMax)
                     let isShown = week.weekStart == shownWeek?.weekStart

@@ -16,7 +16,7 @@ struct CommentRow: View {
         HStack(alignment: .top, spacing: Tokens.Spacing.gap) {
             AvatarPlaceholder(diameter: Tokens.Size.commentAvatar, name: comment.authorName, userId: comment.authorId)
             VStack(alignment: .leading, spacing: 1) {
-                HStack(spacing: 7) {
+                HStack(spacing: 8) {
                     Text(comment.authorName)
                         .textStyle(Typography.commentAuthor)
                         .foregroundStyle(Tokens.Ink.primary)
@@ -32,7 +32,7 @@ struct CommentRow: View {
             }
             Spacer(minLength: 0)
         }
-        .padding(11)
+        .padding(12)
         .background {
             RoundedRectangle(cornerRadius: Tokens.Radius.comment, style: .continuous)
                 .fill(Tokens.Ink.primary.opacity(0.05))

@@ -39,6 +39,8 @@ struct RankingsView: View {
                 TestsView(showsOwnTitle: false, mode: $mode, reselects: reselects)
             }
         }
+        // The two boards swap at once rather than cross-fading under the control's spring.
+        .animation(nil, value: mode)
         .safeAreaInset(edge: .top, spacing: 0) {
             HStack {
                 Text("Rankings")

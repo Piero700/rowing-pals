@@ -35,7 +35,7 @@ struct PrimaryButtonStyle: ButtonStyle {
             .textStyle(Typography.button)
             .foregroundStyle(isEnabled ? Tokens.Ink.onBrand : Tokens.Ink.faint)
             .frame(maxWidth: .infinity, minHeight: Tokens.Size.primaryButton)
-            .padding(.horizontal, 18)
+            .padding(.horizontal, 16)
             .background {
                 if isEnabled {
                     Capsule().fill(
@@ -169,7 +169,7 @@ struct GlassIconButton: View {
     var body: some View {
         Button(action: action) {
             Image(systemName: systemImage)
-                .font(.system(size: 17, weight: .semibold))
+                .textStyle(Typography.cardTitle)
                 .foregroundStyle(tint)
                 .frame(width: Tokens.Size.iconButton, height: Tokens.Size.iconButton)
                 .glassSurface(in: Circle())
@@ -212,6 +212,6 @@ extension View {
             GlassIconButton(systemImage: "magnifyingglass", accessibilityLabel: "Search") {}
         }
     }
-    .padding(15)
+    .padding(16)
     .background(Tokens.Base.ground)
 }

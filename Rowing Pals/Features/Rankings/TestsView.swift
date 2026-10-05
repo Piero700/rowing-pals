@@ -23,11 +23,11 @@ struct TestsView: View {
     var body: some View {
         // Direct ScrollView child, same constraint as FeedView — see its comment.
         ScrollView {
-            VStack(alignment: .leading, spacing: 18) {
+            VStack(alignment: .leading, spacing: 16) {
                 if showsOwnTitle {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Tests")
-                            .font(.system(size: 30, weight: .bold))
+                            .textStyle(Typography.bigResult)
                             .foregroundStyle(Tokens.Ink.primary)
                         Text("Your bests, and where they rank.")
                             .textStyle(Typography.bodySecondary)
@@ -191,7 +191,7 @@ struct TestsView: View {
     private var addTestTile: some View {
         VStack(spacing: 6) {
             Image(systemName: "plus")
-                .font(.system(size: 21, weight: .bold))
+                .font(.system(size: 22, weight: .semibold))
             Text("Add test")
                 .textStyle(Typography.pill)
         }
@@ -206,13 +206,13 @@ struct TestsView: View {
     private func distanceTile(_ tile: TestsViewModel.Tile) -> some View {
         VStack(spacing: 6) {
             Text(tile.test.label)
-                .font(.system(size: 21, weight: .bold))
+                .font(.system(size: 22, weight: .semibold))
                 .tabularNumerals()
                 .foregroundStyle(Tokens.Ink.primary)
                 .lineLimit(1)
                 .minimumScaleFactor(0.6)
             Text(tile.displayValue ?? "—")
-                .font(.system(size: 13.5, weight: .semibold))
+                .textStyle(Typography.pill)
                 .tabularNumerals()
                 .foregroundStyle(Tokens.Ink.secondary)
                 .lineLimit(1)

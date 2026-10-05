@@ -158,6 +158,9 @@ that they match the prototype.
    Contrast, full screen-by-screen comparison against the
    prototype, then task 19 (TestFlight).
 
+11. **Design sync** (decision 42, branch `t38-design-sync`, `docs/testing/design-sync.md`): the
+    canvas's type scale, spacing, tab bar, centred titles and Settings layout. 90 hard-coded font
+    sizes moved onto tokens. Next: coaching Phase 1.
 10. **Performance** (branch `t37-performance`, `docs/testing/performance.md`): one shared
     "viewer context" (profile, club, clubmates, follows) instead of every screen re-fetching it;
     the feed relies on the database's visibility rule (decision 33) instead of repeating it;

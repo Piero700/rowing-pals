@@ -78,7 +78,7 @@ struct PeopleListView: View {
     /// 52 pt, card fill, 1 pt line, radius 24; a 20 pt search icon inset 14.
     private var searchField: some View {
         let shape = RoundedRectangle(cornerRadius: Tokens.Radius.input, style: .continuous)
-        return HStack(spacing: 9) {
+        return HStack(spacing: 8) {
             Image(systemName: "magnifyingglass")
                 .font(.system(size: 17, weight: .medium))
                 .frame(width: 20, height: 20)

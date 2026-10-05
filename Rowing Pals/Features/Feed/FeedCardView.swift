@@ -48,7 +48,7 @@ struct FeedCardView: View {
                     .foregroundStyle(Tokens.Ink.primary)
                     .fixedSize(horizontal: false, vertical: true)
                     .padding(.top, 1)
-                    .padding(.bottom, 9)
+                    .padding(.bottom, 8)
             }
             workoutLink
             reactionRow
@@ -73,7 +73,7 @@ struct FeedCardView: View {
         Button {
             navigate(.profile(post.userId))
         } label: {
-            HStack(spacing: 11) {
+            HStack(spacing: 12) {
                 AvatarPlaceholder(diameter: 41, streakDays: streakDays, name: post.author.displayName, userId: post.userId)
                 VStack(alignment: .leading, spacing: 0) {
                     Text(post.author.displayName)
@@ -188,7 +188,7 @@ struct FeedCardView: View {
             }
         }
         .padding(.horizontal, 8)
-        .padding(.vertical, 5)
+        .padding(.vertical, 4)
         .background { Capsule().fill(Color.black.opacity(0.35)) }
         .accessibilityHidden(true)
     }
@@ -235,16 +235,16 @@ struct FeedCardView: View {
             HStack(spacing: Tokens.Spacing.loose) {
                 VStack(alignment: .leading, spacing: 6) {
                     Text("\(post.workoutLabel ?? "Training") · Main workout")
-                        .font(.system(size: 14, weight: .bold))
+                        .textStyle(Typography.rowTitle)
                         .foregroundStyle(Tokens.Ink.primary)
                     Text(meta)
-                        .font(.system(size: 12))
+                        .textStyle(Typography.statLabel)
                         .tabularNumerals()
                         .foregroundStyle(Tokens.Ink.secondary)
                 }
                 Spacer(minLength: 0)
                 Image(systemName: "chevron.right")
-                    .font(.system(size: 14, weight: .semibold))
+                    .textStyle(Typography.rowTitle)
                     .foregroundStyle(Tokens.Ink.primary)
             }
             .padding(Tokens.Spacing.card)
@@ -341,7 +341,7 @@ struct FeedCardView: View {
                 isShowingShare = true
             } label: {
                 Image(systemName: "square.and.arrow.up")
-                    .font(.system(size: 16, weight: .semibold))
+                    .textStyle(Typography.cardTitle)
                     .foregroundStyle(Tokens.Ink.primary)
                     .frame(width: Tokens.Size.minTap, height: Tokens.Size.minTap)
                     .glassSurface(in: Circle())
@@ -350,7 +350,7 @@ struct FeedCardView: View {
             .buttonStyle(IconPressStyle())
             .accessibilityLabel("Share workout")
         }
-        .padding(.top, 9)
+        .padding(.top, 8)
         .overlay(alignment: .top) {
             Rectangle().fill(Tokens.Surface.line).frame(height: 1)
         }

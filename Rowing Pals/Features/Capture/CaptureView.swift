@@ -52,7 +52,7 @@ struct CaptureView: View {
             VStack(spacing: Tokens.Spacing.gap) {
                 cameraFrame
                 Text("Front + rear · No time limit")
-                    .font(.system(size: 12))
+                    .textStyle(Typography.statLabel)
                     .foregroundStyle(Tokens.Ink.secondary)
             }
             .padding(.horizontal, Tokens.Spacing.screen)
@@ -67,9 +67,9 @@ struct CaptureView: View {
             .padding(.top, Tokens.Spacing.gap)
 
             controls
-                .padding(.top, 13)
+                .padding(.top, 12)
                 .padding(.horizontal, Tokens.Spacing.screen)
-                .padding(.bottom, 18)
+                .padding(.bottom, 16)
         }
         .background(Tokens.Base.ground)
         .toolbar(.hidden, for: .navigationBar)
@@ -100,22 +100,12 @@ struct CaptureView: View {
 
     // MARK: - Header
 
-    /// Pushed-screen header: 44 pt glass back button, 17 pt title, brand text action.
+    /// The shared pushed-screen header: back, centred "Log workout", and Help on the right.
     private var header: some View {
-        HStack(spacing: Tokens.Spacing.gap) {
-            GlassIconButton(systemImage: "chevron.left", accessibilityLabel: "Back", action: onClose)
-            Text("Log workout")
-                .textStyle(Typography.navTitle)
-                .foregroundStyle(Tokens.Ink.primary)
-                .accessibilityAddTraits(.isHeader)
-            Spacer(minLength: 0)
+        ScreenHeader(title: "Log workout", onBack: onClose) {
             Button("Help") { isShowingHelp = true }
                 .buttonStyle(.rpText)
         }
-        .padding(.top, 8)
-        .padding(.horizontal, Tokens.Spacing.headerHorizontal)
-        .padding(.bottom, 14)
-        .frame(minHeight: 58)
     }
 
     // MARK: - Camera
@@ -203,7 +193,7 @@ struct CaptureView: View {
                 withAnimation(.snappy) { isFrontPrimary.toggle() }
             } label: {
                 Image(systemName: "arrow.left.arrow.right")
-                    .font(.system(size: 17, weight: .semibold))
+                    .textStyle(Typography.cardTitle)
                     .foregroundStyle(Tokens.Ink.primary)
                     .frame(width: 48, height: 48)
                     .glassSurface(in: Circle())
@@ -218,7 +208,7 @@ struct CaptureView: View {
 
             PhotosPicker(selection: $libraryItem, matching: .images) {
                 Image(systemName: "photo.on.rectangle")
-                    .font(.system(size: 17, weight: .semibold))
+                    .textStyle(Typography.cardTitle)
                     .foregroundStyle(Tokens.Ink.primary)
                     .frame(width: 48, height: 48)
                     .glassSurface(in: Circle())

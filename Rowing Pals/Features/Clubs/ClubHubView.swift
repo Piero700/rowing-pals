@@ -136,8 +136,8 @@ struct ClubHubView: View {
             .textStyle(Typography.statLabel)
             .tabularNumerals()
             .foregroundStyle(Tokens.Ink.secondary)
-            .padding(.horizontal, 9)
-            .padding(.vertical, 5)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
             .background(Capsule().fill(Tokens.Surface.raised))
             .lineLimit(1)
     }
@@ -182,7 +182,7 @@ struct ClubHubView: View {
                     }
                     Spacer(minLength: 0)
                     Image(systemName: "chevron.right")
-                        .font(.system(size: 13, weight: .semibold))
+                        .textStyle(Typography.pill)
                         .foregroundStyle(Tokens.Ink.secondary)
                 }
                 .padding(12)

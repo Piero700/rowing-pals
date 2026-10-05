@@ -79,7 +79,7 @@ struct ClubSearchView: View {
 
                 if mode == .joinLater, let myRequest {
                     requestStatus(myRequest)
-                        .padding(.bottom, 18)
+                        .padding(.bottom, 16)
                 }
 
                 Text("Club name")
@@ -237,14 +237,14 @@ struct ClubSearchView: View {
             Text(body)
                 .textStyle(Typography.bodyV3)
                 .foregroundStyle(Tokens.Ink.secondary)
-                .padding(.bottom, 18)
+                .padding(.bottom, 16)
         }
     }
 
     /// 52 pt, card fill, 1 pt line, radius 24; a 20 pt search icon inset 14.
     private var searchField: some View {
         let shape = RoundedRectangle(cornerRadius: Tokens.Radius.input, style: .continuous)
-        return HStack(spacing: 9) {
+        return HStack(spacing: 8) {
             Image(systemName: "magnifyingglass")
                 .font(.system(size: 17, weight: .medium))
                 .frame(width: 20, height: 20)
@@ -279,7 +279,7 @@ struct ClubSearchView: View {
                 .foregroundStyle(Tokens.Ink.secondary)
                 .padding(.vertical, 8)
         } else {
-            VStack(spacing: 9) {
+            VStack(spacing: 8) {
                 ForEach(viewModel.results) { club in
                     clubRow(club)
                 }
@@ -291,9 +291,9 @@ struct ClubSearchView: View {
     private func clubRow(_ club: ClubSearchViewModel.ClubResult) -> some View {
         let isSelected = viewModel.selectedClub?.id == club.id
         let shape = RoundedRectangle(cornerRadius: Tokens.Radius.input, style: .continuous)
-        return HStack(spacing: 11) {
+        return HStack(spacing: 12) {
             Text(club.crest)
-                .font(.system(size: 12, weight: .heavy))
+                .font(.system(size: 12, weight: .bold))
                 .foregroundStyle(Tokens.Accent.brand)
                 .frame(width: 44, height: 44)
                 .background(RoundedRectangle(cornerRadius: Tokens.Radius.crest, style: .continuous).fill(Tokens.Surface.raised))
@@ -312,7 +312,7 @@ struct ClubSearchView: View {
                 if isSelected {
                     Circle().fill(Tokens.Accent.brand)
                     Image(systemName: "checkmark")
-                        .font(.system(size: 11, weight: .heavy))
+                        .font(.system(size: 11, weight: .bold))
                         .foregroundStyle(Tokens.Ink.onBrand)
                 }
             }
@@ -361,7 +361,7 @@ struct ClubSearchView: View {
                 Text("Level")
                     .textStyle(Typography.fieldLabel)
                     .foregroundStyle(Tokens.Ink.secondary)
-                    .padding(.top, 18)
+                    .padding(.top, 16)
                     .padding(.bottom, 6)
                 PillSegmentedControl(options: ["Novice", "Senior"], selection: $categorySelection)
                 Text("Novice means you’re in your first season.")
@@ -393,13 +393,13 @@ struct ClubSearchView: View {
     /// v3's bottom bar: the primary button over a fade into the screen ground.
     private func stickyButton(_ title: String, isEnabled: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            HStack(spacing: 7) {
+            HStack(spacing: 8) {
                 if isSaving {
                     ProgressView().tint(Tokens.Ink.onBrand)
                 } else {
                     Text(title)
                     Image(systemName: "chevron.right")
-                        .font(.system(size: 15, weight: .semibold))
+                        .textStyle(Typography.rowTitle)
                 }
             }
         }

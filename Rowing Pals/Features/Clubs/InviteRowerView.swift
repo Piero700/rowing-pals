@@ -76,7 +76,7 @@ struct InviteRowerView: View {
 
     private var searchField: some View {
         let shape = RoundedRectangle(cornerRadius: Tokens.Radius.input, style: .continuous)
-        return HStack(spacing: 9) {
+        return HStack(spacing: 8) {
             Image(systemName: "magnifyingglass")
                 .font(.system(size: 17, weight: .medium))
                 .frame(width: 20, height: 20)

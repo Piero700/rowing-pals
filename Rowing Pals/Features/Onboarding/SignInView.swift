@@ -30,7 +30,7 @@ struct SignInView: View {
                 }
                 VStack(alignment: .leading, spacing: 8) {
                     Text(viewModel.isSigningUp ? "Create your account" : "Sign in")
-                        .font(.system(size: 34, weight: .bold))
+                        .textStyle(Typography.bigResult)
                         .foregroundStyle(Tokens.Ink.primary)
                     Text("Your feed, leaderboards and squad live here.")
                         .textStyle(Typography.bodySecondary)
@@ -68,12 +68,12 @@ struct SignInView: View {
                             ProgressView().tint(Tokens.Base.dark)
                         } else {
                             Text(viewModel.isSigningUp ? "Sign up" : "Sign in")
-                                .font(.system(size: 16, weight: .bold))
+                                .textStyle(Typography.cardTitle)
                         }
                         Spacer()
                     }
                     .foregroundStyle(Tokens.Base.dark)
-                    .padding(.vertical, 15)
+                    .padding(.vertical, 16)
                     .background {
                         RoundedRectangle(cornerRadius: 18, style: .continuous)
                             .fill(Tokens.Accent.brand)

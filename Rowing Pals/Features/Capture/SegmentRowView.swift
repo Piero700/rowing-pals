@@ -91,11 +91,11 @@ struct SegmentRowView: View {
             }
             if !segment.lowConfidenceFields.isEmpty {
                 Text(lowConfidenceCaption)
-                    .font(.system(size: 12.5))
+                    .textStyle(Typography.statLabel)
                     .foregroundStyle(Tokens.Accent.brand)
             }
             Text(rateHelp)
-                .font(.system(size: 12.5))
+                .textStyle(Typography.statLabel)
                 .foregroundStyle(Tokens.Ink.secondary)
             HStack(spacing: 6) {
                 ForEach(SegmentLabel.allCases, id: \.self) { tag in
@@ -111,7 +111,7 @@ struct SegmentRowView: View {
             }
             if isLead {
                 Label("Shown first on the feed", systemImage: "star")
-                    .font(.system(size: 12.5, weight: .semibold))
+                    .textStyle(Typography.fieldLabel)
                     .foregroundStyle(Tokens.Ink.secondary)
             }
             if onRemove != nil || onNotMonitor != nil {
@@ -119,7 +119,7 @@ struct SegmentRowView: View {
                     if let onNotMonitor {
                         Button(action: onNotMonitor) {
                             Text("Not a monitor photo")
-                                .font(.system(size: 13, weight: .semibold))
+                                .textStyle(Typography.pill)
                                 .foregroundStyle(Tokens.Accent.brand)
                                 .frame(minHeight: Tokens.Size.minTap)
                                 .contentShape(Rectangle())
@@ -129,7 +129,7 @@ struct SegmentRowView: View {
                     if let onRemove {
                         Button(role: .destructive, action: onRemove) {
                             Text("Remove piece")
-                                .font(.system(size: 13, weight: .semibold))
+                                .textStyle(Typography.pill)
                                 .foregroundStyle(Tokens.System.error)
                                 .frame(minHeight: Tokens.Size.minTap)
                                 .contentShape(Rectangle())
@@ -174,7 +174,7 @@ struct SegmentRowView: View {
                     .fill(Tokens.Ink.primary.opacity(0.08))
                     .overlay {
                         Image(systemName: "pencil")
-                            .font(.system(size: 15, weight: .semibold))
+                            .textStyle(Typography.rowTitle)
                             .foregroundStyle(Tokens.Ink.secondary)
                     }
             }
@@ -197,7 +197,7 @@ struct SegmentRowView: View {
             TextField(placeholder, text: text, onEditingChanged: { isEditing in
                 if !isEditing { onCommit() }
             })
-                .font(.system(size: 16))
+                .textStyle(Typography.bodyV3)
                 .tabularNumerals()
                 .foregroundStyle(Tokens.Ink.primary)
                 .keyboardType(keyboard)
@@ -213,7 +213,7 @@ struct SegmentRowView: View {
         VStack(alignment: .leading, spacing: 6) {
             fieldLabel(paceDisplay == .split ? "Average /500m" : "Average watts")
             Text(segment.splitMs > 0 ? segment.splitMs.formattedPace(display: paceDisplay) : "—")
-                .font(.system(size: 16))
+                .textStyle(Typography.bodyV3)
                 .tabularNumerals()
                 .foregroundStyle(Tokens.Ink.secondary)
                 .fieldBox(highlighted: false)
@@ -231,7 +231,7 @@ struct SegmentRowView: View {
                 TextField("spm", text: $rateText, onEditingChanged: { isEditing in
                     if !isEditing { commitRate() }
                 })
-                    .font(.system(size: 16))
+                    .textStyle(Typography.bodyV3)
                     .tabularNumerals()
                     .foregroundStyle(Tokens.Ink.primary)
                     .keyboardType(.decimalPad)
@@ -261,7 +261,7 @@ struct SegmentRowView: View {
             segment.isRateConfirmed = true
         } label: {
             Text(segment.isRateConfirmed ? "Checked" : "Confirm")
-                .font(.system(size: 13, weight: .bold))
+                .textStyle(Typography.pill)
                 .lineLimit(1)
                 .fixedSize()
                 .foregroundStyle(segment.isRateConfirmed ? Tokens.Accent.success : Tokens.Accent.brand)
@@ -281,7 +281,7 @@ struct SegmentRowView: View {
     /// v3 field label: 12.5 pt, bold, muted.
     private func fieldLabel(_ text: String) -> some View {
         Text(text)
-            .font(.system(size: 12.5, weight: .bold))
+            .textStyle(Typography.fieldLabel)
             .foregroundStyle(Tokens.Ink.secondary)
             .lineLimit(1)
     }

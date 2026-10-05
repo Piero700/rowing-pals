@@ -90,7 +90,7 @@ struct ProfileView: View {
                         options: Tab.allCases.map(\.label),
                         selection: Binding(get: { tab.rawValue }, set: { tab = Tab(rawValue: $0) ?? .overview })
                     )
-                    .padding(.top, 11)
+                    .padding(.top, 12)
 
                     switch tab {
                     case .overview: overview
@@ -178,7 +178,7 @@ struct ProfileView: View {
                     }
                     .overlay(alignment: .bottomTrailing) {
                         Image(systemName: "camera.fill")
-                            .font(.system(size: 12, weight: .semibold))
+                            .textStyle(Typography.fieldLabel)
                             .foregroundStyle(Tokens.Ink.onBrand)
                             .frame(width: Tokens.Size.avatarBadge, height: Tokens.Size.avatarBadge)
                             .background(Circle().fill(Tokens.Accent.brand))
@@ -249,21 +249,21 @@ struct ProfileView: View {
                 .foregroundStyle(Tokens.Ink.primary)
                 .multilineTextAlignment(.center)
             Text(identityMeta)
-                .font(.system(size: 13))
+                .textStyle(Typography.meta)
                 .foregroundStyle(Tokens.Ink.secondary)
                 .padding(.top, 4)
                 .padding(.bottom, isOtherRower ? 0 : 8)
             if isOtherRower {
                 // v3 §08: the club on one line, whether the profile is public on the next.
                 Text(viewModel.isPrivateAccount ? "Private profile" : "Public profile")
-                    .font(.system(size: 13))
+                    .textStyle(Typography.meta)
                     .foregroundStyle(Tokens.Ink.secondary)
                     .padding(.top, 4)
                     .padding(.bottom, 8)
             }
         }
         .frame(maxWidth: .infinity)
-        .padding(.top, 11)
+        .padding(.top, 12)
         .padding(.bottom, 14)
     }
 
@@ -334,7 +334,7 @@ struct ProfileView: View {
         Button(action: action) {
             VStack(spacing: 0) {
                 Text("\(value)")
-                    .font(.system(size: 16, weight: .bold))
+                    .textStyle(Typography.cardTitle)
                     .tabularNumerals()
                     .foregroundStyle(Tokens.Ink.primary)
                 Text(label)
@@ -357,7 +357,7 @@ struct ProfileView: View {
                 .font(.system(size: 26, weight: .semibold))
                 .foregroundStyle(Tokens.Ink.secondary)
             Text("This profile is private")
-                .font(.system(size: 17, weight: .bold))
+                .textStyle(Typography.cardTitle)
                 .foregroundStyle(Tokens.Ink.primary)
             Text("Send a follow request to see their stats, personal bests, followers and following.")
                 .textStyle(Typography.meta)
@@ -389,7 +389,7 @@ struct ProfileView: View {
             ForEach(stats.indices, id: \.self) { index in
                 VStack(spacing: 2) {
                     Text(stats[index].0)
-                        .font(.system(size: 21, weight: .bold))
+                        .font(.system(size: 22, weight: .semibold))
                         .tabularNumerals()
                         .foregroundStyle(Tokens.Ink.primary)
                         .lineLimit(1)
@@ -529,14 +529,14 @@ struct ProfileView: View {
             sectionHeader("Weekly volume") { chip("12 weeks") }
                 .padding(.top, 4)
             WeeklyVolumeChart(weeks: viewModel.weeklyVolumes)
-                .padding(.vertical, 18)
+                .padding(.vertical, 16)
                 .padding(.horizontal, Tokens.Spacing.card)
                 .background(Self.cardShape.fill(Tokens.Surface.card))
                 .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
 
             sectionHeader("Consistency") { chip("\(viewModel.activeDaysInGrid) active days") }
             ConsistencyCalendarView(days: viewModel.consistencyDays, footnote: streakFootnote)
-                .padding(.vertical, 18)
+                .padding(.vertical, 16)
                 .padding(.horizontal, Tokens.Spacing.card)
                 .background(Self.cardShape.fill(Tokens.Surface.card))
                 .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
@@ -633,7 +633,7 @@ struct ProfileView: View {
 
     private func chip(_ text: String) -> some View {
         Text(text)
-            .font(.system(size: 12, weight: .bold))
+            .textStyle(Typography.fieldLabel)
             .tabularNumerals()
             .foregroundStyle(Tokens.Ink.secondary)
             .padding(.horizontal, 8)
@@ -651,17 +651,17 @@ struct ProfileView: View {
             HStack(spacing: Tokens.Spacing.loose) {
                 VStack(alignment: .leading, spacing: 6) {
                     Text("\(session.workoutLabel ?? "Training") · \(session.distanceM.formattedMetres)")
-                        .font(.system(size: 14, weight: .bold))
+                        .textStyle(Typography.rowTitle)
                         .tabularNumerals()
                         .foregroundStyle(Tokens.Ink.primary)
                     Text("\(session.totalTimeMs.formattedDurationMs) · View workout")
-                        .font(.system(size: 12))
+                        .textStyle(Typography.statLabel)
                         .tabularNumerals()
                         .foregroundStyle(Tokens.Ink.secondary)
                 }
                 Spacer(minLength: 0)
                 Image(systemName: "chevron.right")
-                    .font(.system(size: 14, weight: .semibold))
+                    .textStyle(Typography.rowTitle)
                     .foregroundStyle(Tokens.Ink.primary)
             }
             .padding(Tokens.Spacing.card)
@@ -687,7 +687,7 @@ struct ProfileView: View {
     // MARK: - Posts tab
 
     private var postsGrid: some View {
-        LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 5), count: 3), spacing: 5) {
+        LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 4), count: 3), spacing: 4) {
             ForEach(viewModel.photos) { photo in
                 photoTile(photo)
                     .asButton { navigate(.post(photo.id)) }

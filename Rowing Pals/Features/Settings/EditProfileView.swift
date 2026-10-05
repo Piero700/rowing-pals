@@ -152,7 +152,7 @@ struct EditProfileView: View {
 
     private func label(_ text: String) -> some View {
         Text(text)
-            .font(.system(size: 12.5, weight: .bold))
+            .textStyle(Typography.fieldLabel)
             .foregroundStyle(Tokens.Ink.secondary)
             .padding(.top, 4)
     }

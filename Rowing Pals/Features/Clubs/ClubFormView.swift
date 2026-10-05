@@ -152,7 +152,7 @@ struct ClubFormView: View {
                     .foregroundStyle(Tokens.Ink.primary)
                 Spacer()
                 Image(systemName: "chevron.up.chevron.down")
-                    .font(.system(size: 13, weight: .semibold))
+                    .textStyle(Typography.pill)
                     .foregroundStyle(Tokens.Ink.secondary)
             }
             .contentShape(Rectangle())

@@ -34,7 +34,7 @@ struct MetresLeaderboardView: View {
                 .padding(.top, Tokens.Spacing.loose)
 
                 rankHeroCard
-                    .padding(.top, 13)
+                    .padding(.top, 12)
 
                 HStack(spacing: Tokens.Spacing.gap) {
                     RankingsFiltersPill(text: filterSummary) { isShowingFilters = true }
@@ -111,7 +111,7 @@ struct MetresLeaderboardView: View {
             Text(heroTitle(rows: rows, ownIndex: ownIndex))
                 .textStyle(Typography.overline)
                 .foregroundStyle(Tokens.Accent.records)
-            (Text(own.value) + Text(" \(own.unit)").font(.system(size: 16, weight: .bold)))
+            (Text(own.value) + Text(" \(own.unit)").font(Typography.cardTitle.font))
                 .textStyle(Typography.heroNumber)
                 .tabularNumerals()
                 .foregroundStyle(Tokens.Ink.primary)
@@ -122,12 +122,12 @@ struct MetresLeaderboardView: View {
                 .padding(.vertical, Tokens.Spacing.tight)
             if let leader = rows.first {
                 Text("Group leader · \(leader.isCurrentUser ? "You" : leader.name) · \(leader.metres.formattedDistance(unit: distanceUnit))")
-                    .font(.system(size: 12))
+                    .textStyle(Typography.statLabel)
                     .tabularNumerals()
                     .foregroundStyle(Tokens.Ink.secondary)
             }
         }
-        .padding(17)
+        .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background {
             shape.fill(
@@ -192,16 +192,16 @@ struct MetresLeaderboardView: View {
     private func leaderboardRow(_ row: MetresLeaderboardViewModel.Row) -> some View {
         let isWinner = row.rank == 1
         let score = row.metres.distanceParts(unit: distanceUnit)
-        return HStack(spacing: 7) {
+        return HStack(spacing: 8) {
             Text(isWinner ? "♛" : "\(row.rank)")
-                .font(.system(size: 16, weight: .heavy))
+                .font(.system(size: 17, weight: .bold))
                 .tabularNumerals()
                 .foregroundStyle(isWinner ? Tokens.Accent.rank : Tokens.Ink.secondary)
                 .frame(width: 20)
             AvatarPlaceholder(diameter: 32, streakDays: row.streakDays, name: row.name, userId: row.userId)
             VStack(alignment: .leading, spacing: 1) {
                 Text(row.isCurrentUser ? "\(row.name) (you)" : row.name)
-                    .font(.system(size: 12, weight: .bold))
+                    .textStyle(Typography.fieldLabel)
                     .foregroundStyle(Tokens.Ink.primary)
                     .lineLimit(1)
                 Text(rowMeta(row))
@@ -212,7 +212,7 @@ struct MetresLeaderboardView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             VStack(alignment: .trailing, spacing: 2) {
                 Text(score.value)
-                    .font(.system(size: 14, weight: .bold))
+                    .textStyle(Typography.rowTitle)
                     .tabularNumerals()
                     .foregroundStyle(isWinner ? Tokens.Accent.rank : Tokens.Ink.secondary)
                 Text(score.unit == "m" ? "metres" : "km")
@@ -220,8 +220,8 @@ struct MetresLeaderboardView: View {
                     .foregroundStyle(Tokens.Ink.secondary)
             }
         }
-        .padding(.vertical, 9)
-        .padding(.horizontal, 11)
+        .padding(.vertical, 8)
+        .padding(.horizontal, 12)
         .frame(minHeight: 72)
         .background {
             if isWinner {
@@ -248,14 +248,14 @@ struct MetresLeaderboardView: View {
         VStack(alignment: .leading, spacing: 6) {
             if let errorMessage = viewModel.errorMessage {
                 Text("Couldn't load the leaderboard")
-                    .font(.system(size: 17, weight: .bold))
+                    .textStyle(Typography.cardTitle)
                     .foregroundStyle(Tokens.Ink.primary)
                 Text(errorMessage)
                     .textStyle(Typography.meta)
                     .foregroundStyle(Tokens.Ink.secondary)
             } else if viewModel.viewerHasNoClub {
                 Text("You're not in a club")
-                    .font(.system(size: 17, weight: .bold))
+                    .textStyle(Typography.cardTitle)
                     .foregroundStyle(Tokens.Ink.primary)
                 Text("Join one to see how your metres stack up against your crew.")
                     .textStyle(Typography.meta)
@@ -265,7 +265,7 @@ struct MetresLeaderboardView: View {
                     .padding(.top, 4)
             } else {
                 Text("Nobody's logged metres here yet")
-                    .font(.system(size: 17, weight: .bold))
+                    .textStyle(Typography.cardTitle)
                     .foregroundStyle(Tokens.Ink.primary)
                 Text("Post a session to be the first on the board.")
                     .textStyle(Typography.meta)
@@ -312,7 +312,7 @@ struct MetresPinnedRow: View {
     var body: some View {
         HStack(spacing: 10) {
             Text("\(row.rank)")
-                .font(.system(size: 16, weight: .heavy))
+                .font(.system(size: 17, weight: .bold))
                 .tabularNumerals()
                 .foregroundStyle(row.rank == 1 ? Tokens.Accent.rank : Tokens.Ink.primary)
                 .frame(width: 22)
@@ -328,7 +328,7 @@ struct MetresPinnedRow: View {
             }
             Spacer(minLength: 8)
             Text(row.metres.formattedDistance(unit: distanceUnit))
-                .font(.system(size: 16, weight: .bold))
+                .textStyle(Typography.cardTitle)
                 .tabularNumerals()
                 .foregroundStyle(Tokens.Ink.primary)
                 .lineLimit(1)

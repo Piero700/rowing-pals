@@ -5,25 +5,42 @@
 
 import SwiftUI
 
-/// v3's header for a pushed screen (Settings, Rower profile, Find rowers…): a 44 pt glass back
-/// button and a 17 pt bold title, left-aligned, at least 58 pt tall, on the screen ground.
-struct ScreenHeader: View {
+/// The header for a pushed screen (Settings, Rower profile, Find rowers, a test board, Log
+/// workout…): a 44 pt glass back button, a 17 pt semibold title centred on the screen (v4), an
+/// optional control on the right, at least 58 pt tall, on the screen ground.
+struct ScreenHeader<Trailing: View>: View {
     let title: String
     let onBack: () -> Void
+    /// Optional control on the right: a delete button, a text action ("Help").
+    @ViewBuilder var trailing: () -> Trailing
 
+    /// v4: the title is centred on the screen, kept clear of the buttons on both sides so it
+    /// stays centred, and cut short with "…" if it's too long.
     var body: some View {
-        HStack(spacing: Tokens.Spacing.gap) {
-            GlassIconButton(systemImage: "chevron.left", accessibilityLabel: "Back", action: onBack)
+        ZStack {
+            HStack(spacing: 0) {
+                GlassIconButton(systemImage: "chevron.left", accessibilityLabel: "Back", action: onBack)
+                Spacer(minLength: 0)
+                trailing()
+            }
             Text(title)
                 .textStyle(Typography.navTitle)
                 .foregroundStyle(Tokens.Ink.primary)
+                .lineLimit(1)
+                .truncationMode(.tail)
+                .padding(.horizontal, Tokens.Size.iconButton + Tokens.Spacing.loose)
                 .accessibilityAddTraits(.isHeader)
-            Spacer(minLength: 0)
         }
-        .padding(.top, 8)
+        .padding(.top, Tokens.Spacing.tight)
         .padding(.horizontal, Tokens.Spacing.headerHorizontal)
-        .padding(.bottom, 14)
+        .padding(.bottom, Tokens.Spacing.loose)
         .frame(minHeight: Tokens.Size.navHeight)
         .background(Tokens.Base.ground)
+    }
+}
+
+extension ScreenHeader where Trailing == EmptyView {
+    init(title: String, onBack: @escaping () -> Void) {
+        self.init(title: title, onBack: onBack) { EmptyView() }
     }
 }

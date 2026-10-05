@@ -40,12 +40,12 @@ struct PillSegmentedControl: View {
             }
         } label: {
             Text(options[index])
-                .font(.system(size: compact ? 13 : 14, weight: .bold))
+                .textStyle(Typography.segment)
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
                 .foregroundStyle(isSelected ? Tokens.Ink.primary : Tokens.Ink.secondary)
-                // A compact segment draws 38 pt but still takes taps across 44 pt.
-                .frame(maxWidth: .infinity, minHeight: compact ? 38 : Tokens.Size.minTap)
+                // A compact segment draws 36 pt but still takes taps across 44 pt.
+                .frame(maxWidth: .infinity, minHeight: compact ? Tokens.Size.compactSegment : Tokens.Size.minTap)
                 .background {
                     if isSelected {
                         Color.clear
@@ -53,7 +53,7 @@ struct PillSegmentedControl: View {
                             .matchedGeometryEffect(id: "thumb", in: thumb)
                     }
                 }
-                .contentShape(Capsule().inset(by: compact ? -3 : 0))
+                .contentShape(Capsule().inset(by: compact ? -4 : 0))
         }
         .buttonStyle(.plain)
         .accessibilityAddTraits(isSelected ? .isSelected : [])
@@ -63,6 +63,6 @@ struct PillSegmentedControl: View {
 #Preview {
     @Previewable @State var selection = 0
     PillSegmentedControl(options: ["Following", "Club"], selection: $selection)
-        .padding(15)
+        .padding(16)
         .background(Tokens.Base.ground)
 }

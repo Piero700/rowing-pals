@@ -15,7 +15,7 @@ struct PrivacyPolicyView: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(alignment: .leading, spacing: 18) {
+                VStack(alignment: .leading, spacing: 16) {
                     section("What we collect") {
                         "Your account: email address, password (stored only as a secure hash by " +
                         "our sign-in provider), display name, gender, level, club and profile " +
