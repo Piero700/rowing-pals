@@ -6,12 +6,28 @@
 import SwiftUI
 
 /// "+ Add test" (decision 28; docs/design/rowing-pals-redesign-handoff-v2.md §3 "Custom test
-/// creation"): a club admin or above defines a distance or a timed test. The name is made from
-/// what they type ("750m", "3k", "20min"), checked against the standard tests and the club's own
-/// before Add, and the new board starts empty.
+/// creation"): a club admin or above defines a distance, or a time in minutes or seconds. The
+/// name is made from what they type ("750m", "3k", "20min", "30s"), checked against the standard
+/// tests and the club's own before Add, and the new board starts empty.
 struct AddClubTestView: View {
     private enum Kind: Int {
-        case distance, time
+        case distance, minutes, seconds
+
+        var unit: String {
+            switch self {
+            case .distance: "metres"
+            case .minutes: "minutes"
+            case .seconds: "seconds"
+            }
+        }
+
+        var hint: String {
+            switch self {
+            case .distance: "A whole number of metres, e.g. 750 or 3000."
+            case .minutes: "A whole number of minutes, e.g. 20."
+            case .seconds: "A whole number of seconds, e.g. 30."
+            }
+        }
     }
 
     /// The club's tests already, so a duplicate is caught before Add.
@@ -28,11 +44,18 @@ struct AddClubTestView: View {
 
     private var value: Int? { Int(amount) }
     private var distanceM: Int? { kind == .distance ? value : nil }
-    private var minutes: Int? { kind == .time ? value : nil }
-    private var problem: String? {
-        ClubTest.problem(distanceM: distanceM, minutes: minutes, existing: existing)
+    /// A time in seconds, whichever unit it was typed in.
+    private var seconds: Int? {
+        switch kind {
+        case .distance: nil
+        case .minutes: value.map { $0 * 60 }
+        case .seconds: value
+        }
     }
-    private var label: String? { ClubTest.label(distanceM: distanceM, minutes: minutes) }
+    private var problem: String? {
+        ClubTest.problem(distanceM: distanceM, seconds: seconds, existing: existing)
+    }
+    private var label: String? { ClubTest.label(distanceM: distanceM, seconds: seconds) }
 
     var body: some View {
         VStack(alignment: .leading, spacing: Tokens.Spacing.loose) {
@@ -49,7 +72,7 @@ struct AddClubTestView: View {
                 .textStyle(Typography.meta)
                 .foregroundStyle(Tokens.Ink.secondary)
 
-            PillSegmentedControl(options: ["Distance", "Time"], selection: kindSelection)
+            PillSegmentedControl(options: ["Distance", "Minutes", "Seconds"], selection: kindSelection)
 
             amountField
 
@@ -62,7 +85,7 @@ struct AddClubTestView: View {
                         .tabularNumerals()
                         .foregroundStyle(Tokens.Ink.secondary)
                 } else {
-                    Text(kind == .distance ? "A whole number of metres, e.g. 750 or 3000." : "A whole number of minutes, e.g. 20.")
+                    Text(kind.hint)
                         .tabularNumerals()
                         .foregroundStyle(Tokens.Ink.secondary)
                 }
@@ -86,7 +109,7 @@ struct AddClubTestView: View {
         .presentationDetents([.medium])
         .presentationDragIndicator(.visible)
         .onAppear { isAmountFocused = true }
-        // Metres and minutes don't carry over.
+        // A number in one unit means nothing in another.
         .onChange(of: kind) { amount = "" }
     }
 
@@ -106,7 +129,7 @@ struct AddClubTestView: View {
                 .focused($isAmountFocused)
                 .tabularNumerals()
                 .onChange(of: amount) { amount = String(amount.filter(\.isNumber).prefix(6)) }
-            Text(kind == .distance ? "metres" : "minutes")
+            Text(kind.unit)
                 .foregroundStyle(Tokens.Ink.secondary)
         }
         .textStyle(Typography.bodyV3)
@@ -122,7 +145,7 @@ struct AddClubTestView: View {
         errorMessage = nil
         defer { isSaving = false }
         do {
-            try await ClubTestService.create(distanceM: distanceM, minutes: minutes)
+            try await ClubTestService.create(distanceM: distanceM, seconds: seconds)
             await onAdded()
             dismiss()
         } catch {

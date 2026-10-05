@@ -158,6 +158,8 @@ enum Tokens {
         static let iconButton: CGFloat = 44
         /// A tile in the Test results grid, and the "+ Add test" tile.
         static let testTile: CGFloat = 106
+        /// The camera badge on your own profile picture (decision 29).
+        static let avatarBadge: CGFloat = 26
     }
 
     /// The new-PB celebration (docs/design/v2-decisions.md #12): an RGB-LED style glow that

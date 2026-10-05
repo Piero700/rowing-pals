@@ -119,6 +119,9 @@ that they match the prototype.
      club admins, club tests in the grid, the review dropdown and the post banner, delete from
      the board. Needs `docs/migrations/2026-10-04-club-tests.sql` on staging
      (`docs/testing/club-tests.md`).
+   - **Seconds tests + profile pictures BUILT** (decisions 28–29, branch `t32-seconds-tests-avatars`).
+     Needs `docs/migrations/2026-10-05-seconds-tests-and-avatars.sql` on staging
+     (`docs/testing/seconds-tests-and-avatars.md`).
    - All v3 screens are now built.
    - **Known for step 3:** profile consistency grid month labels wrap letter by letter ("M / ar").
      Note: the clickable prototype renders an 8 pt nav gap; `RP Screen.dc.html` and the README say

@@ -11,7 +11,7 @@ extension StandardTest {
     var shortTitle: String {
         switch target {
         case .distance: label.uppercased()
-        case .duration(let ms): "\(ms / 60_000) MIN"
+        case .duration(let ms): ms % 60_000 == 0 ? "\(ms / 60_000) MIN" : "\(ms / 1000) SEC"
         }
     }
 
@@ -19,7 +19,7 @@ extension StandardTest {
     var longTitle: String {
         switch target {
         case .distance(let metres): "\(metres.formattedWithGrouping) METRES"
-        case .duration(let ms): "\(ms / 60_000) MINUTES"
+        case .duration(let ms): ms % 60_000 == 0 ? "\(ms / 60_000) MINUTES" : "\(ms / 1000) SECONDS"
         }
     }
 }

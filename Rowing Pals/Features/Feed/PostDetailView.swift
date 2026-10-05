@@ -221,7 +221,7 @@ struct PostDetailView: View {
     private var personPill: some View {
         Button(action: handlePersonPillTap) {
             HStack(spacing: 8) {
-                AvatarPlaceholder(diameter: 28, streakDays: viewModel.authorStreakDays)
+                AvatarPlaceholder(diameter: 28, streakDays: viewModel.authorStreakDays, name: viewModel.author?.displayName, userId: viewModel.author?.id)
                 Text(viewModel.author?.displayName ?? "")
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundStyle(Tokens.Ink.primary)
@@ -599,7 +599,7 @@ struct PostDetailView: View {
 
             ForEach(recentComments) { comment in
                 HStack(alignment: .top, spacing: 10) {
-                    AvatarPlaceholder(diameter: 30)
+                    AvatarPlaceholder(diameter: 30, name: comment.authorName, userId: comment.authorId)
                     VStack(alignment: .leading, spacing: 1) {
                         HStack(spacing: 7) {
                             Text(comment.authorName)

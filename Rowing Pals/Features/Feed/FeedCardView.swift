@@ -72,7 +72,7 @@ struct FeedCardView: View {
             navigate(.profile(post.userId))
         } label: {
             HStack(spacing: 11) {
-                AvatarPlaceholder(diameter: 41, streakDays: streakDays, name: post.author.displayName)
+                AvatarPlaceholder(diameter: 41, streakDays: streakDays, name: post.author.displayName, userId: post.userId)
                 VStack(alignment: .leading, spacing: 0) {
                     Text(post.author.displayName)
                         .textStyle(Typography.name)

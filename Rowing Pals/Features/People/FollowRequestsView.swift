@@ -52,7 +52,7 @@ struct FollowRequestsView: View {
                 navigate(.profile(person.id))
             } label: {
                 HStack(spacing: 12) {
-                    AvatarPlaceholder(diameter: 42)
+                    AvatarPlaceholder(diameter: 42, name: person.displayName, userId: person.id)
                     VStack(alignment: .leading, spacing: 2) {
                         Text(person.displayName)
                             .font(.system(size: 15.5, weight: .semibold))

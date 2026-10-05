@@ -6,8 +6,8 @@
 import Foundation
 
 /// Mirrors the `club_tests` table (docs/migrations/2026-10-04-club-tests.sql, decision 28): a
-/// test a club's admins added next to the nine standard ones — a distance (750m, 3k) or a whole
-/// number of minutes (20min). Its results are ordinary `test_results` rows keyed by `key`.
+/// test a club's admins added next to the nine standard ones — a distance (750m, 3k) or a time in
+/// whole seconds (30s, 20min). Its results are ordinary `test_results` rows keyed by `key`.
 nonisolated struct ClubTest: Codable, Identifiable, Hashable {
     let id: UUID
     let clubId: UUID
@@ -38,29 +38,31 @@ nonisolated struct ClubTest: Codable, Identifiable, Hashable {
 
     // MARK: - Adding one
 
-    /// The limits `create_club_test` enforces.
+    /// The limits `create_club_test` enforces: metres, and seconds (10 s to 120 min).
     static let distanceRange = 100...100_000
-    static let minutesRange = 1...120
+    static let secondsRange = 10...7200
 
-    /// "750m", "3k", "20min" — the same rule as the database's `club_test_label`, shown while
-    /// an admin types.
-    static func label(distanceM: Int?, minutes: Int?) -> String? {
+    /// "750m", "3k", "30s", "20min" — the same rule as the database's `club_test_label`, shown
+    /// while an admin types. A time in whole minutes is named in minutes, anything else in
+    /// seconds, so 120 seconds and 2 minutes are the same test.
+    static func label(distanceM: Int?, seconds: Int?) -> String? {
         if let distanceM {
             return distanceM % 1000 == 0 ? "\(distanceM / 1000)k" : "\(distanceM)m"
         }
-        return minutes.map { "\($0)min" }
+        guard let seconds else { return nil }
+        return seconds % 60 == 0 ? "\(seconds / 60)min" : "\(seconds)s"
     }
 
     /// Why a new test can't be added, or nil if it can. The database checks the same things;
     /// this says so before the admin presses Add.
-    static func problem(distanceM: Int?, minutes: Int?, existing: [ClubTest]) -> String? {
+    static func problem(distanceM: Int?, seconds: Int?, existing: [ClubTest]) -> String? {
         if let distanceM {
             guard distanceRange.contains(distanceM) else {
                 return "A distance test must be between 100m and 100,000m."
             }
-        } else if let minutes {
-            guard minutesRange.contains(minutes) else {
-                return "A timed test must be from 1 to 120 minutes."
+        } else if let seconds {
+            guard secondsRange.contains(seconds) else {
+                return "A timed test must be from 10 seconds to 120 minutes."
             }
         } else {
             return "Enter a distance or a time."
@@ -68,11 +70,11 @@ nonisolated struct ClubTest: Codable, Identifiable, Hashable {
         let standard = StandardTest.all.contains { test in
             switch test.target {
             case .distance(let m): m == distanceM
-            case .duration(let ms): ms == minutes.map { $0 * 60_000 }
+            case .duration(let ms): ms == seconds.map { $0 * 1000 }
             }
         }
         if standard { return "That's already a standard test." }
-        guard let label = label(distanceM: distanceM, minutes: minutes) else { return nil }
+        guard let label = label(distanceM: distanceM, seconds: seconds) else { return nil }
         if existing.contains(where: { $0.label.lowercased() == label.lowercased() }) {
             return "Your club already has a \(label) test."
         }
