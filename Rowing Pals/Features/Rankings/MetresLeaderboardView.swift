@@ -270,7 +270,7 @@ struct MetresLeaderboardView: View {
                 .tabularNumerals()
                 .foregroundStyle(isWinner ? Tokens.Accent.rank : Tokens.Ink.secondary)
                 .frame(width: 20)
-            AvatarPlaceholder(diameter: 32, streakDays: row.streakDays, name: row.name)
+            AvatarPlaceholder(diameter: 32, streakDays: row.streakDays, name: row.name, userId: row.userId)
             VStack(alignment: .leading, spacing: 1) {
                 Text(row.isCurrentUser ? "\(row.name) (you)" : row.name)
                     .font(.system(size: 12, weight: .bold))
@@ -388,7 +388,7 @@ struct MetresPinnedRow: View {
                 .tabularNumerals()
                 .foregroundStyle(row.rank == 1 ? Tokens.Accent.rank : Tokens.Ink.primary)
                 .frame(width: 22)
-            AvatarPlaceholder(diameter: 32, streakDays: row.streakDays, name: row.name)
+            AvatarPlaceholder(diameter: 32, streakDays: row.streakDays, name: row.name, userId: row.userId)
             VStack(alignment: .leading, spacing: 1) {
                 Text("You")
                     .textStyle(Typography.name)

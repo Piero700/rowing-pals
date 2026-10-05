@@ -228,7 +228,7 @@ struct ManageClubView: View {
             ForEach(Array(viewModel.invitations.enumerated()), id: \.element.id) { index, invitation in
                 HStack(spacing: Tokens.Spacing.gap) {
                     HStack(spacing: Tokens.Spacing.gap) {
-                        AvatarPlaceholder(diameter: 38, name: invitation.person.displayName)
+                        AvatarPlaceholder(diameter: 38, name: invitation.person.displayName, userId: invitation.person.id)
                         VStack(alignment: .leading, spacing: 1) {
                             Text(invitation.person.displayName)
                                 .textStyle(Typography.name)
@@ -312,7 +312,7 @@ struct ManageClubView: View {
 
     private func personLabel(_ person: ClubService.Person, detail: String) -> some View {
         HStack(spacing: Tokens.Spacing.gap) {
-            AvatarPlaceholder(diameter: 38, name: person.displayName)
+            AvatarPlaceholder(diameter: 38, name: person.displayName, userId: person.id)
             VStack(alignment: .leading, spacing: 1) {
                 Text(person.displayName)
                     .textStyle(Typography.name)

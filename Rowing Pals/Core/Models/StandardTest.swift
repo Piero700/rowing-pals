@@ -57,8 +57,16 @@ nonisolated struct StandardTest: Identifiable, Hashable {
         case .distance(let target):
             return distanceM == target
         case .duration(let target):
-            return abs(timeMs - target) <= max(2000, Int(Double(target) * 0.01))
+            return abs(timeMs - target) <= Self.finishTolerance(forDurationMs: target)
         }
+    }
+
+    /// How far a timed piece may stop from its target and still count: 2 seconds or 1%,
+    /// whichever is bigger, but never more than 5% — so a 30-second club test (decision 28)
+    /// allows 1.5 s, not 2. Every standard test (4 minutes and up) keeps its 2 s / 1% rule.
+    /// `test_results_check_club_test` applies the same rule.
+    static func finishTolerance(forDurationMs target: Int) -> Int {
+        max(min(2000, target / 20), target / 100)
     }
 
     /// Finds the standard test a segment's distance/time matches, within a

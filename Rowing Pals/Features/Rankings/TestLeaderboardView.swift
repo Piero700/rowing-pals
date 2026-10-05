@@ -140,7 +140,7 @@ struct TestLeaderboardView: View {
                 .tabularNumerals()
                 .foregroundStyle(isPodium ? Tokens.Accent.records : Tokens.Ink.secondary)
                 .frame(width: 24)
-            AvatarPlaceholder(diameter: 40, streakDays: row.streakDays)
+            AvatarPlaceholder(diameter: 40, streakDays: row.streakDays, name: row.name, userId: row.id)
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 6) {
                     Text(row.name)

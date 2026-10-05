@@ -168,7 +168,7 @@ struct ClubHubView: View {
         VStack(spacing: 0) {
             ForEach(Array(crewmates.enumerated()), id: \.element.id) { index, person in
                 HStack(spacing: Tokens.Spacing.gap) {
-                    AvatarPlaceholder(diameter: 38, name: person.displayName)
+                    AvatarPlaceholder(diameter: 38, name: person.displayName, userId: person.id)
                     VStack(alignment: .leading, spacing: 1) {
                         Text(person.displayName)
                             .textStyle(Typography.name)

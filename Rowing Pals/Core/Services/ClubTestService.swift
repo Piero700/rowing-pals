@@ -52,9 +52,9 @@ enum ClubTestService {
         return rows.first
     }
 
-    /// Exactly one of `distanceM` or `minutes`. The database names it and rejects a duplicate.
+    /// Exactly one of `distanceM` or `seconds`. The database names it and rejects a duplicate.
     @discardableResult
-    static func create(distanceM: Int?, minutes: Int?) async throws -> UUID {
+    static func create(distanceM: Int?, seconds: Int?) async throws -> UUID {
         struct Params: Encodable {
             let p_distance_m: Int?
             let p_duration_ms: Int?
@@ -68,7 +68,7 @@ enum ClubTestService {
             enum CodingKeys: String, CodingKey { case p_distance_m, p_duration_ms }
         }
         return try await SupabaseService.shared
-            .rpc("create_club_test", params: Params(p_distance_m: distanceM, p_duration_ms: minutes.map { $0 * 60_000 }))
+            .rpc("create_club_test", params: Params(p_distance_m: distanceM, p_duration_ms: seconds.map { $0 * 1000 }))
             .execute().value
     }
 

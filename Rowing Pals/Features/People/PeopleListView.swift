@@ -114,7 +114,7 @@ struct PeopleListView: View {
     private func row(_ person: PersonSummary) -> some View {
         HStack(spacing: Tokens.Spacing.gap) {
             HStack(spacing: Tokens.Spacing.gap) {
-                AvatarPlaceholder(diameter: 38, name: person.displayName)
+                AvatarPlaceholder(diameter: 38, name: person.displayName, userId: person.id)
                 VStack(alignment: .leading, spacing: 1) {
                     HStack(spacing: 6) {
                         Text(person.displayName)

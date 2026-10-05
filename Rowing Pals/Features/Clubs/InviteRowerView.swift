@@ -96,7 +96,7 @@ struct InviteRowerView: View {
     private func row(_ person: PersonSummary) -> some View {
         let isInvited = invitedIds.contains(person.id)
         return HStack(spacing: Tokens.Spacing.gap) {
-            AvatarPlaceholder(diameter: 38, name: person.displayName)
+            AvatarPlaceholder(diameter: 38, name: person.displayName, userId: person.id)
             VStack(alignment: .leading, spacing: 1) {
                 Text(person.displayName)
                     .textStyle(Typography.name)

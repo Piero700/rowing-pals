@@ -48,6 +48,9 @@ struct AvatarPlaceholder: View {
     var streakDays: Int? = nil
     /// When given, the avatar shows the rower's initials, as in v3.
     var name: String? = nil
+    /// When given, the avatar shows the rower's profile picture once it loads (decision 29),
+    /// over the initials; with no picture, or one this viewer may not see, the initials stay.
+    var userId: UUID? = nil
 
     /// v3 avatar: a circle with a 145° gradient from `recordsSoft` to `raised`, initials in the
     /// records colour at heavy weight, and a 🔥 streak badge in a card-coloured circle at the
@@ -70,7 +73,22 @@ struct AvatarPlaceholder: View {
                         .lineLimit(1)
                 }
             }
+            .overlay {
+                if let url = userId.flatMap({ AvatarStore.shared.url(for: $0) }) {
+                    AsyncImage(url: url) { phase in
+                        if let image = phase.image {
+                            image.resizable().scaledToFill()
+                        } else if phase.error != nil, let userId {
+                            Color.clear.onAppear { AvatarStore.shared.linkFailed(userId) }
+                        }
+                    }
+                    .clipShape(Circle())
+                }
+            }
             .frame(width: diameter, height: diameter)
+            .task(id: userId) {
+                if let userId { AvatarStore.shared.load(userId) }
+            }
             .overlay(alignment: .topTrailing) {
                 if let streakDays, streakDays > 0 {
                     let badgeDiameter = diameter * 23 / 41
