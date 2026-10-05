@@ -171,7 +171,8 @@ final class ProfileViewModel {
     @MainActor
     func load() async {
         isLoading = true
-        defer { isLoading = false }
+        let perf = PerfLog.start()
+        defer { isLoading = false; PerfLog.done(viewingId == nil ? "Profile" : "Rower profile", since: perf) }
 
         do {
             let viewerId = try await SupabaseService.shared.auth.session.user.id

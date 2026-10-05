@@ -39,7 +39,8 @@ final class TestsViewModel {
     @MainActor
     func loadOwnPBs() async {
         isLoading = true
-        defer { isLoading = false }
+        let perf = PerfLog.start()
+        defer { isLoading = false; PerfLog.done("Test results", since: perf) }
 
         guard let userId = try? await SupabaseService.shared.auth.session.user.id else { return }
         // Before the club-tests migration has run, this is simply none.

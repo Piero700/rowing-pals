@@ -133,7 +133,8 @@ final class MetresLeaderboardViewModel {
     private func performReload() async {
         guard !Task.isCancelled else { return }
         isLoading = true
-        defer { isLoading = false }
+        let perf = PerfLog.start()
+        defer { isLoading = false; if !Task.isCancelled { PerfLog.done("Rankings volume", since: perf) } }
 
         do {
             let scopeIds = try await filters.scope.userIds()
@@ -229,6 +230,7 @@ final class MetresLeaderboardViewModel {
                 .from("daily_totals")
                 .select("user_id, day, session_count")
                 .in("user_id", values: profileRows.map(\.id))
+                .gte("day", value: StreakCalculator.earliestRelevantDay())
                 .execute()
                 .value) ?? []
 

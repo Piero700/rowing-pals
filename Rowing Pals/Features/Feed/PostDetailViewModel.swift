@@ -113,7 +113,8 @@ final class PostDetailViewModel {
     @MainActor
     func load() async {
         isLoading = true
-        defer { isLoading = false }
+        let perf = PerfLog.start()
+        defer { isLoading = false; PerfLog.done("Workout", since: perf) }
 
         do {
             let userId = try await SupabaseService.shared.auth.session.user.id
@@ -298,6 +299,7 @@ final class PostDetailViewModel {
             .from("daily_totals")
             .select("day, session_count")
             .eq("user_id", value: userId)
+            .gte("day", value: StreakCalculator.earliestRelevantDay())
             .execute()
             .value
         else { return 0 }

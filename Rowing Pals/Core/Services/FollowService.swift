@@ -107,6 +107,7 @@ enum FollowService {
             .from("follows")
             .insert(NewFollow(followerId: me, followeeId: target))
             .execute()
+        ViewerContext.shared.invalidate()
         return try await state(to: target)
     }
 
@@ -119,6 +120,7 @@ enum FollowService {
             .eq("follower_id", value: me)
             .eq("followee_id", value: target)
             .execute()
+        ViewerContext.shared.invalidate()
     }
 
     // MARK: - Requests (the viewer is the one being asked)

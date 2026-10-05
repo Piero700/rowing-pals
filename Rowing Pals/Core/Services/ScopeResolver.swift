@@ -31,42 +31,11 @@ enum SocialScope: Int, CaseIterable {
     /// My Club when the viewer's own profile has no club, rather than
     /// either of those silently falling back to showing everyone.
     func userIds() async throws -> [UUID] {
+        // From the shared viewer context: fetched once, not again on every screen.
+        let viewer = try await ViewerContext.shared.current()
         switch self {
-        case .following:
-            let userId = try await SupabaseService.shared.auth.session.user.id
-            struct Row: Decodable {
-                let followeeId: UUID
-                enum CodingKeys: String, CodingKey { case followeeId = "followee_id" }
-            }
-            let rows: [Row] = try await SupabaseService.shared
-                .from("follows")
-                .select("followee_id")
-                .eq("follower_id", value: userId)
-                // A pending follow request is not a follow: only approved
-                // follows put someone in the Following scope.
-                .eq("status", value: "accepted")
-                .execute()
-                .value
-            return rows.map(\.followeeId)
-
-        case .myClub:
-            let userId = try await SupabaseService.shared.auth.session.user.id
-            let profile: Profile = try await SupabaseService.shared
-                .from("profiles")
-                .select()
-                .eq("id", value: userId)
-                .single()
-                .execute()
-                .value
-            guard let clubId = profile.clubId else { return [] }
-            struct Row: Decodable { let id: UUID }
-            let rows: [Row] = try await SupabaseService.shared
-                .from("profiles")
-                .select("id")
-                .eq("club_id", value: clubId)
-                .execute()
-                .value
-            return rows.map(\.id)
+        case .following: return viewer.followingIds
+        case .myClub: return viewer.clubmateIds
         }
     }
 }

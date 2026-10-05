@@ -53,16 +53,6 @@ final class FeedViewModel {
     private var streaks: [UUID: Int] = [:]
     private var hasMorePages = true
 
-    /// Everyone blocked in either direction — resolved once and reused for
-    /// the life of this view model, since a block only ever happens from
-    /// `PostDetailView`, never mid-scroll of the feed itself.
-    private var blockedUserIds: [UUID]?
-
-    /// Cached the same way as `blockedUserIds`, for the same reason — see
-    /// `resolvedVisibilityFilter()`.
-    private var clubmateIds: [UUID]?
-    private var followedIds: [UUID]?
-
     @MainActor
     func loadInitial() async {
         guard posts.isEmpty else { return }
@@ -72,38 +62,25 @@ final class FeedViewModel {
     /// A request waiting on a club (decision 26): the Club tab says so instead of "not in a club".
     var pendingClubName: String?
 
-    /// Who is viewing and which club they belong to — the club is re-read on every load, so a
-    /// club joined (or left) elsewhere shows at the next refresh rather than staying stale.
+    /// Who is viewing and their club, from the shared viewer context (no request of its own
+    /// once that's loaded).
     @MainActor
     private func loadViewer() async {
-        guard let id = try? await SupabaseService.shared.auth.session.user.id else { return }
-        viewerId = id
-        struct Row: Decodable {
-            struct Club: Decodable { let name: String }
-            let club: Club?
-            enum CodingKeys: String, CodingKey { case club = "clubs" }
-        }
-        let row: Row? = try? await SupabaseService.shared
-            .from("profiles")
-            .select("clubs(name)")
-            .eq("id", value: id)
-            .single()
-            .execute()
-            .value
-        let clubName = row?.club?.name
-        if clubName != viewerClubName {
-            // A different club means different clubmates.
-            clubmateIds = nil
-        }
-        viewerClubName = clubName
+        guard let viewer = try? await ViewerContext.shared.current() else { return }
+        viewerId = viewer.userId
+        viewerClubName = viewer.clubName
+    }
+
+    /// A join request still waiting on a club's answer (decision 26).
+    private static func pendingClubName(for userId: UUID) async -> String? {
         struct Pending: Decodable {
             struct Club: Decodable { let name: String }
             let clubs: Club
         }
         let pending: [Pending]? = try? await SupabaseService.shared
-            .from("club_join_requests").select("clubs(name)").eq("user_id", value: id)
+            .from("club_join_requests").select("clubs(name)").eq("user_id", value: userId)
             .eq("status", value: "pending").execute().value
-        pendingClubName = pending?.first?.clubs.name
+        return pending?.first?.clubs.name
     }
 
     // MARK: - Reactions
@@ -174,7 +151,8 @@ final class FeedViewModel {
     @MainActor
     func reload() async {
         isLoading = true
-        defer { isLoading = false }
+        let perf = PerfLog.start()
+        defer { isLoading = false; PerfLog.done("Feed", since: perf) }
         await loadPage(offset: 0, replacing: true)
     }
 
@@ -184,8 +162,6 @@ final class FeedViewModel {
     func clubChanged() async {
         viewerId = nil
         viewerClubName = nil
-        clubmateIds = nil
-        await loadViewer()
         await reload()
     }
 
@@ -222,39 +198,44 @@ final class FeedViewModel {
             await loadViewer()
         }
         do {
-            var query = SupabaseService.shared
-                .from("sessions")
-                .select(Self.selectColumns)
-
-            let userIds = try await scope.userIds()
+            // Who's in scope comes from the shared viewer context. Following is "you and people
+            // you follow", so it includes the viewer's own posts.
+            var userIds = try await scope.userIds()
+            if scope == .following, let viewerId, !userIds.contains(viewerId) {
+                userIds.append(viewerId)
+            }
             guard !userIds.isEmpty else {
                 if replacing { posts = [] }
                 hasMorePages = false
                 errorMessage = nil
+                if offset == 0, let viewerId { pendingClubName = await Self.pendingClubName(for: viewerId) }
                 return
             }
-            query = query.in("user_id", values: userIds)
 
-            let blocked = await resolvedBlockedUserIds()
-            if !blocked.isEmpty {
-                query = query.notIn("user_id", values: blocked)
-            }
-
-            if let visibilityFilter = await resolvedVisibilityFilter() {
-                query = query.or(visibilityFilter)
-            }
-
-            let page: [FeedPost] = try await query
+            // One query for the page. Who may see each post — blocks either way, private
+            // accounts, the post's Following / Club / Everyone setting — is the database's job
+            // (decision 33's `can_view_session`), so the app doesn't repeat it in the query.
+            async let pageRequest: [FeedPost] = SupabaseService.shared
+                .from("sessions")
+                .select(Self.selectColumns)
+                .in("user_id", values: userIds)
                 .order("posted_at", ascending: false)
                 .range(from: offset, to: offset + Self.pageSize - 1)
                 .execute()
                 .value
+            async let pending: String? = offset == 0 && viewerId != nil
+                ? Self.pendingClubName(for: viewerId ?? UUID())
+                : pendingClubName
+            let (page, pendingName) = try await (pageRequest, pending)
 
             posts = replacing ? page : posts + page
+            pendingClubName = pendingName
             hasMorePages = page.count == Self.pageSize
             errorMessage = nil
-            await fetchSignedURLs(for: page)
-            await fetchStreaks(for: page)
+            // Photo links and streak badges don't depend on each other: fetch both at once.
+            async let urls: Void = fetchSignedURLs(for: page)
+            async let streakBadges: Void = fetchStreaks(for: page)
+            _ = await (urls, streakBadges)
         } catch {
             // Per task 12: "Feed blanks after a few pages -> pagination
             // cursor bug; print the query being sent." Printing the actual
@@ -329,6 +310,7 @@ final class FeedViewModel {
             .from("daily_totals")
             .select("user_id, day, session_count")
             .in("user_id", values: authorIds)
+            .gte("day", value: StreakCalculator.earliestRelevantDay())
             .execute()
             .value
         else { return }
@@ -342,87 +324,7 @@ final class FeedViewModel {
         }
     }
 
-    /// Filtering, task 17 — blocking works both ways: rows the viewer
-    /// blocked, and rows blocked *by* someone whose posts would otherwise
-    /// show the viewer as an author. `sessions`' own RLS policy is
-    /// `read_all using (true)` (docs/schema.sql) — it doesn't know about
-    /// blocks at all, so this client-side filter is the only thing
-    /// enforcing it, not a belt-and-braces extra.
-    @MainActor
-    private func resolvedBlockedUserIds() async -> [UUID] {
-        if let blockedUserIds { return blockedUserIds }
-        guard let userId = try? await SupabaseService.shared.auth.session.user.id else { return [] }
-        struct BlockedByMe: Decodable { let blockedId: UUID
-            enum CodingKeys: String, CodingKey { case blockedId = "blocked_id" }
-        }
-        struct BlockedMe: Decodable { let blockerId: UUID
-            enum CodingKeys: String, CodingKey { case blockerId = "blocker_id" }
-        }
-        async let byMe: [BlockedByMe] = (try? await SupabaseService.shared
-            .from("blocks")
-            .select("blocked_id")
-            .eq("blocker_id", value: userId)
-            .execute()
-            .value) ?? []
-        async let ofMe: [BlockedMe] = (try? await SupabaseService.shared
-            .from("blocks")
-            .select("blocker_id")
-            .eq("blocked_id", value: userId)
-            .execute()
-            .value) ?? []
-        let resolved = Array(Set(await byMe.map(\.blockedId) + (await ofMe.map(\.blockerId))))
-        blockedUserIds = resolved
-        return resolved
-    }
 
-    /// The poster's own audience choice at post time — independent of, and
-    /// ANDed with, the viewer's own scope tab above. A 'club'-restricted
-    /// post from someone the viewer follows still shouldn't show up in the
-    /// Following tab if the viewer isn't actually in that club; every tab
-    /// has to honour every post's own restriction, not just its own. Same
-    /// "no RLS, filter in the query" approach as `resolvedBlockedUserIds()`,
-    /// for the same reason (see the NOTE in docs/schema.sql).
-    ///
-    /// No app-wide public case (`PostVisibility`, `SocialScope`) — just
-    /// club, following, their union ("everyone" — clubmates OR followers,
-    /// not every app user), and "it's your own post."
-    ///
-    /// Returns the raw `.or()` filter string PostgREST expects, or nil if
-    /// the viewer can't be identified (session lost) — in that case the
-    /// query just runs unfiltered by visibility, same fail-open posture as
-    /// `resolvedBlockedUserIds()` returning `[]`.
-    @MainActor
-    private func resolvedVisibilityFilter() async -> String? {
-        guard let userId = try? await SupabaseService.shared.auth.session.user.id else { return nil }
-
-        if clubmateIds == nil {
-            clubmateIds = (try? await SocialScope.myClub.userIds()) ?? []
-        }
-        if followedIds == nil {
-            followedIds = (try? await SocialScope.following.userIds()) ?? []
-        }
-        let clubmateCSV = clubmateIds.flatMap { $0.isEmpty ? nil : $0.map { $0.uuidString.lowercased() }.joined(separator: ",") }
-        let followedCSV = followedIds.flatMap { $0.isEmpty ? nil : $0.map { $0.uuidString.lowercased() }.joined(separator: ",") }
-
-        var clauses = ["user_id.eq.\(userId.uuidString.lowercased())"]
-        if let clubmateCSV {
-            clauses.append("and(visibility.eq.club,user_id.in.(\(clubmateCSV)))")
-        }
-        if let followedCSV {
-            clauses.append("and(visibility.eq.following,user_id.in.(\(followedCSV)))")
-        }
-        switch (clubmateCSV, followedCSV) {
-        case (nil, nil):
-            break
-        case (let club?, nil):
-            clauses.append("and(visibility.eq.everyone,user_id.in.(\(club)))")
-        case (nil, let following?):
-            clauses.append("and(visibility.eq.everyone,user_id.in.(\(following)))")
-        case (let club?, let following?):
-            clauses.append("and(visibility.eq.everyone,or(user_id.in.(\(club)),user_id.in.(\(following))))")
-        }
-        return clauses.joined(separator: ",")
-    }
 
     /// The selfie's storage path is never stored in the DB — it's always at
     /// this convention-based path (task 08/10) — so it's derived here

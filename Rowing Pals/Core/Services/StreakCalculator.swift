@@ -5,6 +5,18 @@
 
 import Foundation
 
+    /// The oldest day a streak can reach (the walk stops 730 days back), as "yyyy-MM-dd" — so
+    /// a streak query fetches only the days that can matter, not a rower's whole history.
+    static func earliestRelevantDay(today: Date = Date()) -> String {
+        let calendar = Calendar.current
+        let start = calendar.date(byAdding: .day, value: -731, to: calendar.startOfDay(for: today)) ?? today
+        let formatter = DateFormatter()
+        formatter.calendar = calendar
+        formatter.timeZone = .current
+        formatter.dateFormat = "yyyy-MM-dd"
+        return formatter.string(from: start)
+    }
+
 /// Pure client-side port of `current_streak(p_user, p_today)` in
 /// docs/schema.sql — that `plpgsql` function walks backward from today
 /// through one user's `daily_totals` rows, counting active days and
