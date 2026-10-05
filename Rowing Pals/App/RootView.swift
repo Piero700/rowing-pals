@@ -51,8 +51,9 @@ struct RootView: View {
     /// A tapped push alert's post arrives here (docs/design/v2-decisions.md #19).
     @State private var push = PushNotificationService.shared
     @State private var membershipMonitor = MembershipMonitor()
-    /// Counts taps on Feed while Feed is already showing; Feed scrolls to the top and refreshes.
-    @State private var feedReselects = 0
+    /// Counts taps on a tab while it's already showing; that tab scrolls to the top and
+    /// refreshes (decision 27).
+    @State private var reselects: [RootTab: Int] = [:]
     @Environment(\.scenePhase) private var scenePhase
     @AppStorage(Appearance.storageKey) private var appearance: Appearance = .dark
 
@@ -78,9 +79,7 @@ struct RootView: View {
                     FloatingTabBar(
                         items: Self.items,
                         selection: $selection,
-                        onReselect: { tab in
-                            if tab == .feed { feedReselects += 1 }
-                        },
+                        onReselect: { tab in reselects[tab, default: 0] += 1 },
                         onTapLog: { isShowingPostSheet = true }
                     )
                 }
@@ -123,9 +122,9 @@ struct RootView: View {
     /// All three live simultaneously — see the doc comment above for why.
     private var content: some View {
         ZStack {
-            tab(.feed) { FeedView(reselects: feedReselects) }
-            tab(.rankings) { RankingsView() }
-            tab(.profile) { ProfileView() }
+            tab(.feed) { FeedView(reselects: reselects[.feed, default: 0]) }
+            tab(.rankings) { RankingsView(reselects: reselects[.rankings, default: 0]) }
+            tab(.profile) { ProfileView(reselects: reselects[.profile, default: 0]) }
         }
         // Reaches the physical bottom edge so the nav can sit 6 pt above it, as in v3; each
         // tab's scroll view already runs under the bottom safe area.

@@ -156,6 +156,8 @@ enum Tokens {
         static let navGap: CGFloat = 4
         static let headerMinHeight: CGFloat = 61
         static let iconButton: CGFloat = 44
+        /// A tile in the Test results grid, and the "+ Add test" tile.
+        static let testTile: CGFloat = 106
     }
 
     /// The new-PB celebration (docs/design/v2-decisions.md #12): an RGB-LED style glow that

@@ -12,6 +12,8 @@ import SwiftUI
 /// scope My club / Following only (decision 17). Distances follow the km toggle (decision 3).
 struct MetresLeaderboardView: View {
     @Binding var mode: RankingsMode
+    /// Goes up by one each time Rankings is tapped while already selected (decision 27).
+    var reselects = 0
 
     @State private var viewModel = MetresLeaderboardViewModel()
     @State private var isOwnRowVisible = true
@@ -70,6 +72,7 @@ struct MetresLeaderboardView: View {
             .padding(.horizontal, Tokens.Spacing.screen)
         }
         .scrollIndicators(.hidden)
+        .scrollsToTopOnReselect(reselects) { await viewModel.reload() }
         .background(Tokens.Base.ground)
         .tracksFloatingBar()
         .ignoresSafeArea(edges: .bottom)

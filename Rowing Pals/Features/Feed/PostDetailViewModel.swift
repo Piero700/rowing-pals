@@ -337,7 +337,16 @@ final class PostDetailViewModel {
             .eq("session_id", value: sessionId)
             .execute()
             .value
-        guard let thisResult = matches.first, let test = StandardTest.all.first(where: { $0.key == thisResult.distanceKey }) else { return nil }
+        guard let thisResult = matches.first else { return nil }
+        // A standard test, or one of a club's own (decision 28).
+        let test: StandardTest
+        if let standard = StandardTest.all.first(where: { $0.key == thisResult.distanceKey }) {
+            test = standard
+        } else if let clubTest = try? await ClubTestService.test(forKey: thisResult.distanceKey) {
+            test = clubTest.asTest
+        } else {
+            return nil
+        }
 
         struct OwnRow: Decodable {
             let distanceM: Int

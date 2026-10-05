@@ -113,19 +113,24 @@ that they match the prototype.
    - **Club follow-ups BUILT** (decision 26): one-club Your crew with every member, Requested /
      declined / Request again, invitation alerts and declined invites, live updates. Needs
      `2026-10-04-club-updates.sql` on staging.
+   - **Tapping the tab you're on** (decision 27): Feed, Rankings and Profile scroll to the top
+     and refresh.
+   - **Club tests BUILT** (phase I, decision 28, branch `t31-tab-reselect`): "+ Add test" for
+     club admins, club tests in the grid, the review dropdown and the post banner, delete from
+     the board. Needs `docs/migrations/2026-10-04-club-tests.sql` on staging
+     (`docs/testing/club-tests.md`).
    - All v3 screens are now built.
    - **Known for step 3:** profile consistency grid month labels wrap letter by letter ("M / ar").
      Note: the clickable prototype renders an 8 pt nav gap; `RP Screen.dc.html` and the README say
      4 pt — 4 pt is used.
-4. **G — Clubs.** Create club, join policy (open / approval / invite), roles
+4. **G — Clubs. BUILT and merged** (decisions 25–26). Create club, join policy (open / approval / invite), roles
    (owner / co-owner / admin / member), join requests, owner-only management, onboarding policy
    tags and "Join request pending". Needs schema (roles, policy, requests). Existing base:
    `Features/Onboarding/ClubSearchView`.
 5. **H — Settings overhaul.** App-icon picker (alternate icons; artwork already added), notification
    toggles, privacy row (needs E), account section. **No CSV export** (decision 4). Quiet hours and
    "Who can comment" are placeholders: confirm before building.
-6. **I — Custom tests.** "+ Add test" tile and form on Test results; test-detail with the shared
-   filter sheet.
+6. **I — Custom tests. BUILT as club tests** (decision 28) — see above.
 7. **J — Feed extras.** Full-screen comments thread (`comments` table already exists), 12-emoji
    picker, share-workout preview.
 8. **K — Prediction cards.** Wire in the user's own algorithm once supplied. Until then only the
@@ -139,5 +144,4 @@ that they match the prototype.
 - The prediction algorithm (phase K).
 - Concrete description of what is still wrong with the tab bar (phase L).
 - Go-ahead on the placeholder "Who can comment".
-- Joining the paid Apple Developer Program, so push notifications can be delivered (and for
-  TestFlight). Then the push key + capability (`docs/testing/notifications.md` Part 3).
+- ~~Joining the paid Apple Developer Program~~ — done 2026-10-04; push alerts work.
