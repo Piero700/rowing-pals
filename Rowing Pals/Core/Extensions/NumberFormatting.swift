@@ -61,8 +61,9 @@ enum DurationParsing {
         switch parts.count {
         case 3:
             guard let hours = Int(parts[0]), let minutes = Int(parts[1]) else { return nil }
+            // "1:05:" has nothing after the last colon: not a time yet (it used to crash here).
             let secondsPart = parts[2].split(separator: ".")
-            guard let seconds = Int(secondsPart[0]) else { return nil }
+            guard let first = secondsPart.first, let seconds = Int(first) else { return nil }
             let deciseconds = secondsPart.count > 1 ? Int(secondsPart[1]) ?? 0 : 0
             return ((hours * 3600) + (minutes * 60) + seconds) * 1000 + deciseconds * 100
 
@@ -75,8 +76,9 @@ enum DurationParsing {
             } else {
                 return nil
             }
+            // "5:" has nothing after the colon: not a time yet (it used to crash here).
             let secondsPart = parts[1].split(separator: ".")
-            guard let seconds = Int(secondsPart[0]) else { return nil }
+            guard let first = secondsPart.first, let seconds = Int(first) else { return nil }
             let deciseconds = secondsPart.count > 1 ? Int(secondsPart[1]) ?? 0 : 0
             return (minutes * 60 + seconds) * 1000 + deciseconds * 100
 

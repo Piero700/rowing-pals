@@ -31,6 +31,11 @@ The file gained a section (5b); it's safe to run again.
 - [ ] The row reads "2,000m × 3" / "Rest 5:00 · rate 26–28". Tap it: same values; **Remove piece**
       works (add it back).
 - [ ] Type a distance of **50**: "Enter a distance between 100 and 100,000 m."; Done is greyed.
+- [ ] **Times type as digits, the colon goes in for you** (fixed 2026-10-12 — typing "5:" used to
+      crash the app): rest **5 0 0** reads "5:00"; Time piece **2 0 0 0** reads "20:00"; split
+      **1 4 2** reads "1:42". The number pad has no colon key. Reopen the piece: the times are still there.
+- [ ] Rate **75** in either box: that box turns red and "Invalid rate: enter a rate between 10 and
+      70."; Done is greyed. **70** is accepted.
 5. Who it's for: **Rowers** → tap Rower's chip (it turns blue). The count reads "1 rower get…".
    Try **Squads** with no squads: the note points to Squads. Go back to **Rowers**.
 6. **Set workout**.
