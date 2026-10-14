@@ -63,6 +63,8 @@ enum Tokens {
     /// which the redesign removes outright — see CaptureView.swift, phase F).
     enum System {
         static let error = Color(light: Color(hex: 0xC93C36), dark: Color(hex: 0xFF766F))
+        /// The area under a chart line drawn in `error` (elevated effort), as `brandSoft` is for brand.
+        static let errorSoft = Color(light: Color(hex: 0xC93C36, opacity: 0.10), dark: Color(hex: 0xFF766F, opacity: 0.14))
     }
 
     /// Ground colour — the screen/card base, not the outer page background the web prototype
@@ -154,6 +156,8 @@ enum Tokens {
     enum Size {
         /// Nothing tappable is smaller than this, in either direction.
         static let minTap: CGFloat = 44
+        /// The red Delete revealed by a short swipe on a card (decision 60), as wide as iOS's.
+        static let swipeAction: CGFloat = 88
         static let primaryButton: CGFloat = 54
         static let secondaryButton: CGFloat = 52
         static let input: CGFloat = 52
@@ -193,7 +197,8 @@ enum Tokens {
         static let rowerPageAvatar: CGFloat = 76
         static let targetBar: CGFloat = 6
         static let volumeChart: CGFloat = 120
-        static let effortChart: CGFloat = 100
+        /// The labelled effort chart (decision 59), sized like the PB progression chart's plot.
+        static let effortChart: CGFloat = 200
         static let zoneBar: CGFloat = 14
         static let zoneSwatch: CGFloat = 10
         static let chip: CGFloat = 24

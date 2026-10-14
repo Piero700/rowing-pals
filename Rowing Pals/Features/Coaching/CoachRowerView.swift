@@ -76,7 +76,7 @@ struct CoachRowerView: View {
             .padding(Tokens.Spacing.card)
             .background(card)
 
-        section("Effort trend", trailing: detail.monthEffort == nil ? nil : "Dashed: 4-week average")
+        section("Effort trend")
         effortCard(detail)
 
         section("Tests")
@@ -191,7 +191,8 @@ struct CoachRowerView: View {
                     .foregroundStyle(isElevated ? Tokens.System.error : Tokens.Ink.primary)
             }
             if detail.weeklyEffort.contains(where: { $0 != nil }) {
-                EffortTrendChart(weeks: detail.weeklyEffort, average: detail.monthEffort, isElevated: isElevated)
+                EffortTrendChart(weeks: detail.weeklyEffort, weekStarts: detail.weekStarts,
+                                 average: detail.monthEffort, isElevated: isElevated)
             } else {
                 Text("No effort ratings in the last 8 weeks.")
                     .textStyle(Typography.meta)

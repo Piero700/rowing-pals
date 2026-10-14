@@ -145,6 +145,67 @@ end $$;
 ```
 - [ ] Expect `RESULT: refused — That workout isn't set for you.`
 
+## Fixes from your Phase 2 test (decisions 57–62, 2026-10-14)
+
+### 0. Run one more migration on staging (do this first)
+1. Supabase dashboard → the **staging** project → **SQL Editor** → **+ New query**.
+2. Open `docs/migrations/2026-10-14-workout-same-day.sql`, select all (Cmd+A), copy (Cmd+C), paste (Cmd+V).
+3. Click **Run**. Expect **Success. No rows returned**. Any red error: stop and send it to Claude.
+
+### 1. Posting for a workout (decision 57) — as Rower
+Set two workouts for today as Coach first (e.g. "3 × 2,000m" and a **Test** day "2k test").
+- [ ] Feed shows both cards. Tap **Log it** on the **2k test** card: Log's panel shows **2k test** only,
+      with no ⌄ to switch to another workout.
+- [ ] Post it. Back on the Feed, the 2k test card is **gone** (no pull-to-refresh needed); 3 × 2,000m is still there.
+- [ ] Open Log from the **+** button: only 3 × 2,000m is offered. Post it: its card goes too.
+- [ ] Open Log again: no Today's workout panel at all.
+- [ ] Next day (or set a workout for **yesterday** as Coach): it's not on the Feed and can't be logged.
+- [ ] Coach → that past workout's results: anyone who didn't post shows a red **Absent** chip; the
+      counts read "… absent" and the filter "Absent".
+
+### 2. Typing the average (decision 58) — Log → Enter session manually
+- [ ] Distance **2000**, then Average **1 4 5** → Time fills in **7:00**.
+- [ ] New piece: Distance **2000**, Time **6 4 0** → Average reads **1:40**.
+- [ ] New piece: Time **3 0 0 0 0** (30:00), Average **2 0 0** → Distance fills in **7500**.
+- [ ] Average **9 9 9** ("9:99") turns red with "Enter an average between 1:00 and 9:59.9 per 500m."
+- [ ] Settings → Pace display **Watts**: the box reads **Average watts**; type **350** → over 2000 m the time reads 6:40.
+
+### 3. Effort trend (decision 59) — Coach → a rower who rates effort
+- [ ] A chart with 0–10 up the side, dashed lines, dates along the bottom ending "This week", a filled
+      line with dots, "4-week avg x.x" on its dashed line, and a panel "This week · x.x / 10".
+- [ ] Tap an earlier dot: the panel shows that week.
+
+### 4. Swipe to delete (decision 60) — Coach → Workouts
+- [ ] Swipe a card a little to the left: a red **Delete** appears. Tap the card: it closes.
+- [ ] Swipe again and tap **Delete**: the workout is gone (and from the rowers' Feeds).
+- [ ] Swipe a card hard all the way left: it deletes without the button.
+- [ ] **Delete workout** on the results page still works.
+
+### 5. Swipe back everywhere (decision 61)
+From the very left edge of the screen, drag right:
+- [ ] Coaching → a rower → swipe: back to Coaching. Swipe again: Coaching closes.
+- [ ] Coaching → Workouts → a workout → swipe: back. Squads, a squad → swipe: back.
+- [ ] Profile → Settings → a settings page (e.g. Privacy) → swipe: back.
+- [ ] A rower's profile from the Feed, Your crew, Manage club, Log → swipe: closes / goes back.
+
+### 6. Coaching's list (decision 62)
+- [ ] One button under Rowers | Workouts, reading "All squads · Behind target".
+- [ ] Tap it: Squad, then **Sort by** with Behind target, On target, Best to worst, Worst to best,
+      Attendance, Not logged, Name — each with a line underneath. Choose one → Done: the button
+      reads the new order and the list follows it.
+- [ ] A third figure "xx% attendance" beside behind target / flagged; each rower card shows its own
+      "xx% attendance" top right (none until a workout's been set for them).
+
+### 7. The database refuses it (SQL, staging)
+Send Claude a screenshot of the result of this query, and Claude will send back the tests with your
+ids already filled in:
+```sql
+select p.display_name, p.id as user_id, w.title, w.id as workout_id, w.workout_date
+from coach_workouts w cross join profiles p
+where p.club_id = w.club_id and p.is_rower
+order by w.created_at desc, p.display_name limit 20;
+```
+
 ## Every time typed the same way (decision 56, 2026-10-14)
 Same rule as the coach's piece editor, now everywhere a workout time is typed.
 1. **Log** → **Enter session manually** (or post a photo and look at Review).
@@ -184,6 +245,14 @@ the whole file → Run → "Success. No rows returned").
 - [ ] Tapping the "New workout" alert just opens the app (the workout is on the Feed on its day).
 - [ ] **The tenth on the session time** (decision 56): the decimal key adds the monitor's tenth
       ("7:02.4"). You asked for the colon; the tenth is there because monitor times carry one.
+- [ ] **Log it opens that workout only** (decision 57): no picker on Log when you came from a card.
+- [ ] **The Feed refreshing on its own** after you post and when you come back to the app.
+- [ ] **Watts can be typed** in the average when Watts is your pace display (decision 58).
+- [ ] **Distance worked out from time and average** when no distance is typed (decision 58).
+- [ ] **Tapping a week on the effort chart** to read it, and the chosen-week panel (decision 59).
+- [ ] **A long swipe deletes straight away**, as in iOS (decision 60) — say if you'd rather it always asked.
+- [ ] **What attendance counts until Phase 3**: set workouts posted for over the last 8 weeks (decision 62).
+- [ ] **The line under each sort option** on the sheet (decision 62).
 - [ ] **A red "That isn't a time" line** on the session time and on Add test, and the session time
       going back to its earlier value when you leave it unreadable.
 

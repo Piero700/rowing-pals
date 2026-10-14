@@ -12,13 +12,15 @@ enum ReviewField: Hashable {
     case field(segmentId: DraftSegment.ID, field: DraftSegment.Field)
 }
 
-/// One editable segment row in the review sheet — thumbnail, distance and
-/// time, the read-only average, the stroke rate with its inline Confirm
-/// button, and the Warmup/Main/Cooldown/Extra tag picker.
+/// One editable segment row in the review sheet — thumbnail, distance, time,
+/// the average, the stroke rate with its inline Confirm button, and the
+/// Warmup/Main/Cooldown/Extra tag picker.
 ///
-/// Redesign phase F (docs/design/rowing-pals-redesign-handoff-v2.md §2
-/// Screen 05): the average /500m is no longer editable — it is derived from
-/// distance and time and updates as either changes. The stroke rate has a
+/// Decision 58 (2026-10-14): any two of distance, time and the average give the
+/// third. Type the time and the average follows; type the average (a split, or
+/// watts when that's the display preference) and the time follows — or, with
+/// no distance yet, the distance. Whichever of time and average was typed last
+/// is the one kept when the distance changes. The stroke rate has a
 /// Confirm button embedded in the field, always required for a photographed
 /// piece and cleared whenever the rate is edited. A manual piece has no
 /// monitor to check against, so it has no Confirm.
@@ -44,8 +46,22 @@ struct SegmentRowView: View {
     @State private var distanceText: String
     @State private var timeText: String
     @State private var rateText: String
-    /// The piece's time when its field was entered: put back if the field is left unreadable.
-    @State private var timeBeforeEditing: Int?
+    @State private var splitText: String
+    /// The piece's distance, time and split when a time or average field was entered: put back
+    /// if that field is left unreadable.
+    @State private var beforeEditing: Snapshot?
+    /// The average was typed more recently than the time: a new distance keeps the average and
+    /// works out the time, rather than the other way round.
+    @State private var splitTypedLast = false
+
+    private struct Snapshot: Equatable {
+        let distanceM: Int
+        let timeMs: Int
+        let splitMs: Int
+    }
+
+    /// The splits a rower can type: 1:00 to 9:59.9 per 500 m.
+    private static let splitRange = 60_000...599_900
     /// Redesign phase B — per-device display preference. The average shown
     /// here follows it, like every other read-only pace.
     @AppStorage(PaceDisplay.storageKey) private var paceDisplay: PaceDisplay = .split
@@ -68,6 +84,7 @@ struct SegmentRowView: View {
         _distanceText = State(initialValue: value.distanceM > 0 ? String(value.distanceM) : "")
         _timeText = State(initialValue: Self.shown(value.timeMs))
         _rateText = State(initialValue: value.rate > 0 ? value.rate.formattedRate : "")
+        _splitText = State(initialValue: Self.shownSplit(value.splitMs, display: PaceDisplay.current))
     }
 
     var body: some View {
@@ -91,6 +108,14 @@ struct SegmentRowView: View {
             if timeIsUnreadable {
                 Text("That isn't a time: minutes and seconds go up to 59.")
                     .textStyle(Typography.statLabel)
+                    .foregroundStyle(Tokens.System.error)
+            }
+            if splitIsUnreadable {
+                Text(paceDisplay == .split
+                     ? "Enter an average between 1:00 and 9:59.9 per 500m."
+                     : "Enter average watts between 2 and 1,620.")
+                    .textStyle(Typography.statLabel)
+                    .tabularNumerals()
                     .foregroundStyle(Tokens.System.error)
             }
             if !segment.lowConfidenceFields.isEmpty {
@@ -226,11 +251,27 @@ struct SegmentRowView: View {
                 .tabularNumerals()
                 .fieldBox(highlighted: segment.lowConfidenceFields.contains(.time), invalid: timeIsUnreadable)
         }
-        .onChange(of: timeText) { commitTime(leaving: false) }
+        // Only typing counts: the text also changes when the average sets the time.
+        .onChange(of: timeText) { if focusedField.wrappedValue == field { commitTime(leaving: false) } }
         .onChange(of: focusedField.wrappedValue, initial: true) { old, new in
-            if new == field, old != field || timeBeforeEditing == nil { timeBeforeEditing = segment.timeMs }
+            if new == field, old != field || beforeEditing == nil { beforeEditing = snapshot }
             if old == field, new != field { commitTime(leaving: true) }
         }
+    }
+
+    private var snapshot: Snapshot {
+        Snapshot(distanceM: segment.distanceM, timeMs: segment.timeMs, splitMs: segment.splitMs)
+    }
+
+    /// Puts the piece back as it was when the field was entered.
+    private func restoreBeforeEditing() {
+        guard let before = beforeEditing else { return }
+        segment.distanceM = before.distanceM
+        segment.timeMs = before.timeMs
+        segment.splitMs = before.splitMs
+        distanceText = before.distanceM > 0 ? String(before.distanceM) : ""
+        timeText = Self.shown(before.timeMs)
+        splitText = Self.shownSplit(before.splitMs, display: paceDisplay)
     }
 
     /// Something typed that isn't a time ("0:75").
@@ -247,18 +288,93 @@ struct SegmentRowView: View {
         DurationEntry.milliseconds(entry: DurationEntry.entry(from: text, allowsTenths: true)).flatMap { $0 > 0 ? $0 : nil }
     }
 
-    /// Average pace, derived from distance and time — not a field. Shows a
-    /// dash until both are known.
+    /// The average: worked out from distance and time, or typed — a split like every time in the
+    /// app (1 4 5 . 2 reads "1:45.2"), or whole watts when that's the display preference — and
+    /// then the time (or, with no distance, the distance) follows (decision 58).
     private var averageField: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        let field = ReviewField.field(segmentId: segment.id, field: .split)
+        return VStack(alignment: .leading, spacing: 6) {
             fieldLabel(paceDisplay == .split ? "Average /500m" : "Average watts")
-            Text(segment.splitMs > 0 ? segment.splitMs.formattedPace(display: paceDisplay) : "—")
-                .textStyle(Typography.bodyV3)
-                .tabularNumerals()
-                .foregroundStyle(Tokens.Ink.secondary)
-                .fieldBox(highlighted: false)
-                .accessibilityLabel("Average pace, calculated from distance and time")
+            Group {
+                if paceDisplay == .split {
+                    DurationTextField(placeholder: "0:00.0", text: $splitText, allowsTenths: true,
+                                      focus: focusedField, field: field)
+                } else {
+                    TextField("watts", text: $splitText)
+                        .keyboardType(.numberPad)
+                        .focused(focusedField, equals: field)
+                        .onChange(of: splitText) { _, new in
+                            let clean = String(new.filter(\.isWholeNumber).prefix(4))
+                            if clean != new { splitText = clean }
+                        }
+                }
+            }
+            .textStyle(Typography.bodyV3)
+            .tabularNumerals()
+            .foregroundStyle(Tokens.Ink.primary)
+            .fieldBox(highlighted: false, invalid: splitIsUnreadable)
         }
+        // Only typing counts: the text also changes when distance or time set the average.
+        .onChange(of: splitText) { if focusedField.wrappedValue == field { commitSplit(leaving: false) } }
+        .onChange(of: focusedField.wrappedValue, initial: true) { old, new in
+            if new == field, old != field || beforeEditing == nil { beforeEditing = snapshot }
+            if old == field, new != field { commitSplit(leaving: true) }
+        }
+        // Distance and time can change the average while this field isn't being typed in.
+        .onChange(of: segment.splitMs) { _, new in
+            guard focusedField.wrappedValue != field else { return }
+            splitText = Self.shownSplit(new, display: paceDisplay)
+        }
+        .onChange(of: paceDisplay) { _, display in
+            splitText = Self.shownSplit(segment.splitMs, display: display)
+        }
+    }
+
+    /// The typed average as a split, or nil if it isn't one in range.
+    private func typedSplitMs(_ text: String) -> Int? {
+        let ms: Int? = paceDisplay == .split
+            ? Self.milliseconds(text)
+            : Int(text).flatMap { PaceDisplay.splitMs(watts: $0) }
+        return ms.flatMap { Self.splitRange.contains($0) ? $0 : nil }
+    }
+
+    /// Something typed in the average that isn't a split in range.
+    private var splitIsUnreadable: Bool {
+        !splitText.isEmpty && typedSplitMs(splitText) == nil
+    }
+
+    /// "1:45.2", or "186" in watts; "" for none.
+    private static func shownSplit(_ ms: Int, display: PaceDisplay) -> String {
+        guard ms > 0 else { return "" }
+        return display == .split ? shown(ms) : String(PaceDisplay.watts(splitMs: ms))
+    }
+
+    /// Takes a typed average into the piece: the time follows from the distance, or — with no
+    /// distance yet — the distance from the time. On `leaving`, the text is tidied or, if it
+    /// isn't an average, the piece goes back to how it was.
+    private func commitSplit(leaving: Bool) {
+        guard let parsed = typedSplitMs(splitText) else {
+            if leaving {
+                if splitText.isEmpty || beforeEditing == nil {
+                    splitText = Self.shownSplit(segment.splitMs, display: paceDisplay)
+                } else {
+                    restoreBeforeEditing()
+                }
+            }
+            return
+        }
+        if leaving { splitText = Self.shownSplit(parsed, display: paceDisplay) }
+        guard parsed != segment.splitMs else { return }
+        segment.splitMs = parsed
+        splitTypedLast = true
+        if segment.distanceM > 0 {
+            segment.timeMs = DraftSegment.timeMs(splitMs: parsed, distanceM: segment.distanceM)
+            timeText = Self.shown(segment.timeMs)
+        } else if segment.timeMs > 0 {
+            segment.distanceM = DraftSegment.distanceM(timeMs: segment.timeMs, splitMs: parsed)
+            distanceText = String(segment.distanceM)
+        }
+        segment.wasEdited = true
     }
 
     /// The stroke rate field, with Confirm inside it for a photographed
@@ -334,7 +450,13 @@ struct SegmentRowView: View {
         distanceText = String(parsed)
         guard parsed != segment.distanceM else { return }
         segment.distanceM = parsed
-        segment.recomputeSplit()
+        // Keep whichever of time and average was typed last; work out the other (decision 58).
+        if segment.splitMs > 0, splitTypedLast || segment.timeMs == 0 {
+            segment.timeMs = DraftSegment.timeMs(splitMs: segment.splitMs, distanceM: parsed)
+            timeText = Self.shown(segment.timeMs)
+        } else {
+            segment.recomputeSplit()
+        }
         segment.wasEdited = true
     }
 
@@ -344,18 +466,24 @@ struct SegmentRowView: View {
     private func commitTime(leaving: Bool) {
         guard let parsed = Self.milliseconds(timeText) else {
             guard leaving else { return }
-            let before = timeBeforeEditing ?? segment.timeMs
-            timeText = Self.shown(before)
-            if before != segment.timeMs {
-                segment.timeMs = before
-                segment.recomputeSplit()
+            if beforeEditing != nil {
+                restoreBeforeEditing()
+            } else {
+                timeText = Self.shown(segment.timeMs)
             }
             return
         }
         if leaving { timeText = Self.shown(parsed) }
         guard parsed != segment.timeMs else { return }
         segment.timeMs = parsed
-        segment.recomputeSplit()
+        splitTypedLast = false
+        if segment.distanceM > 0 {
+            segment.recomputeSplit()
+        } else if segment.splitMs > 0 {
+            // No distance yet: the average typed earlier gives it (decision 58).
+            segment.distanceM = DraftSegment.distanceM(timeMs: parsed, splitMs: segment.splitMs)
+            distanceText = String(segment.distanceM)
+        }
         segment.wasEdited = true
     }
 

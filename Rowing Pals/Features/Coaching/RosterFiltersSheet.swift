@@ -5,9 +5,10 @@
 
 import SwiftUI
 
-/// Coaching's filters (CoachSortSheet): one squad or all, and the order. Changes apply on Done;
-/// Reset goes back to all squads, behind target first. "Attendance" joins the sort with
-/// practices in Phase 3.
+/// Coaching's filters (CoachSortSheet), behind the list's one Squad · Sort button (decision 62):
+/// one squad or all, and the order — behind target, on target, best to worst, worst to best,
+/// attendance, not logged or name — each with a line saying what it does. Changes apply on
+/// Done; Reset goes back to all squads, behind target first.
 struct RosterFiltersSheet: View {
     let squads: [Squad]
     /// How many rowers each squad holds, and the whole club.
@@ -63,10 +64,10 @@ struct RosterFiltersSheet: View {
                     title("Squad")
                         .padding(.top, Tokens.Spacing.screen)
                     VStack(spacing: 0) {
-                        squadRow(name: "All squads", count: rowerCount, isSelected: squad == nil) { squad = nil }
+                        choiceRow(name: "All squads", detail: Self.rowers(rowerCount), isSelected: squad == nil) { squad = nil }
                         ForEach(squads) { item in
                             Rectangle().fill(Tokens.Surface.line).frame(height: 1)
-                            squadRow(name: item.name, count: item.memberIds.count, isSelected: squad == item.id) { squad = item.id }
+                            choiceRow(name: item.name, detail: Self.rowers(item.memberIds.count), isSelected: squad == item.id) { squad = item.id }
                         }
                     }
                     .background(Self.cardShape.fill(Tokens.Surface.card))
@@ -75,14 +76,15 @@ struct RosterFiltersSheet: View {
 
                     title("Sort by")
                         .padding(.top, Tokens.Spacing.group)
-                    PillSegmentedControl(
-                        options: RosterSort.allCases.map(\.label),
-                        selection: Binding(
-                            get: { RosterSort.allCases.firstIndex(of: sort) ?? 0 },
-                            set: { sort = RosterSort.allCases[$0] }
-                        ),
-                        compact: true
-                    )
+                    VStack(spacing: 0) {
+                        ForEach(Array(RosterSort.allCases.enumerated()), id: \.element) { index, option in
+                            if index > 0 { Rectangle().fill(Tokens.Surface.line).frame(height: 1) }
+                            choiceRow(name: option.label, detail: option.detail, isSelected: sort == option) { sort = option }
+                        }
+                    }
+                    .background(Self.cardShape.fill(Tokens.Surface.card))
+                    .clipShape(Self.cardShape)
+                    .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
                 }
                 .padding(.horizontal, Tokens.Spacing.screen)
                 .padding(.bottom, Tokens.Spacing.group)
@@ -104,14 +106,18 @@ struct RosterFiltersSheet: View {
             .accessibilityAddTraits(.isHeader)
     }
 
-    private func squadRow(name: String, count: Int, isSelected: Bool, action: @escaping () -> Void) -> some View {
+    private static func rowers(_ count: Int) -> String {
+        "\(count) rower\(count == 1 ? "" : "s")"
+    }
+
+    private func choiceRow(name: String, detail: String, isSelected: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             HStack(spacing: Tokens.Spacing.loose) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(name)
                         .textStyle(Typography.rowTitle)
                         .foregroundStyle(Tokens.Ink.primary)
-                    Text("\(count) rower\(count == 1 ? "" : "s")")
+                    Text(detail)
                         .textStyle(Typography.meta)
                         .tabularNumerals()
                         .foregroundStyle(Tokens.Ink.secondary)

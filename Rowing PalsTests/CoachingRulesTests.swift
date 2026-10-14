@@ -253,4 +253,53 @@ struct CoachingRulesTests {
         """
         return try JSONDecoder().decode(Prediction.self, from: Data(json.utf8))
     }
+
+    // MARK: - More sorts and attendance (decision 62)
+
+    @Test func onTargetPutsThoseOnTrackFirst() {
+        var ahead = Self.rower("Ahead", shortfall: 0)
+        ahead = CoachRower(id: ahead.id, displayName: "Ahead", avatarPath: nil, category: .senior, gender: .male,
+                           isPrivate: false, isCoach: false, squadNames: [], squadIds: [], weekMetres: 50_000,
+                           weekSessions: 4, weeklyTargetM: 40_000, daysSinceSession: 1, twoKBestMs: nil,
+                           prediction: nil, flags: [], shortfallM: 0)
+        let list = [Self.rower("Behind", shortfall: 9_000), Self.rower("Level", shortfall: 0), ahead]
+        #expect(CoachingRules.sorted(list, by: .onTarget).map(\.displayName) == ["Ahead", "Level", "Behind"])
+    }
+
+    @Test func bestAndWorstGoBy2kWithNoneLast() {
+        func rower(_ name: String, best: Int?) -> CoachRower {
+            CoachRower(id: UUID(), displayName: name, avatarPath: nil, category: .senior, gender: .male,
+                       isPrivate: false, isCoach: false, squadNames: [], squadIds: [], weekMetres: 0, weekSessions: 0,
+                       weeklyTargetM: 40_000, daysSinceSession: 1, twoKBestMs: best, prediction: nil, flags: [],
+                       shortfallM: 0)
+        }
+        let list = [rower("Slow", best: 440_000), rower("None", best: nil), rower("Fast", best: 380_000)]
+        #expect(CoachingRules.sorted(list, by: .bestFirst).map(\.displayName) == ["Fast", "Slow", "None"])
+        #expect(CoachingRules.sorted(list, by: .worstFirst).map(\.displayName) == ["Slow", "Fast", "None"])
+    }
+
+    @Test func attendanceCountsWorkoutsOnceTheirDayIsOver() {
+        let ann = UUID(), ben = UUID()
+        func workout(_ day: String) -> CoachWorkout {
+            CoachWorkout(id: UUID(), clubId: UUID(), createdBy: nil, title: "x", workoutDate: day, startTime: nil,
+                         description: nil, zone: nil, testKey: nil, pieces: [], audience: .club)
+        }
+        let past = workout("2026-10-12"), alsoPast = workout("2026-10-13"), today = workout("2026-10-14")
+        let attendance = CoachingRules.attendance(
+            workouts: [past, alsoPast, today],
+            audiences: [past.id: [ann, ben], alsoPast.id: [ann, ben], today.id: [ann, ben]],
+            // Ann posted for both past ones and today's; Ben for one past one.
+            posted: [past.id: [ann, ben], alsoPast.id: [ann], today.id: [ann]],
+            since: "2026-08-19", today: "2026-10-14"
+        )
+        #expect(attendance[ann] == WorkoutAttendance(attended: 3, set: 3))
+        // Today's isn't held against Ben until it's over.
+        #expect(attendance[ben] == WorkoutAttendance(attended: 1, set: 2))
+        #expect(attendance[ben]?.text == "50% attendance")
+        #expect(WorkoutAttendance.total(attendance.values).percent == 80)
+
+        let list = [Self.rower("Ben"), Self.rower("Ann"), Self.rower("Cat")]
+        let byId = [list[0].id: attendance[ben] ?? .zero, list[1].id: attendance[ann] ?? .zero]
+        #expect(CoachingRules.sorted(list, by: .attendance, attendance: byId).map(\.displayName) == ["Ann", "Ben", "Cat"])
+    }
 }

@@ -16,6 +16,8 @@ import SwiftUI
 /// A photo chosen from the library has no live selfie, so — like manual entry — the session is
 /// unverified and stays personal (decision 2026-09-24); the photo is still read.
 struct CaptureView: View {
+    /// The workout chosen on its Feed card ("Log it"): Log offers only that one (decision 57).
+    var workoutId: UUID?
     /// Closes the whole Log modal after posting.
     let onPosted: () -> Void
     /// Closes the Log modal without posting (the back button).
@@ -33,8 +35,9 @@ struct CaptureView: View {
     /// "Flip camera": which camera fills the frame. The rear photo is always the monitor.
     @State private var isFrontPrimary = false
     @State private var libraryItem: PhotosPickerItem?
-    /// The workouts the rower's coaches set for today, and which one this session is for
-    /// (RowerLogCoaching, decision 39). Linking is on by default.
+    /// The workouts the rower's coaches set for today that they haven't posted for, and which one
+    /// this session is for (RowerLogCoaching, decisions 39, 57) — just the one chosen on the Feed,
+    /// if Log was opened from its card. Linking is on by default.
     @State private var todaysWorkouts: [TodaysWorkout] = []
     @State private var chosenWorkout = 0
     @State private var linksWorkout = true
@@ -85,7 +88,11 @@ struct CaptureView: View {
         .background(Tokens.Base.ground)
         .toolbar(.hidden, for: .navigationBar)
         .onAppear { viewModel.start() }
-        .task { todaysWorkouts = await WorkoutService.today() }
+        .task {
+            let today = await WorkoutService.today()
+            // From a workout's card: that workout only, so there's nothing else to choose.
+            todaysWorkouts = workoutId.map { id in today.filter { $0.id == id } } ?? today
+        }
         .onDisappear { viewModel.stop() }
         .navigationDestination(item: $initialCapture) { capture in
             ReviewSheetView(selfieJPEG: capture.frontJPEG, initialMonitorPhoto: capture.rearJPEG,

@@ -10,9 +10,11 @@ import SwiftUI
 /// week's km against their target with a bar (red while behind the pro-rata target, decision
 /// 43), sessions, their 2k PB, the Pace Engine's 2k prediction, and any flags.
 ///
-/// Attendance (the canvas's right-hand figure) arrives with practices in Phase 3.
+/// Attendance, the canvas's right-hand figure, is the share of set workouts posted for over the
+/// last 8 weeks (decision 62); Phase 3 adds practices to it.
 struct RowerCard: View {
     let rower: CoachRower
+    var attendance: WorkoutAttendance?
 
     private static let cardShape = RoundedRectangle(cornerRadius: Tokens.Radius.card, style: .continuous)
 
@@ -31,6 +33,13 @@ struct RowerCard: View {
                         .lineLimit(1)
                 }
                 Spacer(minLength: 0)
+                if let text = attendance?.text {
+                    Text(text)
+                        .textStyle(Typography.meta)
+                        .tabularNumerals()
+                        .foregroundStyle(Tokens.Ink.secondary)
+                        .lineLimit(1)
+                }
             }
 
             HStack(alignment: .firstTextBaseline) {

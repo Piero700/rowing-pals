@@ -585,7 +585,10 @@ struct ReviewSheetView: View {
     private var postButton: some View {
         Button {
             Task {
-                if await viewModel.post() { onPosted() }
+                if await viewModel.post() {
+                    NotificationCenter.default.post(name: .sessionPosted, object: nil)
+                    onPosted()
+                }
             }
         } label: {
             if viewModel.isPosting {

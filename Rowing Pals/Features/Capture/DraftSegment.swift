@@ -90,6 +90,21 @@ struct DraftSegment: Identifiable {
         isRateConfirmed = true
     }
 
+    // MARK: - Any two of distance, time and split give the third (decision 58)
+
+    /// The time a split takes over a distance, to the tenth of a second: 1:45.0 over 2,000 m is
+    /// 7:00.0.
+    static func timeMs(splitMs: Int, distanceM: Int) -> Int {
+        guard splitMs > 0, distanceM > 0 else { return 0 }
+        return Int((Double(splitMs) * Double(distanceM) / 500 / 100).rounded()) * 100
+    }
+
+    /// The whole metres a split covers in a time: 2:00.0 for 30:00 is 7,500 m.
+    static func distanceM(timeMs: Int, splitMs: Int) -> Int {
+        guard timeMs > 0, splitMs > 0 else { return 0 }
+        return Int((Double(timeMs) / Double(splitMs) * 500).rounded())
+    }
+
     /// Average pace per 500 m, derived from distance and time — read-only in
     /// the UI ("Average /500m now read-only, auto-computed as distance/time
     /// change"). Zero until both are known.

@@ -30,6 +30,21 @@ enum PaceDisplay: String, CaseIterable {
     static var current: PaceDisplay {
         UserDefaults.standard.string(forKey: storageKey).flatMap(PaceDisplay.init(rawValue:)) ?? .split
     }
+
+    /// Watts for a split, Concept2's `watts = 2.80 / pace³` (pace in seconds per metre).
+    static func watts(splitMs: Int) -> Int {
+        guard splitMs > 0 else { return 0 }
+        let paceSecondsPerMetre = (Double(splitMs) / 1000) / 500
+        return Int((2.80 / pow(paceSecondsPerMetre, 3)).rounded())
+    }
+
+    /// The split for typed watts — the same formula turned round — to the tenth of a second;
+    /// nil for no watts.
+    static func splitMs(watts: Int) -> Int? {
+        guard watts > 0 else { return nil }
+        let paceSecondsPerMetre = pow(2.80 / Double(watts), 1.0 / 3.0)
+        return Int((paceSecondsPerMetre * 500 * 10).rounded()) * 100
+    }
 }
 
 extension Int {

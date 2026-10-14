@@ -10,6 +10,9 @@ extension Notification.Name {
     /// (decisions 24–25) — or their coaching status or account type did (decisions 34, 39).
     /// The feed, rankings, profile and tab bar reload.
     static let rowerClubChanged = Notification.Name("rowerClubChanged")
+    /// The signed-in rower just posted a session: the feed reloads, and a workout it was posted
+    /// for leaves the Feed (decision 57).
+    static let sessionPosted = Notification.Name("sessionPosted")
 }
 
 extension NotificationCenter {

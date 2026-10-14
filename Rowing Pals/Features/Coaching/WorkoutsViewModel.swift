@@ -3,7 +3,7 @@
 //  Rowing Pals
 //
 
-import Foundation
+import SwiftUI
 
 /// Coaching's Workouts tab (CoachWorkouts, decision 39): the club's set workouts in Today,
 /// Upcoming and Past, each with how many of its rowers have done it (decision 49).
@@ -54,6 +54,23 @@ final class WorkoutsViewModel {
                 .sorted { ($0.workout.workoutDate, $0.workout.startTime ?? "") < ($1.workout.workoutDate, $1.workout.startTime ?? "") }
             past = items.filter { WorkoutRules.section($0.workout, today: todayText) == .past }
                 .sorted { ($0.workout.workoutDate, $0.workout.startTime ?? "") > ($1.workout.workoutDate, $1.workout.startTime ?? "") }
+            errorMessage = nil
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    /// Deletes a workout from a swipe on its card (decision 60): it leaves the list at once, and
+    /// from its rowers' Feeds. On failure it stays, with the reason.
+    @MainActor
+    func delete(_ workoutId: UUID) async {
+        do {
+            try await WorkoutService.delete(workoutId)
+            withAnimation {
+                today.removeAll { $0.id == workoutId }
+                upcoming.removeAll { $0.id == workoutId }
+                past.removeAll { $0.id == workoutId }
+            }
             errorMessage = nil
         } catch {
             errorMessage = error.localizedDescription

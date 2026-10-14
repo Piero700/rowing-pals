@@ -173,4 +173,63 @@ struct WorkoutRulesTests {
                                   description: nil, zone: nil, testKey: nil, pieces: [], audience: .rowers, rowerIds: [a, b, UUID()])
         #expect(WorkoutsText.audience(rowers, squads: [:], names: [a: "Tom", b: "Ann"]) == "Ann and Tom")
     }
+
+    // MARK: - Absent, and the day it's for (decision 57)
+
+    @Test func nothingLinkedAfterTheDayIsAbsent() {
+        #expect(WorkoutRules.status(pieces: Self.threeByTwoK, segments: [], hasLinkedSession: false, isOver: true) == .absent)
+        #expect(WorkoutRules.status(pieces: Self.threeByTwoK, segments: [], hasLinkedSession: false, isOver: false) == .notYet)
+        // Something linked is never absent, even once the day is over.
+        let two = [Self.segment(2000, 420_000), Self.segment(2000, 420_000, position: 1)]
+        #expect(WorkoutRules.status(pieces: Self.threeByTwoK, segments: two, hasLinkedSession: true, isOver: true)
+                == .partly(completed: 2, total: 3))
+    }
+
+    @Test func aWorkoutIsOverOnceItsDayHasGone() {
+        let workout = CoachWorkout(id: UUID(), clubId: UUID(), createdBy: nil, title: "x", workoutDate: "2026-10-13",
+                                   startTime: nil, description: nil, zone: nil, testKey: nil, pieces: [], audience: .club)
+        #expect(WorkoutRules.isOver(workout, today: "2026-10-14"))
+        #expect(!WorkoutRules.isOver(workout, today: "2026-10-13"))
+        #expect(!WorkoutRules.isOver(workout, today: "2026-10-12"))
+    }
+
+    @Test func statusesMarkTheAudienceAbsentAfterTheDay() {
+        let rower = UUID(), other = UUID()
+        let workout = CoachWorkout(id: UUID(), clubId: UUID(), createdBy: nil, title: "x", workoutDate: "2026-10-13",
+                                   startTime: nil, description: nil, zone: nil, testKey: nil,
+                                   pieces: Self.threeByTwoK, audience: .club)
+        let session = WorkoutService.LinkedSession(
+            id: UUID(), userId: rower, workoutId: workout.id,
+            segments: (0..<3).map { Self.segment(2000, 420_000, position: $0, day: "2026-10-13") }
+        )
+        let next = WorkoutService.statuses(for: workout, audience: [rower, other], sessions: [session], today: "2026-10-14")
+        #expect(next[rower] == .done)
+        #expect(next[other] == .absent)
+        let same = WorkoutService.statuses(for: workout, audience: [rower, other], sessions: [session], today: "2026-10-13")
+        #expect(same[other] == .notYet)
+    }
+
+    // MARK: - Any two of distance, time and split (decision 58)
+
+    @Test func aSplitAndADistanceGiveTheTime() {
+        #expect(DraftSegment.timeMs(splitMs: 105_000, distanceM: 2000) == 420_000)
+        #expect(DraftSegment.timeMs(splitMs: 100_300, distanceM: 1000) == 200_600)
+        #expect(DraftSegment.timeMs(splitMs: 0, distanceM: 2000) == 0)
+    }
+
+    @Test func aSplitAndATimeGiveTheDistance() {
+        #expect(DraftSegment.distanceM(timeMs: 1_800_000, splitMs: 120_000) == 7500)
+        #expect(DraftSegment.distanceM(timeMs: 400_000, splitMs: 100_000) == 2000)
+        #expect(DraftSegment.distanceM(timeMs: 0, splitMs: 100_000) == 0)
+    }
+
+    @Test func wattsTurnIntoASplitAndBack() {
+        // Concept2's own table: 2:00.0 is 203 W; 1:40.0 is 350 W.
+        #expect(PaceDisplay.watts(splitMs: 120_000) == 203)
+        #expect(PaceDisplay.watts(splitMs: 100_000) == 350)
+        #expect(PaceDisplay.splitMs(watts: 350) == 100_000)
+        // 2:00.0 is 202.5 W, shown as 203; exactly 203 W is a shade quicker.
+        #expect(PaceDisplay.splitMs(watts: 203) == 119_900)
+        #expect(PaceDisplay.splitMs(watts: 0) == nil)
+    }
 }

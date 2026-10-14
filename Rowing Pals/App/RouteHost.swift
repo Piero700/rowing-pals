@@ -25,6 +25,8 @@ struct RouteHost: View {
     var body: some View {
         NavigationStack(path: $path) {
             destination(root)
+                // Swipe from the left edge to close this area, like going back (decision 61).
+                .edgeSwipeToDismiss()
                 // The workout screen draws its own back button over its photo.
                 .toolbar(Self.drawsOwnChrome(root) ? .hidden : .visible, for: .navigationBar)
                 .toolbar {
@@ -40,6 +42,8 @@ struct RouteHost: View {
                 }
                 .navigationDestination(for: AppRoute.self) { route in
                     destination(route)
+                        // The stack's own swipe takes a pushed screen back (decision 61).
+                        .swipeBackHandledByStack()
                 }
         }
         .tint(Tokens.Accent.brand)
@@ -47,7 +51,8 @@ struct RouteHost: View {
         .environment(\.closeRoute, CloseRouteAction { dismiss() })
         .environment(\.navigate, NavigateAction { route in
             // Log belongs to the tab screens; it can't be pushed here.
-            guard route != .log else { return }
+            if route == .log { return }
+            if case .logWorkout = route { return }
             if route == .coaching, root != .coaching {
                 isShowingCoaching = true
             } else {
@@ -77,7 +82,7 @@ struct RouteHost: View {
             PeopleListView(kind: kind)
         case .followRequests:
             FollowRequestsView()
-        case .log:
+        case .log, .logWorkout:
             EmptyView()
         case .findClub:
             ClubSearchView(mode: .joinLater)

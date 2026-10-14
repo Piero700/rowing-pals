@@ -42,6 +42,8 @@ struct RootView: View {
 
     @State private var selection: RootTab = .feed
     @State private var isShowingPostSheet = false
+    /// The workout a Feed card's "Log it" chose; nil when Log was opened on its own.
+    @State private var logWorkoutId: UUID?
     @State private var barVisibility = FloatingBarVisibility()
     /// Redesign phase E: a rower's profile (and the people lists reached from
     /// it) opens over the tabs. Features raise an `AppRoute` through the
@@ -92,6 +94,10 @@ struct RootView: View {
             .environment(\.navigate, NavigateAction { route in
                 if route == .log {
                     // A coach-only account never logs a session.
+                    logWorkoutId = nil
+                    if isRower { isShowingPostSheet = true }
+                } else if case .logWorkout(let workoutId) = route {
+                    logWorkoutId = workoutId
                     if isRower { isShowingPostSheet = true }
                 } else {
                     presentedRoute = route
@@ -99,7 +105,7 @@ struct RootView: View {
             })
             // v3: Log opens capture as a full-screen modal, no tab bar.
             .fullScreenCover(isPresented: $isShowingPostSheet) {
-                PostSheetView()
+                PostSheetView(workoutId: logWorkoutId)
             }
             .fullScreenCover(item: $presentedRoute) { route in
                 RouteHost(root: route)

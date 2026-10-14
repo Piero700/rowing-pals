@@ -55,10 +55,12 @@ nonisolated enum WorkoutRules {
         return result
     }
 
-    /// Done, partly or not yet (decision 49): partly is a linked session that didn't complete
-    /// the whole workout. Without pieces, any linked session is the workout.
-    static func status(pieces: [WorkoutPiece], segments: [LinkedSegment], hasLinkedSession: Bool) -> WorkoutStatus {
-        guard hasLinkedSession else { return .notYet }
+    /// Done, partly, not yet or absent (decisions 49, 57): partly is a linked session that didn't
+    /// complete the whole workout; with nothing linked it's not yet on the day and absent once the
+    /// day `isOver`. Without pieces, any linked session is the workout.
+    static func status(pieces: [WorkoutPiece], segments: [LinkedSegment], hasLinkedSession: Bool,
+                       isOver: Bool = false) -> WorkoutStatus {
+        guard hasLinkedSession else { return isOver ? .absent : .notYet }
         guard !pieces.isEmpty else { return .done }
         let total = totalReps(pieces)
         let completed = rowedReps(pieces: pieces, segments: segments).compactMap { $0 }.count
@@ -233,6 +235,12 @@ nonisolated enum WorkoutRules {
 
     enum Section: Equatable {
         case today, upcoming, past
+    }
+
+    /// Whether the workout's day has gone: it can't be logged any more, and anyone without a
+    /// linked session is absent (decision 57). `today` is the viewer's own "yyyy-MM-dd".
+    static func isOver(_ workout: CoachWorkout, today: String) -> Bool {
+        workout.workoutDate < today
     }
 
     static func section(_ workout: CoachWorkout, today: String) -> Section {

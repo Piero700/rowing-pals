@@ -166,6 +166,12 @@ final class FeedViewModel {
         todaysWorkouts = today
     }
 
+    /// Just today's workouts — on coming back to the app, which may be a new day (decision 57).
+    @MainActor
+    func refreshWorkouts() async {
+        todaysWorkouts = await WorkoutService.today()
+    }
+
     /// The viewer just joined a club (decision 24): forget the cached club and clubmates, then
     /// load the Club tab afresh.
     @MainActor

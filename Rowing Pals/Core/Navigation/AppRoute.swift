@@ -26,6 +26,9 @@ enum AppRoute: Hashable, Identifiable {
     case post(UUID)
     /// Opens Log (capture) — handled by `RootView`, which owns that modal.
     case log
+    /// Log for one of today's workouts, from its Feed card: Log offers that workout only
+    /// (decision 57).
+    case logWorkout(UUID)
     /// Pick a club after onboarding without one (decision 24).
     case findClub
     /// "Your crew": your club, pending request, invitations and club options (v3 §12).

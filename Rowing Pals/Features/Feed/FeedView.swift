@@ -29,6 +29,7 @@ struct FeedView: View {
     @State private var viewModel = FeedViewModel()
     @State private var cover: Cover?
     @Environment(\.navigate) private var navigate
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         // The scroll view stays the tab's root view so the floating bar can track it.
@@ -43,7 +44,7 @@ struct FeedView: View {
                     .padding(.vertical, Tokens.Spacing.loose)
 
                 ForEach(viewModel.todaysWorkouts) { today in
-                    TodaysWorkoutCard(today: today) { navigate(.log) }
+                    TodaysWorkoutCard(today: today) { navigate(.logWorkout(today.id)) }
                         .padding(.bottom, Tokens.Spacing.loose)
                 }
 
@@ -70,6 +71,14 @@ struct FeedView: View {
         .refreshable { ViewerContext.shared.invalidate(); await viewModel.reload() }
         .onReceive(NotificationCenter.default.publisher(for: .rowerClubChanged)) { _ in
             Task { await viewModel.clubChanged() }
+        }
+        // A new post shows, and a workout it was for leaves the Feed (decision 57).
+        .onReceive(NotificationCenter.default.publisher(for: .sessionPosted)) { _ in
+            Task { await viewModel.reload() }
+        }
+        // Back from the background, perhaps on a new day: yesterday's workouts go.
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active { Task { await viewModel.refreshWorkouts() } }
         }
         .fullScreenCover(item: $cover) { cover in
             switch cover {

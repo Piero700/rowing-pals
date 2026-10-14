@@ -125,7 +125,7 @@ struct WorkoutResultsView: View {
             HStack(alignment: .top, spacing: 4) {
                 stat(viewModel.doneCount, "done")
                 stat(viewModel.partlyCount, "partly")
-                stat(viewModel.notYetCount, "not yet")
+                stat(viewModel.notYetCount, viewModel.isOver ? "absent" : "not yet")
             }
             .padding(.top, Tokens.Spacing.loose)
         }
@@ -158,7 +158,7 @@ struct WorkoutResultsView: View {
 
     private var filterControl: some View {
         PillSegmentedControl(
-            options: ["All \(viewModel.rows.count)", "Done", "Not yet"],
+            options: ["All \(viewModel.rows.count)", "Done", viewModel.isOver ? "Absent" : "Not yet"],
             selection: Binding(
                 get: { viewModel.filter.rawValue },
                 set: { viewModel.filter = WorkoutResultsViewModel.Filter(rawValue: $0) ?? .all }
@@ -187,7 +187,7 @@ struct WorkoutResultsView: View {
                 Spacer(minLength: 0)
                 statusChip(row.status)
             }
-            if hasPieces && row.status != .notYet {
+            if hasPieces && row.status != .notYet && row.status != .absent {
                 LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: Tokens.Spacing.tight, alignment: .leading), count: 3),
                           alignment: .leading, spacing: Tokens.Spacing.tight) {
                     ForEach(row.reps) { rep in
@@ -239,6 +239,8 @@ struct WorkoutResultsView: View {
             FlagChip(text: "\(completed) of \(total)")
         case .notYet:
             FlagChip(text: "Not yet")
+        case .absent:
+            FlagChip(text: "Absent", isWarning: true)
         }
     }
 }

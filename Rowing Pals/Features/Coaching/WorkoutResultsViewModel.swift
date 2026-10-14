@@ -43,6 +43,11 @@ final class WorkoutResultsViewModel {
         self.workoutId = workoutId
     }
 
+    /// The day has gone: "not yet" reads "absent" (decision 57).
+    var isOver: Bool {
+        workout.map { WorkoutRules.isOver($0, today: WorkoutRules.dayText(Date(), calendar: .current)) } ?? false
+    }
+
     var shownRows: [Row] {
         switch filter {
         case .all: rows
@@ -53,7 +58,8 @@ final class WorkoutResultsViewModel {
 
     var doneCount: Int { rows.filter(\.status.isDone).count }
     var partlyCount: Int { rows.filter { if case .partly = $0.status { true } else { false } }.count }
-    var notYetCount: Int { rows.filter { $0.status == .notYet }.count }
+    /// Not yet on the day; absent after it (decision 57).
+    var notYetCount: Int { rows.filter { $0.status == .notYet || $0.status == .absent }.count }
 
     @MainActor
     func load() async {
@@ -100,6 +106,7 @@ final class WorkoutResultsViewModel {
                         case .done: 0
                         case .partly: 1
                         case .notYet: 2
+                        case .absent: 3
                         }
                     }
                     if order(a.status) != order(b.status) { return order(a.status) < order(b.status) }

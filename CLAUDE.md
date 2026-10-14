@@ -74,6 +74,12 @@ Structure that should survive any redesign:
   tokens only. Each accent colour has one job; a colour outside its job is a bug.
 - Dark mode is the primary design. Light mode must work but is secondary.
 - Typography: SF Pro. **All numerals use `.monospacedDigit()`.**
+- **Every screen swipes back from the left edge** (decision 61). Push new screens through the
+  navigation stack (an `AppRoute` in `RouteHost`) or present full-screen areas through `RouteHost`,
+  and the swipe comes for free (`App/SwipeBackNavigation.swift`, `edgeSwipeToDismiss()`); never
+  turn it off.
+- **Every workout time is typed with `DurationTextField`** (decisions 53, 56): digits only, the colon
+  put in as you type.
 
 **Liquid Glass is a permanent requirement**, whatever else changes. Glass surfaces carry a
 darkened outer edge and a specular top rim — a flat translucent rectangle is not glass.

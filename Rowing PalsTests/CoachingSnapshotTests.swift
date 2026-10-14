@@ -51,7 +51,7 @@ struct CoachingSnapshotTests {
             ])
             .padding(Tokens.Spacing.card)
             .background(Tokens.Surface.card)
-            EffortTrendChart(weeks: [5.5, 5.8, 6.0, 5.6, 6.4, 7.0, 7.4, 7.9], average: 6.2, isElevated: true)
+            EffortTrendChart(weeks: [5.5, 5.8, 6.0, 5.6, 6.4, 7.0, 7.4, 7.9], weekStarts: starts, average: 6.2, isElevated: true)
                 .padding(Tokens.Spacing.card)
                 .background(Tokens.Surface.card)
         }

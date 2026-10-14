@@ -219,11 +219,64 @@ nonisolated enum CoachingRules {
         return rowers.filter { $0.squadIds.contains(squad) }
     }
 
-    static func sorted(_ rowers: [CoachRower], by sort: RosterSort) -> [CoachRower] {
+    /// How far through their weekly target they are, 0 upwards.
+    static func targetShare(_ rower: CoachRower) -> Double {
+        rower.weeklyTargetM > 0 ? Double(rower.weekMetres) / Double(rower.weeklyTargetM) : 0
+    }
+
+    /// Their 2k for ranking best to worst: the PB, else the Pace Engine's predicted time.
+    static func twoKMs(_ rower: CoachRower) -> Int? {
+        if let best = rower.twoKBestMs { return best }
+        return rower.prediction?.predictedTotalTimeSeconds.map { Int(($0 * 1000).rounded()) }
+    }
+
+    /// Each rower's attendance at set workouts from `since` to `today` (both "yyyy-MM-dd",
+    /// decision 62): a workout counts once its day is over, or on its day once they've posted
+    /// for it. `posted` is who posted for each workout.
+    static func attendance(
+        workouts: [CoachWorkout], audiences: [UUID: Set<UUID>], posted: [UUID: Set<UUID>],
+        since: String, today: String
+    ) -> [UUID: WorkoutAttendance] {
+        var result: [UUID: WorkoutAttendance] = [:]
+        for workout in workouts where workout.workoutDate >= since && workout.workoutDate <= today {
+            let isOver = WorkoutRules.isOver(workout, today: today)
+            let done = posted[workout.id] ?? []
+            for rower in audiences[workout.id] ?? [] {
+                let attended = done.contains(rower)
+                guard attended || isOver else { continue }
+                result[rower, default: .zero].set += 1
+                if attended { result[rower, default: .zero].attended += 1 }
+            }
+        }
+        return result
+    }
+
+    static func sorted(
+        _ rowers: [CoachRower], by sort: RosterSort, attendance: [UUID: WorkoutAttendance] = [:]
+    ) -> [CoachRower] {
         rowers.sorted { a, b in
             switch sort {
             case .behindTarget:
                 if a.shortfallM != b.shortfallM { return a.shortfallM > b.shortfallM }
+            case .onTarget:
+                if a.shortfallM != b.shortfallM { return a.shortfallM < b.shortfallM }
+                let aShare = targetShare(a), bShare = targetShare(b)
+                if aShare != bShare { return aShare > bShare }
+            case .bestFirst, .worstFirst:
+                // Rowers without a 2k, PB or predicted, go last either way.
+                switch (twoKMs(a), twoKMs(b)) {
+                case let (x?, y?) where x != y: return sort == .bestFirst ? x < y : x > y
+                case (.some, nil): return true
+                case (nil, .some): return false
+                default: break
+                }
+            case .attendance:
+                switch (attendance[a.id]?.percent, attendance[b.id]?.percent) {
+                case let (x?, y?) where x != y: return x > y
+                case (.some, nil): return true
+                case (nil, .some): return false
+                default: break
+                }
             case .notLogged:
                 // Nothing in the window reads as the longest gap of all.
                 let aDays = a.daysSinceSession ?? Int.max

@@ -179,18 +179,57 @@ enum WorkoutService {
         }
     }
 
-    /// Each rower's status on a workout, from its audience and linked sessions.
+    /// Each rower's status on a workout, from its audience and linked sessions; anyone without a
+    /// linked session once its day is over is absent (decision 57).
     static func statuses(
-        for workout: CoachWorkout, audience: Set<UUID>, sessions: [LinkedSession]
+        for workout: CoachWorkout, audience: Set<UUID>, sessions: [LinkedSession],
+        today: String = WorkoutRules.dayText(Date(), calendar: .current)
     ) -> [UUID: WorkoutStatus] {
+        let isOver = WorkoutRules.isOver(workout, today: today)
         var result: [UUID: WorkoutStatus] = [:]
         for rower in audience {
             let mine = sessions.filter { $0.workoutId == workout.id && $0.userId == rower }
             result[rower] = WorkoutRules.status(
-                pieces: workout.pieces, segments: mine.flatMap(\.segments), hasLinkedSession: !mine.isEmpty
+                pieces: workout.pieces, segments: mine.flatMap(\.segments), hasLinkedSession: !mine.isEmpty,
+                isOver: isOver
             )
         }
         return result
+    }
+
+    /// Who has posted for each of these workouts, without their pieces (attendance, decision 62).
+    static func postings(for workoutIds: [UUID]) async throws -> [UUID: Set<UUID>] {
+        guard !workoutIds.isEmpty else { return [:] }
+        nonisolated struct Row: Decodable {
+            let userId: UUID
+            let workoutId: UUID
+            enum CodingKeys: String, CodingKey {
+                case userId = "user_id"
+                case workoutId = "workout_id"
+            }
+        }
+        let rows: [Row] = try await SupabaseService.shared
+            .from("sessions").select("user_id, workout_id")
+            .in("workout_id", values: workoutIds)
+            .execute().value
+        var result: [UUID: Set<UUID>] = [:]
+        for row in rows { result[row.workoutId, default: []].insert(row.userId) }
+        return result
+    }
+
+    /// Which of these workouts the signed-in rower has already posted a session for.
+    static func postedWorkoutIds(among workoutIds: [UUID], userId: UUID) async throws -> Set<UUID> {
+        guard !workoutIds.isEmpty else { return [] }
+        nonisolated struct Row: Decodable {
+            let workoutId: UUID
+            enum CodingKeys: String, CodingKey { case workoutId = "workout_id" }
+        }
+        let rows: [Row] = try await SupabaseService.shared
+            .from("sessions").select("workout_id")
+            .eq("user_id", value: userId)
+            .in("workout_id", values: workoutIds)
+            .execute().value
+        return Set(rows.map(\.workoutId))
     }
 
     // MARK: - The rower's side
@@ -206,16 +245,22 @@ enum WorkoutService {
             .execute().value
     }
 
-    /// The workouts set for the signed-in rower today, with who set them and the rower's own
-    /// target split. Empty for anyone who doesn't row, or before the coaching migration.
+    /// The workouts set for the signed-in rower today that they haven't posted for yet, with who
+    /// set them and the rower's own target split (decision 57: a workout leaves the Feed and Log
+    /// once posted for, and with its day). Empty for anyone who doesn't row, or before the
+    /// coaching migration.
     static func today(calendar: Calendar = .current) async -> [TodaysWorkout] {
         guard let viewer = try? await ViewerContext.shared.current(), viewer.isRower, let clubId = viewer.clubId else { return [] }
         struct Params: Encodable { let p_from: String; let p_to: String }
         let day = WorkoutRules.dayText(Date(), calendar: calendar)
-        guard let workouts: [CoachWorkout] = try? await SupabaseService.shared
+        guard let set: [CoachWorkout] = try? await SupabaseService.shared
             .rpc("my_workouts", params: Params(p_from: day, p_to: day))
             .select(columns)
-            .execute().value, !workouts.isEmpty else { return [] }
+            .execute().value, !set.isEmpty else { return [] }
+        // If this can't be read, show them all: the database still refuses a second post.
+        let posted = (try? await postedWorkoutIds(among: set.map(\.id), userId: viewer.userId)) ?? []
+        let workouts = set.filter { !posted.contains($0.id) }
+        guard !workouts.isEmpty else { return [] }
 
         async let namesTask = coachNames(for: workouts)
         async let squadsTask = try? await CoachingService.squads(of: clubId)

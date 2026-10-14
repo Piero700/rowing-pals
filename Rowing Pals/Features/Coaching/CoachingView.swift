@@ -106,21 +106,23 @@ struct CoachingView: View {
 
     @ViewBuilder
     private func content(_ roster: CoachingService.Roster) -> some View {
+        // One button for squad and order: both open the same sheet (decision 62).
         HStack(spacing: Tokens.Spacing.tight) {
             Button { isShowingFilters = true } label: {
-                Label(viewModel.squadName, systemImage: "line.3.horizontal.decrease")
+                Label("\(viewModel.squadName) · \(viewModel.sort.label)", systemImage: "line.3.horizontal.decrease")
+                    .lineLimit(1)
             }
             .buttonStyle(.rpPill(isOn: false))
-            Button { isShowingFilters = true } label: {
-                Label(viewModel.sort.label, systemImage: "arrow.up.arrow.down")
-            }
-            .buttonStyle(.rpPill(isOn: false))
+            .accessibilityHint("Choose a squad and how the rowers are ordered")
             Spacer(minLength: 0)
         }
 
         HStack(spacing: Tokens.Spacing.tight) {
-            stat(viewModel.behindCount, "behind target")
-            stat(viewModel.flaggedCount, "flagged")
+            stat("\(viewModel.behindCount)", "behind target")
+            stat("\(viewModel.flaggedCount)", "flagged")
+            if let attendance = viewModel.attendanceText {
+                stat(attendance, "attendance")
+            }
         }
         .padding(.top, Tokens.Spacing.loose)
 
@@ -142,7 +144,7 @@ struct CoachingView: View {
         } else {
             LazyVStack(spacing: Tokens.Spacing.tight) {
                 ForEach(rowers) { rower in
-                    RowerCard(rower: rower)
+                    RowerCard(rower: rower, attendance: viewModel.attendance[rower.id])
                         .asButton { navigate(.coachRower(rower.id)) }
                 }
             }
@@ -200,14 +202,16 @@ struct CoachingView: View {
                 ForEach(items) { item in
                     WorkoutCard(item: item, isToday: isToday)
                         .asButton { navigate(.workoutResults(item.workout.id)) }
+                        // As well as Delete workout on its page (decision 60).
+                        .swipeToDelete { await workouts.delete(item.workout.id) }
                 }
             }
         }
     }
 
-    private func stat(_ value: Int, _ label: String) -> some View {
+    private func stat(_ value: String, _ label: String) -> some View {
         VStack(alignment: .leading, spacing: 2) {
-            Text("\(value)")
+            Text(value)
                 .textStyle(Typography.coachStat)
                 .tabularNumerals()
                 .foregroundStyle(Tokens.Ink.primary)
