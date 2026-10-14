@@ -25,7 +25,7 @@ struct PillSegmentedControl: View {
                 segment(index)
             }
         }
-        .padding(compact ? 3 : 4)
+        .padding(3)
         .glassSurface(in: Capsule())
     }
 
@@ -45,7 +45,7 @@ struct PillSegmentedControl: View {
                 .minimumScaleFactor(0.8)
                 .foregroundStyle(isSelected ? Tokens.Ink.primary : Tokens.Ink.secondary)
                 // A compact segment draws 36 pt but still takes taps across 44 pt.
-                .frame(maxWidth: .infinity, minHeight: compact ? Tokens.Size.compactSegment : Tokens.Size.minTap)
+                .frame(maxWidth: .infinity, minHeight: compact ? Tokens.Size.compactSegment : Tokens.Size.control)
                 .background {
                     if isSelected {
                         Color.clear

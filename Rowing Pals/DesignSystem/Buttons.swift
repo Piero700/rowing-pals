@@ -92,7 +92,7 @@ struct TextButtonStyle: ButtonStyle {
         configuration.label
             .textStyle(Typography.button)
             .foregroundStyle(Tokens.Accent.brand)
-            .frame(minWidth: Tokens.Size.minTap, minHeight: Tokens.Size.minTap)
+            .frame(minWidth: Tokens.Size.minTap, minHeight: Tokens.Size.control)
             .opacity(isEnabled ? 1 : 0.45)
             .contentShape(Rectangle())
             .modifier(PressEffect(isPressed: configuration.isPressed))
@@ -118,7 +118,7 @@ struct DestructiveButtonStyle: ButtonStyle {
 /// Glass pill: 40–44 tall capsule for reactions, comments, filters and follow buttons.
 struct GlassPillButtonStyle: ButtonStyle {
     var isPressedState = false
-    var minHeight: CGFloat = Tokens.Size.minTap
+    var minHeight: CGFloat = Tokens.Size.control
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
@@ -154,7 +154,7 @@ extension ButtonStyle where Self == DestructiveButtonStyle {
 
 extension ButtonStyle where Self == GlassPillButtonStyle {
     static var rpPill: GlassPillButtonStyle { GlassPillButtonStyle() }
-    static func rpPill(isOn: Bool, minHeight: CGFloat = Tokens.Size.minTap) -> GlassPillButtonStyle {
+    static func rpPill(isOn: Bool, minHeight: CGFloat = Tokens.Size.control) -> GlassPillButtonStyle {
         GlassPillButtonStyle(isPressedState: isOn, minHeight: minHeight)
     }
 }

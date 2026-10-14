@@ -117,7 +117,7 @@ enum Tokens {
 
     /// v3 corner radii. Interactive controls (buttons, pills, segmented, nav) use a `Capsule`.
     enum Radius {
-        static let card: CGFloat = 30
+        static let card: CGFloat = 28
         /// Inputs, club rows, split rows, PB tiles.
         static let input: CGFloat = 24
         static let estimate: CGFloat = 22
@@ -158,18 +158,20 @@ enum Tokens {
         static let minTap: CGFloat = 44
         /// The red Delete revealed by a short swipe on a card (decision 60), as wide as iOS's.
         static let swipeAction: CGFloat = 88
-        static let primaryButton: CGFloat = 54
-        static let secondaryButton: CGFloat = 52
-        static let input: CGFloat = 52
-        static let navHeight: CGFloat = 58
+        static let primaryButton: CGFloat = 51
+        static let secondaryButton: CGFloat = 50
+        static let input: CGFloat = 50
+        static let navHeight: CGFloat = 55
         /// v4: the floating bar sits 44 pt in from each side and 14 pt up, 8 pt from the Log button.
         static let navSideInset: CGFloat = 44
-        static let navBottomInset: CGFloat = 14
+        static let navBottomInset: CGFloat = 22
         static let navGap: CGFloat = 8
         static let headerMinHeight: CGFloat = 61
-        static let iconButton: CGFloat = 44
+        static let iconButton: CGFloat = 42
+        /// v4 at 95% (2026-10-15): segmented controls, glass pills and text buttons draw 40 pt.
+        static let control: CGFloat = 40
         /// A tile in the Test results grid, and the "+ Add test" tile.
-        static let testTile: CGFloat = 106
+        static let testTile: CGFloat = 100
         /// The camera badge on your own profile picture (decision 29).
         static let avatarBadge: CGFloat = 26
         /// A comment's author picture.
@@ -183,7 +185,7 @@ enum Tokens {
         /// A "Best in your group" card on Test results (decision 37).
         static let groupBestCard: CGFloat = 140
         /// A compact segmented control's segment (Settings' units), tappable across 44 pt.
-        static let compactSegment: CGFloat = 36
+        static let compactSegment: CGFloat = 34
         /// A settings row: with a description line, and without.
         static let row: CGFloat = 66
         static let rowCompact: CGFloat = 56
@@ -194,7 +196,7 @@ enum Tokens {
         /// picture, the weekly-target bar, the volume chart, the zone-mix bar and its legend
         /// swatches, a flag chip, an onboarding choice card's tick.
         static let rowerCardAvatar: CGFloat = 40
-        static let rowerPageAvatar: CGFloat = 76
+        static let rowerPageAvatar: CGFloat = 72
         static let targetBar: CGFloat = 6
         static let volumeChart: CGFloat = 120
         /// The labelled effort chart (decision 59), sized like the PB progression chart's plot.
@@ -206,7 +208,7 @@ enum Tokens {
         /// The round icon at the top of a notice sheet ("UEA Boat Club has coaches").
         static let noticeIcon: CGFloat = 56
         /// The profile picture at the top of Edit profile (SettingsProfile).
-        static let editProfileAvatar: CGFloat = 88
+        static let editProfileAvatar: CGFloat = 84
         /// The Log screen's camera frame, width ÷ height: 3:4 upright, the shape the iPhone camera
         /// saves (decision 55), so the preview shows exactly the photo taken.
         static let cameraAspect: CGFloat = 3.0 / 4.0
@@ -286,16 +288,16 @@ enum Typography {
     // light tracking (0.02 em) on capitals. Set in SF Pro (decision 13).
 
     /// Large title on tab screens.
-    static let largeTitle = Style(size: 34, weight: .bold, trackingEm: 0, uppercase: false)
-    static let onboardingTitle = Style(size: 34, weight: .bold, trackingEm: 0, uppercase: false)
+    static let largeTitle = Style(size: 32, weight: .bold, trackingEm: 0, uppercase: false)
+    static let onboardingTitle = Style(size: 32, weight: .bold, trackingEm: 0, uppercase: false)
     /// Title on pushed screens, centred between the back button and the edge.
     static let navTitle = Style(size: 17, weight: .semibold, trackingEm: 0, uppercase: false)
-    static let profileName = Style(size: 22, weight: .bold, trackingEm: 0, uppercase: false)
+    static let profileName = Style(size: 21, weight: .bold, trackingEm: 0, uppercase: false)
     /// Every big number (a workout's result, the review screen's total, the rank card's total,
     /// a PB) is the same 34 pt bold.
-    static let bigResult = Style(size: 34, weight: .bold, trackingEm: 0, uppercase: false)
-    static let reviewResult = Style(size: 34, weight: .bold, trackingEm: 0, uppercase: false)
-    static let heroNumber = Style(size: 34, weight: .bold, trackingEm: 0, uppercase: false)
+    static let bigResult = Style(size: 32, weight: .bold, trackingEm: 0, uppercase: false)
+    static let reviewResult = Style(size: 32, weight: .bold, trackingEm: 0, uppercase: false)
+    static let heroNumber = Style(size: 32, weight: .bold, trackingEm: 0, uppercase: false)
     static let bodyV3 = Style(size: 17, weight: .regular, trackingEm: 0, uppercase: false)
     static let name = Style(size: 15, weight: .semibold, trackingEm: 0, uppercase: false)
     /// The title of a settings row or switch row.
@@ -310,13 +312,13 @@ enum Typography {
     /// The label under a rank or stat ("2k test").
     static let statLabel = Style(size: 12, weight: .regular, trackingEm: 0, uppercase: false)
     /// PB history's "Current personal best" figure (v3 §10).
-    static let pbValue = Style(size: 34, weight: .bold, trackingEm: 0, uppercase: false)
+    static let pbValue = Style(size: 32, weight: .bold, trackingEm: 0, uppercase: false)
     /// A card's own heading ("PB progression").
     static let cardTitle = Style(size: 17, weight: .semibold, trackingEm: 0, uppercase: false)
     /// Row text in a list card (PB history dates).
     static let detail = Style(size: 15, weight: .regular, trackingEm: 0, uppercase: false)
     /// The chosen result under the PB chart.
-    static let selectedValue = Style(size: 22, weight: .bold, trackingEm: 0, uppercase: false)
+    static let selectedValue = Style(size: 21, weight: .bold, trackingEm: 0, uppercase: false)
     /// The small label over a form field ("Club name").
     static let fieldLabel = Style(size: 12, weight: .semibold, trackingEm: 0, uppercase: false)
     static let navLabel = Style(size: 11, weight: .semibold, trackingEm: 0, uppercase: false)
@@ -329,13 +331,13 @@ enum Typography {
     static let button = Style(size: 17, weight: .semibold, trackingEm: 0, uppercase: false)
     /// Coaching: a stat card's number (Rowers list), a 4-up stat on one rower's page, a flag
     /// or info chip.
-    static let coachStat = Style(size: 22, weight: .bold, trackingEm: 0, uppercase: false)
+    static let coachStat = Style(size: 21, weight: .bold, trackingEm: 0, uppercase: false)
     static let coachStatSmall = Style(size: 20, weight: .bold, trackingEm: 0, uppercase: false)
     static let chip = Style(size: 12, weight: .semibold, trackingEm: 0, uppercase: false)
     /// "TODAY'S WORKOUT" over a set workout (RowerFeedCoaching, RowerLogCoaching).
     static let kicker = Style(size: 12, weight: .medium, trackingEm: 0.02, uppercase: true)
     /// The time on a "Best in your group" card.
-    static let groupBestValue = Style(size: 28, weight: .bold, trackingEm: 0, uppercase: false)
+    static let groupBestValue = Style(size: 27, weight: .bold, trackingEm: 0, uppercase: false)
     /// The glyph in a small round button (the comment send arrow).
     static let buttonGlyph = Style(size: 15, weight: .bold, trackingEm: 0, uppercase: false)
     /// A comment: its author, its text and when it was written.
