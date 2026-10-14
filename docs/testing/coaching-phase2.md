@@ -146,6 +146,10 @@ end $$;
 - [ ] Expect `RESULT: refused — That workout isn't set for you.`
 
 ## Water logging removed (decision 54)
+Run `docs/migrations/2026-10-14-erg-only.sql` on staging first (SQL Editor → + New query → paste
+the whole file → Run → "Success. No rows returned").
+- [ ] **Your crew → Manage club → Edit club** (owner or co-owner): **Club focus** offers All rowing,
+      Indoor rowing and University crew only — no "On-water rowing".
 - [ ] **Rankings → Volume**: the filters pill reads "Senior men · My club" (no "Erg + water").
 - [ ] Tap it: the Filters sheet has Gender, Level and Rowers only — no **Source** row.
 - [ ] The Volume board still ranks everyone's erg metres for Week / Month / Year.

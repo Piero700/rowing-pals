@@ -33,7 +33,9 @@ struct Club: Codable, Identifiable {
         crestPath = try c.decodeIfPresent(String.self, forKey: .crestPath)
         description = try c.decodeIfPresent(String.self, forKey: .description)
         joinPolicy = try c.decodeIfPresent(ClubJoinPolicy.self, forKey: .joinPolicy) ?? .open
-        focus = try c.decodeIfPresent(ClubFocus.self, forKey: .focus) ?? .allRowing
+        // A focus this app no longer offers ("On-water rowing", before the erg-only migration
+        // has run) reads as All rowing rather than failing the whole club.
+        focus = (try c.decodeIfPresent(String.self, forKey: .focus)).flatMap(ClubFocus.init(rawValue:)) ?? .allRowing
         createdAt = try c.decode(Date.self, forKey: .createdAt)
     }
 }
