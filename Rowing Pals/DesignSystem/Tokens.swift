@@ -202,6 +202,11 @@ enum Tokens {
         static let noticeIcon: CGFloat = 56
         /// The profile picture at the top of Edit profile (SettingsProfile).
         static let editProfileAvatar: CGFloat = 88
+        /// The Log screen's camera frame, width ÷ height: 3:4 upright, the shape the iPhone camera
+        /// saves (decision 55), so the preview shows exactly the photo taken.
+        static let cameraAspect: CGFloat = 3.0 / 4.0
+        /// The front camera's inset, as a share of the frame's width; it keeps the same 3:4 shape.
+        static let cameraInsetShare: CGFloat = 0.27
         /// The picture in a member's sheet (CoachMakeCoach).
         static let memberSheetAvatar: CGFloat = 56
         /// A round tick box in a squad's member list (CoachSquadEdit).

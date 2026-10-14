@@ -134,7 +134,8 @@ struct CaptureView: View {
                     .clipShape(shape)
 
                 insetPreview
-                    .frame(width: geometry.size.width * 0.27, height: geometry.size.height * 0.37)
+                    .frame(width: geometry.size.width * Tokens.Size.cameraInsetShare,
+                           height: geometry.size.height * Tokens.Size.cameraInsetShare)
                     .clipShape(RoundedRectangle(cornerRadius: Tokens.Radius.photoInset, style: .continuous))
                     .overlay {
                         RoundedRectangle(cornerRadius: Tokens.Radius.photoInset, style: .continuous)
@@ -160,7 +161,8 @@ struct CaptureView: View {
                 }
             }
         }
-        .frame(maxHeight: 530)
+        // 3:4 upright, the shape the iPhone saves: what you see is the photo (decision 55).
+        .aspectRatio(Tokens.Size.cameraAspect, contentMode: .fit)
     }
 
     /// The rear camera by default; the front camera after "Flip camera".
