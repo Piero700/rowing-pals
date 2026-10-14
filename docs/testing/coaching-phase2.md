@@ -145,6 +145,25 @@ end $$;
 ```
 - [ ] Expect `RESULT: refused — That workout isn't set for you.`
 
+## Every time typed the same way (decision 56, 2026-10-14)
+Same rule as the coach's piece editor, now everywhere a workout time is typed.
+1. **Log** → **Enter session manually** (or post a photo and look at Review).
+- [ ] Tap **Time**: the number pad has a **decimal key** but no colon. Type **7 0 2** → "7:02";
+      then **.** and **4** → "7:02.4". The caret sits after the last digit while you type.
+- [ ] Type a **Distance** of 1500 first: the **Average /500m** beside it updates as you type the time
+      (7:02.4 → 2:20.8).
+- [ ] From a monitor photo, the time read off the monitor shows the same way ("7:02.4").
+- [ ] Clear the time and type **7 5**: the box turns red, "That isn't a time: minutes and seconds go up
+      to 59." Tap somewhere else: the time goes back to what it was before you started typing.
+- [ ] Post: the session shows the time you typed.
+2. **Rankings → Test results → ＋ Add test** (club admin or above).
+- [ ] The switch reads **Distance · Time** (no more Minutes / Seconds).
+- [ ] **Time** → **2 0 0 0** reads "20:00", "Shown as 20min", button **Add 20min test**.
+- [ ] **3 0** reads "0:30" → **30s**; **1 3 0** reads "1:30" → **90s**.
+- [ ] **7 5** reads "0:75": red "That isn't a time: minutes and seconds go up to 59.", Add greyed.
+- [ ] **4 0 0** ("4:00") still says "That's already a standard test."
+3. Coach's **Add piece** still works as before (rest 3 0 0 → "3:00").
+
 ## Water logging removed (decision 54)
 Run `docs/migrations/2026-10-14-erg-only.sql` on staging first (SQL Editor → + New query → paste
 the whole file → Run → "Success. No rows returned").
@@ -163,6 +182,10 @@ the whole file → Run → "Success. No rows returned").
 - [ ] The workout's **description** on the rower's Today's workout card.
 - [ ] **Several workouts on one day**: choose which on the Log screen.
 - [ ] Tapping the "New workout" alert just opens the app (the workout is on the Feed on its day).
+- [ ] **The tenth on the session time** (decision 56): the decimal key adds the monitor's tenth
+      ("7:02.4"). You asked for the colon; the tenth is there because monitor times carry one.
+- [ ] **A red "That isn't a time" line** on the session time and on Add test, and the session time
+      going back to its earlier value when you leave it unreadable.
 
 ## What needs a second phone (or a second account)
 - The alert (section 2) arrives on the rower's phone, not the coach's.

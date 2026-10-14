@@ -22,6 +22,11 @@ struct PieceEditorSheet: View {
     @State private var rateMinText: String
     @State private var rateMaxText: String
     @State private var splitText: String
+    @FocusState private var focusedTime: TimeField?
+
+    private enum TimeField {
+        case value, rest, split
+    }
 
     /// The highest stroke rate a target can ask for (user, 2026-10-12).
     static let rateRange = 10...70
@@ -78,7 +83,7 @@ struct PieceEditorSheet: View {
                     if kind == .distance {
                         field("2000", text: $valueText, unit: "m", keyboard: .numberPad, isInvalid: valueProblem != nil)
                     } else {
-                        timeField("20:00", text: $valueText, unit: nil, isInvalid: valueProblem != nil)
+                        timeField("20:00", text: $valueText, unit: nil, field: .value, isInvalid: valueProblem != nil)
                     }
 
                     label("Reps")
@@ -97,7 +102,7 @@ struct PieceEditorSheet: View {
                     .overlay { Self.fieldShape.strokeBorder(Tokens.Surface.line, lineWidth: 1) }
 
                     label("Rest between reps (optional)")
-                    timeField("5:00", text: $restText, unit: nil, isInvalid: restProblem != nil)
+                    timeField("5:00", text: $restText, unit: nil, field: .rest, isInvalid: restProblem != nil)
 
                     label("Target rate (optional)")
                     HStack(spacing: Tokens.Spacing.loose) {
@@ -107,7 +112,7 @@ struct PieceEditorSheet: View {
                     }
 
                     label("Target split (optional)")
-                    timeField("1:42", text: $splitText, unit: "/500m", isInvalid: splitProblem != nil)
+                    timeField("1:42", text: $splitText, unit: "/500m", field: .split, isInvalid: splitProblem != nil)
                     Text("Leave the split empty and each rower gets their own target from the Pace Engine, for this zone and distance.")
                         .textStyle(Typography.meta)
                         .foregroundStyle(Tokens.Ink.secondary)
@@ -233,9 +238,10 @@ struct PieceEditorSheet: View {
     }
 
     /// A time on the number pad, shown with its colon as it's typed (5 0 0 → "5:00").
-    private func timeField(_ placeholder: String, text: Binding<String>, unit: String?, isInvalid: Bool) -> some View {
+    private func timeField(_ placeholder: String, text: Binding<String>, unit: String?, field: TimeField,
+                           isInvalid: Bool) -> some View {
         HStack(spacing: Tokens.Spacing.tight) {
-            DurationTextField(placeholder: placeholder, text: text)
+            DurationTextField(placeholder: placeholder, text: text, focus: $focusedTime, field: field)
                 .textStyle(Typography.bodyV3)
                 .tabularNumerals()
             if let unit {

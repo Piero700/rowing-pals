@@ -44,6 +44,8 @@ struct SegmentRowView: View {
     @State private var distanceText: String
     @State private var timeText: String
     @State private var rateText: String
+    /// The piece's time when its field was entered: put back if the field is left unreadable.
+    @State private var timeBeforeEditing: Int?
     /// Redesign phase B — per-device display preference. The average shown
     /// here follows it, like every other read-only pace.
     @AppStorage(PaceDisplay.storageKey) private var paceDisplay: PaceDisplay = .split
@@ -64,7 +66,7 @@ struct SegmentRowView: View {
         // A manual piece starts blank — "0" and "0:00.0" would have to be
         // deleted before typing.
         _distanceText = State(initialValue: value.distanceM > 0 ? String(value.distanceM) : "")
-        _timeText = State(initialValue: value.timeMs > 0 ? value.timeMs.formattedDurationMs : "")
+        _timeText = State(initialValue: Self.shown(value.timeMs))
         _rateText = State(initialValue: value.rate > 0 ? value.rate.formattedRate : "")
     }
 
@@ -77,10 +79,7 @@ struct SegmentRowView: View {
                         "Distance (m)", placeholder: "metres", text: $distanceText, keyboard: .numberPad,
                         field: .distance, onCommit: commitDistance
                     )
-                    editableField(
-                        "Time", placeholder: "m:ss.t", text: $timeText, keyboard: .numbersAndPunctuation,
-                        field: .time, onCommit: commitTime
-                    )
+                    timeField
                     averageField
                     rateField
                 }
@@ -88,6 +87,11 @@ struct SegmentRowView: View {
                 // shrinks, and the rate column is too narrow for its value
                 // plus the Confirm button.
                 .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            if timeIsUnreadable {
+                Text("That isn't a time: minutes and seconds go up to 59.")
+                    .textStyle(Typography.statLabel)
+                    .foregroundStyle(Tokens.System.error)
             }
             if !segment.lowConfidenceFields.isEmpty {
                 Text(lowConfidenceCaption)
@@ -207,6 +211,42 @@ struct SegmentRowView: View {
         }
     }
 
+    /// The time as the monitor shows it, typed like every time in the app (user, 2026-10-14):
+    /// digits only, the colon put in as you type, the decimal key for the tenth — 7 0 2 . 4 reads
+    /// "7:02.4". Each readable keystroke goes straight into the piece, so the average beside it
+    /// follows and Post always has what's shown; leaving an unreadable time puts back the one
+    /// from before the field was entered.
+    private var timeField: some View {
+        let field = ReviewField.field(segmentId: segment.id, field: .time)
+        return VStack(alignment: .leading, spacing: 6) {
+            fieldLabel("Time")
+            DurationTextField(placeholder: "0:00.0", text: $timeText, allowsTenths: true,
+                              focus: focusedField, field: field)
+                .textStyle(Typography.bodyV3)
+                .tabularNumerals()
+                .fieldBox(highlighted: segment.lowConfidenceFields.contains(.time), invalid: timeIsUnreadable)
+        }
+        .onChange(of: timeText) { commitTime(leaving: false) }
+        .onChange(of: focusedField.wrappedValue, initial: true) { old, new in
+            if new == field, old != field || timeBeforeEditing == nil { timeBeforeEditing = segment.timeMs }
+            if old == field, new != field { commitTime(leaving: true) }
+        }
+    }
+
+    /// Something typed that isn't a time ("0:75").
+    private var timeIsUnreadable: Bool {
+        !timeText.isEmpty && Self.milliseconds(timeText) == nil
+    }
+
+    /// "7:02.4" for 422,400 ms; "" for none.
+    private static func shown(_ ms: Int) -> String {
+        ms > 0 ? DurationEntry.text(entry: DurationEntry.entry(milliseconds: ms)) : ""
+    }
+
+    private static func milliseconds(_ text: String) -> Int? {
+        DurationEntry.milliseconds(entry: DurationEntry.entry(from: text, allowsTenths: true)).flatMap { $0 > 0 ? $0 : nil }
+    }
+
     /// Average pace, derived from distance and time — not a field. Shows a
     /// dash until both are known.
     private var averageField: some View {
@@ -298,12 +338,21 @@ struct SegmentRowView: View {
         segment.wasEdited = true
     }
 
-    private func commitTime() {
-        guard let parsed = DurationParsing.parseMs(timeText) else {
-            timeText = segment.timeMs > 0 ? segment.timeMs.formattedDurationMs : ""
+    /// Takes a readable time into the piece. On `leaving` the field, the text is tidied ("7:02."
+    /// → "7:02") or, if it isn't a time, the time from before the field was entered goes back —
+    /// not whatever was passed through on the way ("0:07" while typing 7 5).
+    private func commitTime(leaving: Bool) {
+        guard let parsed = Self.milliseconds(timeText) else {
+            guard leaving else { return }
+            let before = timeBeforeEditing ?? segment.timeMs
+            timeText = Self.shown(before)
+            if before != segment.timeMs {
+                segment.timeMs = before
+                segment.recomputeSplit()
+            }
             return
         }
-        timeText = parsed.formattedDurationMs
+        if leaving { timeText = Self.shown(parsed) }
         guard parsed != segment.timeMs else { return }
         segment.timeMs = parsed
         segment.recomputeSplit()
@@ -326,12 +375,13 @@ struct SegmentRowView: View {
 private extension View {
     /// v3 input box: 54 pt tall, card fill, 1 pt line, radius 24, 14 pt side padding. A value
     /// the reader wasn't sure of gets a 2 pt brand border — never red (CLAUDE.md: expected, not
-    /// an error).
-    func fieldBox(highlighted: Bool) -> some View {
+    /// an error). Red is only for something typed that can't be read.
+    func fieldBox(highlighted: Bool, invalid: Bool = false) -> some View {
         let shape = RoundedRectangle(cornerRadius: Tokens.Radius.input, style: .continuous)
+        let edge = invalid ? Tokens.System.error : highlighted ? Tokens.Accent.brand : Tokens.Surface.line
         return padding(.horizontal, 14)
             .frame(maxWidth: .infinity, minHeight: 54, alignment: .leading)
             .background(shape.fill(Tokens.Surface.card))
-            .overlay { shape.strokeBorder(highlighted ? Tokens.Accent.brand : Tokens.Surface.line, lineWidth: highlighted ? 2 : 1) }
+            .overlay { shape.strokeBorder(edge, lineWidth: highlighted || invalid ? 2 : 1) }
     }
 }

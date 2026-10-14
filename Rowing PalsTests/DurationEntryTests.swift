@@ -45,4 +45,40 @@ struct DurationEntryTests {
         #expect(DurationEntry.digits(milliseconds: 300_000) == "500")
         #expect(DurationEntry.digits(milliseconds: 5_400_000) == "13000")
     }
+
+    // MARK: - The session time, with the monitor's tenth (2026-10-14)
+
+    @Test func theDecimalKeyAddsATenth() {
+        #expect(DurationEntry.entry(from: "702.4", allowsTenths: true) == "702.4")
+        #expect(DurationEntry.text(entry: "702.4") == "7:02.4")
+        // While the tenth is still to come.
+        #expect(DurationEntry.text(entry: "702.") == "7:02.")
+        // Without a tenth it's an ordinary time.
+        #expect(DurationEntry.text(entry: "702") == "7:02")
+        // A comma key works the same; a second mark and a second tenth digit are ignored.
+        #expect(DurationEntry.entry(from: "702,4", allowsTenths: true) == "702.4")
+        #expect(DurationEntry.entry(from: "702.45", allowsTenths: true) == "702.4")
+        #expect(DurationEntry.entry(from: "70.2.4", allowsTenths: true) == "70.2")
+        // Where tenths aren't taken, everything from the mark is dropped.
+        #expect(DurationEntry.entry(from: "702.4", allowsTenths: false) == "702")
+    }
+
+    @Test func theShownTimeReadsBackAsItsEntry() {
+        // The field is seeded from what it shows, including a time read off the monitor.
+        #expect(DurationEntry.entry(from: "7:02.4", allowsTenths: true) == "702.4")
+        #expect(DurationEntry.entry(from: "1:05:00", allowsTenths: true) == "10500")
+    }
+
+    @Test func entriesBecomeMilliseconds() {
+        #expect(DurationEntry.milliseconds(entry: "702.4") == 422_400)
+        #expect(DurationEntry.milliseconds(entry: "702.") == 422_000)
+        #expect(DurationEntry.milliseconds(entry: "702") == 422_000)
+        #expect(DurationEntry.milliseconds(entry: "10500.3") == 3_900_300)
+        #expect(DurationEntry.milliseconds(entry: "75.2") == nil)     // 0:75.2
+        #expect(DurationEntry.milliseconds(entry: ".4") == nil)
+        #expect(DurationEntry.milliseconds(entry: "") == nil)
+        #expect(DurationEntry.entry(milliseconds: 422_400) == "702.4")
+        #expect(DurationEntry.entry(milliseconds: 422_000) == "702")
+        #expect(DurationEntry.entry(milliseconds: 422_450) == "702.4")
+    }
 }

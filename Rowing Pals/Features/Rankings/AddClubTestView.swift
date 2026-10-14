@@ -6,26 +6,18 @@
 import SwiftUI
 
 /// "+ Add test" (decision 28; docs/design/rowing-pals-redesign-handoff-v2.md §3 "Custom test
-/// creation"): a club admin or above defines a distance, or a time in minutes or seconds. The
-/// name is made from what they type ("750m", "3k", "20min", "30s"), checked against the standard
-/// tests and the club's own before Add, and the new board starts empty.
+/// creation"): a club admin or above defines a distance, or a time typed like every time in the
+/// app — the colon put in as you type, 2 0 0 0 → "20:00", 3 0 → "0:30" (user, 2026-10-14). The
+/// name is made from it ("750m", "3k", "20min", "30s"), checked against the standard tests and
+/// the club's own before Add, and the new board starts empty.
 struct AddClubTestView: View {
     private enum Kind: Int {
-        case distance, minutes, seconds
-
-        var unit: String {
-            switch self {
-            case .distance: "metres"
-            case .minutes: "minutes"
-            case .seconds: "seconds"
-            }
-        }
+        case distance, time
 
         var hint: String {
             switch self {
             case .distance: "A whole number of metres, e.g. 750 or 3000."
-            case .minutes: "A whole number of minutes, e.g. 20."
-            case .seconds: "A whole number of seconds, e.g. 30."
+            case .time: "Minutes and seconds, e.g. 20:00 or 0:30."
             }
         }
     }
@@ -40,20 +32,19 @@ struct AddClubTestView: View {
     @State private var amount = ""
     @State private var isSaving = false
     @State private var errorMessage: String?
-    @FocusState private var isAmountFocused: Bool
+    @FocusState private var focusedKind: Kind?
 
-    private var value: Int? { Int(amount) }
-    private var distanceM: Int? { kind == .distance ? value : nil }
-    /// A time in seconds, whichever unit it was typed in.
+    private var distanceM: Int? { kind == .distance ? Int(amount) : nil }
+    /// The time in whole seconds, from the shown "20:00".
     private var seconds: Int? {
-        switch kind {
-        case .distance: nil
-        case .minutes: value.map { $0 * 60 }
-        case .seconds: value
-        }
+        guard kind == .time else { return nil }
+        return DurationEntry.milliseconds(digits: DurationEntry.digits(from: amount)).map { $0 / 1000 }
     }
     private var problem: String? {
-        ClubTest.problem(distanceM: distanceM, seconds: seconds, existing: existing)
+        if kind == .time, !amount.isEmpty, seconds == nil {
+            return "That isn't a time: minutes and seconds go up to 59."
+        }
+        return ClubTest.problem(distanceM: distanceM, seconds: seconds, existing: existing)
     }
     private var label: String? { ClubTest.label(distanceM: distanceM, seconds: seconds) }
 
@@ -72,7 +63,7 @@ struct AddClubTestView: View {
                 .textStyle(Typography.meta)
                 .foregroundStyle(Tokens.Ink.secondary)
 
-            PillSegmentedControl(options: ["Distance", "Minutes", "Seconds"], selection: kindSelection)
+            PillSegmentedControl(options: ["Distance", "Time"], selection: kindSelection)
 
             amountField
 
@@ -108,9 +99,12 @@ struct AddClubTestView: View {
         .background(Tokens.Base.ground)
         .presentationDetents([.medium])
         .presentationDragIndicator(.visible)
-        .onAppear { isAmountFocused = true }
+        .onAppear { focusedKind = kind }
         // A number in one unit means nothing in another.
-        .onChange(of: kind) { amount = "" }
+        .onChange(of: kind) {
+            amount = ""
+            focusedKind = kind
+        }
     }
 
     private var kindSelection: Binding<Int> {
@@ -120,17 +114,24 @@ struct AddClubTestView: View {
         )
     }
 
-    /// The v3 field: card fill, 1 pt line, radius 24, 52 pt tall, with the unit on the right.
+    /// The v3 field: card fill, 1 pt line, radius 24, 52 pt tall; a distance has "metres" on the
+    /// right, a time shows its colon as it's typed.
     private var amountField: some View {
         let shape = RoundedRectangle(cornerRadius: Tokens.Radius.input, style: .continuous)
         return HStack {
-            TextField(kind == .distance ? "Distance" : "Length", text: $amount)
-                .keyboardType(.numberPad)
-                .focused($isAmountFocused)
-                .tabularNumerals()
-                .onChange(of: amount) { amount = String(amount.filter(\.isNumber).prefix(6)) }
-            Text(kind.unit)
-                .foregroundStyle(Tokens.Ink.secondary)
+            if kind == .distance {
+                TextField("Distance", text: $amount)
+                    .keyboardType(.numberPad)
+                    .focused($focusedKind, equals: .distance)
+                    .tabularNumerals()
+                    .onChange(of: amount) { amount = String(amount.filter(\.isNumber).prefix(6)) }
+                Text("metres")
+                    .foregroundStyle(Tokens.Ink.secondary)
+            } else {
+                DurationTextField(placeholder: "20:00", text: $amount, focus: $focusedKind, field: .time)
+                    .tabularNumerals()
+                Spacer(minLength: 0)
+            }
         }
         .textStyle(Typography.bodyV3)
         .foregroundStyle(Tokens.Ink.primary)
