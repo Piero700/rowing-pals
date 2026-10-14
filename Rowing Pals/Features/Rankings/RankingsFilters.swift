@@ -72,7 +72,7 @@ struct ViewerGroup: Equatable {
 }
 
 /// The one glass pill a board shows in place of inline controls: a filter glyph and what's
-/// selected ("Senior men · My club · Erg + water"). Opens `RankingsFiltersSheet`.
+/// selected ("Senior men · My club"). Opens `RankingsFiltersSheet`.
 struct RankingsFiltersPill: View {
     let text: String
     let action: () -> Void
@@ -95,14 +95,12 @@ struct RankingsFiltersPill: View {
     }
 }
 
-/// v4 `RankingsFilters` artboard: Reset · Filters · Done, then Gender, Level, Rowers and — on
-/// Volume only — Source, each a glass segmented control, and a line naming the group the board
-/// opens on.
+/// v4 `RankingsFilters` artboard: Reset · Filters · Done, then Gender, Level and Rowers, each a
+/// glass segmented control, and a line naming the group the board opens on. (The canvas's
+/// Volume-only Source — erg / water — was removed with water logging, decision 54.)
 struct RankingsFiltersSheet: View {
     @Binding var filters: RankingsFilters
     let ownGroup: ViewerGroup?
-    /// Volume's erg / water choice; nil on a test board.
-    var source: Binding<MetresLeaderboardViewModel.Source>?
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -124,12 +122,6 @@ struct RankingsFiltersSheet: View {
             axis("Gender", options: ["Men", "Women", "All"], selection: genderSelection)
             axis("Level", options: ["Senior", "Novice", "All"], selection: levelSelection)
             axis("Rowers", options: ["My club", "Following"], selection: scopeSelection)
-            if let source {
-                axis("Source", note: "Volume only", options: MetresLeaderboardViewModel.Source.allCases.map(\.label), selection: Binding(
-                    get: { source.wrappedValue.rawValue },
-                    set: { source.wrappedValue = MetresLeaderboardViewModel.Source(rawValue: $0) ?? .all }
-                ))
-            }
 
             if let ownGroup {
                 Text(ownGroup.sentence)
@@ -142,13 +134,12 @@ struct RankingsFiltersSheet: View {
         .padding(.top, Tokens.Spacing.loose)
         .frame(maxHeight: .infinity, alignment: .top)
         .background(Tokens.Surface.card)
-        .presentationDetents([.height(source == nil ? 430 : 520)])
+        .presentationDetents([.height(430)])
         .presentationDragIndicator(.visible)
     }
 
     private func reset() {
         filters = ownGroup?.filters ?? .initial
-        source?.wrappedValue = .all
     }
 
     private func axis(_ title: String, note: String? = nil, options: [String], selection: Binding<Int>) -> some View {

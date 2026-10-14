@@ -5,7 +5,7 @@
 
 import SwiftUI
 
-/// A single pill chip — Male/Female, All/Erg/Water, segment tags
+/// A single pill chip — Male/Female, segment tags
 /// (Warmup/Main/Cooldown/Extra), distance tags.
 struct FilterChip: View {
     let label: String

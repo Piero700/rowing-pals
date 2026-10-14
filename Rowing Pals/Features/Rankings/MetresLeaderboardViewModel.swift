@@ -7,7 +7,7 @@ import Foundation
 import Supabase
 
 /// Owns the metres leaderboard's Week/Month/Year period, Male/Female
-/// filter, All/Erg/Water source, and Following/My Club scope.
+/// filter, and Following/My Club scope. Erg metres only (decision 54).
 /// Aggregates from `daily_totals` only, never `sessions`, per task 13.
 @Observable
 final class MetresLeaderboardViewModel {
@@ -23,18 +23,6 @@ final class MetresLeaderboardViewModel {
         }
     }
 
-    enum Source: Int, CaseIterable {
-        case all, erg, water
-
-        var label: String {
-            switch self {
-            case .all: "Erg + water"
-            case .erg: "Erg"
-            case .water: "Water"
-            }
-        }
-    }
-
     struct Row: Identifiable {
         let userId: UUID
         var id: UUID { userId }
@@ -43,10 +31,6 @@ final class MetresLeaderboardViewModel {
         let club: String?
         let level: RowerCategory?
         let metres: Int
-        /// Fraction of `metres` that's erg, for the two-tone bar — always
-        /// the row's true erg/water mix, regardless of which figure
-        /// `source` currently ranks by.
-        let ergFraction: Double
         let isCurrentUser: Bool
         /// From a batched `daily_totals` fetch computed client-side via
         /// `StreakCalculator`, not a `current_streak(...)` RPC call per row.
@@ -61,12 +45,6 @@ final class MetresLeaderboardViewModel {
     var filters = RankingsFilters.initial {
         didSet { guard oldValue != filters else { return }; Task { await reload() } }
     }
-    /// Re-sorting by a different source never needs a new query — every
-    /// aggregate this view model holds already has all three figures.
-    var source: Source = .all {
-        didSet { guard oldValue != source else { return }; rankedRows = Self.rank(aggregates, source: source, currentUserId: ownUserId) }
-    }
-
     var rankedRows: [Row] = []
     /// The viewer's gender, level and club — what the board opens on and Reset returns to.
     var ownGroup: ViewerGroup?
@@ -89,8 +67,6 @@ final class MetresLeaderboardViewModel {
         let club: String?
         var level: RowerCategory? = nil
         var distanceM = 0
-        var ergDistanceM = 0
-        var waterDistanceM = 0
         var streakDays = 0
     }
 
@@ -177,18 +153,15 @@ final class MetresLeaderboardViewModel {
             struct TotalRow: Decodable {
                 let userId: UUID
                 let distanceM: Int
-                let ergDistanceM: Int
-                let waterDistanceM: Int
 
                 // The leaderboards read the `ranked_*` columns, not the
                 // personal ones: a session left off "Include on leaderboards"
                 // (and every manual entry) counts for its owner's own totals
-                // and streak but never here (redesign phase F).
+                // and streak but never here (redesign phase F). Erg metres
+                // only (decision 54).
                 enum CodingKeys: String, CodingKey {
                     case userId = "user_id"
-                    case distanceM = "ranked_distance_m"
-                    case ergDistanceM = "ranked_erg_distance_m"
-                    case waterDistanceM = "ranked_water_distance_m"
+                    case distanceM = "ranked_erg_distance_m"
                 }
             }
 
@@ -216,7 +189,7 @@ final class MetresLeaderboardViewModel {
             async let profileRowsTask: [ProfileRow] = profileRequest.execute().value
             async let totalRowsTask: [TotalRow] = SupabaseService.shared
                 .from("daily_totals")
-                .select("user_id, ranked_distance_m, ranked_erg_distance_m, ranked_water_distance_m")
+                .select("user_id, ranked_erg_distance_m")
                 .in("user_id", values: scopeIds)
                 .gte("day", value: Self.periodStartString(for: period))
                 .execute()
@@ -248,8 +221,6 @@ final class MetresLeaderboardViewModel {
             }
             for row in totalRows {
                 newAggregates[row.userId]?.distanceM += row.distanceM
-                newAggregates[row.userId]?.ergDistanceM += row.ergDistanceM
-                newAggregates[row.userId]?.waterDistanceM += row.waterDistanceM
             }
 
             var activeDaysByUser: [UUID: Set<String>] = [:]
@@ -261,7 +232,7 @@ final class MetresLeaderboardViewModel {
             }
 
             aggregates = newAggregates
-            rankedRows = Self.rank(newAggregates, source: source, currentUserId: ownUserId)
+            rankedRows = Self.rank(newAggregates, currentUserId: ownUserId)
             errorMessage = nil
         } catch {
             print("Metres leaderboard query failed (period \(period), filters \(filters)): \(error)")
@@ -271,14 +242,8 @@ final class MetresLeaderboardViewModel {
 
     /// Rows with nothing logged this period are left off entirely, current
     /// user included — a "You · 0m" pinned row has nothing to say.
-    private static func rank(_ aggregates: [UUID: Aggregate], source: Source, currentUserId: UUID?) -> [Row] {
-        func metres(_ aggregate: Aggregate) -> Int {
-            switch source {
-            case .all: aggregate.distanceM
-            case .erg: aggregate.ergDistanceM
-            case .water: aggregate.waterDistanceM
-            }
-        }
+    private static func rank(_ aggregates: [UUID: Aggregate], currentUserId: UUID?) -> [Row] {
+        func metres(_ aggregate: Aggregate) -> Int { aggregate.distanceM }
 
         return aggregates
             .filter { metres($0.value) > 0 }
@@ -286,7 +251,6 @@ final class MetresLeaderboardViewModel {
             .enumerated()
             .map { index, entry in
                 let (userId, aggregate) = entry
-                let fraction = aggregate.distanceM > 0 ? Double(aggregate.ergDistanceM) / Double(aggregate.distanceM) : 0
                 return Row(
                     userId: userId,
                     rank: index + 1,
@@ -294,7 +258,6 @@ final class MetresLeaderboardViewModel {
                     club: aggregate.club,
                     level: aggregate.level,
                     metres: metres(aggregate),
-                    ergFraction: fraction,
                     isCurrentUser: userId == currentUserId,
                     streakDays: aggregate.streakDays
                 )

@@ -167,7 +167,7 @@ async function composeAlert(admin: SupabaseClient, row: NotificationRow) {
       const label = session.workout_label as string | null
       const posted = label && /test$/i.test(label)
         ? `a ${label}`
-        : `${metres(session.total_distance_m)} ${label ?? (session.type === "water" ? "on the water" : "on the erg")}`
+        : `${metres(session.total_distance_m)} ${label ?? "on the erg"}`
       return { title: club, body: `${actor} posted ${posted}` }
     }
   }
@@ -180,7 +180,7 @@ async function displayName(admin: SupabaseClient, userId: string) {
 
 function describe(label: string | null, type: string) {
   if (label) return label
-  return type === "water" ? "water session" : "session"
+  return "session"
 }
 
 /// "Tue 7 Oct, 06:30" or "Sat 11 Oct" — the workout's own day, written as UK dates.

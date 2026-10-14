@@ -15,7 +15,6 @@ struct DailyTotal: Codable {
     var day: String
     var distanceM: Int
     var ergDistanceM: Int
-    var waterDistanceM: Int
     var sessionCount: Int
     /// What the leaderboards read (redesign phase F): a session left off the
     /// leaderboards, and every manual entry, adds to the personal columns
@@ -23,17 +22,14 @@ struct DailyTotal: Codable {
     /// migration still decodes.
     var rankedDistanceM: Int?
     var rankedErgDistanceM: Int?
-    var rankedWaterDistanceM: Int?
 
     enum CodingKeys: String, CodingKey {
         case userId = "user_id"
         case day
         case distanceM = "distance_m"
         case ergDistanceM = "erg_distance_m"
-        case waterDistanceM = "water_distance_m"
         case sessionCount = "session_count"
         case rankedDistanceM = "ranked_distance_m"
         case rankedErgDistanceM = "ranked_erg_distance_m"
-        case rankedWaterDistanceM = "ranked_water_distance_m"
     }
 }

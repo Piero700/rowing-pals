@@ -566,7 +566,7 @@ final class ReviewSheetViewModel {
             // the rower switched "Include on leaderboards" off.
             let isRanked = !isManual && includeOnLeaderboards
             try await Self.addToDailyTotal(
-                userId: userId, day: sessionDate, distanceM: totalDistanceM, type: .erg, isRanked: isRanked
+                userId: userId, day: sessionDate, distanceM: totalDistanceM, isRanked: isRanked
             )
 
             if !isManual, case .test(let test) = sessionKind, let main = mainSegment {
@@ -613,27 +613,23 @@ final class ReviewSheetViewModel {
         let day: String
         let distanceM: Int
         let ergDistanceM: Int
-        let waterDistanceM: Int
         let sessionCount: Int
         let rankedDistanceM: Int
         let rankedErgDistanceM: Int
-        let rankedWaterDistanceM: Int
 
         enum CodingKeys: String, CodingKey {
             case userId = "user_id"
             case day
             case distanceM = "distance_m"
             case ergDistanceM = "erg_distance_m"
-            case waterDistanceM = "water_distance_m"
             case sessionCount = "session_count"
             case rankedDistanceM = "ranked_distance_m"
             case rankedErgDistanceM = "ranked_erg_distance_m"
-            case rankedWaterDistanceM = "ranked_water_distance_m"
         }
     }
 
     private static func addToDailyTotal(
-        userId: UUID, day: String, distanceM: Int, type: SessionType, isRanked: Bool
+        userId: UUID, day: String, distanceM: Int, isRanked: Bool
     ) async throws {
         let existing: [DailyTotal] = try await SupabaseService.shared
             .from("daily_totals")
@@ -644,18 +640,15 @@ final class ReviewSheetViewModel {
             .value
         let current = existing.first
 
-        let erg = type == .erg ? distanceM : 0
-        let water = type == .water ? distanceM : 0
+        // Every session is an erg session (decision 54).
         let upsert = DailyTotalUpsert(
             userId: userId,
             day: day,
             distanceM: (current?.distanceM ?? 0) + distanceM,
-            ergDistanceM: (current?.ergDistanceM ?? 0) + erg,
-            waterDistanceM: (current?.waterDistanceM ?? 0) + water,
+            ergDistanceM: (current?.ergDistanceM ?? 0) + distanceM,
             sessionCount: (current?.sessionCount ?? 0) + 1,
             rankedDistanceM: (current?.rankedDistanceM ?? 0) + (isRanked ? distanceM : 0),
-            rankedErgDistanceM: (current?.rankedErgDistanceM ?? 0) + (isRanked ? erg : 0),
-            rankedWaterDistanceM: (current?.rankedWaterDistanceM ?? 0) + (isRanked ? water : 0)
+            rankedErgDistanceM: (current?.rankedErgDistanceM ?? 0) + (isRanked ? distanceM : 0)
         )
         try await SupabaseService.shared
             .from("daily_totals")

@@ -7,7 +7,7 @@ import SwiftUI
 
 /// Rankings → Volume, to v4 (`docs/design/v4/RankingsVolume.dc.html`): mode control, Week /
 /// Month / Year, the lilac rank-hero card ("Weekly volume · You · #2", the gap to the next place,
-/// the group leader), one filters pill naming the group ("Senior men · My club · Erg + water",
+/// the group leader), one filters pill naming the group ("Senior men · My club",
 /// decision 37) with the rower count, and one leaderboard card of 72 pt rows (#1 in gold with ♛
 /// and a gold edge bar, your row tinted brand). Opens on the viewer's own group; scope stays My
 /// club / Following (decision 17). Distances follow the km toggle (decision 3).
@@ -77,7 +77,7 @@ struct MetresLeaderboardView: View {
             Task { await viewModel.reload() }
         }
         .sheet(isPresented: $isShowingFilters) {
-            RankingsFiltersSheet(filters: $viewModel.filters, ownGroup: viewModel.ownGroup, source: $viewModel.source)
+            RankingsFiltersSheet(filters: $viewModel.filters, ownGroup: viewModel.ownGroup)
         }
     }
 
@@ -90,9 +90,9 @@ struct MetresLeaderboardView: View {
         )
     }
 
-    /// "Senior men · My club · Erg + water".
+    /// "Senior men · My club".
     private var filterSummary: String {
-        "\(viewModel.filters.captionText) · \(viewModel.source.label)"
+        viewModel.filters.captionText
     }
 
     private var rowerCount: String {

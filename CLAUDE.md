@@ -5,6 +5,11 @@ An iOS social app for rowers. Users post a training session as two simultaneous 
 the numbers off the monitor photo, and those numbers feed the feed, the profile and the
 leaderboards.
 
+**Erg only.** The app logs indoor erg sessions read from the monitor photo — nothing else. On-water
+logging was removed (decision 54, 2026-10-14) and is not to be built unless the user asks for it
+again (it may return later if rowers ask for it). Older docs that mention water sessions, an
+erg/water split or a Water leaderboard filter are superseded.
+
 ## How to work on this project — read first
 
 - **Build exactly what the user asks for, in full.** No reduced scope, no "simpler version",

@@ -145,6 +145,12 @@ end $$;
 ```
 - [ ] Expect `RESULT: refused — That workout isn't set for you.`
 
+## Water logging removed (decision 54)
+- [ ] **Rankings → Volume**: the filters pill reads "Senior men · My club" (no "Erg + water").
+- [ ] Tap it: the Filters sheet has Gender, Level and Rowers only — no **Source** row.
+- [ ] The Volume board still ranks everyone's erg metres for Week / Month / Year.
+- [ ] Post a session: it still counts on Volume, your profile totals and your streak.
+
 ## Added beyond the canvas — check these
 - [ ] **Personal targets** (decision 51): without a coach's split, each rower's target comes from
       their Pace Engine prediction for the zone and distance.

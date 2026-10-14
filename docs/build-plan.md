@@ -156,7 +156,7 @@ Under £100 for year one at club scale. The cost that scales is photo storage �
 ### v1 — everything needed to reach TestFlight
 
 Auth + Sign in with Apple · Club directory and join · Dual-camera capture · OCR review
-sheet · Multi-segment sessions · Water logging · Feed · Reactions and comments · Metres
+sheet · Multi-segment sessions · Feed · Reactions and comments · Metres
 leaderboard · Test leaderboards · Profile and PB board · Day streak with rest days · Weekly
 volume bars · Consistency calendar · PB progression charts · Report / block / filter ·
 Account deletion · Push plumbing
@@ -164,6 +164,9 @@ Account deletion · Push plumbing
 The streak and the charts are in v1 because they add no capture flow, no permissions and no
 backend — they are queries and drawings over data the app already holds, and they are what
 makes a profile worth revisiting between posts.
+
+Water logging was in this list and is removed: the app is erg only for now (decision 54). It may
+come back after launch if rowers ask for it.
 
 ### v1.1 — first month after beta
 
