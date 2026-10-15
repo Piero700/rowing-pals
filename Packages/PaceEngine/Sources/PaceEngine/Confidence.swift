@@ -67,7 +67,8 @@ func scoreConfidence(
         score -= 15
     }
 
-    let count = sessions.count
+    // Bests the rower typed in aren't logged sessions (v1.6, §5.16).
+    let count = sessions.filter { !$0.declared }.count
     if count < config.minSessionsMinimum {
         factors.append(.init(label: "Only \(count) session(s) in the window", delta: -20))
         score -= 20
@@ -81,6 +82,13 @@ func scoreConfidence(
         factors.append(.init(label: "No sessions logged in \(lastSessionDays) days", delta: -10))
         score -= 10
         recommendations.append("Log recent sessions — this history has gone stale.")
+    }
+
+    if anchor.declared {
+        factors.append(.init(label: "Based on a best you entered rather than one you logged",
+                             delta: -config.declaredAnchorPenalty))
+        score -= config.declaredAnchorPenalty
+        recommendations.append("Log an all-out piece in the app to replace the best you entered.")
     }
 
     if anchor.rateMismatch {

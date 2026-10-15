@@ -7,8 +7,9 @@ import SwiftUI
 import UIKit
 
 /// Swipe a card right to left to delete it, as iOS does for an alarm (decision 60, user
-/// 2026-10-14): a short swipe opens a red Delete button behind the card's trailing edge; a long
-/// one, past half the card, deletes straight away. Tap the card while it's open to close it.
+/// 2026-10-14; changed 2026-10-15): the swipe opens a red Delete button behind the card's
+/// trailing edge and stops there — however far you swipe, nothing is deleted until you tap
+/// Delete. Tap the card while it's open to close it.
 ///
 /// `List`'s own `.swipeActions` only works inside a `List`, and the app's cards sit in scroll
 /// views, so this uses a UIKit pan that only starts on a sideways swipe — the page still scrolls
@@ -19,7 +20,6 @@ private struct SwipeToDelete: ViewModifier {
     @State private var offset: CGFloat = 0
     @State private var isOpen = false
     @State private var width: CGFloat = 0
-    @State private var isPastFullSwipe = false
 
     private var actionWidth: CGFloat { Tokens.Size.swipeAction }
     private var revealed: CGFloat { max(-offset, 0) }
@@ -41,13 +41,13 @@ private struct SwipeToDelete: ViewModifier {
                 canBegin: { velocity in velocity.x < 0 || isOpen },
                 onChange: { translation in
                     let start = isOpen ? -actionWidth : 0
-                    offset = min(0, start + translation)
-                    isPastFullSwipe = revealed > width * 0.5
+                    // Follows the finger to the button's width, then only gives a little more.
+                    let raw = min(0, start + translation)
+                    offset = raw < -actionWidth ? -actionWidth - (-raw - actionWidth) * 0.15 : raw
                 },
                 onEnd: { velocity in finish(velocity: velocity) }
             ))
             .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width = $0 }
-            .sensoryFeedback(.impact, trigger: isPastFullSwipe) { _, now in now }
             .accessibilityAction(named: "Delete") { Task { await onDelete() } }
     }
 
@@ -70,9 +70,7 @@ private struct SwipeToDelete: ViewModifier {
     }
 
     private func finish(velocity: CGPoint) {
-        if revealed > width * 0.5 || (velocity.x < -1_200 && revealed > actionWidth) {
-            deleteNow()
-        } else if revealed > actionWidth / 2 || (velocity.x < -300 && revealed > 0) {
+        if revealed > actionWidth / 2 || (velocity.x < -300 && revealed > 0) {
             withAnimation(.snappy(duration: 0.25)) { offset = -actionWidth }
             isOpen = true
         } else {
@@ -83,7 +81,6 @@ private struct SwipeToDelete: ViewModifier {
     private func close() {
         withAnimation(.snappy(duration: 0.25)) { offset = 0 }
         isOpen = false
-        isPastFullSwipe = false
     }
 
     /// Slides the card away, then deletes it; if it's still here afterwards (deleting failed),

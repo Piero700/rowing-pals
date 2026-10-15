@@ -33,9 +33,11 @@ public struct Prediction: Codable, Sendable, Equatable {
         public var effectiveDistanceM: Double
         public var method: String
         public var rpe: Double?
+        /// v1.6: the piece that weighs most is a best the rower typed in.
+        public var declared: Bool?
 
         enum CodingKeys: String, CodingKey {
-            case tier, date, method, rpe
+            case tier, date, method, rpe, declared
             case sessionIds = "session_ids"
             case daysAgo = "days_ago"
             case splitSeconds = "split_seconds"
@@ -79,6 +81,8 @@ public struct Prediction: Codable, Sendable, Equatable {
         public var projectionToTarget: Double?
         public var weightTrendCorrection: Double?
         public var volumeModifier: Double?
+        /// v1.6: how far the split was brought down to one already held for longer (§5.15).
+        public var heldSplitAdjustment: Double?
         public var clampAdjustment: Double?
         public var population2kSeconds: Double?
 
@@ -91,6 +95,7 @@ public struct Prediction: Codable, Sendable, Equatable {
             case projectionToTarget = "projection_to_target"
             case weightTrendCorrection = "weight_trend_correction"
             case volumeModifier = "volume_modifier"
+            case heldSplitAdjustment = "held_split_adjustment"
             case clampAdjustment = "clamp_adjustment"
             case population2kSeconds = "population_2k_seconds"
         }
@@ -99,7 +104,7 @@ public struct Prediction: Codable, Sendable, Equatable {
         public var entries: [(key: String, value: Double)] {
             let values: [Double?] = [anchorSplit, paulAdjustment, intensityOffset, rpeCorrection,
                                      twoKEquivalent, projectionToTarget, weightTrendCorrection,
-                                     volumeModifier, clampAdjustment, population2kSeconds]
+                                     volumeModifier, heldSplitAdjustment, clampAdjustment, population2kSeconds]
             return zip(CodingKeys.allCases, values).compactMap { key, value in
                 value.map { (key.rawValue, $0) }
             }

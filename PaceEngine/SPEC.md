@@ -1,7 +1,8 @@
-# Anchor & Impulse Pace Engine — Technical Specification v1.5
+# Anchor & Impulse Pace Engine — Technical Specification v1.6
 
 **Status:** Ready for implementation
-**Supersedes:** v1.4 (adds the prediction range — §5.13, §8.11). v1.3.1: audit fixes — §8.9. v1.3 added perceived effort, age, sex and bodyweight (§2.1, §5.9–5.12)
+**Supersedes:** v1.5 (every all-out piece counts — §5.3; the held-split floor — §5.15; bests the
+rower typed in — §5.16; §8.12). v1.5 added the prediction range (§5.13, §8.11). v1.3.1: audit fixes — §8.9. v1.3 added perceived effort, age, sex and bodyweight (§2.1, §5.9–5.12)
 **Constraints honoured:** no ML, session-summary data only, user-supplied intensity tags
 
 ---
@@ -152,9 +153,15 @@ Retain sessions in `[as_of − 30 days, as_of]`. Configurable via `window_days`.
 ### 5.3 Anchor selection
 Choose the best available tier by rank, then select within it:
 
-- **AN / TR (maximal tiers):** the session minimising `|log2(effective_distance / target)|`,
-  tie-broken on recency. Paul's Law error grows with the distance ratio, so the
-  closest-distance effort is the most informative anchor — not merely the longest.
+- **AN / TR (maximal tiers), v1.6:** **every** session in the tier counts. Each is turned into
+  its own 2k equivalent (§2) and they're averaged with weight
+  `0.5^(|log2(d / target)| / blend_distance_halving_log2) × 0.5^(age_days / blend_recency_half_life_days)`
+  (defaults 1.0 doubling, 14 days): closer distances and newer pieces count most, but a recent
+  5k still moves a 2k prediction. The anchor reported is synthetic — the weighted geometric-mean
+  distance, with the split that normalises back to exactly the blended 2k — dated and tagged by
+  the heaviest piece (`method: "weighted_blend"`; one piece alone is `"closest_distance"`).
+  `maximal_anchor_method: "closest_distance"` restores v1.5: the single session minimising
+  `|log2(effective_distance / target)|`, tie-broken on recency.
 - **AT / UT1 / UT2 (submaximal tiers):** the **duration-weighted median split** across all
   qualifying sessions in the window. A single steady-state row is a noisy estimate of a
   physiological ceiling; the median is what the tier is actually evidence of.
@@ -413,6 +420,24 @@ A coach's set workout uses it for each rower's personal target split from their 
 
 ---
 
+### 5.15 The held-split floor (v1.6)
+A prediction is never slower than a split the rower has already held over a **longer**
+continuous piece in the window, in any zone: if you held 1:46 for 6k, you can hold it for 2k.
+After the volume modifier and before the clamps, the split becomes
+`min(modelled, fastest split over pieces with effective distance ≥ target)`; pieces flagged
+`interval_structure_ambiguous` are left out (an unlabelled interval session's split isn't a
+continuous effort). The change is `components.held_split_adjustment` (≤ 0), the flag
+`raised_to_held_split`, and a recommendation naming the piece. `held_split_floor: false` turns
+it off.
+
+### 5.16 Bests the rower typed in (v1.6)
+An input row with `declared: true` is a best the rower entered rather than a session they
+logged (the app's "Your bests"). It is an all-out piece like any other for anchoring and the
+floor, dated the day it was entered, but it is **not training**: it never counts towards load,
+`load.session_count`, the session-count confidence penalty or recent effort. When the heaviest
+anchor piece is declared, confidence loses `declared_anchor_penalty` (10) and the anchor reports
+`declared: true`.
+
 ## 6. Output contract
 
 ```jsonc
@@ -633,6 +658,14 @@ the age-graded score.
 Adds `predicted_split_range_seconds` and `predicted_total_time_range_seconds` (§5.13) so the
 coach view can show "7:20 ±9s". Nothing else changes: every v1.4 prediction, confidence
 score and flag is identical.
+
+### 8.12 v1.6: every all-out piece counts; the held-split floor; typed-in bests
+User feedback (2026-10-15): a 20-minute test moved the 5k prediction but not the 2k, because
+v1.5 took only the closest all-out piece for each target. v1.6 blends them all (§5.3), adds the
+rule that a prediction can't be slower than a split already held for longer (§5.15), and accepts
+bests the rower typed in as a starting point (§5.16). The app also now tells the engine a test
+piece is continuous (rep distance = its distance), so a 5k or 20-minute test is no longer held
+back as possible intervals. Schema `anchor-impulse/1.6`; 8 new golden cases (46 in all).
 
 ## 9. Test coverage
 

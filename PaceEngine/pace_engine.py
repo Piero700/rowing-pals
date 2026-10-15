@@ -80,7 +80,7 @@ from dataclasses import dataclass, field, replace
 from datetime import date, datetime, timedelta
 from typing import Any, Iterable, Mapping, Sequence
 
-SCHEMA_VERSION = "anchor-impulse/1.5"
+SCHEMA_VERSION = "anchor-impulse/1.6"
 
 __all__ = [
     "SCHEMA_VERSION",
@@ -178,6 +178,9 @@ _FIELD_ALIASES = {
     "rep_distance_m": ("rep_distance_m", "repDistance", "rep_distance",
                        "interval_distance", "piece_distance"),
     "id": ("id", "ID", "session_id", "sessionId", "uuid"),
+    # v1.6: a best the rower typed in (2k, 5k...) rather than a session they logged. Used as
+    # an all-out piece, never as training load. See SPEC.md §5.16.
+    "declared": ("declared", "is_declared", "isDeclared"),
     # Session RPE on the Borg CR10 scale (1-10). A 1-20 Borg value is detected and
     # converted; see `_normalise_rpe`.
     "rpe": ("rpe", "RPE", "perceived_effort", "perceivedEffort", "effort",
@@ -255,6 +258,21 @@ class EngineConfig:
 
     # "median" (default, robust) or "single_session" (v1.0 parity: longest qualifying row).
     submaximal_anchor_method: str = "median"
+
+    # --- v1.6: every all-out piece counts (SPEC.md §5.3, §5.15) --------------------------
+    #
+    # "blend" (default): every AN/TR piece in the tier gives its own 2k equivalent and they
+    # are averaged, weighted by closeness to the target (the weight halves every
+    # `blend_distance_halving_log2` doublings away) and by age (halving every
+    # `blend_recency_half_life_days`). "closest_distance": v1.5 parity, one piece only.
+    maximal_anchor_method: str = "blend"
+    blend_distance_halving_log2: float = 1.0
+    blend_recency_half_life_days: float = 14.0
+    # Never predict a split slower than one already held over a longer continuous piece in
+    # the window, in any zone: holding it for longer proves it can be held for shorter.
+    held_split_floor: bool = True
+    # A best the rower typed in rather than rowed in the app is self-reported (§5.16).
+    declared_anchor_penalty: int = 10
 
     # --- Perceived effort (RPE) --------------------------------------------------------
     #
@@ -562,6 +580,8 @@ class Session:
     rpe: float | None = None
     rpe_mismatch: bool = False
     bodyweight_kg: float | None = None
+    # v1.6: a best the rower typed in, not a logged session (§5.16).
+    declared: bool = False
 
     @property
     def duration_minutes(self) -> float:
@@ -685,6 +705,9 @@ def _normalise_session(
         )
         bodyweight = None
 
+    declared_raw = _pluck(raw, "declared")
+    declared = declared_raw is True or str(declared_raw).strip().lower() in ("true", "1", "yes")
+
     return Session(
         id=session_id,
         day=day,
@@ -700,6 +723,7 @@ def _normalise_session(
         rpe=rpe,
         rpe_mismatch=rpe_mismatch,
         bodyweight_kg=bodyweight,
+        declared=declared,
     )
 
 
@@ -720,6 +744,7 @@ class Anchor:
     rpe: float | None = None
     rpe_mismatch: bool = False
     rpe_coverage: float = 1.0   # share of the anchor's duration carrying a usable RPE
+    declared: bool = False      # the piece that weighs most is a best the rower typed in
 
     @property
     def tier(self) -> Tier:
@@ -742,16 +767,70 @@ def _weighted_median(pairs: Sequence[tuple[float, float]]) -> float:
     return ordered[-1][0]
 
 
+def _blend_weight(session: Session, target_distance: float, as_of: date,
+                  config: EngineConfig) -> float:
+    """How much one all-out piece counts towards a target (v1.6, §5.3): halving every
+    `blend_distance_halving_log2` doublings from the target, and every
+    `blend_recency_half_life_days` of age."""
+    doublings = abs(math.log2(target_distance / max(session.effective_distance_m, 1e-9)))
+    age_days = max(0, (as_of - session.day).days)
+    return (0.5 ** (doublings / config.blend_distance_halving_log2)
+            * 0.5 ** (age_days / config.blend_recency_half_life_days))
+
+
+def _blended_anchor(candidates: Sequence[Session], tag: str, target_distance: float,
+                    as_of: date, config: EngineConfig) -> Anchor:
+    """Every all-out piece in the tier, each turned into its own 2k equivalent and averaged
+    by `_blend_weight` (v1.6). Returned as one synthetic anchor at the weighted (geometric)
+    mean distance whose split gives exactly that blended 2k, so the rest of the pipeline is
+    unchanged. One piece on its own is the v1.5 closest-distance anchor."""
+    tier = TIERS[tag]
+    weighted = sorted(
+        ((_blend_weight(s, target_distance, as_of, config), s) for s in candidates),
+        key=lambda pair: (pair[0], pair[1].day.toordinal()),
+        reverse=True,
+    )
+    dominant = weighted[0][1]
+    if len(weighted) == 1:
+        split_s, distance, method = dominant.split_s, dominant.effective_distance_m, "closest_distance"
+    else:
+        total = sum(w for w, _ in weighted)
+        two_k = sum(
+            w * _normalise_to_reference(s.split_s, s.effective_distance_m, tier, config)[0]
+            for w, s in weighted
+        ) / total
+        distance = 2 ** (sum(w * math.log2(s.effective_distance_m) for w, s in weighted) / total)
+        # The split that, at `distance`, normalises back to exactly `two_k`.
+        split_s = (two_k + tier.paul_weight * config.paul_constant
+                   * math.log2(distance / tier.ref_distance_m) + tier.offset)
+        method = "weighted_blend"
+    return Anchor(
+        tag=tag,
+        split_s=split_s,
+        effective_distance_m=distance,
+        day=dominant.day,
+        session_ids=[s.id for _, s in weighted],
+        method=method,
+        interval_ambiguous=dominant.interval_ambiguous,
+        rate_mismatch=dominant.rate_mismatch,
+        rpe=dominant.rpe,
+        rpe_mismatch=dominant.rpe_mismatch,
+        declared=dominant.declared,
+    )
+
+
 def _select_anchor(
     sessions: Sequence[Session],
     target_distance: float,
     config: EngineConfig,
+    as_of: date | None = None,
 ) -> Anchor | None:
     """Pick the best available anchor, walking tiers in priority order.
 
-    Maximal tiers use the single session whose effort distance is closest to the target,
-    because Paul's Law error grows with the distance ratio. v1.0 specified "longest",
-    which maximises that ratio — exactly the wrong direction.
+    Maximal tiers blend every all-out piece in the tier (v1.6, `_blended_anchor`), closer
+    distances and newer pieces counting most, so a 5k test moves the 2k prediction too. With
+    `maximal_anchor_method="closest_distance"` they use the single closest piece (v1.5):
+    Paul's Law error grows with the distance ratio, and v1.0's "longest" maximised it.
 
     Submaximal tiers aggregate: one steady-state row is a noisy estimate of a
     physiological ceiling, so we take the duration-weighted median across the window.
@@ -763,6 +842,10 @@ def _select_anchor(
         candidates = [s for s in sessions if s.tag == tag]
         if not candidates:
             continue
+
+        if tag in MAXIMAL_TIERS and config.maximal_anchor_method == "blend":
+            reference_day = as_of or max(s.day for s in sessions)
+            return _blended_anchor(candidates, tag, target_distance, reference_day, config)
 
         if tag in MAXIMAL_TIERS:
             def closeness(session: Session) -> tuple[float, int]:
@@ -781,6 +864,7 @@ def _select_anchor(
                 rate_mismatch=best.rate_mismatch,
                 rpe=best.rpe,
                 rpe_mismatch=best.rpe_mismatch,
+                declared=best.declared,
             )
 
         if config.submaximal_anchor_method == "single_session":
@@ -1243,7 +1327,7 @@ def _score_confidence(
         })
         score -= 15
 
-    count = len(sessions)
+    count = sum(1 for s in sessions if not s.declared)
     if count < config.min_sessions_minimum:
         factors.append({"label": f"Only {count} session(s) in the window", "delta": -20})
         score -= 20
@@ -1259,6 +1343,13 @@ def _score_confidence(
         })
         score -= 10
         recommendations.append("Log recent sessions — this history has gone stale.")
+
+    if anchor.declared:
+        factors.append({"label": "Based on a best you entered rather than one you logged",
+                        "delta": -config.declared_anchor_penalty})
+        score -= config.declared_anchor_penalty
+        recommendations.append(
+            "Log an all-out piece in the app to replace the best you entered.")
 
     if anchor.rate_mismatch:
         tier = anchor.tier
@@ -1461,7 +1552,10 @@ def predict_test_piece(
                                                resolved_as_of)
         return _empty_result(target, config, warnings, flags)
 
-    anchor = _select_anchor(window, target, config)
+    anchor = _select_anchor(window, target, config, resolved_as_of)
+    # Bests the rower typed in are evidence of fitness, not training: they never count as
+    # load, sessions logged or recent effort (§5.16).
+    training = [s for s in window if not s.declared]
     if anchor is None:  # defensive: window is non-empty and every session carries a valid tag
         warnings.append("No session in the window qualified as an anchor")
         flags.append("no_anchor")
@@ -1511,7 +1605,7 @@ def predict_test_piece(
 
     # --- Fatigue read from RPE (confidence and advice only, never pace) -----------------
     fatigue_cutoff = resolved_as_of - timedelta(days=config.fatigue_window_days)
-    recent_rated = [s for s in window
+    recent_rated = [s for s in training
                     if s.day >= fatigue_cutoff and s.rpe is not None and not s.rpe_mismatch]
     fatigue_excess = (sum(s.rpe_deviation for s in recent_rated) / len(recent_rated)
                       if len(recent_rated) >= 2 else None)
@@ -1527,13 +1621,28 @@ def predict_test_piece(
     # sparse logger the full +3s detraining penalty punishes logging behaviour rather than
     # fitness, and it is exactly the user who has just logged a single 2k test who would
     # be told their 2k is 11 seconds slower than the one they rowed yesterday.
-    load = _rolling_load(window)
+    load = _rolling_load(training)
     raw_modifier = _interpolate(config.load_knots, load)
-    load_confidence = min(1.0, len(window) / config.min_sessions_comfortable)
+    load_confidence = min(1.0, len(training) / config.min_sessions_comfortable)
     volume_modifier = raw_modifier * load_confidence
     if load_confidence < 1.0:
         flags.append("load_estimate_damped")
     modelled_split = base_split + volume_modifier
+
+    # --- v1.6: never slower than a split already held for longer (§5.15) -----------------
+    held_adjustment = 0.0
+    held_piece: Session | None = None
+    if config.held_split_floor and not config.legacy_v1_formula:
+        longer = [s for s in window
+                  if s.effective_distance_m >= target and not s.interval_ambiguous]
+        if longer:
+            held_piece = min(longer, key=lambda s: (s.split_s, -s.day.toordinal()))
+            if held_piece.split_s < modelled_split:
+                held_adjustment = held_piece.split_s - modelled_split
+                modelled_split = held_piece.split_s
+                flags.append("raised_to_held_split")
+            else:
+                held_piece = None
 
     # --- Clamps --------------------------------------------------------------------------
     floor = config.floor_split_at_reference + config.paul_constant * math.log2(
@@ -1562,6 +1671,12 @@ def predict_test_piece(
     score, band, factors, recommendations = _score_confidence(
         anchor, window, target, spread, resolved_as_of, config, fatigue_excess
     )
+    if held_piece is not None:
+        what = "best you entered" if held_piece.declared else "piece"
+        recommendations.insert(0,
+            f"You've already held {format_seconds(held_piece.split_s)} /500m for "
+            f"{int(round(held_piece.effective_distance_m)):,}m (your {what} on "
+            f"{held_piece.day.isoformat()}), so this prediction is at least that fast.")
 
     # A clamped result means the inputs produced a physiologically impossible number —
     # almost always a typo or a mis-tag. Showing "5:28.0, Medium confidence" invites the
@@ -1609,10 +1724,11 @@ def predict_test_piece(
             "effective_distance_m": round(anchor.effective_distance_m, 1),
             "method": anchor.method,
             "rpe": None if anchor.rpe is None else round(anchor.rpe, 1),
+            "declared": anchor.declared,
         },
         "load": {
             "trimp_lite": round(load, 1),
-            "session_count": len(window),
+            "session_count": len(training),
             "window_days": config.window_days,
             "raw_modifier_seconds": round(raw_modifier, 2),
             "load_confidence": round(load_confidence, 2),
@@ -1631,6 +1747,7 @@ def predict_test_piece(
             "projection_to_target": round(projection, 2),
             "weight_trend_correction": round(weight_correction, 2),
             "volume_modifier": round(volume_modifier, 2),
+            "held_split_adjustment": round(held_adjustment, 2),
             "clamp_adjustment": round(final_split - modelled_split, 2),
         },
         "effort": {
@@ -2394,6 +2511,50 @@ def _run_self_test() -> None:
                 "distance_m": 8000, "split_s": round(zone_target_split(101.0, "AT", 8000), 2),
                 "tag": "AT", "stroke_rate": 24} for i in range(8)],
               2000, as_of)["components"]["two_k_equivalent"] - 101.0) < 0.02)
+
+    print("\n" + "=" * 78)
+    print("13. v1.6: every all-out piece counts; never slower than a split already held")
+    print("=" * 78)
+    def piece(pid: str, days: int, metres: float, split: float, tag: str = "AN",
+              **extra: Any) -> dict[str, Any]:
+        return dict({"id": pid, "date": (as_of - timedelta(days=days)).isoformat(),
+                     "distance_m": metres, "split_s": split, "tag": tag}, **extra)
+    old_2k = piece("2k", 20, 2000, 106.0)
+    fast_5k = piece("5k", 1, 5000, 108.0)
+    alone = predict_test_piece([old_2k], 2000, as_of)
+    both = predict_test_piece([old_2k, fast_5k], 2000, as_of)
+    parity = predict_test_piece([old_2k, fast_5k], 2000, as_of,
+                                replace(DEFAULT_CONFIG, maximal_anchor_method="closest_distance",
+                                        held_split_floor=False))
+    check("a new 5k moves the 2k prediction", both["predicted_split_seconds"]
+          < alone["predicted_split_seconds"] - 0.5,
+          f"{alone['predicted_split_seconds']} -> {both['predicted_split_seconds']}")
+    check("both pieces are named in the anchor", sorted(both["anchor"]["session_ids"]) == ["2k", "5k"]
+          and both["anchor"]["method"] == "weighted_blend")
+    check("closest_distance parity still ignores the 5k",
+          parity["anchor"]["session_ids"] == ["2k"])
+    one = predict_test_piece([fast_5k], 2000, as_of)
+    check("a single piece is still the closest-distance anchor",
+          one["anchor"]["method"] == "closest_distance")
+
+    longer_faster = [piece("old-2k", 20, 2000, 110.0), piece("6k", 2, 6000, 106.0, "AT", stroke_rate=24)]
+    held = predict_test_piece(longer_faster, 2000, as_of)
+    check("a 2k is never slower than a 6k split already held",
+          held["predicted_split_seconds"] <= 106.0 and "raised_to_held_split" in held["flags"],
+          str(held["predicted_split_seconds"]))
+    check("the held-split adjustment is reported", held["components"]["held_split_adjustment"] < 0)
+    ambiguous = predict_test_piece([piece("ivals", 1, 4000, 95.0)], 2000, as_of)
+    check("an unlabelled interval session never sets the floor",
+          "raised_to_held_split" not in ambiguous["flags"])
+
+    declared = predict_test_piece([piece("best-2k", 0, 2000, 100.0, declared=True)], 2000, as_of)
+    check("a best you entered gives a prediction on its own",
+          declared["predicted_split_seconds"] is not None
+          and declared["anchor"]["declared"] is True)
+    check("a best you entered is not training load",
+          declared["load"]["trimp_lite"] == 0 and declared["load"]["session_count"] == 0)
+    check("a best you entered costs confidence",
+          any("best you entered" in f["label"] for f in declared["confidence_factors"]))
 
     print("\n" + "=" * 78)
     print("12. Full output shape (with profile and RPE)")

@@ -33,7 +33,10 @@ enum PredictionService {
         let userId = try await SupabaseService.shared.auth.session.user.id
         async let history = loadHistory(userId: userId, asOf: asOf, calendar: calendar)
         async let athlete = loadAthlete(userId: userId, asOf: asOf, calendar: calendar)
-        let (sessions, profile) = try await (history, athlete)
+        // Bests you typed in (decision 64); none before the migration, or if they can't be read.
+        async let bests = (try? await DeclaredBestService.mine()) ?? []
+        let (logged, profile, declared) = try await (history, athlete, bests)
+        let sessions = logged + DeclaredBestService.engineInputs(declared, calendar: calendar)
 
         var predictions: [Double: Prediction] = [:]
         for distance in distances {
@@ -61,11 +64,12 @@ enum PredictionService {
     // MARK: - Inputs
 
     /// The columns `SessionRow` reads.
-    static let sessionColumns = "id, session_date, zone, rpe, segments(label, position, distance_m, time_ms, split_ms, rate, rep_distance_m)"
+    static let sessionColumns = "id, session_date, zone, rpe, segments(id, label, position, distance_m, time_ms, split_ms, rate, rep_distance_m), test_results(segment_id)"
 
     /// One `sessions` row with its segments, as read for the engine.
     struct SessionRow: Decodable {
         struct SegmentRow: Decodable {
+            let id: UUID?
             let label: SegmentLabel
             let position: Int
             let distanceM: Int
@@ -75,7 +79,7 @@ enum PredictionService {
             let repDistanceM: Int?
 
             enum CodingKeys: String, CodingKey {
-                case label, position, rate
+                case id, label, position, rate
                 case distanceM = "distance_m"
                 case timeMs = "time_ms"
                 case splitMs = "split_ms"
@@ -88,10 +92,29 @@ enum PredictionService {
         let zone: String?
         let rpe: Double?
         let segments: [SegmentRow]
+        /// The pieces that set a test result: one continuous effort, whatever its length.
+        let testSegmentIds: Set<UUID>
+
+        struct TestRef: Decodable {
+            let segmentId: UUID
+            enum CodingKeys: String, CodingKey { case segmentId = "segment_id" }
+        }
 
         enum CodingKeys: String, CodingKey {
             case id, zone, rpe, segments
             case sessionDate = "session_date"
+            case testResults = "test_results"
+        }
+
+        init(from decoder: Decoder) throws {
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            id = try c.decode(UUID.self, forKey: .id)
+            sessionDate = try c.decode(String.self, forKey: .sessionDate)
+            zone = try c.decodeIfPresent(String.self, forKey: .zone)
+            rpe = try c.decodeIfPresent(Double.self, forKey: .rpe)
+            segments = try c.decode([SegmentRow].self, forKey: .segments)
+            let tests = (try? c.decodeIfPresent([TestRef].self, forKey: .testResults)) ?? []
+            testSegmentIds = Set(tests.map(\.segmentId))
         }
     }
 
@@ -126,7 +149,10 @@ enum PredictionService {
                     timeS: Double(segment.timeMs) / 1000,
                     splitS: segment.splitMs.map { Double($0) / 1000 },
                     strokeRate: segment.rate,
-                    repDistanceM: segment.repDistanceM.map(Double.init),
+                    // A test is one continuous piece: say so, or a 5k or 20-minute test reads
+                    // as possible intervals and is held back (engine v1.6).
+                    repDistanceM: segment.repDistanceM.map(Double.init)
+                        ?? (segment.id.map { row.testSegmentIds.contains($0) } == true ? Double(segment.distanceM) : nil),
                     rpe: row.rpe
                 ))
             }

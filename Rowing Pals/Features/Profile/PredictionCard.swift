@@ -14,6 +14,9 @@ struct PredictionCard: View {
     let title: String
     let prediction: Prediction?
     let isLoading: Bool
+    /// The last attempt failed and there's nothing to show: offer Try again.
+    var didFail = false
+    var onRetry: () -> Void = {}
     let onExplain: () -> Void
 
     var body: some View {
@@ -31,8 +34,7 @@ struct PredictionCard: View {
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(IconPressStyle())
-                .disabled(prediction == nil)
-                .accessibilityLabel("How we got this")
+                .accessibilityLabel(prediction == nil ? "How predictions work" : "How we got this")
             }
             if let prediction, PredictionService.isShowable(prediction) {
                 Text(prediction.predictedTotalTimeFormatted ?? "—")
@@ -50,6 +52,19 @@ struct PredictionCard: View {
                         .foregroundStyle(Tokens.Ink.secondary)
                         .padding(.top, 6)
                 }
+            } else if prediction == nil && isLoading {
+                HStack(spacing: Tokens.Spacing.tight) {
+                    ProgressView()
+                        .tint(Tokens.Accent.records)
+                    Text("Calculating…")
+                        .textStyle(Typography.cardTitle)
+                        .foregroundStyle(Tokens.Accent.records)
+                }
+                .frame(minHeight: Tokens.Size.minTap)
+                Text("Working out your prediction from your recent sessions.")
+                    .textStyle(Typography.meta)
+                    .foregroundStyle(Tokens.Ink.secondary)
+                    .padding(.vertical, 6)
             } else {
                 Text("—")
                     .textStyle(Typography.bigResult)
@@ -58,6 +73,10 @@ struct PredictionCard: View {
                     .textStyle(Typography.meta)
                     .foregroundStyle(Tokens.Ink.secondary)
                     .padding(.vertical, 6)
+                if prediction == nil && didFail {
+                    Button("Try again", action: onRetry)
+                        .buttonStyle(.rpText)
+                }
             }
         }
         .padding(.vertical, 14)
@@ -69,7 +88,7 @@ struct PredictionCard: View {
     /// What to say when there's no number to show.
     private var emptyText: String {
         guard let prediction else {
-            return isLoading ? "Working out your prediction…" : "Couldn't work out a prediction just now."
+            return didFail ? "Couldn't reach the server to work out your prediction." : Self.unlockText
         }
         if prediction.confidenceScore == .insufficientData, let advice = prediction.recommendations.first {
             return advice

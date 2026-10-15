@@ -171,6 +171,42 @@ CASES: list[dict] = [
                   "tag": "AN"}]},
     {"name": "prior_implausible_profile_dropped", "history": [], "target": 2000,
      "athlete": {"age": 400, "weight_kg": -3}},
+    # --- v1.6: every all-out piece counts; held-split floor; entered bests --------------
+    {"name": "blend_old_2k_new_5k_target_2k", "target": 2000,
+     "history": [{"id": "2k", "date": day(20), "distance_m": 2000, "split_s": 106.0, "tag": "AN"},
+                 {"id": "5k", "date": day(1), "distance_m": 5000, "split_s": 108.0, "tag": "AN",
+                  "rep_distance_m": 5000}]},
+    {"name": "blend_old_2k_new_5k_target_5k", "target": 5000,
+     "history": [{"id": "2k", "date": day(20), "distance_m": 2000, "split_s": 106.0, "tag": "AN"},
+                 {"id": "5k", "date": day(1), "distance_m": 5000, "split_s": 108.0, "tag": "AN",
+                  "rep_distance_m": 5000}]},
+    {"name": "blend_three_pieces_with_20min", "target": 2000,
+     "history": [{"id": "1k", "date": day(10), "distance_m": 1000, "split_s": 101.0, "tag": "AN"},
+                 {"id": "2k", "date": day(25), "distance_m": 2000, "split_s": 105.5, "tag": "AN"},
+                 {"id": "20m", "date": day(2), "distance_m": 5400, "time_s": 1200.0, "tag": "AN",
+                  "rep_distance_m": 5400}]},
+    {"name": "blend_parity_closest_distance", "target": 2000,
+     "config_overrides": {"maximal_anchor_method": "closest_distance", "held_split_floor": False},
+     "history": [{"id": "2k", "date": day(20), "distance_m": 2000, "split_s": 106.0, "tag": "AN"},
+                 {"id": "5k", "date": day(1), "distance_m": 5000, "split_s": 108.0, "tag": "AN",
+                  "rep_distance_m": 5000}]},
+    {"name": "held_split_floor_from_longer_6k", "target": 2000,
+     "history": [{"id": "old-2k", "date": day(20), "distance_m": 2000, "split_s": 110.0, "tag": "AN"},
+                 {"id": "6k", "date": day(2), "distance_m": 6000, "split_s": 106.0, "tag": "AT",
+                  "stroke_rate": 24}]},
+    {"name": "held_split_floor_off", "target": 2000,
+     "config_overrides": {"held_split_floor": False},
+     "history": [{"id": "old-2k", "date": day(20), "distance_m": 2000, "split_s": 110.0, "tag": "AN"},
+                 {"id": "6k", "date": day(2), "distance_m": 6000, "split_s": 106.0, "tag": "AT",
+                  "stroke_rate": 24}]},
+    {"name": "declared_best_only", "target": 2000,
+     "history": [{"id": "best-2k", "date": day(0), "distance_m": 2000, "split_s": 100.0,
+                  "tag": "AN", "declared": True}]},
+    {"name": "declared_best_with_training", "target": 5000,
+     "history": [{"id": "best-2k", "date": day(3), "distance_m": 2000, "split_s": 100.0,
+                  "tag": "AN", "declared": True}]
+                + [{"id": f"u{i}", "date": day(i + 1), "distance_m": 12000, "split_s": 125.0,
+                    "tag": "UT2", "stroke_rate": 19} for i in range(5)]},
 ]
 
 # Fields the Swift port must match. Numbers compare within tolerance; flags compare as a
@@ -178,7 +214,8 @@ CASES: list[dict] = [
 # the app owns its copy, and the flags carry the meaning.
 NUMERIC_COMPONENTS = ("anchor_split", "paul_adjustment", "intensity_offset",
                       "rpe_correction", "two_k_equivalent", "projection_to_target",
-                      "weight_trend_correction", "volume_modifier", "clamp_adjustment",
+                      "weight_trend_correction", "volume_modifier", "held_split_adjustment",
+                      "clamp_adjustment",
                       "population_2k_seconds")
 
 

@@ -39,7 +39,7 @@ struct GoldenVectorTests {
     @Test("The vectors and the port share a schema version")
     func schemaVersion() {
         #expect(vectors.schemaVersion == PacePredictor.schemaVersion)
-        #expect(vectors.cases.count == 38)
+        #expect(vectors.cases.count == 46)
         let parsing = vectors.parsing
         #expect(parsing.formatSeconds.count + parsing.weightAdjustmentFactor.count
             + parsing.agePerformanceFactor.count + parsing.normaliseRPE.count == 34)

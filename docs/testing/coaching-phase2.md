@@ -178,7 +178,7 @@ Set two workouts for today as Coach first (e.g. "3 × 2,000m" and a **Test** day
 ### 4. Swipe to delete (decision 60) — Coach → Workouts
 - [ ] Swipe a card a little to the left: a red **Delete** appears. Tap the card: it closes.
 - [ ] Swipe again and tap **Delete**: the workout is gone (and from the rowers' Feeds).
-- [ ] Swipe a card hard all the way left: it deletes without the button.
+- [ ] Swipe a card hard all the way left: it stops at the Delete button; nothing is deleted until you tap it.
 - [ ] **Delete workout** on the results page still works.
 
 ### 5. Swipe back everywhere (decision 61)
@@ -250,7 +250,6 @@ the whole file → Run → "Success. No rows returned").
 - [ ] **Watts can be typed** in the average when Watts is your pace display (decision 58).
 - [ ] **Distance worked out from time and average** when no distance is typed (decision 58).
 - [ ] **Tapping a week on the effort chart** to read it, and the chosen-week panel (decision 59).
-- [ ] **A long swipe deletes straight away**, as in iOS (decision 60) — say if you'd rather it always asked.
 - [ ] **What attendance counts until Phase 3**: set workouts posted for over the last 8 weeks (decision 62).
 - [ ] **The line under each sort option** on the sheet (decision 62).
 - [ ] **A red "That isn't a time" line** on the session time and on Add test, and the session time

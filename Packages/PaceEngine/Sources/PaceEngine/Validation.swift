@@ -109,6 +109,8 @@ struct Session {
     let rpe: Double?
     let rpeMismatch: Bool
     let bodyweightKg: Double?
+    /// v1.6: a best the rower typed in, not a logged session (§5.16).
+    var declared = false
 
     var durationMinutes: Double { timeS / 60.0 }
 
@@ -224,7 +226,8 @@ func normaliseSession(
         rateMismatch: rateMismatch,
         rpe: rpe,
         rpeMismatch: rpeMismatch,
-        bodyweightKg: bodyweight
+        bodyweightKg: bodyweight,
+        declared: raw.declared
     )
 }
 

@@ -27,6 +27,9 @@ struct ClubSearchView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var viewModel = ClubSearchViewModel()
     @State private var isAboutYou = false
+    /// Step three for a rower (decision 64): their current bests, which they can skip.
+    @State private var isBests = false
+    @State private var bestRows: [BestRow] = BestRow.rows(from: [])
     /// True when the rower chose "I'm not in a club".
     @State private var isWithoutClub = false
     @State private var genderSelection = 0
@@ -62,7 +65,10 @@ struct ClubSearchView: View {
 
     var body: some View {
         Group {
-            if isAboutYou {
+            if isBests {
+                bestsStep
+                    .transition(.move(edge: .trailing))
+            } else if isAboutYou {
                 aboutYouStep
                     .transition(.move(edge: .trailing))
             } else {
@@ -71,6 +77,7 @@ struct ClubSearchView: View {
             }
         }
         .animation(.snappy, value: isAboutYou)
+        .animation(.snappy, value: isBests)
         .background(Tokens.Base.ground)
         .sheet(item: $coachNotice) { notice in
             CoachJoinNotice(
@@ -487,8 +494,65 @@ struct ClubSearchView: View {
         }
         .scrollIndicators(.hidden)
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            stickyButton(isCoachOnly ? "Start" : isWithoutClub ? "Start without a club" : "Start rowing", isEnabled: !isSaving) {
-                Task { await finishOnboarding() }
+            // A rower goes on to their bests (decision 64); a coach-only account finishes here.
+            stickyButton(isCoachOnly ? "Start" : "Next", isEnabled: !isSaving) {
+                if isCoachOnly {
+                    Task { await finishOnboarding() }
+                } else {
+                    isBests = true
+                }
+            }
+        }
+    }
+
+    // MARK: - Step three: your bests (decision 64)
+
+    private var bestsStep: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 0) {
+                GlassIconButton(systemImage: "chevron.left", accessibilityLabel: "Back to About you") {
+                    isBests = false
+                }
+                .padding(.bottom, Tokens.Spacing.loose)
+
+                intro(
+                    title: "Your bests",
+                    body: "Know your current 2k or 5k? Add them, and any other bests, so your predicted times start from where you are. You can skip this and add them later in Settings."
+                )
+
+                BestsEditor(rows: $bestRows)
+
+                Text("They count for 30 days, fading as your own all-out pieces come in. Never shown as PBs or on a leaderboard.")
+                    .textStyle(Typography.meta)
+                    .foregroundStyle(Tokens.Ink.secondary)
+                    .padding(.horizontal, 4)
+                    .padding(.top, Tokens.Spacing.loose)
+
+                if let saveError {
+                    Text(saveError)
+                        .textStyle(Typography.meta)
+                        .foregroundStyle(Tokens.System.error)
+                        .padding(.top, Tokens.Spacing.loose)
+                }
+            }
+            .padding(.horizontal, Tokens.Spacing.screen)
+            .padding(.top, Tokens.Spacing.loose)
+            .padding(.bottom, 30)
+        }
+        .scrollIndicators(.hidden)
+        .dismissesKeyboardOnTap()
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            let hasBests = bestRows.contains { $0.parsed != nil }
+            VStack(spacing: Tokens.Spacing.tight) {
+                stickyButton(isWithoutClub ? "Start without a club" : "Start rowing",
+                             isEnabled: !isSaving && !bestRows.contains(where: \.blocksSaving)) {
+                    Task { await finishOnboarding() }
+                }
+                if !hasBests {
+                    Button("Skip for now") { Task { await finishOnboarding() } }
+                        .buttonStyle(.rpText)
+                        .disabled(isSaving)
+                }
             }
         }
     }
@@ -635,6 +699,11 @@ struct ClubSearchView: View {
                 .update(update)
                 .eq("id", value: userId)
                 .execute()
+            // Their bests (decision 64): nice to have, so a failure here doesn't stop sign-up.
+            let bests = isCoachOnly ? [] : bestRows.compactMap(\.parsed)
+            if !bests.isEmpty {
+                try? await DeclaredBestService.save(bests, previous: [])
+            }
             // The tab bar reads the account type from here (no Log button for a coach).
             ViewerContext.shared.invalidate()
             await authState?.refreshOnboardingStatus()

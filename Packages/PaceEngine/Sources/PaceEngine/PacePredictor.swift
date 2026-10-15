@@ -8,7 +8,7 @@
 import Foundation
 
 public enum PacePredictor {
-    public static let schemaVersion = "anchor-impulse/1.5"
+    public static let schemaVersion = "anchor-impulse/1.6"
 
     /// Predicts a test-piece split and total time from session-summary history.
     ///
@@ -91,12 +91,15 @@ public enum PacePredictor {
             return emptyResult(targetDistance: target, config: config, warnings: warnings, flags: flags)
         }
 
-        guard let anchor = selectAnchor(window, targetDistance: target, config: config) else {
+        guard let anchor = selectAnchor(window, targetDistance: target, config: config, asOfDay: asOfDay) else {
             warnings.append("No session in the window qualified as an anchor")
             flags.append("no_anchor")
             return emptyResult(targetDistance: target, config: config, warnings: warnings, flags: flags)
         }
 
+        // Bests the rower typed in are evidence of fitness, not training: never load, sessions
+        // logged or recent effort (v1.6, §5.16).
+        let training = window.filter { !$0.declared }
         let diagnostics = diagnoseHistory(rawSessions, days: rawDays, asOfDay: asOfDay, config: config)
         let spread = diagnostics.spreadSeconds
 
@@ -144,7 +147,7 @@ public enum PacePredictor {
 
         // --- Fatigue read from RPE (confidence and advice only, never pace) -------------
         let fatigueCutoff = asOfDay - config.fatigueWindowDays
-        let recentRated = window.filter { $0.day >= fatigueCutoff && $0.rpe != nil && !$0.rpeMismatch }
+        let recentRated = training.filter { $0.day >= fatigueCutoff && $0.rpe != nil && !$0.rpeMismatch }
         let fatigueExcess: Double? = recentRated.count >= 2
             ? Py.sum(recentRated.map(\.rpeDeviation)) / Double(recentRated.count)
             : nil
@@ -156,14 +159,30 @@ public enum PacePredictor {
         }
 
         // --- Step 4: volume modifier, damped by how much history it rests on ------------
-        let load = rollingLoad(window)
+        let load = rollingLoad(training)
         let rawModifier = interpolate(config.loadKnots, load)
-        let loadConfidence = Py.min(1.0, Double(window.count) / Double(config.minSessionsComfortable))
+        let loadConfidence = Py.min(1.0, Double(training.count) / Double(config.minSessionsComfortable))
         let volumeModifier = rawModifier * loadConfidence
         if loadConfidence < 1.0 {
             flags.append("load_estimate_damped")
         }
-        let modelledSplit = baseSplit + volumeModifier
+        var modelledSplit = baseSplit + volumeModifier
+
+        // --- v1.6: never slower than a split already held for longer (§5.15) ------------
+        var heldAdjustment = 0.0
+        var heldPiece: Session?
+        if config.heldSplitFloor && !config.legacyV1Formula {
+            let longer = window.filter { $0.effectiveDistanceM >= target && !$0.intervalAmbiguous }
+            // min by (split, -day): the fastest, then the newest.
+            if let best = Py.firstMin(longer, by: { lhs, rhs in
+                lhs.splitS < rhs.splitS || (lhs.splitS == rhs.splitS && lhs.day > rhs.day)
+            }), best.splitS < modelledSplit {
+                heldAdjustment = best.splitS - modelledSplit
+                modelledSplit = best.splitS
+                heldPiece = best
+                flags.append("raised_to_held_split")
+            }
+        }
 
         // --- Clamps ----------------------------------------------------------------------
         let floor = config.floorSplitAtReference
@@ -195,6 +214,16 @@ public enum PacePredictor {
         var confidence = scoreConfidence(anchor: anchor, sessions: window, targetDistance: target,
                                          spreadS: spread, asOfDay: asOfDay, config: config,
                                          fatigueExcess: fatigueExcess)
+        if let heldPiece {
+            let what = heldPiece.declared ? "best you entered" : "piece"
+            let metres = Int(Py.round(heldPiece.effectiveDistanceM, 0))
+            confidence.recommendations.insert(
+                "You've already held \(formatSeconds(heldPiece.splitS) ?? "") /500m for "
+                    + "\(metres.formatted(.number.grouping(.automatic).locale(Locale(identifier: "en_GB"))))m "
+                    + "(your \(what) on \(days.iso(heldPiece.date))), so this prediction is at least that fast.",
+                at: 0
+            )
+        }
 
         // A clamped result is physiologically impossible input: cap it at Low and say why.
         if finalSplit != modelledSplit {
@@ -244,11 +273,12 @@ public enum PacePredictor {
                 splitFormatted: formatSeconds(anchor.splitS),
                 effectiveDistanceM: Py.round(anchor.effectiveDistanceM, 1),
                 method: anchor.method,
-                rpe: anchor.rpe.map { Py.round($0, 1) }
+                rpe: anchor.rpe.map { Py.round($0, 1) },
+                declared: anchor.declared
             ),
             load: .init(
                 trimpLite: Py.round(load, 1),
-                sessionCount: window.count,
+                sessionCount: training.count,
                 windowDays: config.windowDays,
                 rawModifierSeconds: Py.round(rawModifier, 2),
                 loadConfidence: Py.round(loadConfidence, 2),
@@ -263,6 +293,7 @@ public enum PacePredictor {
                 projectionToTarget: Py.round(projection, 2),
                 weightTrendCorrection: Py.round(trend.correction, 2),
                 volumeModifier: Py.round(volumeModifier, 2),
+                heldSplitAdjustment: Py.round(heldAdjustment, 2),
                 clampAdjustment: Py.round(finalSplit - modelledSplit, 2)
             ),
             estimateBasis: nil,

@@ -31,6 +31,9 @@ public struct SessionInput: Sendable, Equatable {
     public var rpe: Double?
     /// Bodyweight on the day, in kg.
     public var bodyweightKg: Double?
+    /// v1.6 (SPEC.md §5.16): a best the rower typed in rather than a logged session — used as
+    /// an all-out piece, never as training load.
+    public var declared: Bool
 
     public init(
         id: String,
@@ -42,7 +45,8 @@ public struct SessionInput: Sendable, Equatable {
         strokeRate: Double? = nil,
         repDistanceM: Double? = nil,
         rpe: Double? = nil,
-        bodyweightKg: Double? = nil
+        bodyweightKg: Double? = nil,
+        declared: Bool = false
     ) {
         self.id = id
         self.date = date
@@ -54,6 +58,7 @@ public struct SessionInput: Sendable, Equatable {
         self.repDistanceM = repDistanceM
         self.rpe = rpe
         self.bodyweightKg = bodyweightKg
+        self.declared = declared
     }
 }
 

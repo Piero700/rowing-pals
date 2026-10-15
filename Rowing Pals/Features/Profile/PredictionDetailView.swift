@@ -9,11 +9,12 @@ import SwiftUI
 /// "How we got this" (decision 31): a prediction's arithmetic top to bottom — anchor, the
 /// corrections that turn it into a 2k pace, then the projection and volume that turn that into
 /// the predicted split — followed by why the confidence is what it is and how to raise it.
-/// Weight-adjusted and age-graded scores are never shown (decision 30).
+/// Weight-adjusted and age-graded scores are never shown (decision 30). With no prediction yet
+/// it explains how one is worked out and what unlocks it (ⓘ always opens this, 2026-10-15).
 struct PredictionDetailView: View {
     /// "2k", "5k".
     let title: String
-    let prediction: Prediction
+    let prediction: Prediction?
 
     @Environment(\.dismiss) private var dismiss
 
@@ -48,17 +49,25 @@ struct PredictionDetailView: View {
                         .buttonStyle(.rpText)
                 }
 
-                if PredictionService.isShowable(prediction) {
-                    headline
+                if let prediction, PredictionService.isShowable(prediction) {
+                    headline(prediction)
                     SectionTitle("How we got this")
-                    card(lines)
+                    card(lines(prediction))
                     SectionTitle("Confidence")
-                    card(confidenceLines)
+                    card(confidenceLines(prediction))
                 } else {
                     Text(PredictionCard.unlockText)
                         .textStyle(Typography.bodyV3)
                         .foregroundStyle(Tokens.Ink.primary)
                         .padding(.top, Tokens.Spacing.loose)
+                    SectionTitle("How it works")
+                    Text(Self.howItWorks)
+                        .textStyle(Typography.meta)
+                        .foregroundStyle(Tokens.Ink.secondary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(Tokens.Spacing.card)
+                        .background(Self.cardShape.fill(Tokens.Surface.card))
+                        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
                 }
 
                 if !advice.isEmpty {
@@ -84,7 +93,10 @@ struct PredictionDetailView: View {
             .padding(Tokens.Spacing.screen)
     }
 
-    private var headline: some View {
+    /// What the engine does, for the sheet with no prediction to explain yet.
+    static let howItWorks = "Your predicted times come from your erg sessions in the last 30 days, worked out on your phone. Every all-out piece counts, closer distances and newer pieces most; without one, your steady rows' typical pace is used. That 2k pace is taken out to the distance with Paul's Law and adjusted for how much you've trained. A prediction is never slower than a split you've already held for longer."
+
+    private func headline(_ prediction: Prediction) -> some View {
         VStack(alignment: .leading, spacing: 2) {
             Text(prediction.predictedTotalTimeFormatted ?? "—")
                 .textStyle(Typography.bigResult)
@@ -100,7 +112,7 @@ struct PredictionDetailView: View {
 
     // MARK: - The arithmetic
 
-    private var lines: [Line] {
+    private func lines(_ prediction: Prediction) -> [Line] {
         let parts = prediction.components
         var lines: [Line] = []
         if let anchor = prediction.anchor, let split = parts.anchorSplit {
@@ -139,7 +151,7 @@ struct PredictionDetailView: View {
         return lines
     }
 
-    private var confidenceLines: [Line] {
+    private func confidenceLines(_ prediction: Prediction) -> [Line] {
         var lines = prediction.confidenceFactors.enumerated().map { index, factor in
             Line(label: factor.label, value: index == 0 ? "\(factor.delta)" : Self.signedInt(factor.delta))
         }
@@ -149,7 +161,8 @@ struct PredictionDetailView: View {
     }
 
     private var advice: [String] {
-        PredictionService.isShowable(prediction) ? prediction.recommendations : Array(prediction.recommendations.prefix(1))
+        guard let prediction else { return [] }
+        return PredictionService.isShowable(prediction) ? prediction.recommendations : Array(prediction.recommendations.prefix(1))
     }
 
     /// Which session(s) the prediction rests on.

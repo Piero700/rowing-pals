@@ -45,9 +45,10 @@ struct GoldenCase: Decodable, Sendable, CustomTestStringConvertible {
         let repDistanceM: Double?
         let rpe: Double?
         let bodyweightKg: Double?
+        let declared: Bool?
 
         enum CodingKeys: String, CodingKey {
-            case id, date, tag, rpe
+            case id, date, tag, rpe, declared
             case distanceM = "distance_m"
             case timeS = "time_s"
             case splitS = "split_s"
@@ -114,7 +115,7 @@ struct GoldenCase: Decodable, Sendable, CustomTestStringConvertible {
     let name: String
     let asOf: String
     let targetDistanceM: Double
-    let configOverrides: [String: Double]
+    let configOverrides: [String: OverrideValue]
     let athlete: Athlete?
     let history: [Row]
     let expected: Expected
@@ -127,6 +128,28 @@ struct GoldenCase: Decodable, Sendable, CustomTestStringConvertible {
         case targetDistanceM = "target_distance_m"
         case configOverrides = "config_overrides"
     }
+}
+
+/// A `config_overrides` value: a number, a switch or a choice, as Python wrote it.
+enum OverrideValue: Decodable, Sendable {
+    case number(Double)
+    case flag(Bool)
+    case text(String)
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        if let flag = try? container.decode(Bool.self) {
+            self = .flag(flag)
+        } else if let number = try? container.decode(Double.self) {
+            self = .number(number)
+        } else {
+            self = .text(try container.decode(String.self))
+        }
+    }
+
+    var number: Double? { if case .number(let value) = self { value } else { nil } }
+    var flag: Bool? { if case .flag(let value) = self { value } else { nil } }
+    var text: String? { if case .text(let value) = self { value } else { nil } }
 }
 
 struct Parsing: Decodable, Sendable {
@@ -197,10 +220,23 @@ enum GoldenSupport {
     }
 
     /// `config_overrides` uses the Python snake_case names; each is mapped explicitly.
-    static func config(_ overrides: [String: Double]) -> (EngineConfig, unmapped: [String]) {
+    static func config(_ overrides: [String: OverrideValue]) -> (EngineConfig, unmapped: [String]) {
         var config = EngineConfig.default
         var unmapped: [String] = []
-        for (key, value) in overrides {
+        for (key, override) in overrides {
+            if key == "maximal_anchor_method", let text = override.text,
+               let method = EngineConfig.MaximalAnchorMethod(rawValue: text) {
+                config.maximalAnchorMethod = method
+                continue
+            }
+            if key == "held_split_floor", let flag = override.flag {
+                config.heldSplitFloor = flag
+                continue
+            }
+            guard let value = override.number else {
+                unmapped.append(key)
+                continue
+            }
             switch key {
             case "rpe_sensitivity": config.rpeSensitivity = value
             case "rpe_max_correction": config.rpeMaxCorrection = value
@@ -229,7 +265,8 @@ enum GoldenSupport {
                 strokeRate: row.strokeRate,
                 repDistanceM: row.repDistanceM,
                 rpe: row.rpe,
-                bodyweightKg: row.bodyweightKg
+                bodyweightKg: row.bodyweightKg,
+                declared: row.declared ?? false
             )
         }
     }

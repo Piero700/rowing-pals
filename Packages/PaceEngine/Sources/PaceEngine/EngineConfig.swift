@@ -68,6 +68,23 @@ public struct EngineConfig: Sendable {
 
     public var submaximalAnchorMethod: SubmaximalAnchorMethod = .median
 
+    /// v1.6 (SPEC.md §5.3): how AN/TR anchors are chosen.
+    public enum MaximalAnchorMethod: String, Sendable {
+        /// Every all-out piece in the tier, weighted by closeness and age (default).
+        case blend
+        /// v1.5 parity: the single closest piece.
+        case closestDistance = "closest_distance"
+    }
+    public var maximalAnchorMethod: MaximalAnchorMethod = .blend
+    /// A piece's weight halves every this many doublings from the target.
+    public var blendDistanceHalvingLog2: Double = 1.0
+    /// ...and every this many days of age.
+    public var blendRecencyHalfLifeDays: Double = 14.0
+    /// v1.6 (§5.15): never slower than a split already held over a longer continuous piece.
+    public var heldSplitFloor: Bool = true
+    /// v1.6 (§5.16): confidence lost when the anchor is a best the rower typed in.
+    public var declaredAnchorPenalty: Int = 10
+
     // Perceived effort (RPE)
     public var rpeSensitivity: Double = 1.2
     public var rpeMaxCorrection: Double = 3.0

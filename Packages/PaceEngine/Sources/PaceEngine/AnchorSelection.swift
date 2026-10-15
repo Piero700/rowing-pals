@@ -23,6 +23,8 @@ struct Anchor {
     var rpeMismatch = false
     /// Share of the anchor's duration carrying a usable RPE.
     var rpeCoverage = 1.0
+    /// The piece that weighs most is a best the rower typed in (v1.6).
+    var declared = false
 
     var tier: Tier { Tier.named(tag) }
 }
@@ -72,15 +74,92 @@ func tierRPE(_ candidates: [Session]) -> (rpe: Double?, coverage: Double, mismat
     return (weightedMedian(usable), coverage, majorityMismatch)
 }
 
-/// `_select_anchor`: walk tiers in rank order. Maximal tiers take the single session closest
-/// in distance to the target (then the most recent); submaximal tiers aggregate by
-/// duration-weighted median.
-func selectAnchor(_ sessions: [Session], targetDistance: Double, config: EngineConfig) -> Anchor? {
+/// `_blend_weight` (v1.6): halving every `blendDistanceHalvingLog2` doublings from the target
+/// and every `blendRecencyHalfLifeDays` of age.
+func blendWeight(_ session: Session, targetDistance: Double, asOfDay: Int, config: EngineConfig) -> Double {
+    let doublings = abs(log2(targetDistance / Py.max(session.effectiveDistanceM, 1e-9)))
+    let ageDays = Double(Swift.max(0, asOfDay - session.day))
+    return pow(0.5, doublings / config.blendDistanceHalvingLog2)
+        * pow(0.5, ageDays / config.blendRecencyHalfLifeDays)
+}
+
+/// `_blended_anchor` (v1.6): every all-out piece in the tier, each turned into its own 2k
+/// equivalent and averaged by `blendWeight`, returned as one synthetic anchor at the weighted
+/// geometric-mean distance whose split normalises back to exactly that 2k. One piece on its own
+/// is the v1.5 closest-distance anchor.
+func blendedAnchor(_ candidates: [Session], tag: Tier.Name, targetDistance: Double,
+                   asOfDay: Int, config: EngineConfig) -> Anchor? {
+    let tier = Tier.named(tag)
+    typealias Weighted = (weight: Double, session: Session)
+    let pairs: [Weighted] = candidates.map { session in
+        (weight: blendWeight(session, targetDistance: targetDistance, asOfDay: asOfDay, config: config),
+         session: session)
+    }
+    // sorted(key=(weight, day), reverse=True): heaviest first, then newest; stable on ties.
+    let weighted: [Weighted] = Py.stableSorted(pairs) { (lhs: Weighted, rhs: Weighted) -> Bool in
+        if lhs.weight != rhs.weight { return lhs.weight > rhs.weight }
+        return lhs.session.day > rhs.session.day
+    }
+    guard let dominant = weighted.first?.session else { return nil }
+    let splitS: Double
+    let distance: Double
+    let method: String
+    if weighted.count == 1 {
+        splitS = dominant.splitS
+        distance = dominant.effectiveDistanceM
+        method = "closest_distance"
+    } else {
+        let total = Py.sum(weighted.map { (pair: Weighted) -> Double in pair.weight })
+        let twoKTerms: [Double] = weighted.map { (pair: Weighted) -> Double in
+            let s2k = normaliseToReference(split: pair.session.splitS,
+                                           effectiveDistanceM: pair.session.effectiveDistanceM,
+                                           tier: tier, config: config).s2k
+            return pair.weight * s2k
+        }
+        let twoK = Py.sum(twoKTerms) / total
+        let logTerms: [Double] = weighted.map { (pair: Weighted) -> Double in
+            pair.weight * log2(pair.session.effectiveDistanceM)
+        }
+        distance = pow(2.0, Py.sum(logTerms) / total)
+        let projection: Double = tier.paulWeight * config.paulConstant * log2(distance / tier.refDistanceM)
+        splitS = twoK + projection + tier.offset
+        method = "weighted_blend"
+    }
+    return Anchor(
+        tag: tag,
+        splitS: splitS,
+        effectiveDistanceM: distance,
+        day: dominant.day,
+        date: dominant.date,
+        sessionIds: weighted.map { (pair: Weighted) -> String in pair.session.id },
+        method: method,
+        intervalAmbiguous: dominant.intervalAmbiguous,
+        rateMismatch: dominant.rateMismatch,
+        rpe: dominant.rpe,
+        rpeMismatch: dominant.rpeMismatch,
+        declared: dominant.declared
+    )
+}
+
+/// `_select_anchor`: walk tiers in rank order. Maximal tiers blend every all-out piece
+/// (v1.6), or with `.closestDistance` take the single closest (then most recent); submaximal
+/// tiers aggregate by duration-weighted median.
+func selectAnchor(_ sessions: [Session], targetDistance: Double, config: EngineConfig,
+                  asOfDay: Int? = nil) -> Anchor? {
     guard !sessions.isEmpty else { return nil }
 
     for tier in Tier.all {
         let candidates = sessions.filter { $0.tag == tier.name }
         if candidates.isEmpty { continue }
+
+        if tier.isMaximal && config.maximalAnchorMethod == .blend {
+            let reference = asOfDay ?? (sessions.map { (session: Session) -> Int in session.day }.max() ?? 0)
+            if let anchor = blendedAnchor(candidates, tag: tier.name, targetDistance: targetDistance,
+                                          asOfDay: reference, config: config) {
+                return anchor
+            }
+            continue
+        }
 
         if tier.isMaximal {
             // min by (|log2(target / effective)|, -day): closest distance, then most recent.
@@ -104,7 +183,8 @@ func selectAnchor(_ sessions: [Session], targetDistance: Double, config: EngineC
                 intervalAmbiguous: best.intervalAmbiguous,
                 rateMismatch: best.rateMismatch,
                 rpe: best.rpe,
-                rpeMismatch: best.rpeMismatch
+                rpeMismatch: best.rpeMismatch,
+                declared: best.declared
             )
         }
 

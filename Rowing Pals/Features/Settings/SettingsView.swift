@@ -97,6 +97,16 @@ struct SettingsView: View {
                         }
                         .buttonStyle(IconPressStyle())
                         divider
+                        // Decision 64: bests you typed in, for your predictions. Rowers only.
+                        if viewModel.isRower {
+                            NavigationLink {
+                                YourBestsView()
+                            } label: {
+                                rowContent(title: "Your bests", subtitle: "Your 2k, 5k and others, for your predictions") { chevron }
+                            }
+                            .buttonStyle(IconPressStyle())
+                            divider
+                        }
                         row(title: "Log out", subtitle: nil, titleColor: Tokens.Accent.brand) { EmptyView() } action: {
                             Task { await viewModel.signOut() }
                         }

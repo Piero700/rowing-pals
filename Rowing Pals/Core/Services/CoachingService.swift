@@ -268,6 +268,8 @@ enum CoachingService {
         let sessions: [UserSessionRow]
         let twoKs: [TestRow]
         let privateDetails: [UUID: AthletePrivateService.Details]
+        /// Bests each rower typed in (decision 64), for their predictions.
+        let declaredBests: [UUID: [DeclaredBest]]
     }
 
     /// The club's rowing members (or just `only`) and the last `historyDays` days of everything
@@ -285,7 +287,7 @@ enum CoachingService {
         let (profiles, squads) = try await (profilesTask, squadsTask)
         let ids = profiles.map(\.id)
         guard !ids.isEmpty else {
-            return Raw(profiles: [], squads: squads, totals: [], sessions: [], twoKs: [], privateDetails: [:])
+            return Raw(profiles: [], squads: squads, totals: [], sessions: [], twoKs: [], privateDetails: [:], declaredBests: [:])
         }
 
         let earliest = calendar.date(byAdding: .day, value: -CoachingRules.historyDays, to: asOf) ?? asOf
@@ -305,8 +307,10 @@ enum CoachingService {
         // Before the coaching migration a coach can't read these; predictions then use
         // sessions alone, as they do with the Population Estimate off.
         async let privateTask = (try? await AthletePrivateService.details(for: ids)) ?? [:]
-        let (totals, sessions, twoKs, privateDetails) = try await (totalsTask, sessionsTask, twoKsTask, privateTask)
-        return Raw(profiles: profiles, squads: squads, totals: totals, sessions: sessions, twoKs: twoKs, privateDetails: privateDetails)
+        async let bestsTask = DeclaredBestService.bests(for: ids)
+        let (totals, sessions, twoKs, privateDetails, declaredBests) = try await (totalsTask, sessionsTask, twoKsTask, privateTask, bestsTask)
+        return Raw(profiles: profiles, squads: squads, totals: totals, sessions: sessions, twoKs: twoKs,
+                   privateDetails: privateDetails, declaredBests: declaredBests)
     }
 
     private static func ratings(_ sessions: [UserSessionRow], calendar: Calendar) -> [CoachingRules.Rating] {
@@ -333,6 +337,7 @@ enum CoachingService {
 
         let mine = raw.sessions.filter { $0.userId == profile.id }
         let history = PredictionService.history(from: mine.map(\.row), calendar: calendar)
+            + DeclaredBestService.engineInputs(raw.declaredBests[profile.id] ?? [], calendar: calendar)
         let athlete = PredictionService.athlete(
             gender: profile.gender,
             details: raw.privateDetails[profile.id] ?? AthletePrivateService.Details(),

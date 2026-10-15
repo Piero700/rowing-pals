@@ -152,9 +152,7 @@ struct ProfileView: View {
             Task { await viewModel.load() }
         }
         .sheet(item: $explainedTarget) { target in
-            if let prediction = viewModel.predictions[target.metres] {
-                PredictionDetailView(title: target.title, prediction: prediction)
-            }
+            PredictionDetailView(title: target.title, prediction: viewModel.predictions[target.metres])
         }
         .fullScreenCover(item: $expandedTest) { test in
             PBHistoryView(test: test, userId: viewing)
@@ -550,7 +548,9 @@ struct ProfileView: View {
                         PredictionCard(
                             title: target.title,
                             prediction: viewModel.predictions[target.metres],
-                            isLoading: viewModel.isLoadingPredictions
+                            isLoading: viewModel.isLoadingPredictions,
+                            didFail: viewModel.predictionsFailed,
+                            onRetry: { Task { await viewModel.loadPredictions() } }
                         ) { explainedTarget = target }
                     }
                 }

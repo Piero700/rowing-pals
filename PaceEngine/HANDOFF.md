@@ -205,6 +205,20 @@ The Python file stays the source of truth. To change a constant or rule:
 
 Never edit the Swift side alone; the two will drift and the vectors stop meaning anything.
 
+## v1.6 (2026-10-15): every all-out piece counts, the held-split floor, typed-in bests
+
+- **Blend** (SPEC §5.3): every AN/TR piece in the window gives a 2k equivalent, averaged by
+  closeness to the target and age. Config `maximal_anchor_method` ("blend" | "closest_distance"),
+  `blend_distance_halving_log2` (1.0), `blend_recency_half_life_days` (14).
+- **Held-split floor** (§5.15): never slower than a split already held over a longer continuous
+  piece. Config `held_split_floor`; output `components.held_split_adjustment`, flag
+  `raised_to_held_split`.
+- **Typed-in bests** (§5.16): input `declared: true`; not training; −10 confidence when it anchors.
+  Output `anchor.declared`.
+- App side: test pieces are sent with `rep_distance_m` = their distance; "Your bests" feed in as
+  declared rows (docs/migrations/2026-10-15-declared-bests.sql).
+- Python self-test section 13; golden vectors 46 cases; Swift port passes all of them.
+
 ## v1.5 (2026-10-05): prediction range
 `predicted_split_range_seconds` and `predicted_total_time_range_seconds` (SPEC.md §5.13): a
 ± in seconds, shown in Coaching as "7:20 ±9s". Ported to `Packages/PaceEngine`

@@ -1,5 +1,5 @@
 {
-  "schema_version": "anchor-impulse/1.5",
+  "schema_version": "anchor-impulse/1.6",
   "generated_from": "pace_engine.py (Python reference implementation)",
   "tolerance": {
     "seconds": 0.02,
@@ -44,6 +44,11 @@
     },
     "split_mismatch_tolerance": 0.02,
     "submaximal_anchor_method": "median",
+    "maximal_anchor_method": "blend",
+    "blend_distance_halving_log2": 1.0,
+    "blend_recency_half_life_days": 14.0,
+    "held_split_floor": true,
+    "declared_anchor_penalty": 10,
     "rpe_sensitivity": 1.2,
     "rpe_max_correction": 3.0,
     "rpe_contradiction_points": 2.5,
@@ -382,6 +387,7 @@
           "projection_to_target": 0.0,
           "weight_trend_correction": 0.0,
           "volume_modifier": 0.0,
+          "held_split_adjustment": 0.0,
           "clamp_adjustment": 0.0
         },
         "load_trimp_lite": 1282.1,
@@ -617,6 +623,7 @@
           "projection_to_target": 6.61,
           "weight_trend_correction": 0.0,
           "volume_modifier": 0.0,
+          "held_split_adjustment": 0.0,
           "clamp_adjustment": 0.0
         },
         "load_trimp_lite": 1282.1,
@@ -852,6 +859,7 @@
           "projection_to_target": 7.92,
           "weight_trend_correction": 0.0,
           "volume_modifier": 0.0,
+          "held_split_adjustment": 0.0,
           "clamp_adjustment": 0.0
         },
         "load_trimp_lite": 1282.1,
@@ -907,6 +915,7 @@
           "projection_to_target": 0.0,
           "weight_trend_correction": 0.0,
           "volume_modifier": 0.45,
+          "held_split_adjustment": 0.0,
           "clamp_adjustment": 0.0
         },
         "load_trimp_lite": 63.5,
@@ -939,10 +948,10 @@
         }
       ],
       "expected": {
-        "predicted_split_seconds": 105.48,
-        "predicted_total_time_seconds": 421.93,
-        "predicted_split_formatted": "1:45.5",
-        "predicted_total_time_formatted": "7:01.9",
+        "predicted_split_seconds": 105.0,
+        "predicted_total_time_seconds": 420.0,
+        "predicted_split_formatted": "1:45.0",
+        "predicted_total_time_formatted": "7:00.0",
         "predicted_split_range_seconds": 1.46,
         "predicted_total_time_range_seconds": 5.83,
         "confidence_score": "Medium",
@@ -961,6 +970,7 @@
           "projection_to_target": 0.0,
           "weight_trend_correction": 0.0,
           "volume_modifier": 0.48,
+          "held_split_adjustment": -0.48,
           "clamp_adjustment": 0.0
         },
         "load_trimp_lite": 21.0,
@@ -972,7 +982,8 @@
         "weight_adjusted_total_seconds": null,
         "age_graded_total_seconds": null,
         "flags": [
-          "load_estimate_damped"
+          "load_estimate_damped",
+          "raised_to_held_split"
         ]
       }
     },
@@ -1069,6 +1080,7 @@
           "projection_to_target": 0.0,
           "weight_trend_correction": 0.0,
           "volume_modifier": 0.95,
+          "held_split_adjustment": 0.0,
           "clamp_adjustment": 0.0
         },
         "load_trimp_lite": 409.9,
@@ -1301,6 +1313,7 @@
           "projection_to_target": 0.0,
           "weight_trend_correction": 0.0,
           "volume_modifier": 0.0,
+          "held_split_adjustment": 0.0,
           "clamp_adjustment": 0.0
         },
         "load_trimp_lite": 1277.9,
@@ -1358,6 +1371,7 @@
           "projection_to_target": 0.0,
           "weight_trend_correction": 0.0,
           "volume_modifier": 0.47,
+          "held_split_adjustment": 0.0,
           "clamp_adjustment": 0.0
         },
         "load_trimp_lite": 38.4,
@@ -1414,6 +1428,7 @@
           "projection_to_target": 0.0,
           "weight_trend_correction": 0.0,
           "volume_modifier": 0.47,
+          "held_split_adjustment": 0.0,
           "clamp_adjustment": 0.0
         },
         "load_trimp_lite": 38.4,
@@ -2204,6 +2219,7 @@
           "projection_to_target": 0.0,
           "weight_trend_correction": 0.0,
           "volume_modifier": 0.0,
+          "held_split_adjustment": 0.0,
           "clamp_adjustment": 0.0
         },
         "load_trimp_lite": 1282.1,
@@ -2261,7 +2277,8 @@
           "projection_to_target": 0.0,
           "weight_trend_correction": 0.0,
           "volume_modifier": 0.49,
-          "clamp_adjustment": 21.51
+          "held_split_adjustment": -0.49,
+          "clamp_adjustment": 22.0
         },
         "load_trimp_lite": 12.0,
         "load_modifier_seconds": 0.49,
@@ -2273,7 +2290,8 @@
         "age_graded_total_seconds": null,
         "flags": [
           "clamped_to_physiological_floor",
-          "load_estimate_damped"
+          "load_estimate_damped",
+          "raised_to_held_split"
         ]
       }
     },
@@ -2317,6 +2335,7 @@
           "projection_to_target": 0.0,
           "weight_trend_correction": 0.0,
           "volume_modifier": 0.46,
+          "held_split_adjustment": 0.0,
           "clamp_adjustment": 0.0
         },
         "load_trimp_lite": 43.3,
@@ -2371,6 +2390,7 @@
           "projection_to_target": 0.0,
           "weight_trend_correction": 0.0,
           "volume_modifier": 0.47,
+          "held_split_adjustment": 0.0,
           "clamp_adjustment": 0.0
         },
         "load_trimp_lite": 41.7,
@@ -2624,6 +2644,7 @@
           "projection_to_target": 0.0,
           "weight_trend_correction": 0.0,
           "volume_modifier": 0.0,
+          "held_split_adjustment": 0.0,
           "clamp_adjustment": 0.0
         },
         "load_trimp_lite": 1282.1,
@@ -2742,6 +2763,7 @@
           "projection_to_target": 0.0,
           "weight_trend_correction": 0.0,
           "volume_modifier": 0.63,
+          "held_split_adjustment": 0.0,
           "clamp_adjustment": 0.0
         },
         "load_trimp_lite": 474.1,
@@ -2855,6 +2877,7 @@
           "projection_to_target": 0.0,
           "weight_trend_correction": 0.0,
           "volume_modifier": 0.63,
+          "held_split_adjustment": 0.0,
           "clamp_adjustment": 0.0
         },
         "load_trimp_lite": 474.1,
@@ -2968,6 +2991,7 @@
           "projection_to_target": 0.0,
           "weight_trend_correction": 0.0,
           "volume_modifier": 0.63,
+          "held_split_adjustment": 0.0,
           "clamp_adjustment": 0.0
         },
         "load_trimp_lite": 474.1,
@@ -3081,6 +3105,7 @@
           "projection_to_target": 0.0,
           "weight_trend_correction": 0.0,
           "volume_modifier": 0.63,
+          "held_split_adjustment": 0.0,
           "clamp_adjustment": 0.0
         },
         "load_trimp_lite": 474.1,
@@ -3113,10 +3138,10 @@
         }
       ],
       "expected": {
-        "predicted_split_seconds": 105.48,
-        "predicted_total_time_seconds": 421.93,
-        "predicted_split_formatted": "1:45.5",
-        "predicted_total_time_formatted": "7:01.9",
+        "predicted_split_seconds": 105.0,
+        "predicted_total_time_seconds": 420.0,
+        "predicted_split_formatted": "1:45.0",
+        "predicted_total_time_formatted": "7:00.0",
         "predicted_split_range_seconds": 1.46,
         "predicted_total_time_range_seconds": 5.83,
         "confidence_score": "Medium",
@@ -3135,6 +3160,7 @@
           "projection_to_target": 0.0,
           "weight_trend_correction": 0.0,
           "volume_modifier": 0.48,
+          "held_split_adjustment": -0.48,
           "clamp_adjustment": 0.0
         },
         "load_trimp_lite": 21.0,
@@ -3146,7 +3172,8 @@
         "weight_adjusted_total_seconds": null,
         "age_graded_total_seconds": null,
         "flags": [
-          "load_estimate_damped"
+          "load_estimate_damped",
+          "raised_to_held_split"
         ]
       }
     },
@@ -3352,6 +3379,7 @@
           "projection_to_target": 0.0,
           "weight_trend_correction": 0.0,
           "volume_modifier": 0.0,
+          "held_split_adjustment": 0.0,
           "clamp_adjustment": 0.0
         },
         "load_trimp_lite": 1286.9,
@@ -3588,6 +3616,7 @@
           "projection_to_target": 0.0,
           "weight_trend_correction": 0.0,
           "volume_modifier": 0.0,
+          "held_split_adjustment": 0.0,
           "clamp_adjustment": 0.0
         },
         "load_trimp_lite": 1282.1,
@@ -3647,6 +3676,7 @@
           "projection_to_target": 0.0,
           "weight_trend_correction": 0.0,
           "volume_modifier": 0.44,
+          "held_split_adjustment": 0.0,
           "clamp_adjustment": 0.0
         },
         "load_trimp_lite": 67.7,
@@ -3885,6 +3915,7 @@
           "projection_to_target": 0.0,
           "weight_trend_correction": 0.0,
           "volume_modifier": 0.0,
+          "held_split_adjustment": 0.0,
           "clamp_adjustment": 0.0
         },
         "load_trimp_lite": 1282.1,
@@ -4124,6 +4155,7 @@
           "projection_to_target": 0.0,
           "weight_trend_correction": 0.0,
           "volume_modifier": 0.0,
+          "held_split_adjustment": 0.0,
           "clamp_adjustment": 0.0
         },
         "load_trimp_lite": 1282.1,
@@ -4380,6 +4412,7 @@
           "projection_to_target": 0.0,
           "weight_trend_correction": 0.0,
           "volume_modifier": 0.0,
+          "held_split_adjustment": 0.0,
           "clamp_adjustment": 0.0
         },
         "load_trimp_lite": 1282.1,
@@ -4640,6 +4673,7 @@
           "projection_to_target": 0.0,
           "weight_trend_correction": 0.56,
           "volume_modifier": 0.0,
+          "held_split_adjustment": 0.0,
           "clamp_adjustment": 0.0
         },
         "load_trimp_lite": 1282.1,
@@ -4900,6 +4934,7 @@
           "projection_to_target": 0.0,
           "weight_trend_correction": -0.53,
           "volume_modifier": 0.0,
+          "held_split_adjustment": 0.0,
           "clamp_adjustment": 0.0
         },
         "load_trimp_lite": 1282.1,
@@ -5154,6 +5189,552 @@
         "age_graded_total_seconds": null,
         "flags": [
           "cold_start"
+        ]
+      }
+    },
+    {
+      "name": "blend_old_2k_new_5k_target_2k",
+      "as_of": "2026-09-17",
+      "target_distance_m": 2000,
+      "config_overrides": {},
+      "athlete": null,
+      "history": [
+        {
+          "id": "2k",
+          "date": "2026-08-28",
+          "distance_m": 2000,
+          "split_s": 106.0,
+          "tag": "AN"
+        },
+        {
+          "id": "5k",
+          "date": "2026-09-16",
+          "distance_m": 5000,
+          "split_s": 108.0,
+          "tag": "AN",
+          "rep_distance_m": 5000
+        }
+      ],
+      "expected": {
+        "predicted_split_seconds": 104.54,
+        "predicted_total_time_seconds": 418.17,
+        "predicted_split_formatted": "1:44.5",
+        "predicted_total_time_formatted": "6:58.2",
+        "predicted_split_range_seconds": 1.35,
+        "predicted_total_time_range_seconds": 5.39,
+        "confidence_score": "Medium",
+        "confidence_numeric": 70,
+        "anchor_tier": "AN",
+        "anchor_method": "weighted_blend",
+        "anchor_session_ids": [
+          "5k",
+          "2k"
+        ],
+        "components": {
+          "anchor_split": 107.01,
+          "paul_adjustment": -3.35,
+          "intensity_offset": -0.0,
+          "rpe_correction": 0.0,
+          "two_k_equivalent": 103.67,
+          "projection_to_target": 0.0,
+          "weight_trend_correction": 0.0,
+          "volume_modifier": 0.87,
+          "held_split_adjustment": 0.0,
+          "clamp_adjustment": 0.0
+        },
+        "load_trimp_lite": 75.2,
+        "load_modifier_seconds": 0.87,
+        "spread_seconds": 0.0,
+        "two_k_equivalent_by_tier": {
+          "AN": 106.0
+        },
+        "weight_adjusted_total_seconds": null,
+        "age_graded_total_seconds": null,
+        "flags": [
+          "load_estimate_damped"
+        ]
+      }
+    },
+    {
+      "name": "blend_old_2k_new_5k_target_5k",
+      "as_of": "2026-09-17",
+      "target_distance_m": 5000,
+      "config_overrides": {},
+      "athlete": null,
+      "history": [
+        {
+          "id": "2k",
+          "date": "2026-08-28",
+          "distance_m": 2000,
+          "split_s": 106.0,
+          "tag": "AN"
+        },
+        {
+          "id": "5k",
+          "date": "2026-09-16",
+          "distance_m": 5000,
+          "split_s": 108.0,
+          "tag": "AN",
+          "rep_distance_m": 5000
+        }
+      ],
+      "expected": {
+        "predicted_split_seconds": 108.0,
+        "predicted_total_time_seconds": 1080.0,
+        "predicted_split_formatted": "1:48.0",
+        "predicted_total_time_formatted": "18:00.0",
+        "predicted_split_range_seconds": 1.26,
+        "predicted_total_time_range_seconds": 12.57,
+        "confidence_score": "Medium",
+        "confidence_numeric": 70,
+        "anchor_tier": "AN",
+        "anchor_method": "weighted_blend",
+        "anchor_session_ids": [
+          "5k",
+          "2k"
+        ],
+        "components": {
+          "anchor_split": 107.73,
+          "paul_adjustment": -5.72,
+          "intensity_offset": -0.0,
+          "rpe_correction": 0.0,
+          "two_k_equivalent": 102.01,
+          "projection_to_target": 6.61,
+          "weight_trend_correction": 0.0,
+          "volume_modifier": 0.87,
+          "held_split_adjustment": -1.5,
+          "clamp_adjustment": 0.0
+        },
+        "load_trimp_lite": 75.2,
+        "load_modifier_seconds": 0.87,
+        "spread_seconds": 0.0,
+        "two_k_equivalent_by_tier": {
+          "AN": 106.0
+        },
+        "weight_adjusted_total_seconds": null,
+        "age_graded_total_seconds": null,
+        "flags": [
+          "load_estimate_damped",
+          "raised_to_held_split"
+        ]
+      }
+    },
+    {
+      "name": "blend_three_pieces_with_20min",
+      "as_of": "2026-09-17",
+      "target_distance_m": 2000,
+      "config_overrides": {},
+      "athlete": null,
+      "history": [
+        {
+          "id": "1k",
+          "date": "2026-09-07",
+          "distance_m": 1000,
+          "split_s": 101.0,
+          "tag": "AN"
+        },
+        {
+          "id": "2k",
+          "date": "2026-08-23",
+          "distance_m": 2000,
+          "split_s": 105.5,
+          "tag": "AN"
+        },
+        {
+          "id": "20m",
+          "date": "2026-09-15",
+          "distance_m": 5400,
+          "time_s": 1200.0,
+          "tag": "AN",
+          "rep_distance_m": 5400
+        }
+      ],
+      "expected": {
+        "predicted_split_seconds": 105.5,
+        "predicted_total_time_seconds": 422.0,
+        "predicted_split_formatted": "1:45.5",
+        "predicted_total_time_formatted": "7:02.0",
+        "predicted_split_range_seconds": 1.07,
+        "predicted_total_time_range_seconds": 4.28,
+        "confidence_score": "High",
+        "confidence_numeric": 78,
+        "anchor_tier": "AN",
+        "anchor_method": "weighted_blend",
+        "anchor_session_ids": [
+          "20m",
+          "1k",
+          "2k"
+        ],
+        "components": {
+          "anchor_split": 106.05,
+          "paul_adjustment": -0.95,
+          "intensity_offset": -0.0,
+          "rpe_correction": 0.0,
+          "two_k_equivalent": 105.1,
+          "projection_to_target": 0.0,
+          "weight_trend_correction": 0.0,
+          "volume_modifier": 1.27,
+          "held_split_adjustment": -0.88,
+          "clamp_adjustment": 0.0
+        },
+        "load_trimp_lite": 91.2,
+        "load_modifier_seconds": 1.27,
+        "spread_seconds": 0.0,
+        "two_k_equivalent_by_tier": {
+          "AN": 106.0
+        },
+        "weight_adjusted_total_seconds": null,
+        "age_graded_total_seconds": null,
+        "flags": [
+          "load_estimate_damped",
+          "raised_to_held_split"
+        ]
+      }
+    },
+    {
+      "name": "blend_parity_closest_distance",
+      "as_of": "2026-09-17",
+      "target_distance_m": 2000,
+      "config_overrides": {
+        "maximal_anchor_method": "closest_distance",
+        "held_split_floor": false
+      },
+      "athlete": null,
+      "history": [
+        {
+          "id": "2k",
+          "date": "2026-08-28",
+          "distance_m": 2000,
+          "split_s": 106.0,
+          "tag": "AN"
+        },
+        {
+          "id": "5k",
+          "date": "2026-09-16",
+          "distance_m": 5000,
+          "split_s": 108.0,
+          "tag": "AN",
+          "rep_distance_m": 5000
+        }
+      ],
+      "expected": {
+        "predicted_split_seconds": 106.87,
+        "predicted_total_time_seconds": 427.5,
+        "predicted_split_formatted": "1:46.9",
+        "predicted_total_time_formatted": "7:07.5",
+        "predicted_split_range_seconds": 1.29,
+        "predicted_total_time_range_seconds": 5.14,
+        "confidence_score": "Low",
+        "confidence_numeric": 45,
+        "anchor_tier": "AN",
+        "anchor_method": "closest_distance",
+        "anchor_session_ids": [
+          "2k"
+        ],
+        "components": {
+          "anchor_split": 106.0,
+          "paul_adjustment": -0.0,
+          "intensity_offset": -0.0,
+          "rpe_correction": 0.0,
+          "two_k_equivalent": 106.0,
+          "projection_to_target": 0.0,
+          "weight_trend_correction": 0.0,
+          "volume_modifier": 0.87,
+          "held_split_adjustment": 0.0,
+          "clamp_adjustment": 0.0
+        },
+        "load_trimp_lite": 75.2,
+        "load_modifier_seconds": 0.87,
+        "spread_seconds": 0.0,
+        "two_k_equivalent_by_tier": {
+          "AN": 106.0
+        },
+        "weight_adjusted_total_seconds": null,
+        "age_graded_total_seconds": null,
+        "flags": [
+          "load_estimate_damped"
+        ]
+      }
+    },
+    {
+      "name": "held_split_floor_from_longer_6k",
+      "as_of": "2026-09-17",
+      "target_distance_m": 2000,
+      "config_overrides": {},
+      "athlete": null,
+      "history": [
+        {
+          "id": "old-2k",
+          "date": "2026-08-28",
+          "distance_m": 2000,
+          "split_s": 110.0,
+          "tag": "AN"
+        },
+        {
+          "id": "6k",
+          "date": "2026-09-15",
+          "distance_m": 6000,
+          "split_s": 106.0,
+          "tag": "AT",
+          "stroke_rate": 24
+        }
+      ],
+      "expected": {
+        "predicted_split_seconds": 106.0,
+        "predicted_total_time_seconds": 424.0,
+        "predicted_split_formatted": "1:46.0",
+        "predicted_total_time_formatted": "7:04.0",
+        "predicted_split_range_seconds": 8.08,
+        "predicted_total_time_range_seconds": 32.33,
+        "confidence_score": "Low",
+        "confidence_numeric": 35,
+        "anchor_tier": "AN",
+        "anchor_method": "closest_distance",
+        "anchor_session_ids": [
+          "old-2k"
+        ],
+        "components": {
+          "anchor_split": 110.0,
+          "paul_adjustment": -0.0,
+          "intensity_offset": -0.0,
+          "rpe_correction": 0.0,
+          "two_k_equivalent": 110.0,
+          "projection_to_target": 0.0,
+          "weight_trend_correction": 0.0,
+          "volume_modifier": 0.91,
+          "held_split_adjustment": -4.91,
+          "clamp_adjustment": 0.0
+        },
+        "load_trimp_lite": 53.8,
+        "load_modifier_seconds": 0.91,
+        "spread_seconds": 15.96,
+        "two_k_equivalent_by_tier": {
+          "AN": 110.0,
+          "AT": 94.04
+        },
+        "weight_adjusted_total_seconds": null,
+        "age_graded_total_seconds": null,
+        "flags": [
+          "load_estimate_damped",
+          "raised_to_held_split",
+          "tier_disagreement"
+        ]
+      }
+    },
+    {
+      "name": "held_split_floor_off",
+      "as_of": "2026-09-17",
+      "target_distance_m": 2000,
+      "config_overrides": {
+        "held_split_floor": false
+      },
+      "athlete": null,
+      "history": [
+        {
+          "id": "old-2k",
+          "date": "2026-08-28",
+          "distance_m": 2000,
+          "split_s": 110.0,
+          "tag": "AN"
+        },
+        {
+          "id": "6k",
+          "date": "2026-09-15",
+          "distance_m": 6000,
+          "split_s": 106.0,
+          "tag": "AT",
+          "stroke_rate": 24
+        }
+      ],
+      "expected": {
+        "predicted_split_seconds": 110.91,
+        "predicted_total_time_seconds": 443.64,
+        "predicted_split_formatted": "1:50.9",
+        "predicted_total_time_formatted": "7:23.6",
+        "predicted_split_range_seconds": 8.08,
+        "predicted_total_time_range_seconds": 32.33,
+        "confidence_score": "Low",
+        "confidence_numeric": 35,
+        "anchor_tier": "AN",
+        "anchor_method": "closest_distance",
+        "anchor_session_ids": [
+          "old-2k"
+        ],
+        "components": {
+          "anchor_split": 110.0,
+          "paul_adjustment": -0.0,
+          "intensity_offset": -0.0,
+          "rpe_correction": 0.0,
+          "two_k_equivalent": 110.0,
+          "projection_to_target": 0.0,
+          "weight_trend_correction": 0.0,
+          "volume_modifier": 0.91,
+          "held_split_adjustment": 0.0,
+          "clamp_adjustment": 0.0
+        },
+        "load_trimp_lite": 53.8,
+        "load_modifier_seconds": 0.91,
+        "spread_seconds": 15.96,
+        "two_k_equivalent_by_tier": {
+          "AN": 110.0,
+          "AT": 94.04
+        },
+        "weight_adjusted_total_seconds": null,
+        "age_graded_total_seconds": null,
+        "flags": [
+          "load_estimate_damped",
+          "tier_disagreement"
+        ]
+      }
+    },
+    {
+      "name": "declared_best_only",
+      "as_of": "2026-09-17",
+      "target_distance_m": 2000,
+      "config_overrides": {},
+      "athlete": null,
+      "history": [
+        {
+          "id": "best-2k",
+          "date": "2026-09-17",
+          "distance_m": 2000,
+          "split_s": 100.0,
+          "tag": "AN",
+          "declared": true
+        }
+      ],
+      "expected": {
+        "predicted_split_seconds": 100.0,
+        "predicted_total_time_seconds": 400.0,
+        "predicted_split_formatted": "1:40.0",
+        "predicted_total_time_formatted": "6:40.0",
+        "predicted_split_range_seconds": 1.68,
+        "predicted_total_time_range_seconds": 6.71,
+        "confidence_score": "Medium",
+        "confidence_numeric": 60,
+        "anchor_tier": "AN",
+        "anchor_method": "closest_distance",
+        "anchor_session_ids": [
+          "best-2k"
+        ],
+        "components": {
+          "anchor_split": 100.0,
+          "paul_adjustment": -0.0,
+          "intensity_offset": -0.0,
+          "rpe_correction": 0.0,
+          "two_k_equivalent": 100.0,
+          "projection_to_target": 0.0,
+          "weight_trend_correction": 0.0,
+          "volume_modifier": 0.0,
+          "held_split_adjustment": 0.0,
+          "clamp_adjustment": 0.0
+        },
+        "load_trimp_lite": 0,
+        "load_modifier_seconds": 0.0,
+        "spread_seconds": 0.0,
+        "two_k_equivalent_by_tier": {
+          "AN": 100.0
+        },
+        "weight_adjusted_total_seconds": null,
+        "age_graded_total_seconds": null,
+        "flags": [
+          "load_estimate_damped"
+        ]
+      }
+    },
+    {
+      "name": "declared_best_with_training",
+      "as_of": "2026-09-17",
+      "target_distance_m": 5000,
+      "config_overrides": {},
+      "athlete": null,
+      "history": [
+        {
+          "id": "best-2k",
+          "date": "2026-09-14",
+          "distance_m": 2000,
+          "split_s": 100.0,
+          "tag": "AN",
+          "declared": true
+        },
+        {
+          "id": "u0",
+          "date": "2026-09-16",
+          "distance_m": 12000,
+          "split_s": 125.0,
+          "tag": "UT2",
+          "stroke_rate": 19
+        },
+        {
+          "id": "u1",
+          "date": "2026-09-15",
+          "distance_m": 12000,
+          "split_s": 125.0,
+          "tag": "UT2",
+          "stroke_rate": 19
+        },
+        {
+          "id": "u2",
+          "date": "2026-09-14",
+          "distance_m": 12000,
+          "split_s": 125.0,
+          "tag": "UT2",
+          "stroke_rate": 19
+        },
+        {
+          "id": "u3",
+          "date": "2026-09-13",
+          "distance_m": 12000,
+          "split_s": 125.0,
+          "tag": "UT2",
+          "stroke_rate": 19
+        },
+        {
+          "id": "u4",
+          "date": "2026-09-12",
+          "distance_m": 12000,
+          "split_s": 125.0,
+          "tag": "UT2",
+          "stroke_rate": 19
+        }
+      ],
+      "expected": {
+        "predicted_split_seconds": 108.07,
+        "predicted_total_time_seconds": 1080.68,
+        "predicted_split_formatted": "1:48.1",
+        "predicted_total_time_formatted": "18:00.7",
+        "predicted_split_range_seconds": 2.08,
+        "predicted_total_time_range_seconds": 20.85,
+        "confidence_score": "Medium",
+        "confidence_numeric": 68,
+        "anchor_tier": "AN",
+        "anchor_method": "closest_distance",
+        "anchor_session_ids": [
+          "best-2k"
+        ],
+        "components": {
+          "anchor_split": 100.0,
+          "paul_adjustment": -0.0,
+          "intensity_offset": -0.0,
+          "rpe_correction": 0.0,
+          "two_k_equivalent": 100.0,
+          "projection_to_target": 6.61,
+          "weight_trend_correction": 0.0,
+          "volume_modifier": 1.46,
+          "held_split_adjustment": 0.0,
+          "clamp_adjustment": 0.0
+        },
+        "load_trimp_lite": 250.0,
+        "load_modifier_seconds": 1.46,
+        "spread_seconds": 3.31,
+        "two_k_equivalent_by_tier": {
+          "AN": 100.0,
+          "UT2": 103.31
+        },
+        "weight_adjusted_total_seconds": null,
+        "age_graded_total_seconds": null,
+        "flags": [
+          "load_estimate_damped"
         ]
       }
     }

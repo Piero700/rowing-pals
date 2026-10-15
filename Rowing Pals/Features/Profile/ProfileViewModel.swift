@@ -115,7 +115,11 @@ final class ProfileViewModel {
     var isOwnProfile = true
     /// Your own 2k and 5k predictions from the Pace Engine (decision 31), keyed by metres.
     var predictions: [Double: Prediction] = [:]
-    var isLoadingPredictions = false
+    /// True from the start until the first prediction has been worked out, so the cards say
+    /// "Calculating…" rather than that it failed (2026-10-15).
+    var isLoadingPredictions = true
+    /// The last attempt failed; the cards keep any earlier numbers and offer Try again.
+    var predictionsFailed = false
     var displayName = ""
     var categoryLabel = ""
     var clubName: String?
@@ -335,12 +339,27 @@ final class ProfileViewModel {
         return try await (state, back)
     }
 
-    /// Best-effort: a failure leaves the cards saying so rather than failing the profile.
+    /// Best-effort: a failure leaves the cards saying so rather than failing the profile, and keeps
+    /// the numbers already showing. Run as its own task, so a pull-to-refresh that ends early
+    /// can't cancel it half-way (which is what used to empty the cards on a reload).
     @MainActor
-    private func loadPredictions() async {
+    func loadPredictions() async {
         isLoadingPredictions = true
         defer { isLoadingPredictions = false }
-        predictions = (try? await PredictionService.predictions(for: [2000, 5000])) ?? [:]
+        let result = await Task { try await PredictionService.predictions(for: [2000, 5000]) }.result
+        switch result {
+        case .success(let fresh):
+            predictions = fresh
+            predictionsFailed = false
+        case .failure:
+            // One more try before giving up: a dropped connection is the usual cause.
+            if let fresh = try? await Task(operation: { try await PredictionService.predictions(for: [2000, 5000]) }).value {
+                predictions = fresh
+                predictionsFailed = false
+            } else {
+                predictionsFailed = true
+            }
+        }
     }
 
     private func resetStats() {
