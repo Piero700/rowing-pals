@@ -361,6 +361,38 @@
       "w": 393,
       "x": 473,
       "y": 3816
+    },
+    "CoachBoats.dc.html": {
+      "h": 1440,
+      "is_interactive": true,
+      "title": "Coaching · Boats",
+      "w": 393,
+      "x": 0,
+      "y": 15692
+    },
+    "CoachBoatEdit.dc.html": {
+      "h": 1260,
+      "is_interactive": true,
+      "title": "Coaching · Crew a boat",
+      "w": 393,
+      "x": 473,
+      "y": 15692
+    },
+    "CoachWaterSessionNew.dc.html": {
+      "h": 1560,
+      "is_interactive": true,
+      "title": "Coaching · New water session",
+      "w": 393,
+      "x": 946,
+      "y": 15692
+    },
+    "RowerBoat.dc.html": {
+      "h": 860,
+      "is_interactive": true,
+      "title": "Rower · Feed with their boat",
+      "w": 393,
+      "x": 1419,
+      "y": 15692
     }
   },
   "createdOnFiles": {
@@ -467,6 +499,22 @@
       "w": 240,
       "x": 0,
       "y": 6060
+    },
+    "coach4": {
+      "kind": "title1",
+      "maxW": 1812,
+      "text": "Coaching (proposal) · water sessions and boats",
+      "w": 240,
+      "x": 0,
+      "y": 15392
+    },
+    "boatsAbout": {
+      "fill": "blue",
+      "size": 24,
+      "w": 380,
+      "x": 1892,
+      "y": 15692,
+      "text": "Water sessions and boats · proposal (15 Oct 2026), not in the app. A coach crews each boat seat by seat (bow at the top, stroke at the stern, cox behind) and sends the session; each rower is told their boat and seat. Logging water metres stays out (decision 54). Names are samples."
     }
   },
   "order": [
@@ -514,7 +562,11 @@
     "CoachPracticeNew.dc.html",
     "CoachPracticeRegister.dc.html",
     "CoachAttendance.dc.html",
-    "RowerPractice.dc.html"
+    "RowerPractice.dc.html",
+    "CoachBoats.dc.html",
+    "CoachBoatEdit.dc.html",
+    "CoachWaterSessionNew.dc.html",
+    "RowerBoat.dc.html"
   ],
   "pages": [],
   "title": "Rowing Pals — current app"
