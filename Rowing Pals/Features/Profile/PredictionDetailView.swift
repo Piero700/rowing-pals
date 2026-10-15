@@ -53,6 +53,14 @@ struct PredictionDetailView: View {
                     headline(prediction)
                     SectionTitle("How we got this")
                     card(lines(prediction))
+                    if let held = prediction.recommendations.first(where: PredictionCard.isHeldSplitNote) {
+                        Text(held)
+                            .textStyle(Typography.meta)
+                            .tabularNumerals()
+                            .foregroundStyle(Tokens.Ink.secondary)
+                            .padding(.horizontal, 4)
+                            .padding(.top, Tokens.Spacing.tight)
+                    }
                     SectionTitle("Confidence")
                     card(confidenceLines(prediction))
                 } else {
@@ -139,6 +147,9 @@ struct PredictionDetailView: View {
         if let value = parts.volumeModifier {
             lines.append(.init(label: "Training volume, last 30 days", value: Self.signed(value)))
         }
+        if let value = parts.heldSplitAdjustment, value != 0 {
+            lines.append(.init(label: "A split you've already held for longer", value: Self.signed(value)))
+        }
         if let value = parts.clampAdjustment, value != 0 {
             lines.append(.init(label: "Held to a physiological limit", value: Self.signed(value)))
         }
@@ -162,7 +173,9 @@ struct PredictionDetailView: View {
 
     private var advice: [String] {
         guard let prediction else { return [] }
-        return PredictionService.isShowable(prediction) ? prediction.recommendations : Array(prediction.recommendations.prefix(1))
+        let advice = PredictionService.isShowable(prediction) ? prediction.recommendations : Array(prediction.recommendations.prefix(1))
+        // The held-split line sits under "How we got this", not with the advice.
+        return advice.filter { !PredictionCard.isHeldSplitNote($0) }
     }
 
     /// Which session(s) the prediction rests on.

@@ -63,6 +63,10 @@ struct ProfileView: View {
     @State private var photoError: String?
     /// The post a press-and-hold on the Posts grid asked to delete (decision 63).
     @State private var postToDelete: UUID?
+    /// The post whose Delete bubble a press-and-hold opened, and whether that press should stop the
+    /// tap that follows it from opening the post.
+    @State private var bubblePost: UUID?
+    @State private var heldPost: UUID?
     @State private var deleteError: String?
     @Environment(\.navigate) private var navigate
     @Environment(\.dismiss) private var dismiss
@@ -726,16 +730,23 @@ struct ProfileView: View {
         LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 4), count: 3), spacing: 4) {
             ForEach(viewModel.photos) { photo in
                 photoTile(photo)
-                    .asButton { navigate(.post(photo.id)) }
-                    // Your own posts: press and hold to delete (decision 63).
-                    .contextMenu {
-                        if viewModel.isOwnProfile {
-                            Button(role: .destructive) {
-                                postToDelete = photo.id
-                            } label: {
-                                Label("Delete post", systemImage: "trash")
-                            }
-                        }
+                    .asButton {
+                        // The release after a press-and-hold isn't a tap.
+                        if heldPost == photo.id { heldPost = nil; return }
+                        navigate(.post(photo.id))
+                    }
+                    // Your own posts: press and hold for a small Delete post bubble (decision 63).
+                    .simultaneousGesture(LongPressGesture(minimumDuration: 0.45).onEnded { _ in
+                        guard viewModel.isOwnProfile else { return }
+                        heldPost = photo.id
+                        bubblePost = photo.id
+                    })
+                    .sensoryFeedback(.impact, trigger: bubblePost) { _, new in new == photo.id }
+                    .deleteBubble(isPresented: Binding(
+                        get: { bubblePost == photo.id },
+                        set: { if !$0 { bubblePost = nil } }
+                    ), title: "Delete post") {
+                        postToDelete = photo.id
                     }
             }
         }

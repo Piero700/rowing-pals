@@ -63,17 +63,21 @@ final class WorkoutsViewModel {
     /// Deletes a workout from a swipe on its card (decision 60): it leaves the list at once, and
     /// from its rowers' Feeds. On failure it stays, with the reason.
     @MainActor
-    func delete(_ workoutId: UUID) async {
+    @discardableResult
+    func delete(_ workoutId: UUID) async -> Bool {
         do {
             try await WorkoutService.delete(workoutId)
-            withAnimation {
+            // No slide or fade of its own: the card has already faded; the rest close up.
+            withAnimation(.easeOut(duration: 0.2)) {
                 today.removeAll { $0.id == workoutId }
                 upcoming.removeAll { $0.id == workoutId }
                 past.removeAll { $0.id == workoutId }
             }
             errorMessage = nil
+            return true
         } catch {
             errorMessage = error.localizedDescription
+            return false
         }
     }
 

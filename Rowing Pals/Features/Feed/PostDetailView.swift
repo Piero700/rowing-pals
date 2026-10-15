@@ -25,6 +25,7 @@ struct PostDetailView: View {
     @State private var commentBeingReported: UUID?
     @State private var isShowingAllComments = false
     @State private var isConfirmingDelete = false
+    @State private var isShowingDeleteBubble = false
     /// Called with the comment total whenever it changes, so the feed card underneath updates.
     private let onCommentCountChange: (Int) -> Void
     @Environment(\.dismiss) private var dismiss
@@ -241,19 +242,19 @@ struct PostDetailView: View {
         }
     }
 
-    /// Your own post's ⋯: Delete post, after a confirmation (decision 63).
+    /// Your own post's ⋯: a small bubble with Delete post, then a confirmation (decision 63).
     private var ownPostMenu: some View {
-        Menu {
-            Button(role: .destructive) {
-                isConfirmingDelete = true
-            } label: {
-                Label("Delete post", systemImage: "trash")
-            }
+        Button {
+            isShowingDeleteBubble = true
         } label: {
             floatingIconStyle("ellipsis")
         }
+        .buttonStyle(IconPressStyle())
         .accessibilityLabel("More options")
         .disabled(viewModel.isDeleting)
+        .deleteBubble(isPresented: $isShowingDeleteBubble, title: "Delete post") {
+            isConfirmingDelete = true
+        }
     }
 
     /// Avatar + name + chevron, glass pill, tappable → that person's

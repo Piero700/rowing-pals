@@ -46,7 +46,8 @@ struct PredictionCard: View {
                     .tabularNumerals()
                     .foregroundStyle(Tokens.Ink.secondary)
                     .padding(.top, 2)
-                if let advice = prediction.recommendations.first {
+                // At a glance, only advice; "You've already held…" is detail, behind ⓘ (2026-10-15).
+                if let advice = prediction.recommendations.first(where: { !Self.isHeldSplitNote($0) }) {
                     Text(advice)
                         .textStyle(Typography.meta)
                         .foregroundStyle(Tokens.Ink.secondary)
@@ -94,6 +95,11 @@ struct PredictionCard: View {
             return advice
         }
         return Self.unlockText
+    }
+
+    /// The engine's "You've already held x:xx for N m…" line (v1.6, §5.15).
+    static func isHeldSplitNote(_ text: String) -> Bool {
+        text.hasPrefix("You've already held")
     }
 
     static let unlockText = "Log a few erg sessions — ideally one hard effort — and your prediction appears here."

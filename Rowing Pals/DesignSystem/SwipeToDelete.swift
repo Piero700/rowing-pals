@@ -15,11 +15,14 @@ import UIKit
 /// views, so this uses a UIKit pan that only starts on a sideways swipe — the page still scrolls
 /// up and down over the card, and a swipe the other way is left for going back.
 private struct SwipeToDelete: ViewModifier {
-    let onDelete: () async -> Void
+    /// Deletes the item; true when it's gone.
+    let onDelete: () async -> Bool
 
     @State private var offset: CGFloat = 0
     @State private var isOpen = false
     @State private var width: CGFloat = 0
+    /// Delete was tapped: the card fades out where it is while it's deleted.
+    @State private var isDeleting = false
 
     private var actionWidth: CGFloat { Tokens.Size.swipeAction }
     private var revealed: CGFloat { max(-offset, 0) }
@@ -27,6 +30,7 @@ private struct SwipeToDelete: ViewModifier {
     func body(content: Content) -> some View {
         content
             .offset(x: offset)
+            .opacity(isDeleting ? 0 : 1)
             // While open, a tap on the card closes it rather than opening it.
             .overlay(alignment: .leading) {
                 if isOpen {
@@ -36,7 +40,7 @@ private struct SwipeToDelete: ViewModifier {
                         .onTapGesture { close() }
                 }
             }
-            .background(alignment: .trailing) { deleteButton }
+            .background(alignment: .trailing) { if !isDeleting { deleteButton } }
             .gesture(HorizontalPan(
                 canBegin: { velocity in velocity.x < 0 || isOpen },
                 onChange: { translation in
@@ -48,7 +52,7 @@ private struct SwipeToDelete: ViewModifier {
                 onEnd: { velocity in finish(velocity: velocity) }
             ))
             .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width = $0 }
-            .accessibilityAction(named: "Delete") { Task { await onDelete() } }
+            .accessibilityAction(named: "Delete") { deleteNow() }
     }
 
     private var deleteButton: some View {
@@ -83,14 +87,15 @@ private struct SwipeToDelete: ViewModifier {
         isOpen = false
     }
 
-    /// Slides the card away, then deletes it; if it's still here afterwards (deleting failed),
-    /// it slides back.
+    /// The card simply fades away where it is (user, 2026-10-15: no slide left then right), and
+    /// the list closes the gap. If deleting fails it comes back, closed.
     private func deleteNow() {
-        withAnimation(.easeOut(duration: 0.2)) { offset = -(width + Tokens.Spacing.screen) }
         isOpen = false
+        withAnimation(.easeOut(duration: 0.15)) { isDeleting = true }
         Task {
-            await onDelete()
-            close()
+            if await onDelete() { return }
+            offset = 0
+            withAnimation(.easeOut(duration: 0.2)) { isDeleting = false }
         }
     }
 }
@@ -144,7 +149,7 @@ private struct HorizontalPan: UIGestureRecognizerRepresentable {
 
 extension View {
     /// Swipe right to left to delete, as iOS does for an alarm (decision 60).
-    func swipeToDelete(_ onDelete: @escaping () async -> Void) -> some View {
+    func swipeToDelete(_ onDelete: @escaping () async -> Bool) -> some View {
         modifier(SwipeToDelete(onDelete: onDelete))
     }
 }
