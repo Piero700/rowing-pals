@@ -514,6 +514,24 @@ final class PostDetailViewModel {
     /// isn't a separate "other rower's profile" screen yet to block from
     /// there too. Feed exclusion is enforced by `FeedViewModel`'s query,
     /// not here.
+    var isDeleting = false
+    var deleteError: String?
+
+    /// Deletes this post, your own only (decision 63); true when it's gone.
+    @MainActor
+    func deletePost() async -> Bool {
+        guard isOwnPost else { return false }
+        isDeleting = true
+        defer { isDeleting = false }
+        do {
+            try await SessionService.delete(sessionId)
+            return true
+        } catch {
+            deleteError = error.localizedDescription
+            return false
+        }
+    }
+
     @MainActor
     func blockAuthor() async {
         guard let userId = ownUserId, let authorId = author?.id, !isOwnPost else { return }

@@ -73,6 +73,11 @@ struct FeedView: View {
             Task { await viewModel.clubChanged() }
         }
         // A new post shows, and a workout it was for leaves the Feed (decision 57).
+        // A post you deleted leaves the feed at once (decision 63).
+        .onReceive(NotificationCenter.default.publisher(for: .sessionDeleted)) { note in
+            guard let id = note.object as? UUID else { return }
+            withAnimation { viewModel.posts.removeAll { $0.id == id } }
+        }
         .onReceive(NotificationCenter.default.publisher(for: .sessionPosted)) { _ in
             Task { await viewModel.reload() }
         }

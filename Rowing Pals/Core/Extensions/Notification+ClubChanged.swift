@@ -13,6 +13,8 @@ extension Notification.Name {
     /// The signed-in rower just posted a session: the feed reloads, and a workout it was posted
     /// for leaves the Feed (decision 57).
     static let sessionPosted = Notification.Name("sessionPosted")
+    /// The signed-in rower deleted one of their posts (decision 63); `object` is its id.
+    static let sessionDeleted = Notification.Name("sessionDeleted")
 }
 
 extension NotificationCenter {

@@ -61,6 +61,9 @@ struct ProfileView: View {
     @State private var photoSource: PhotoSource?
     @State private var isSavingPhoto = false
     @State private var photoError: String?
+    /// The post a press-and-hold on the Posts grid asked to delete (decision 63).
+    @State private var postToDelete: UUID?
+    @State private var deleteError: String?
     @Environment(\.navigate) private var navigate
     @Environment(\.dismiss) private var dismiss
 
@@ -118,6 +121,33 @@ struct ProfileView: View {
         .ignoresSafeArea(edges: .bottom)
         .task { await viewModel.load() }
         .refreshable { ViewerContext.shared.invalidate(); await viewModel.load() }
+        // A post deleted here or on its own page leaves the grid and the totals (decision 63).
+        .onReceive(NotificationCenter.default.publisher(for: .sessionDeleted)) { _ in
+            Task { await viewModel.load() }
+        }
+        .alert("Delete this post?", isPresented: Binding(
+            get: { postToDelete != nil },
+            set: { if !$0 { postToDelete = nil } }
+        )) {
+            Button("Cancel", role: .cancel) { postToDelete = nil }
+            Button("Delete", role: .destructive) {
+                guard let id = postToDelete else { return }
+                postToDelete = nil
+                Task {
+                    do { try await SessionService.delete(id) } catch { deleteError = error.localizedDescription }
+                }
+            }
+        } message: {
+            Text(SessionService.deleteWarning)
+        }
+        .alert("Couldn't delete the post", isPresented: Binding(
+            get: { deleteError != nil },
+            set: { if !$0 { deleteError = nil } }
+        )) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(deleteError ?? "")
+        }
         .onReceive(NotificationCenter.default.publisher(for: .rowerClubChanged)) { _ in
             Task { await viewModel.load() }
         }
@@ -697,6 +727,16 @@ struct ProfileView: View {
             ForEach(viewModel.photos) { photo in
                 photoTile(photo)
                     .asButton { navigate(.post(photo.id)) }
+                    // Your own posts: press and hold to delete (decision 63).
+                    .contextMenu {
+                        if viewModel.isOwnProfile {
+                            Button(role: .destructive) {
+                                postToDelete = photo.id
+                            } label: {
+                                Label("Delete post", systemImage: "trash")
+                            }
+                        }
+                    }
             }
         }
         .padding(.top, Tokens.Spacing.sectionTop)

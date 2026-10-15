@@ -327,6 +327,8 @@ final class ReviewSheetViewModel {
         let sessionDate: String
         let isNewPB: Bool
         let workoutId: UUID?
+        /// Counted on the leaderboards, so deleting it takes the right metres off (decision 63).
+        let isRanked: Bool
 
         enum CodingKeys: String, CodingKey {
             case id
@@ -344,6 +346,7 @@ final class ReviewSheetViewModel {
             case capturedAt = "captured_at"
             case sessionDate = "session_date"
             case workoutId = "workout_id"
+            case isRanked = "is_ranked"
         }
     }
 
@@ -531,7 +534,8 @@ final class ReviewSheetViewModel {
                 capturedAt: Date(),
                 sessionDate: sessionDate,
                 isNewPB: isNewPB,
-                workoutId: linkedWorkout?.id
+                workoutId: linkedWorkout?.id,
+                isRanked: !isManual && includeOnLeaderboards
             )
             try await SupabaseService.shared.from("sessions").insert(newSession).execute()
 

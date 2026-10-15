@@ -24,6 +24,7 @@ struct PostDetailView: View {
     @State private var isShowingBlockConfirmation = false
     @State private var commentBeingReported: UUID?
     @State private var isShowingAllComments = false
+    @State private var isConfirmingDelete = false
     /// Called with the comment total whenever it changes, so the feed card underneath updates.
     private let onCommentCountChange: (Int) -> Void
     @Environment(\.dismiss) private var dismiss
@@ -90,6 +91,22 @@ struct PostDetailView: View {
                 }
             }
         }
+        .alert("Delete this post?", isPresented: $isConfirmingDelete) {
+            Button("Cancel", role: .cancel) {}
+            Button("Delete", role: .destructive) {
+                Task { if await viewModel.deletePost() { dismiss() } }
+            }
+        } message: {
+            Text(SessionService.deleteWarning)
+        }
+        .alert("Couldn't delete the post", isPresented: Binding(
+            get: { viewModel.deleteError != nil },
+            set: { if !$0 { viewModel.deleteError = nil } }
+        )) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(viewModel.deleteError ?? "")
+        }
         .alert("Report sent", isPresented: $isShowingReportConfirmation) {
             Button("OK", role: .cancel) {}
         } message: {
@@ -149,12 +166,13 @@ struct PostDetailView: View {
                 .padding(.leading, 14)
                 .padding(.top, 54)
 
-            if !viewModel.isOwnPost {
-                moreOptionsButton
-                    .padding(.trailing, 14)
-                    .padding(.top, 54)
-                    .frame(maxWidth: .infinity, alignment: .trailing)
+            // Report and block for someone else's post; Delete post for your own (decision 63).
+            Group {
+                if viewModel.isOwnPost { ownPostMenu } else { moreOptionsButton }
             }
+            .padding(.trailing, 14)
+            .padding(.top, 54)
+            .frame(maxWidth: .infinity, alignment: .trailing)
 
             VStack {
                 Spacer()
@@ -221,6 +239,21 @@ struct PostDetailView: View {
         } label: {
             floatingIconStyle("ellipsis")
         }
+    }
+
+    /// Your own post's ⋯: Delete post, after a confirmation (decision 63).
+    private var ownPostMenu: some View {
+        Menu {
+            Button(role: .destructive) {
+                isConfirmingDelete = true
+            } label: {
+                Label("Delete post", systemImage: "trash")
+            }
+        } label: {
+            floatingIconStyle("ellipsis")
+        }
+        .accessibilityLabel("More options")
+        .disabled(viewModel.isDeleting)
     }
 
     /// Avatar + name + chevron, glass pill, tappable → that person's
