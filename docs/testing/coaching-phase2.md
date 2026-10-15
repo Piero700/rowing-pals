@@ -197,6 +197,7 @@ From the very left edge of the screen, drag right:
       "xx% attendance" top right (none until a workout's been set for them).
 
 ### 7. The database refuses it (SQL, staging)
+- [x] **Passed on staging, 2026-10-15** (tests 1–6: only coaches set workouts, rowers see only their own, no linking to someone else's workout, no other day, no second post, only your own posts deleted). The tests insert a throwaway session that the database refuses, so they don't need existing posts.
 Send Claude a screenshot of the result of this query, and Claude will send back the tests with your
 ids already filled in:
 ```sql
