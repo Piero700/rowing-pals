@@ -53,7 +53,8 @@ final class CoachingViewModel {
         }
     }
 
-    /// The club's set workouts from the last 8 weeks, who they were for and who posted.
+    /// The club's set workouts from the last 8 weeks, who they were for and who posted, plus the
+    /// registers of the practices in those weeks.
     private static func loadAttendance(calendar: Calendar = .current) async throws -> [UUID: WorkoutAttendance] {
         let today = WorkoutRules.dayText(Date(), calendar: calendar)
         let start = calendar.date(byAdding: .day, value: -7 * 8, to: Date()) ?? Date()
@@ -64,6 +65,11 @@ final class CoachingViewModel {
         async let audiencesTask = WorkoutService.audiences(of: ids)
         async let postedTask = WorkoutService.postings(for: ids)
         let (audiences, posted) = try await (audiencesTask, postedTask)
-        return CoachingRules.attendance(workouts: workouts, audiences: audiences, posted: posted, since: since, today: today)
+        let fromWorkouts = CoachingRules.attendance(workouts: workouts, audiences: audiences, posted: posted, since: since, today: today)
+        // Practices' registers count too (decision 62); before the calendar migration there are none.
+        let practices = ((try? await CalendarService.clubPractices(from: start, to: Date())) ?? [])
+            .filter { !$0.cancelled && $0.startsAt <= Date() }
+        let marks = (try? await CalendarService.marks(forPractices: practices.map(\.id))) ?? []
+        return CoachingRules.addingPractices(marks, to: fromWorkouts)
     }
 }

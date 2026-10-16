@@ -55,6 +55,9 @@ enum Tokens {
         static let recordsSoft = Color(light: Color(hex: 0x67409B, opacity: 0.10), dark: Color(hex: 0xC6ADFF, opacity: 0.12))
         static let rankSoft = Color(light: Color(hex: 0x84500B, opacity: 0.10), dark: Color(hex: 0xEFC37C, opacity: 0.12))
         static let successSoft = Color(light: Color(hex: 0x176A4A, opacity: 0.10), dark: Color(hex: 0x78D7AC, opacity: 0.12))
+        /// A Late square in a rower's attendance strip: success mixed 45% into `Surface.raised`
+        /// (CoachRower; Present is `success`, Absent `System.error`, Excused `Surface.raised`).
+        static let successMuted = Color(light: Color(hex: 0x83ACA3), dark: Color(hex: 0x4D796A))
     }
 
     /// Semantic system colour — not one of the four celebratory accent roles above. Used for
@@ -220,6 +223,34 @@ enum Tokens {
         static let memberSheetAvatar: CGFloat = 56
         /// A round tick box in a squad's member list (CoachSquadEdit).
         static let checkbox: CGFloat = 28
+    }
+
+    /// The Calendar (decision 68; docs/design/v4/RowerCalendar, CoachCalendar): a day's date
+    /// block, the month grid's cells, the Available / Can't control and the availability bars.
+    enum Schedule {
+        static let dateBlockWidth: CGFloat = 44
+        static let dateBlockHeight: CGFloat = 48
+        static let dateBlockRadius: CGFloat = 14
+        /// The start / end times beside a session.
+        static let timeColumn: CGFloat = 44
+        /// Available · Can't, beside a session or a day.
+        static let answerControlWidth: CGFloat = 150
+        /// A day in the month: its number's circle, the dots beneath, the whole cell.
+        static let dayNumber: CGFloat = 32
+        static let dayCell: CGFloat = 46
+        static let dot: CGFloat = 4
+        static let flag: CGFloat = 11
+        /// Who's available at a glance: each session's bar.
+        static let barHeight: CGFloat = 8
+        static let glanceLabelWidth: CGFloat = 76
+        static let glanceCountWidth: CGFloat = 64
+        /// A small round icon in a calendar card (a race's flag, the availability card).
+        static let iconTile: CGFloat = 44
+        static let iconTileRadius: CGFloat = 14
+        /// A rower's attendance strip: nine squares a row, 6 pt apart, 6 pt corners.
+        static let markColumns = 9
+        static let markGap: CGFloat = 6
+        static let markRadius: CGFloat = 6
     }
 
     /// Coaching's own radii and the zone-mix shades (docs/design/v4/CoachRower.dc.html).

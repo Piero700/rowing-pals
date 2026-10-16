@@ -19,6 +19,8 @@ nonisolated struct Practice: Decodable, Identifiable, Equatable, Hashable {
     /// The two-hour reminder (Settings → Practice reminders).
     let remind: Bool
     let cancelled: Bool
+    /// The coach who set it.
+    let createdBy: UUID?
     /// The squads it's for; empty for the whole club.
     let squadIds: [UUID]
 
@@ -31,6 +33,7 @@ nonisolated struct Practice: Decodable, Identifiable, Equatable, Hashable {
         case id, title, place, remind, cancelled
         case clubId = "club_id"
         case seriesId = "series_id"
+        case createdBy = "created_by"
         case startsAt = "starts_at"
         case endsAt = "ends_at"
         case squads = "practice_squads"
@@ -48,11 +51,12 @@ nonisolated struct Practice: Decodable, Identifiable, Equatable, Hashable {
         place = try c.decodeIfPresent(String.self, forKey: .place)
         remind = try c.decodeIfPresent(Bool.self, forKey: .remind) ?? true
         cancelled = try c.decodeIfPresent(Bool.self, forKey: .cancelled) ?? false
+        createdBy = try c.decodeIfPresent(UUID.self, forKey: .createdBy)
         squadIds = (try c.decodeIfPresent([SquadRow].self, forKey: .squads) ?? []).map(\.squadId)
     }
 
     init(id: UUID, clubId: UUID, seriesId: UUID?, startsAt: Date, endsAt: Date, title: String?, place: String?,
-         remind: Bool = true, cancelled: Bool = false, squadIds: [UUID] = []) {
+         remind: Bool = true, cancelled: Bool = false, createdBy: UUID? = nil, squadIds: [UUID] = []) {
         self.id = id
         self.clubId = clubId
         self.seriesId = seriesId
@@ -62,6 +66,7 @@ nonisolated struct Practice: Decodable, Identifiable, Equatable, Hashable {
         self.place = place
         self.remind = remind
         self.cancelled = cancelled
+        self.createdBy = createdBy
         self.squadIds = squadIds
     }
 

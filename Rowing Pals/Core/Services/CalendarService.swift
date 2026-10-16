@@ -95,6 +95,15 @@ enum CalendarService {
         return rows.first
     }
 
+    /// When a weekly series ends: its last practice still on.
+    static func lastInSeries(_ seriesId: UUID) async throws -> Practice? {
+        let rows: [Practice] = try await SupabaseService.shared
+            .from("practices").select(practiceColumns)
+            .eq("series_id", value: seriesId).eq("cancelled", value: false)
+            .order("starts_at", ascending: false).limit(1).execute().value
+        return rows.first
+    }
+
     @discardableResult
     static func createPractice(_ draft: PracticeDraft, calendar: Calendar = .current) async throws -> UUID {
         struct Params: Encodable {
@@ -408,7 +417,50 @@ enum CalendarService {
         try await SupabaseService.shared.rpc("delete_event", params: Params(p_event: id)).execute()
     }
 
+    // MARK: - Members
+
+    /// The club's rowing members, by name (coach-only accounts aren't rowers; decision 34).
+    static func members() async throws -> [ClubMember] {
+        guard let clubId = try await ViewerContext.shared.current().clubId else { return [] }
+        func fetch(_ columns: String) async throws -> [ClubMember] {
+            try await SupabaseService.shared
+                .from("profiles").select(columns)
+                .eq("club_id", value: clubId).eq("is_rower", value: true)
+                .order("display_name")
+                .execute().value
+        }
+        // Before the coach-version migration there's no side column.
+        do { return try await fetch("id, display_name, side") } catch { return try await fetch("id, display_name") }
+    }
+
+    /// Who among `userIds` posted a session on `day` (their own local day): the register's
+    /// "Suggested" tick for a rower who didn't answer or check in.
+    static func postedSessions(onDay day: Date, among userIds: [UUID], calendar: Calendar = .current) async throws -> Set<UUID> {
+        guard !userIds.isEmpty else { return [] }
+        nonisolated struct Row: Decodable {
+            let userId: UUID
+            enum CodingKeys: String, CodingKey { case userId = "user_id" }
+        }
+        let rows: [Row] = try await SupabaseService.shared
+            .from("sessions").select("user_id")
+            .in("user_id", values: userIds)
+            .eq("session_date", value: PredictionService.isoDay(day, calendar: calendar))
+            .execute().value
+        return Set(rows.map(\.userId))
+    }
+
     // MARK: - Helpers
+
+    /// A member's name ("Set by Sarah Lin", "Marked by …").
+    static func displayName(of userId: UUID) async throws -> String {
+        nonisolated struct Row: Decodable {
+            let displayName: String
+            enum CodingKeys: String, CodingKey { case displayName = "display_name" }
+        }
+        let row: Row = try await SupabaseService.shared
+            .from("profiles").select("display_name").eq("id", value: userId).single().execute().value
+        return row.displayName
+    }
 
     /// An instant as the database takes it, e.g. "2026-10-20T05:30:00Z".
     static func iso(_ date: Date) -> String {

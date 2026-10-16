@@ -8,8 +8,9 @@ import PaceEngine
 
 /// The arithmetic behind Coaching (decisions 34, 39, 43), kept free of the network so it can be
 /// tested: the pro-rata weekly target, the flags, the list's sort and squad filter, and the
-/// numbers on one rower's page. Weeks start on Monday and days are the rower's local calendar
-/// days, as everywhere else in the app.
+/// numbers on one rower's page. Weeks start on the calendar's first weekday: `CoachingService`
+/// passes one whose week starts on the club's day, Monday or Sunday (decision 69). Days are the
+/// rower's local calendar days, as everywhere else in the app.
 nonisolated enum CoachingRules {
     /// Days of history read for the list: the Pace Engine's 30-day window plus enough to tell a
     /// lapsed rower from a new one (the same as `PredictionService`).
@@ -17,23 +18,15 @@ nonisolated enum CoachingRules {
     /// No session for this many days or more raises a flag (decision 39).
     static let noSessionDays = 10
 
-    /// `calendar` with weeks starting on Monday.
-    static func mondayCalendar(_ base: Calendar = .current) -> Calendar {
-        var calendar = base
-        calendar.firstWeekday = 2
-        return calendar
-    }
-
-    /// The Monday that starts `date`'s week.
+    /// The first day of `date`'s week, in `calendar` (whose `firstWeekday` is the club's).
     static func weekStart(of date: Date, calendar: Calendar) -> Date {
-        let monday = mondayCalendar(calendar)
-        return monday.dateInterval(of: .weekOfYear, for: date)?.start ?? monday.startOfDay(for: date)
+        calendar.dateInterval(of: .weekOfYear, for: date)?.start ?? calendar.startOfDay(for: date)
     }
 
     // MARK: - Weekly target
 
     /// The share of the weekly target due by now, pro-rata (decision 43): one seventh for each
-    /// day of the week that has **ended**. Nothing is due on Monday, six sevenths on Sunday; today
+    /// day of the week that has **ended**. Nothing is due on its first day, six sevenths on its last; today
     /// is still to play for, so nobody is behind for not having rowed yet today.
     static func proRataTargetM(weeklyTargetM: Int, asOf: Date, calendar: Calendar) -> Int {
         guard weeklyTargetM > 0 else { return 0 }
@@ -247,6 +240,17 @@ nonisolated enum CoachingRules {
                 result[rower, default: .zero].set += 1
                 if attended { result[rower, default: .zero].attended += 1 }
             }
+        }
+        return result
+    }
+
+    /// Adds practices to workout attendance (decision 62, from phase 3): each register mark counts
+    /// as one more set, Present and Late as attended; Excused is left out (decision 39).
+    static func addingPractices(_ marks: [AttendanceMark], to attendance: [UUID: WorkoutAttendance]) -> [UUID: WorkoutAttendance] {
+        var result = attendance
+        for mark in marks where mark.mark.counted {
+            result[mark.userId, default: .zero].set += 1
+            if mark.mark.attended { result[mark.userId, default: .zero].attended += 1 }
         }
         return result
     }

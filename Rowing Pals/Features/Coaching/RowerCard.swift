@@ -10,8 +10,8 @@ import SwiftUI
 /// week's km against their target with a bar (red while behind the pro-rata target, decision
 /// 43), sessions, their 2k PB, the Pace Engine's 2k prediction, and any flags.
 ///
-/// Attendance, the canvas's right-hand figure, is the share of set workouts posted for over the
-/// last 8 weeks (decision 62); Phase 3 adds practices to it.
+/// Attendance, the canvas's right-hand figure, is the share of set workouts posted for and
+/// practices attended over the last 8 weeks (decision 62).
 struct RowerCard: View {
     let rower: CoachRower
     var attendance: WorkoutAttendance?

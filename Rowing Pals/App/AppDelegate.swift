@@ -35,7 +35,7 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
         [.banner, .list, .sound]
     }
 
-    /// Tapping an alert opens its post, or Your club for an invitation.
+    /// Tapping an alert opens its post, practice or race, or Your club for an invitation.
     nonisolated func userNotificationCenter(
         _ center: UNUserNotificationCenter,
         didReceive response: UNNotificationResponse
@@ -43,8 +43,10 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
         let userInfo = response.notification.request.content.userInfo
         let sessionId = userInfo["session_id"] as? String
         let kind = userInfo["kind"] as? String
+        let practiceId = userInfo["practice_id"] as? String
+        let eventId = userInfo["event_id"] as? String
         await MainActor.run {
-            PushNotificationService.shared.open(sessionId: sessionId, kind: kind)
+            PushNotificationService.shared.open(sessionId: sessionId, kind: kind, practiceId: practiceId, eventId: eventId)
         }
     }
 }

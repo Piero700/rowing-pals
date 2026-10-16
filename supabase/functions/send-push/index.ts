@@ -16,7 +16,7 @@ import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-
 
 type Kind =
   | "comment" | "reply" | "pb" | "club_post" | "club_invite" | "new_workout"
-  | "practice_changed" | "practice_cancelled" | "practice_reminder" | "new_event"
+  | "new_practice" | "practice_changed" | "practice_cancelled" | "practice_reminder" | "new_event"
 
 interface NotificationRow {
   id: string
@@ -129,10 +129,11 @@ async function composeAlert(admin: SupabaseClient, row: NotificationRow) {
       body: `${coach}: ${workout.title} · ${when(workout.workout_date, workout.start_time)}`,
     }
   }
-  if (row.kind === "practice_changed" || row.kind === "practice_cancelled" || row.kind === "practice_reminder") {
+  if (row.kind === "new_practice" || row.kind === "practice_changed" || row.kind === "practice_cancelled" ||
+      row.kind === "practice_reminder") {
     const { data: practice } = await admin
       .from("practices")
-      .select("title, place, starts_at, cancelled")
+      .select("title, place, starts_at, cancelled, series_id")
       .eq("id", row.practice_id)
       .maybeSingle()
     if (!practice) return null
@@ -143,6 +144,11 @@ async function composeAlert(admin: SupabaseClient, row: NotificationRow) {
       return { title: "Practice in 2 hours", body: `${what} · ${clock(practice.starts_at)}${where}` }
     }
     const coach = await displayName(admin, row.actor_id)
+    if (row.kind === "new_practice") {
+      if (practice.cancelled) return null
+      const weekly = practice.series_id ? " · every week" : ""
+      return { title: "New practice", body: `${coach}: ${what} · ${moment(practice.starts_at)}${where}${weekly}. Tap to say if you can make it.` }
+    }
     if (row.kind === "practice_cancelled") {
       return { title: "Practice cancelled", body: `${coach}: ${what} · ${moment(practice.starts_at)} is off.` }
     }

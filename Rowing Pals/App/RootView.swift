@@ -37,7 +37,7 @@ import SwiftUI
 ///    the Instagram-style closeness asked for.
 struct RootView: View {
     private enum RootTab: Hashable {
-        case feed, rankings, profile
+        case feed, rankings, calendar, profile
     }
 
     @State private var selection: RootTab = .feed
@@ -68,6 +68,8 @@ struct RootView: View {
     private static let items: [FloatingTabBar<RootTab>.Item] = [
         .init(tab: .feed, label: "Feed", systemImage: "house"),
         .init(tab: .rankings, label: "Rankings", systemImage: "chart.bar"),
+        // Practices, races and workouts for the week, and the rower's answers (decision 68).
+        .init(tab: .calendar, label: "Calendar", systemImage: "calendar"),
         .init(tab: .profile, label: "Profile", systemImage: "person")
     ]
 
@@ -138,11 +140,12 @@ struct RootView: View {
         push.pendingRoute = nil
     }
 
-    /// All three live simultaneously — see the doc comment above for why.
+    /// All four live simultaneously — see the doc comment above for why.
     private var content: some View {
         ZStack {
             tab(.feed) { FeedView(reselects: reselects[.feed, default: 0]) }
             tab(.rankings) { RankingsView(reselects: reselects[.rankings, default: 0]) }
+            tab(.calendar) { RowerCalendarView(reselects: reselects[.calendar, default: 0]) }
             tab(.profile) { ProfileView(reselects: reselects[.profile, default: 0]) }
         }
         // Reaches the physical bottom edge so the nav can sit 6 pt above it, as in v3; each

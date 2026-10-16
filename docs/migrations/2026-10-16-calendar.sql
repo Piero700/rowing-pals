@@ -12,7 +12,8 @@
 --      every change kept (decision 39).
 --   5. Term dates for attendance totals.
 --   6. Races, regattas and other events, and "Can you race?" (decision 68).
---   7. Alerts: a practice changed or cancelled, a new race or event, and a reminder two hours
+--   7. Alerts: a new practice (once per practice or series), one changed or cancelled, a new
+--      race or event, and a reminder two hours
 --      before a practice (Settings → Practice reminders), queued every five minutes by pg_cron.
 
 begin;
@@ -71,7 +72,7 @@ language sql stable security definer set search_path = public as $$
   where pr.id = any(coalesce(p_practices, '{}')) and is_club_coach(pr.club_id);
 $$;
 
--- Tell everyone a practice is for (but the coach) that it changed or was cancelled. Internal.
+-- Tell everyone a practice is for (but the coach) that it's new, changed or was cancelled. Internal.
 create or replace function notify_practice(p_practice uuid, p_kind text)
 returns void
 language plpgsql security definer set search_path = public as $$
@@ -94,7 +95,8 @@ end $$;
 
 -- Create a practice (coaches only). With p_repeat_until, one every week on the same day until
 -- that day, as one series; times stay the same local time across clock changes (p_time_zone).
--- Squads outside the club are ignored; none means the whole club. Returns the first one's id.
+-- Squads outside the club are ignored; none means the whole club. Everyone it's for is told once
+-- ("New practice", from the first one; a series says "every week"). Returns the first one's id.
 create or replace function create_practice(
   p_title text, p_place text, p_starts_at timestamptz, p_ends_at timestamptz, p_squads uuid[],
   p_repeat_until date, p_remind boolean, p_time_zone text
@@ -135,6 +137,7 @@ begin
     v_first := coalesce(v_first, v_id);
     v_week := v_week + 1;
   end loop;
+  perform notify_practice(v_first, 'new_practice');
   return v_first;
 end $$;
 
@@ -516,7 +519,7 @@ begin
   alter table notifications drop constraint if exists notifications_kind_check;
   alter table notifications add constraint notifications_kind_check
     check (kind in ('comment', 'reply', 'pb', 'club_post', 'club_invite', 'new_workout',
-                    'practice_changed', 'practice_cancelled', 'practice_reminder', 'new_event'));
+                    'new_practice', 'practice_changed', 'practice_cancelled', 'practice_reminder', 'new_event'));
 end $$;
 
 -- Two hours before each practice that has its reminder on, everyone it's for who hasn't said

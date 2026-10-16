@@ -13,10 +13,12 @@ import Testing
 /// summaries, coach-only accounts off the leaderboards, and who may make a coach.
 @MainActor
 struct CoachingRulesTests {
-    /// Gregorian, UTC, so the dates below never shift with the test machine's time zone.
+    /// Gregorian, UTC, so the dates below never shift with the test machine's time zone; weeks
+    /// start on Monday, the club default (decision 69).
     private static let calendar: Calendar = {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = TimeZone(identifier: "UTC") ?? .current
+        calendar.firstWeekday = 2
         return calendar
     }()
 

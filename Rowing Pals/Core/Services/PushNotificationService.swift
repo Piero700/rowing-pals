@@ -103,11 +103,20 @@ final class PushNotificationService {
         }
     }
 
-    /// A tapped alert opens its post (`session_id`), or — for a club invitation — Your club,
-    /// where it can be accepted or declined (see send-push, decision 26).
-    func open(sessionId: String?, kind: String?) {
+    /// A tapped alert opens its post (`session_id`); a practice alert its practice, a race or
+    /// event alert its page (decision 68); a club invitation Your club, where it can be accepted
+    /// or declined (see send-push, decision 26).
+    func open(sessionId: String?, kind: String?, practiceId: String? = nil, eventId: String? = nil) {
         if kind == "club_invite" {
             pendingRoute = .clubHub
+            return
+        }
+        if let practiceId, let id = UUID(uuidString: practiceId) {
+            pendingRoute = .practice(id)
+            return
+        }
+        if let eventId, let id = UUID(uuidString: eventId) {
+            pendingRoute = .event(id)
             return
         }
         guard let sessionId, let id = UUID(uuidString: sessionId) else { return }

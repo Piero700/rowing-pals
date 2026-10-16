@@ -10,9 +10,8 @@ import SwiftUI
 /// their age, bodyweight and whether the account is private; anything flagged; this week; eight
 /// weeks of volume; the last four weeks' zone mix; effort over eight weeks; their tests with
 /// watts and W/kg (W/kg only here, decision 35); and their posts. Read-only — a coach can't
-/// comment on a post they see only because they coach the rower (decision 40).
-///
-/// Attendance (this term's register) arrives with practices in Phase 3.
+/// comment on a post they see only because they coach the rower (decision 40). Attendance shows
+/// this term's register marks, once any are taken.
 struct CoachRowerView: View {
     @State private var viewModel: CoachRowerViewModel
     @Environment(\.dismiss) private var dismiss
@@ -81,6 +80,12 @@ struct CoachRowerView: View {
 
         section("Tests")
         testsCard(detail)
+
+        if !viewModel.marks.isEmpty {
+            let totals = CalendarRules.totals(viewModel.marks)
+            section("Attendance · \(viewModel.marksSpan)", trailing: "\(totals.attended) of \(totals.counted)")
+            attendanceStrip(viewModel.marks)
+        }
 
         section("Posts")
         postsGrid(detail.posts)
@@ -268,6 +273,48 @@ struct CoachRowerView: View {
             }
         }
         return parts.joined(separator: " · ")
+    }
+
+    // MARK: - Attendance
+
+    /// Each practice's mark this term, oldest first: Present, Late, Absent or Excused (decision 39).
+    private func attendanceStrip(_ marks: [RegisterMark]) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: Tokens.Schedule.markGap),
+                                     count: Tokens.Schedule.markColumns),
+                      spacing: Tokens.Schedule.markGap) {
+                ForEach(Array(marks.enumerated()), id: \.offset) { _, mark in
+                    let style = Self.markStyle(mark)
+                    Text(mark.initial)
+                        .textStyle(Typography.tag)
+                        .foregroundStyle(style.ink)
+                        .frame(maxWidth: .infinity)
+                        .aspectRatio(1, contentMode: .fit)
+                        .background(RoundedRectangle(cornerRadius: Tokens.Schedule.markRadius, style: .continuous).fill(style.fill))
+                        .accessibilityLabel(mark.label)
+                }
+            }
+            HStack(spacing: Tokens.Spacing.loose) {
+                ForEach(RegisterMark.allCases, id: \.self) { mark in
+                    Text("\(mark.initial) \(mark.label)")
+                        .textStyle(Typography.statLabel)
+                        .foregroundStyle(Tokens.Ink.secondary)
+                }
+            }
+            .padding(.top, Tokens.Spacing.loose)
+            .accessibilityHidden(true)
+        }
+        .padding(Tokens.Spacing.card)
+        .background(card)
+    }
+
+    private static func markStyle(_ mark: RegisterMark) -> (fill: Color, ink: Color) {
+        switch mark {
+        case .present: (Tokens.Accent.success, Tokens.Ink.onBrand)
+        case .late: (Tokens.Accent.successMuted, Tokens.Ink.primary)
+        case .absent: (Tokens.System.error, Tokens.Ink.onBrand)
+        case .excused: (Tokens.Surface.raised, Tokens.Ink.primary)
+        }
     }
 
     // MARK: - Posts

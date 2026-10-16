@@ -7,7 +7,7 @@ import SwiftUI
 
 /// The coach's own page, opened from their picture top right of every coach tab (CoachProfile;
 /// decision 67): who they are and their club, **Switch to rowing** for someone who also rows, the
-/// club's pages, and Settings, Edit profile and Log out.
+/// club's pages and attendance totals, and Settings, Edit profile and Log out.
 struct CoachProfileView: View {
     @State private var me: ViewerContext.Snapshot?
     @State private var isSigningOut = false
@@ -33,6 +33,8 @@ struct CoachProfileView: View {
                         divider
                     }
                     row("Squads", subtitle: "Who’s in each squad") { navigate(.squads) }
+                    divider
+                    row("Attendance totals") { navigate(.attendanceTotals) }
                 }
                 group("Account") {
                     row("Settings", subtitle: "Notifications, appearance, privacy") { navigate(.settings) }

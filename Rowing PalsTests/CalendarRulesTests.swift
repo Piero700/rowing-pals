@@ -138,4 +138,78 @@ struct CalendarRulesTests {
         #expect(!CalendarRules.event(race, covers: "2026-11-02"))
         #expect(CalendarRules.eventDays(race, calendar: Self.calendar(.monday)) == "Sat 31 Oct – Sun 1 Nov")
     }
+
+    // MARK: - Register (decision 39)
+
+    @Test func theRegisterStartsFromWhatTheRowerDid() {
+        #expect(CalendarRules.startingMark(answer: .going, checkedIn: true, postedSession: false) == (.present, false))
+        #expect(CalendarRules.startingMark(answer: nil, checkedIn: false, postedSession: true) == (.present, true))
+        #expect(CalendarRules.startingMark(answer: .cant, checkedIn: false, postedSession: false) == (.excused, false))
+        #expect(CalendarRules.startingMark(answer: .going, checkedIn: false, postedSession: false) == (.absent, false))
+        #expect(CalendarRules.startingMark(answer: nil, checkedIn: false, postedSession: false).mark == nil)
+    }
+
+    @Test func eachRegisterRowSaysWhatTheRowerSaidAndDid() {
+        let london = Self.calendar(.monday)
+        #expect(CalendarRules.registerLine(answer: .going, reason: nil, checkedInAt: Self.date(2026, 10, 16, 17, 22),
+                                           postedSession: true, calendar: london) == "Said available · checked in 17:22")
+        #expect(CalendarRules.registerLine(answer: .cant, reason: "Exam tomorrow", checkedInAt: nil,
+                                           postedSession: false, calendar: london) == "Can’t make it · “Exam tomorrow”")
+        #expect(CalendarRules.registerLine(answer: nil, reason: nil, checkedInAt: nil,
+                                           postedSession: true, calendar: london) == "No reply · posted a session today")
+    }
+
+    @Test func theLastChangeToAMarkIsShown() {
+        let practice = UUID(), rower = UUID(), coach = UUID()
+        let first = AttendanceMarkLogEntry(practiceId: practice, userId: rower, mark: .present, setBy: coach, setAt: Self.date(2026, 10, 16, 17, 40))
+        let second = AttendanceMarkLogEntry(practiceId: practice, userId: rower, mark: .late, setBy: coach, setAt: Self.date(2026, 10, 16, 17, 45))
+        #expect(CalendarRules.lastChange([first]) == nil)
+        let change = CalendarRules.lastChange([second, first])
+        #expect(change?.from == .present && change?.to.mark == .late)
+    }
+
+    // MARK: - Totals and terms
+
+    @Test func attendanceIsCountedPerGroup() {
+        let practice = UUID(), a = UUID(), b = UUID()
+        let marks = [
+            AttendanceMark(practiceId: practice, userId: a, mark: .present, setBy: nil, setAt: Date()),
+            AttendanceMark(practiceId: UUID(), userId: a, mark: .excused, setBy: nil, setAt: Date()),
+            AttendanceMark(practiceId: practice, userId: b, mark: .absent, setBy: nil, setAt: Date())
+        ]
+        #expect(CalendarRules.totals(marks, of: [a]) == CalendarRules.Totals(attended: 1, counted: 1))
+        #expect(CalendarRules.totals(marks, of: [a, b]).percentText == "50%")
+    }
+
+    @Test func theTermHoldingTodayIsFound() {
+        let autumn = ClubTerm(id: UUID(), name: "Autumn", startsOn: "2026-09-29", endsOn: "2026-12-05")
+        let spring = ClubTerm(id: UUID(), name: "Spring", startsOn: "2027-01-12", endsOn: "2027-03-20")
+        #expect(CalendarRules.term(containing: "2026-10-16", in: [autumn, spring]) == autumn)
+        #expect(CalendarRules.term(containing: "2026-12-25", in: [autumn, spring]) == nil)
+        #expect(CalendarRules.termText(autumn, calendar: Self.calendar(.monday)) == "Autumn · 29 Sep – 5 Dec")
+    }
+
+    @Test func aRaceCountsWhoCanRace() {
+        let event = UUID(), a = UUID(), b = UUID(), c = UUID()
+        let responses = [EventResponse(eventId: event, userId: a, canCome: true, reason: nil),
+                         EventResponse(eventId: event, userId: b, canCome: false, reason: "Wedding")]
+        let counts = CalendarRules.counts(audience: [a, b, c], eventResponses: responses)
+        #expect(counts == CalendarRules.Counts(available: 1, cant: 1, noAnswer: 1))
+    }
+
+    @Test func practicesAddToWorkoutAttendance() {
+        let rower = UUID()
+        let marks = [AttendanceMark(practiceId: UUID(), userId: rower, mark: .late, setBy: nil, setAt: Date()),
+                     AttendanceMark(practiceId: UUID(), userId: rower, mark: .absent, setBy: nil, setAt: Date()),
+                     AttendanceMark(practiceId: UUID(), userId: rower, mark: .excused, setBy: nil, setAt: Date())]
+        let result = CoachingRules.addingPractices(marks, to: [rower: WorkoutAttendance(attended: 3, set: 4)])
+        #expect(result[rower] == WorkoutAttendance(attended: 4, set: 6))
+    }
+
+    @Test func coachingWeeksFollowTheClubsDay() {
+        // Wednesday 21 Oct: three days have ended in a Sunday week, two in a Monday week.
+        let wednesday = Self.date(2026, 10, 21, 12)
+        #expect(CoachingRules.proRataTargetM(weeklyTargetM: 70_000, asOf: wednesday, calendar: Self.calendar(.monday)) == 20_000)
+        #expect(CoachingRules.proRataTargetM(weeklyTargetM: 70_000, asOf: wednesday, calendar: Self.calendar(.sunday)) == 30_000)
+    }
 }

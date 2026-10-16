@@ -15,6 +15,12 @@ extension Notification.Name {
     static let sessionPosted = Notification.Name("sessionPosted")
     /// The signed-in rower deleted one of their posts (decision 63); `object` is its id.
     static let sessionDeleted = Notification.Name("sessionDeleted")
+    /// The signed-in rower answered a practice or a race away from the Calendar (its page, the
+    /// Feed's card); the Calendar and Feed reload (decision 68).
+    static let practiceAnswered = Notification.Name("practiceAnswered")
+    /// A coach changed the calendar — a practice, a race, the register or the club's week — from
+    /// a screen over their Calendar tab, which reloads.
+    static let calendarChanged = Notification.Name("calendarChanged")
 }
 
 extension NotificationCenter {

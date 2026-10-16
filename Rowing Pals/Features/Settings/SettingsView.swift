@@ -32,11 +32,15 @@ struct SettingsView: View {
     @AppStorage(AppMode.storageKey) private var appMode: AppMode = .rowing
     /// True for an account that rows and coaches: only it can switch.
     @State private var canSwitchVersion = false
+    /// Coaches set the day the club's week starts (decision 69); nil for anyone else.
+    @State private var clubWeek: (clubName: String, day: WeekStart)?
+    @State private var weekStartError: String?
 
     private static let cardShape = RoundedRectangle(cornerRadius: Tokens.Radius.card, style: .continuous)
 
     /// v3 Settings (`docs/design/v3/RP Screen.dc.html` §07): grouped cards of 66 pt rows —
-    /// Appearance, Units and display, Notifications, Privacy, Account — then Delete account and
+    /// Appearance, Club · coaches (coaches only: the week start, decision 69), Units and display,
+    /// Notifications, Privacy, Account — then Delete account and
     /// the version. Left out by decision: the app-icon section (14) and CSV export (15). No
     /// "Who can comment" row: anyone who can see a post can comment on it (decision 33).
     var body: some View {
@@ -58,6 +62,23 @@ struct SettingsView: View {
                         row(title: "Match iPhone", subtitle: "Switches with your iPhone’s Light or Dark setting.") {
                             checkmark(appearance == .system)
                         } action: { appearance = .system }
+                    }
+
+                    if let clubWeek {
+                        group("Club · coaches") {
+                            stackedRow(title: "Week starts on",
+                                       subtitle: "For all of \(clubWeek.clubName): calendars, availability and weekly totals.") {
+                                PillSegmentedControl(options: WeekStart.allCases.map(\.label), selection: Binding(
+                                    get: { WeekStart.allCases.firstIndex(of: clubWeek.day) ?? 0 },
+                                    set: { index in Task { await setWeekStart(WeekStart.allCases[index]) } }
+                                ), compact: true)
+                            }
+                        }
+                        Text(weekStartError ?? "Only coaches see this. Rankings and streaks still run Monday to Sunday.")
+                            .textStyle(Typography.meta)
+                            .foregroundStyle(weekStartError == nil ? Tokens.Ink.secondary : Tokens.System.error)
+                            .padding(.horizontal, 4)
+                            .padding(.top, Tokens.Spacing.tight)
                     }
 
                     group("Units and display") {
@@ -175,6 +196,9 @@ struct SettingsView: View {
             .task {
                 if let viewer = try? await ViewerContext.shared.current() {
                     canSwitchVersion = viewer.isCoach && viewer.isRower
+                    if viewer.isCoach, viewer.clubId != nil {
+                        clubWeek = (viewer.clubName ?? "your club", await CalendarService.weekStart())
+                    }
                 }
             }
             .sheet(isPresented: $isShowingTerms) {
@@ -229,6 +253,20 @@ struct SettingsView: View {
 
     /// Someone who rows and coaches moves between the two versions here (decision 67); the coach's
     /// Profile has the same switch. The app then opens in whichever they used last.
+    /// Saves the club's week start; the calendars reload with it.
+    private func setWeekStart(_ day: WeekStart) async {
+        guard let current = clubWeek, current.day != day else { return }
+        clubWeek = (current.clubName, day)
+        do {
+            try await CalendarService.setWeekStart(day)
+            weekStartError = nil
+            NotificationCenter.default.post(name: .calendarChanged, object: nil)
+        } catch {
+            clubWeek = current
+            weekStartError = "Couldn’t change the week start. \(error.localizedDescription)"
+        }
+    }
+
     private var switchVersionRow: some View {
         let toCoaching = appMode == .rowing
         return Button {

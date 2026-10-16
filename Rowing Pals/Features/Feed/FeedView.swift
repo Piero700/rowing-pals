@@ -28,6 +28,8 @@ struct FeedView: View {
 
     @State private var viewModel = FeedViewModel()
     @State private var cover: Cover?
+    /// The rower's next practice, under today's workout (decision 68).
+    @State private var nextPractice = NextPracticeModel()
     @Environment(\.navigate) private var navigate
     @Environment(\.scenePhase) private var scenePhase
 
@@ -48,6 +50,18 @@ struct FeedView: View {
                         .padding(.bottom, Tokens.Spacing.loose)
                 }
 
+                if let practice = nextPractice.practice {
+                    FeedPracticeCard(
+                        practice: practice,
+                        answer: nextPractice.answer,
+                        squadText: nextPractice.squadText,
+                        errorMessage: nextPractice.errorMessage,
+                        onOpen: { navigate(.practice(practice.id)) },
+                        onAnswer: { answer in Task { await nextPractice.setAnswer(answer) } }
+                    )
+                    .padding(.bottom, Tokens.Spacing.loose)
+                }
+
                 content
 
                 if viewModel.isLoadingMore {
@@ -62,15 +76,34 @@ struct FeedView: View {
             .padding(.horizontal, Tokens.Spacing.screen)
         }
         .scrollIndicators(.hidden)
-        .scrollsToTopOnReselect(reselects) { ViewerContext.shared.invalidate(); await viewModel.reload() }
+        .scrollsToTopOnReselect(reselects) {
+            ViewerContext.shared.invalidate()
+            async let practice: Void = nextPractice.load()
+            await viewModel.reload()
+            await practice
+        }
         .safeAreaInset(edge: .top, spacing: 0) { header }
         .background(Tokens.Base.ground)
         .tracksFloatingBar()
         .ignoresSafeArea(edges: .bottom)
         .task { await viewModel.loadInitial() }
-        .refreshable { ViewerContext.shared.invalidate(); await viewModel.reload() }
+        .task { await nextPractice.load() }
+        .refreshable {
+            ViewerContext.shared.invalidate()
+            async let practice: Void = nextPractice.load()
+            await viewModel.reload()
+            await practice
+        }
+        // An answer from the Calendar or the practice page, or a coach's change, shows here too.
+        .onReceive(NotificationCenter.default.publisher(for: .practiceAnswered)) { _ in
+            Task { await nextPractice.load() }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .calendarChanged)) { _ in
+            Task { await nextPractice.load() }
+        }
         .onReceive(NotificationCenter.default.publisher(for: .rowerClubChanged)) { _ in
             Task { await viewModel.clubChanged() }
+            Task { await nextPractice.load() }
         }
         // A new post shows, and a workout it was for leaves the Feed (decision 57).
         // A post you deleted leaves the feed at once (decision 63).
@@ -83,7 +116,10 @@ struct FeedView: View {
         }
         // Back from the background, perhaps on a new day: yesterday's workouts go.
         .onChange(of: scenePhase) { _, phase in
-            if phase == .active { Task { await viewModel.refreshWorkouts() } }
+            if phase == .active {
+                Task { await viewModel.refreshWorkouts() }
+                Task { await nextPractice.load() }
+            }
         }
         .fullScreenCover(item: $cover) { cover in
             switch cover {

@@ -99,8 +99,17 @@ enum CoachingService {
         let squads: [Squad]
     }
 
+    /// The calendar coaching's weeks use: the one given, or the current one starting on the club's
+    /// day (Monday until a coach changes it; decision 69).
+    private static func clubCalendar(_ given: Calendar?) async -> Calendar {
+        if let given { return given }
+        return await CalendarService.weekStart().calendar()
+    }
+
     /// Every rowing member of the club the caller coaches, with this week's numbers.
-    static func roster(asOf: Date = Date(), calendar: Calendar = .current) async throws -> Roster {
+    /// `calendar` defaults to one whose weeks start on the club's day (decision 69).
+    static func roster(asOf: Date = Date(), calendar: Calendar? = nil) async throws -> Roster {
+        let calendar = await clubCalendar(calendar)
         let viewer = try await ViewerContext.shared.current()
         guard viewer.isCoach, let clubId = viewer.clubId else { throw CoachingError.notACoach }
         let raw = try await load(clubId: clubId, only: nil, asOf: asOf, calendar: calendar)
@@ -153,7 +162,8 @@ enum CoachingService {
         let posts: [PostTile]
     }
 
-    static func rower(_ userId: UUID, asOf: Date = Date(), calendar: Calendar = .current) async throws -> RowerDetail {
+    static func rower(_ userId: UUID, asOf: Date = Date(), calendar: Calendar? = nil) async throws -> RowerDetail {
+        let calendar = await clubCalendar(calendar)
         let viewer = try await ViewerContext.shared.current()
         guard viewer.isCoach, let clubId = viewer.clubId else { throw CoachingError.notACoach }
         async let rawTask = load(clubId: clubId, only: userId, asOf: asOf, calendar: calendar)

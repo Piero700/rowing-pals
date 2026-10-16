@@ -113,6 +113,20 @@ enum CalendarRules {
         return counts
     }
 
+    /// Can race (or come), can't and no answer among everyone an event is for.
+    static func counts(audience: Set<UUID>, eventResponses: [EventResponse]) -> Counts {
+        let byUser = Dictionary(eventResponses.map { ($0.userId, $0.canCome) }, uniquingKeysWith: { first, _ in first })
+        var counts = Counts()
+        for user in audience {
+            switch byUser[user] {
+            case true?: counts.available += 1
+            case false?: counts.cant += 1
+            case nil: counts.noAnswer += 1
+            }
+        }
+        return counts
+    }
+
     /// "every Friday" for a practice in a weekly series; nil for a one-off.
     static func repeatCaption(_ practice: Practice, calendar: Calendar) -> String? {
         guard practice.seriesId != nil else { return nil }
@@ -141,6 +155,68 @@ enum CalendarRules {
         }
     }
 
+    // MARK: - Register
+
+    /// The mark a register row starts on before the coach has saved one (CoachPracticeRegister):
+    /// checked in → Present; posted a session that day → Present, shown as "Suggested"; said
+    /// can't → Excused; said available but neither checked in nor posted → Absent; otherwise none.
+    static func startingMark(answer: PracticeAnswer?, checkedIn: Bool, postedSession: Bool) -> (mark: RegisterMark?, isSuggested: Bool) {
+        if checkedIn { return (.present, false) }
+        if postedSession { return (.present, true) }
+        switch answer {
+        case .cant: return (.excused, false)
+        case .going: return (.absent, false)
+        case nil: return (nil, false)
+        }
+    }
+
+    /// A rower's line on the register: "Said available · checked in 17:22", "Can’t make it ·
+    /// “Exam tomorrow”", "No reply · posted a session today".
+    static func registerLine(answer: PracticeAnswer?, reason: String?, checkedInAt: Date?, postedSession: Bool, calendar: Calendar) -> String {
+        var parts: [String]
+        switch answer {
+        case .going: parts = ["Said available"]
+        case .cant: parts = ["Can’t make it"]
+        case nil: parts = ["No reply"]
+        }
+        if answer == .cant, let reason, !reason.isEmpty { parts.append("“\(reason)”") }
+        if let checkedInAt {
+            parts.append("checked in \(time(checkedInAt, calendar: calendar))")
+        } else if postedSession {
+            parts.append("posted a session today")
+        }
+        return parts.joined(separator: " · ")
+    }
+
+    /// The latest change to a rower's saved mark, from the log in time order: the mark before it,
+    /// the new one, and who set it when. Nil when the mark was only ever set once.
+    static func lastChange(_ log: [AttendanceMarkLogEntry]) -> (from: RegisterMark, to: AttendanceMarkLogEntry)? {
+        let ordered = log.sorted { $0.setAt < $1.setAt }
+        guard ordered.count >= 2 else { return nil }
+        let last = ordered[ordered.count - 1]
+        let before = ordered[ordered.count - 2]
+        guard before.mark != last.mark else { return nil }
+        return (before.mark, last)
+    }
+
+    /// Attendance among `userIds` from the marks given (decision 39).
+    static func totals(_ marks: [AttendanceMark], of userIds: Set<UUID>) -> Totals {
+        totals(marks.filter { userIds.contains($0.userId) }.map(\.mark))
+    }
+
+    /// The term holding `day` ("yyyy-MM-dd"), or nil between terms.
+    static func term(containing day: String, in terms: [ClubTerm]) -> ClubTerm? {
+        terms.first { $0.startsOn <= day && day <= $0.endsOn }
+    }
+
+    /// "Autumn · 29 Sep – 5 Dec".
+    static func termText(_ term: ClubTerm, calendar: Calendar) -> String {
+        guard let start = WorkoutRules.day(term.startsOn, calendar: calendar),
+              let end = WorkoutRules.day(term.endsOn, calendar: calendar) else { return term.name }
+        let short = formatter("d MMM", calendar: calendar)
+        return "\(term.name) · \(short.string(from: start)) – \(short.string(from: end))"
+    }
+
     // MARK: - Events
 
     /// Whether a race or event covers `day` ("yyyy-MM-dd" strings compare in order).
@@ -162,6 +238,11 @@ enum CalendarRules {
     /// "Fri 16 Oct".
     static func dayLabel(_ date: Date, calendar: Calendar) -> String {
         formatter("EEE d MMM", calendar: calendar).string(from: date)
+    }
+
+    /// "MON".
+    static func weekdayShort(_ date: Date, calendar: Calendar) -> String {
+        formatter("EEE", calendar: calendar).string(from: date).uppercased()
     }
 
     /// "06:30".

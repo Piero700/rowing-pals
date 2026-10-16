@@ -158,7 +158,7 @@ After any change:
 ## Current focus
 
 **The coach version** (decisions 67–70): phases CV1–CV3 in `docs/design/coach-version-build-plan.md`, on branch
-`t41-coach-version`. CV1 (the coach's own app shell) is built; CV2 (Calendar and attendance) is next. Earlier:
+`t41-coach-version`. CV1 (the coach's own app shell) and CV2 (Calendar and attendance) are built; CV3 (Boats) is next. Earlier:
 
 Coaching and the v4 canvas: a catch-up phase, then coaching Phases 1–3 in `docs/design/coaching-build-plan.md`. Earlier:
 

@@ -53,6 +53,21 @@ enum AppRoute: Hashable, Identifiable {
     case workoutResults(UUID)
     /// A rower's results at one test (a coach opening a test row).
     case pbHistory(StandardTest, UUID)
+    /// Set a workout for a given day, from the Calendar's Add (decision 68).
+    case newWorkoutOn(Date)
+    /// One practice for the rower it's set for; a new practice on a day; one to edit; its register
+    /// (decisions 39, 68).
+    case practice(UUID)
+    case newPractice(Date)
+    case editPractice(UUID)
+    case register(UUID)
+    /// Attendance totals, from the coach's Profile; Who's available, from the Calendar.
+    case attendanceTotals
+    case availability
+    /// A race or event; a new one of a kind on a day; one to edit (decision 68).
+    case event(UUID)
+    case newEvent(EventKind, Date)
+    case editEvent(UUID)
 
     var id: Self { self }
 }

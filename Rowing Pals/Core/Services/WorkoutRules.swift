@@ -214,6 +214,15 @@ nonisolated enum WorkoutRules {
         return calendar.date(from: DateComponents(year: parts[0], month: parts[1], day: parts[2]))
     }
 
+    /// When a workout starts on its day, or nil with no set time (the Calendar matches it to the
+    /// practice it falls in).
+    static func startDate(_ workout: CoachWorkout, calendar: Calendar) -> Date? {
+        guard let date = day(workout.workoutDate, calendar: calendar), let time = workout.startTime else { return nil }
+        let parts = time.split(separator: ":").compactMap { Int($0) }
+        guard parts.count >= 2 else { return nil }
+        return calendar.date(bySettingHour: parts[0], minute: parts[1], second: 0, of: date)
+    }
+
     /// `date` as "yyyy-MM-dd" in `calendar` — the rower's own calendar day.
     static func dayText(_ date: Date, calendar: Calendar) -> String {
         let parts = calendar.dateComponents([.year, .month, .day], from: date)

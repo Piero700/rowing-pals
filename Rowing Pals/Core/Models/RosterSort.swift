@@ -16,7 +16,7 @@ nonisolated enum RosterSort: String, CaseIterable, Identifiable {
     case bestFirst
     /// Slowest 2k first.
     case worstFirst
-    /// Highest share of set workouts posted for first.
+    /// Highest share of set workouts posted for and practices attended first.
     case attendance
     /// Longest since their last session first.
     case notLogged
@@ -43,7 +43,7 @@ nonisolated enum RosterSort: String, CaseIterable, Identifiable {
         case .onTarget: "On track first, furthest through their target first"
         case .bestFirst: "Fastest 2k first: PB, or predicted without one"
         case .worstFirst: "Slowest 2k first: PB, or predicted without one"
-        case .attendance: "Most set workouts done first"
+        case .attendance: "Most workouts and practices attended first"
         case .notLogged: "Longest since their last session first"
         case .name: "A to Z"
         }

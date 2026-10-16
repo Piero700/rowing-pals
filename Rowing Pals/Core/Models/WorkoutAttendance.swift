@@ -5,8 +5,9 @@
 
 import Foundation
 
-/// How many of the workouts set for a rower they posted for (decision 62): the canvas's
-/// "attendance", from set workouts until Phase 3 adds practices to it. A workout counts once its
+/// How many of the workouts set for a rower they posted for, and of their practices they attended
+/// (decision 62): the canvas's "attendance". A practice counts once its register has a mark
+/// (Excused is left out; decision 39). A workout counts once its
 /// day is over, or on the day once it's been posted for; one with nothing posted after its day is
 /// an absence (decision 57).
 nonisolated struct WorkoutAttendance: Equatable {

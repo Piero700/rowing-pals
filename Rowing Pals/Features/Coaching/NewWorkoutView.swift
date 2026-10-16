@@ -14,6 +14,15 @@ struct NewWorkoutView: View {
     @State private var editingPiece: EditingPiece?
     @Environment(\.dismiss) private var dismiss
 
+    init() {}
+
+    /// New workout on a chosen day, from Add on the coach's Calendar.
+    init(date: Date) {
+        let viewModel = NewWorkoutViewModel()
+        viewModel.date = date
+        _viewModel = State(initialValue: viewModel)
+    }
+
     private struct EditingPiece: Identifiable {
         let id = UUID()
         let piece: WorkoutPiece?

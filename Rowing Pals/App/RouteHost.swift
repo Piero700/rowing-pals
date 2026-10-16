@@ -68,7 +68,9 @@ struct RouteHost: View {
     private static func drawsOwnChrome(_ route: AppRoute) -> Bool {
         switch route {
         case .post, .profile, .people, .findClub, .clubHub, .createClub, .editClub, .manageClub,
-             .coachProfile, .editProfile, .coachRower, .squads, .squadEdit, .pbHistory, .newWorkout, .workoutResults: true
+             .coachProfile, .editProfile, .coachRower, .squads, .squadEdit, .pbHistory, .newWorkout, .workoutResults,
+             .newWorkoutOn, .practice, .newPractice, .editPractice, .register, .attendanceTotals, .availability,
+             .event, .newEvent, .editEvent: true
         default: false
         }
     }
@@ -111,6 +113,26 @@ struct RouteHost: View {
             NewWorkoutView()
         case .workoutResults(let workoutId):
             WorkoutResultsView(workoutId: workoutId)
+        case .newWorkoutOn(let day):
+            NewWorkoutView(date: day)
+        case .practice(let practiceId):
+            RowerPracticeView(practiceId: practiceId)
+        case .newPractice(let day):
+            PracticeEditorView(practiceId: nil, day: day)
+        case .editPractice(let practiceId):
+            PracticeEditorView(practiceId: practiceId, day: nil)
+        case .register(let practiceId):
+            RegisterView(practiceId: practiceId)
+        case .attendanceTotals:
+            AttendanceTotalsView()
+        case .availability:
+            AvailabilityView()
+        case .event(let eventId):
+            EventView(eventId: eventId)
+        case .newEvent(let kind, let day):
+            EventEditorView(eventId: nil, kind: kind, day: day)
+        case .editEvent(let eventId):
+            EventEditorView(eventId: eventId)
         case .pbHistory(let test, let userId):
             PBHistoryView(test: test, userId: userId)
                 .toolbar(.hidden, for: .navigationBar)
