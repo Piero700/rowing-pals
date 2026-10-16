@@ -109,7 +109,9 @@ struct ClubHubView: View {
 
         if !coaches.isEmpty {
             SectionTitle("Coaches · \(coaches.count)")
-            peopleList(coaches) { $0.coachLine }
+            peopleList(coaches) { person in
+                person.id == viewModel.myId ? "You · \(person.coachLine)" : person.coachLine
+            }
         }
 
         SectionTitle("Crewmates · \(crewmates.count)")
@@ -180,9 +182,10 @@ struct ClubHubView: View {
         viewModel.members.filter { $0.id != viewModel.myId && $0.isRower }
     }
 
-    /// Every coach but you, rowing or not (decision 39).
+    /// Every coach, rowing or not (decision 39) — you too, first, marked "You" (user, 2026-10-16).
     private var coaches: [ClubService.Person] {
-        viewModel.members.filter { $0.id != viewModel.myId && $0.isCoach }
+        let all = viewModel.members.filter(\.isCoach)
+        return all.filter { $0.id == viewModel.myId } + all.filter { $0.id != viewModel.myId }
     }
 
     private var isCoach: Bool {
@@ -241,7 +244,8 @@ struct ClubHubView: View {
                         .foregroundStyle(Tokens.Ink.secondary)
                 }
                 .padding(12)
-                .asButton { navigate(.profile(person.id)) }
+                // A coach who doesn't row has no rower profile: their own row opens the coach's Profile.
+                .asButton { navigate(person.id == viewModel.myId && !person.isRower ? .coachProfile : .profile(person.id)) }
                 .accessibilityElement(children: .combine)
                 if index < people.count - 1 {
                     Rectangle().fill(Tokens.Surface.line).frame(height: 1)

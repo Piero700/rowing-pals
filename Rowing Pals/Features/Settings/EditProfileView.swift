@@ -8,8 +8,9 @@ import UIKit
 
 /// Settings → Account → Edit profile, to the v4 SettingsProfile artboard (decisions 34–36):
 /// the profile picture, name, **account type** (I row / Coach only), the rankings group (gender
-/// and level — hidden for a coach-only account), date of birth and bodyweight (seen only by the
-/// rower and their club's coaches), and the weekly target in km. Saved with Save.
+/// level and side), date of birth and bodyweight (seen only by the rower and their club's
+/// coaches), and the weekly target in km — all but name and account type hidden for a
+/// coach-only account. Saved with Save.
 ///
 /// The canvas draws age as "years"; the app keeps **date of birth** (decision 35), so it stays
 /// right every year.
@@ -48,7 +49,7 @@ struct EditProfileView: View {
                     .overlay { field.strokeBorder(Tokens.Surface.line, lineWidth: 1) }
 
                 SettingsGroup(title: "Account type") {
-                    stackedRow(title: "How you use Rowing Pals", subtitle: "Coaches who don’t row get the coach version: no rankings and no Log button.") {
+                    stackedRow(title: "How you use Rowing Pals", subtitle: nil) {
                         PillSegmentedControl(options: ["I row", "Coach only"], selection: Binding(
                             get: { viewModel.isRower ? 0 : 1 },
                             set: { viewModel.isRower = $0 == 0 }
@@ -85,36 +86,40 @@ struct EditProfileView: View {
                     }
                 }
 
-                sectionTitle("About you")
-                    .padding(.top, Tokens.Spacing.group)
-                HStack(spacing: Tokens.Spacing.loose) {
-                    birthDateField
-                    weightField
-                }
-                footnote("Visible to you and your club’s coaches. Bodyweight is used for watts per kilo.")
-                if let weightProblem = viewModel.weightProblem {
-                    problem(weightProblem)
-                }
+                // Date of birth, bodyweight and a weekly target only mean something for someone who
+                // rows; a coach-only account isn't asked (user, 2026-10-16).
+                if viewModel.isRower {
+                    sectionTitle("About you")
+                        .padding(.top, Tokens.Spacing.group)
+                    HStack(spacing: Tokens.Spacing.loose) {
+                        birthDateField
+                        weightField
+                    }
+                    footnote("Visible to you and your club’s coaches. Bodyweight is used for watts per kilo.")
+                    if let weightProblem = viewModel.weightProblem {
+                        problem(weightProblem)
+                    }
 
-                sectionTitle("Weekly target")
-                    .padding(.top, Tokens.Spacing.group)
-                HStack(spacing: Tokens.Spacing.tight) {
-                    TextField("0", text: $viewModel.weeklyTargetText)
-                        .keyboardType(.decimalPad)
-                        .focused($focusedField, equals: .target)
-                        .textStyle(Typography.bodyV3)
-                        .tabularNumerals()
-                    Text("km")
-                        .textStyle(Typography.detail)
-                        .foregroundStyle(Tokens.Ink.secondary)
-                }
-                .padding(.horizontal, Tokens.Spacing.card)
-                .frame(minHeight: Tokens.Size.input)
-                .background(field.fill(Tokens.Surface.card))
-                .overlay { field.strokeBorder(Tokens.Surface.line, lineWidth: 1) }
-                footnote("Your weekly volume goal. Any logged session counts towards it.")
-                if let targetProblem = viewModel.weeklyTargetProblem {
-                    problem(targetProblem)
+                    sectionTitle("Weekly target")
+                        .padding(.top, Tokens.Spacing.group)
+                    HStack(spacing: Tokens.Spacing.tight) {
+                        TextField("0", text: $viewModel.weeklyTargetText)
+                            .keyboardType(.decimalPad)
+                            .focused($focusedField, equals: .target)
+                            .textStyle(Typography.bodyV3)
+                            .tabularNumerals()
+                        Text("km")
+                            .textStyle(Typography.detail)
+                            .foregroundStyle(Tokens.Ink.secondary)
+                    }
+                    .padding(.horizontal, Tokens.Spacing.card)
+                    .frame(minHeight: Tokens.Size.input)
+                    .background(field.fill(Tokens.Surface.card))
+                    .overlay { field.strokeBorder(Tokens.Surface.line, lineWidth: 1) }
+                    footnote("Your weekly volume goal. Any logged session counts towards it.")
+                    if let targetProblem = viewModel.weeklyTargetProblem {
+                        problem(targetProblem)
+                    }
                 }
 
                 if let saveError = viewModel.saveError {

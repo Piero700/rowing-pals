@@ -55,12 +55,12 @@ final class SettingsViewModel {
         return displayName != original.displayName
             || gender != original.gender
             || category != original.category
-            || (parsedWeeklyTargetM ?? original.weeklyTargetM) != original.weeklyTargetM
-            || weeklyTargetProblem != nil
+            || (isRower && (parsedWeeklyTargetM ?? original.weeklyTargetM) != original.weeklyTargetM)
+            || (isRower && weeklyTargetProblem != nil)
             || isRower != original.isRower
             || side != original.side
-            || weightProblem != nil
-            || AthletePrivateService.Details(birthDate: birthDate, weightKg: parsedWeight) != originalPrivate
+            || (isRower && weightProblem != nil)
+            || (isRower && AthletePrivateService.Details(birthDate: birthDate, weightKg: parsedWeight) != originalPrivate)
     }
 
     private var parsedWeight: Double? {
@@ -217,11 +217,12 @@ final class SettingsViewModel {
     @MainActor
     func save() async {
         guard let userId, !displayName.trimmingCharacters(in: .whitespaces).isEmpty else { return }
-        if let problem = weightProblem ?? weeklyTargetProblem {
+        // A coach-only account isn't shown these, so they can't hold the save up.
+        if isRower, let problem = weightProblem ?? weeklyTargetProblem {
             saveError = problem
             return
         }
-        weeklyTargetM = parsedWeeklyTargetM ?? weeklyTargetM
+        if isRower { weeklyTargetM = parsedWeeklyTargetM ?? weeklyTargetM }
         isSaving = true
         saveError = nil
         defer { isSaving = false }
@@ -255,7 +256,7 @@ final class SettingsViewModel {
             }
 
             let details = AthletePrivateService.Details(birthDate: birthDate, weightKg: parsedWeight)
-            if details != originalPrivate {
+            if isRower, details != originalPrivate {
                 try await AthletePrivateService.save(details)
                 originalPrivate = details
             }

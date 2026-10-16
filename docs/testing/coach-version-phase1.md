@@ -40,9 +40,14 @@ You need two accounts in the same club:
       card (you don't row). **CLUB**: your club ("Your crew", or "Members, requests and roles" if
       you manage it) and **Squads**. **ACCOUNT**: Settings, Edit profile, Log out (blue).
 - [ ] **UEA Boat Club** opens Your crew (or Manage club). **There's no Coaching button on it any more.**
+- [ ] Under **COACHES**, **you** come first — "Coach_J · You · Coach · doesn't row" — then the club's
+      other coaches. Tapping your own row opens your coach Profile.
 - [ ] **Settings** opens as a sheet. No switch row at the top (you don't row).
-- [ ] **Edit profile** opens Edit profile. The account type line reads "Coaches who don't row get
-      the coach version: no rankings and no Log button." Go back without saving.
+- [ ] **Edit profile** opens Edit profile with only your photo, **NAME** and **ACCOUNT TYPE** (Coach
+      only) — no line of text under "How you use Rowing Pals", and **no** Rankings, About you (date
+      of birth, weight) or Weekly target.
+- [ ] Tap **I row**: Rankings, About you and Weekly target appear. Tap **Coach only**: they go.
+      Go back without saving.
 - [ ] Back, then back again: you're on the tabs.
 
 ## 3. The side (sign in as Piero, or any account that rows)
