@@ -511,7 +511,7 @@
     "about": {
       "fill": "blue",
       "size": 24,
-      "text": "Rowing Pals on 16 Oct 2026, in the app’s own colours, type and spacing (DesignSystem/Tokens.swift). Rows marked proposal aren’t in the app yet. Each screen’s Tweaks switch Dark / Light. Names and numbers are sample data.",
+      "text": "Rowing Pals on 17 Oct 2026, in the app’s own colours, type and spacing (DesignSystem/Tokens.swift). Every screen here is in the app; the coach version (decisions 67–71) is built and waiting on phone tests before it merges. Each screen’s Tweaks switch Dark / Light. Names and numbers are sample data.",
       "w": 380,
       "x": 2365,
       "y": 299
@@ -519,7 +519,7 @@
     "boatsAbout": {
       "fill": "blue",
       "size": 24,
-      "text": "Boats · proposal (16 Oct 2026), not in the app. Drawn upright, bow at the top, seats a seat-length apart. Stroke-side oars on the left, bow side on the right; stroke-rigged or bow-rigged sets which seats are which. A rower on their other side gets a ‘Usually stroke side’ note. Logging water metres stays out (decision 54).",
+      "text": "Boats · in the app (phase CV3, 17 Oct 2026). Drawn upright, bow at the top, seats a seat-length apart. Stroke-side oars on the left, bow side on the right; stroke-rigged or bow-rigged sets which seats are which. A rower on their other side gets a ‘Usually stroke side’ note. In the app the cox is drawn in the text colour (purple stays for PBs and avatars). Logging water metres stays out (decision 54).",
       "w": 380,
       "x": 2838,
       "y": 15292
@@ -527,7 +527,7 @@
     "calAbout": {
       "fill": "blue",
       "size": 24,
-      "text": "Calendars · proposal (16 Oct 2026), not in the app. Rowers’ bar: Feed, Rankings, Calendar, Profile + Log. A week ahead, rowers say which sessions they can make (morning and evening separately, or the whole day at once) and which races. Coaches’ Calendar replaces Practices: tap a day to take a register or add a practice, land or water session, race or event; Who’s available feeds crewing. Boats can be saved and reused. The club’s week starts on Monday or Sunday (Settings, coaches).",
+      "text": "Calendars · in the app (phase CV2, 16 Oct 2026). Rowers’ bar: Feed, Rankings, Calendar, Profile + Log. A week ahead, rowers say which sessions they can make (morning and evening separately, or the whole day at once) and which races. Coaches’ Calendar replaces Practices: tap a day to take a register or add a practice, land or water session, race or event; Who’s available feeds crewing. Boats can be saved and reused. The club’s week starts on Monday or Sunday (Settings, coaches).",
       "w": 380,
       "x": 2365,
       "y": 19628
@@ -535,7 +535,7 @@
     "coach0": {
       "kind": "title1",
       "maxW": 3231,
-      "text": "Coach app (proposal) · joining, setup, Profile and +",
+      "text": "Coach app · joining, setup, Profile and +",
       "w": 240,
       "x": 0,
       "y": 8968
@@ -559,7 +559,7 @@
     "coach3": {
       "kind": "title1",
       "maxW": 2285,
-      "text": "Coach app (proposal) · Calendar and attendance",
+      "text": "Coach app · Calendar and attendance",
       "w": 240,
       "x": 0,
       "y": 17348
@@ -567,7 +567,7 @@
     "coach4": {
       "kind": "title1",
       "maxW": 1812,
-      "text": "Coach app (proposal) · boats and water sessions",
+      "text": "Coach app · boats and water sessions",
       "w": 240,
       "x": 0,
       "y": 14992
@@ -575,7 +575,7 @@
     "coach6": {
       "kind": "title1",
       "maxW": 2758,
-      "text": "Calendar (proposal) · availability, races and events",
+      "text": "Calendar · availability, races and events",
       "w": 240,
       "x": 0,
       "y": 19328
@@ -583,7 +583,7 @@
     "coachAbout": {
       "fill": "purple",
       "size": 24,
-      "text": "Coach app · 16 Oct 2026. In the app now, as the full-screen Coaching area: rowers, squads, squad and sort, one rower and set workouts (decisions 39–62). Proposal, not built yet: the coach’s own bar (Rowers, Workouts, Boats, Calendar and +), Profile behind the avatar, Switch to rowing / coaching, boats, the Calendar, availability and races (decisions 67–70). Predictions, effort and flags come from the Pace Engine.",
+      "text": "Coach app · built 17 Oct 2026 (phases CV1–CV3, decisions 67–71). A coach gets their own bar: Rowers, Workouts, Boats, Calendar and + (Land or Water session). Profile is behind the avatar; someone who rows and coaches switches with Switch to rowing / coaching. Your crew lists every coach, you first. Predictions, effort and flags come from the Pace Engine.",
       "w": 380,
       "x": 2838,
       "y": 9268
