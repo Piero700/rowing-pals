@@ -48,7 +48,7 @@ struct EditProfileView: View {
                     .overlay { field.strokeBorder(Tokens.Surface.line, lineWidth: 1) }
 
                 SettingsGroup(title: "Account type") {
-                    stackedRow(title: "How you use Rowing Pals", subtitle: "Coaches who don’t row skip rankings and have no Log button.") {
+                    stackedRow(title: "How you use Rowing Pals", subtitle: "Coaches who don’t row get the coach version: no rankings and no Log button.") {
                         PillSegmentedControl(options: ["I row", "Coach only"], selection: Binding(
                             get: { viewModel.isRower ? 0 : 1 },
                             set: { viewModel.isRower = $0 == 0 }
@@ -72,6 +72,14 @@ struct EditProfileView: View {
                             PillSegmentedControl(options: ["Novice", "Senior"], selection: Binding(
                                 get: { viewModel.category == .senior ? 1 : 0 },
                                 set: { viewModel.category = $0 == 1 ? .senior : .novice }
+                            ), compact: true)
+                        }
+                        Rectangle().fill(Tokens.Surface.line).frame(height: 1)
+                        // Decision 67: coaches see it when they seat the rower in a boat.
+                        stackedRow(title: "Side", subtitle: "The side you row on in sweep boats. Your coach sees it when seating you.") {
+                            PillSegmentedControl(options: RowingSide.allCases.map(\.label), selection: Binding(
+                                get: { viewModel.side.flatMap { RowingSide.allCases.firstIndex(of: $0) } ?? -1 },
+                                set: { viewModel.side = RowingSide.allCases[$0] }
                             ), compact: true)
                         }
                     }

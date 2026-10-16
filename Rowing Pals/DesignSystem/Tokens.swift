@@ -189,6 +189,8 @@ enum Tokens {
         /// A settings row: with a description line, and without.
         static let row: CGFloat = 66
         static let rowCompact: CGFloat = 56
+        /// The round icon at the start of Settings' Switch to coaching / rowing row (decision 67).
+        static let rowIcon: CGFloat = 36
         /// A coach-only account's bar has no Log button, so it sits 72 pt in from each side
         /// (CoachOnlyFeed, decision 34).
         static let navSideInsetNoLog: CGFloat = 72

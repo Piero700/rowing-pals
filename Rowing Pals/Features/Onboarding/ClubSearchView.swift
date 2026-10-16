@@ -34,6 +34,8 @@ struct ClubSearchView: View {
     @State private var isWithoutClub = false
     @State private var genderSelection = 0
     @State private var categorySelection = 0
+    /// Stroke side, bow side or both (decision 67); -1 until chosen, and it may be left.
+    @State private var sideSelection = -1
     @State private var isSaving = false
     @State private var saveError: String?
     /// "Have an invite code?" (decision 25).
@@ -473,6 +475,17 @@ struct ClubSearchView: View {
                         .textStyle(Typography.meta)
                         .foregroundStyle(Tokens.Ink.secondary)
                         .padding(.top, 8)
+
+                    Text("Side")
+                        .textStyle(Typography.fieldLabel)
+                        .foregroundStyle(Tokens.Ink.secondary)
+                        .padding(.top, 16)
+                        .padding(.bottom, 6)
+                    PillSegmentedControl(options: RowingSide.allCases.map(\.label), selection: $sideSelection)
+                    Text("The side you row on in a pair, four or eight. Your coach sees it when they seat you.")
+                        .textStyle(Typography.meta)
+                        .foregroundStyle(Tokens.Ink.secondary)
+                        .padding(.top, 8)
                 }
 
                 Text("You can change this later in Edit profile.")
@@ -668,10 +681,12 @@ struct ClubSearchView: View {
             let gender: RowerGender?
             let category: RowerCategory
             let isRower: Bool
+            let side: RowingSide?
             let onboardedAt: Date
             enum CodingKeys: String, CodingKey {
                 case gender, category
                 case isRower = "is_rower"
+                case side
                 case onboardedAt = "onboarded_at"
             }
 
@@ -681,6 +696,8 @@ struct ClubSearchView: View {
                 try c.encode(gender, forKey: .gender)
                 try c.encode(category, forKey: .category)
                 try c.encode(isRower, forKey: .isRower)
+                // Only once chosen: sign-up still works before the side column exists.
+                try c.encodeIfPresent(side, forKey: .side)
                 try c.encode(onboardedAt, forKey: .onboardedAt)
             }
         }
@@ -692,6 +709,7 @@ struct ClubSearchView: View {
                 gender: isCoachOnly ? nil : genders[genderSelection],
                 category: categories[categorySelection],
                 isRower: !isCoachOnly,
+                side: isCoachOnly || !RowingSide.allCases.indices.contains(sideSelection) ? nil : RowingSide.allCases[sideSelection],
                 onboardedAt: Date()
             )
             try await SupabaseService.shared

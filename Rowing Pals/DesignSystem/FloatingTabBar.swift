@@ -33,6 +33,8 @@ struct FloatingTabBar<Tab: Hashable>: View {
     /// False for a coach-only account: no Log button, and the pill sits further in from the
     /// sides (CoachOnlyFeed, decision 34).
     var showsLog = true
+    /// What the + does, for VoiceOver: Log workout for a rower, New workout in the coach version.
+    var logLabel = "Log workout"
     let onTapLog: () -> Void
 
     @Environment(FloatingBarVisibility.self) private var visibility
@@ -130,6 +132,6 @@ struct FloatingTabBar<Tab: Hashable>: View {
                 .contentShape(Circle())
         }
         .buttonStyle(IconPressStyle())
-        .accessibilityLabel("Log workout")
+        .accessibilityLabel(logLabel)
     }
 }

@@ -19,8 +19,8 @@ struct RouteHost: View {
     /// here gets its own so scrolling it doesn't move a bar that isn't
     /// on screen.
     @State private var barVisibility = FloatingBarVisibility()
-    /// Coaching opens as a full-screen area of its own over whatever raised it (decision 39).
-    @State private var isShowingCoaching = false
+    /// Settings opens as a sheet, as from the rower's Profile (it has its own navigation stack).
+    @State private var isShowingSettings = false
 
     var body: some View {
         NavigationStack(path: $path) {
@@ -53,14 +53,14 @@ struct RouteHost: View {
             // Log belongs to the tab screens; it can't be pushed here.
             if route == .log { return }
             if case .logWorkout = route { return }
-            if route == .coaching, root != .coaching {
-                isShowingCoaching = true
+            if route == .settings {
+                isShowingSettings = true
             } else {
                 path.append(route)
             }
         })
-        .fullScreenCover(isPresented: $isShowingCoaching) {
-            RouteHost(root: .coaching)
+        .sheet(isPresented: $isShowingSettings) {
+            SettingsView()
         }
     }
 
@@ -68,7 +68,7 @@ struct RouteHost: View {
     private static func drawsOwnChrome(_ route: AppRoute) -> Bool {
         switch route {
         case .post, .profile, .people, .findClub, .clubHub, .createClub, .editClub, .manageClub,
-             .coaching, .coachRower, .squads, .squadEdit, .pbHistory, .newWorkout, .workoutResults: true
+             .coachProfile, .editProfile, .coachRower, .squads, .squadEdit, .pbHistory, .newWorkout, .workoutResults: true
         default: false
         }
     }
@@ -94,8 +94,13 @@ struct RouteHost: View {
             ClubFormView(mode: .edit)
         case .manageClub:
             ManageClubView()
-        case .coaching:
-            CoachingView()
+        case .coachProfile:
+            CoachProfileView()
+        case .settings:
+            // Shown as a sheet by `navigate`; never pushed.
+            EmptyView()
+        case .editProfile:
+            EditProfileHost()
         case .coachRower(let userId):
             CoachRowerView(userId: userId)
         case .squads:

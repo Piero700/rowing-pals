@@ -38,8 +38,11 @@ enum AppRoute: Hashable, Identifiable {
     case editClub
     /// Requests, invites, members, roles and ownership — admins and up (decision 25).
     case manageClub
-    /// Coaching: the club's rowers, for its coaches (decisions 34, 39).
-    case coaching
+    /// The coach's own page, from their picture on a coach tab (decision 67).
+    case coachProfile
+    /// Settings, as a sheet; Edit profile on its own (both from the coach's Profile).
+    case settings
+    case editProfile
     /// One rower, as their coach sees them.
     case coachRower(UUID)
     /// The club's squads; and one squad to edit, or a new one (nil).

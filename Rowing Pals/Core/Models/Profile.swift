@@ -30,6 +30,9 @@ struct Profile: Codable, Identifiable {
     /// "I row" (true) or "Coach only" (false): a coach-only account has no gender or level, no
     /// Log button, and is never on a leaderboard or in Crewmates (decision 34).
     var isRower: Bool
+    /// Stroke side, bow side or both (decision 67); nil until they pick one, and for coach-only
+    /// accounts.
+    var side: RowingSide?
     let createdAt: Date
 
     enum CodingKeys: String, CodingKey {
@@ -45,6 +48,7 @@ struct Profile: Codable, Identifiable {
         case onboardedAt = "onboarded_at"
         case isCoach = "is_coach"
         case isRower = "is_rower"
+        case side
         case createdAt = "created_at"
     }
 
@@ -68,6 +72,8 @@ struct Profile: Codable, Identifiable {
         // Absent before docs/migrations/2026-10-05-coaching.sql has run.
         isCoach = try c.decodeIfPresent(Bool.self, forKey: .isCoach) ?? false
         isRower = try c.decodeIfPresent(Bool.self, forKey: .isRower) ?? true
+        // Absent before docs/migrations/2026-10-16-coach-version.sql has run.
+        side = try c.decodeIfPresent(RowingSide.self, forKey: .side)
         createdAt = try c.decode(Date.self, forKey: .createdAt)
     }
 }

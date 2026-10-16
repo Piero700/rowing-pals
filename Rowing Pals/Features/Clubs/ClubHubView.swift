@@ -156,12 +156,6 @@ struct ClubHubView: View {
                 tag(club.focus.rawValue)
             }
             .padding(.top, 4)
-            // CoachCrew: a coach's way into Coaching (decision 39).
-            if isCoach {
-                Button("Coaching") { navigate(.coaching) }
-                    .buttonStyle(.rpPrimary)
-                    .padding(.top, Tokens.Spacing.loose)
-            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(Tokens.Spacing.card + 3)

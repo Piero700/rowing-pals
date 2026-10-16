@@ -1,42 +1,30 @@
 //
-//  CoachingView.swift
+//  CoachRowersView.swift
 //  Rowing Pals
 //
 
 import SwiftUI
 
-/// Coaching (CoachRowers, CoachWorkouts; decisions 34, 39, 43): a full-screen area for a club's
-/// coaches, opened from Your crew or Profile → Club. **Rowers** — every rowing member with this
-/// week against their target, their 2k and prediction, and flags — filtered by squad and
-/// sorted; **Workouts** — the workouts the club's coaches have set, and New workout. Squads sits
-/// top right. The Practices tab and attendance arrive with Phase 3.
-struct CoachingView: View {
-    @State private var viewModel = CoachingViewModel()
-    @State private var workouts = WorkoutsViewModel()
-    @State private var tab: Tab = .rowers
+/// The coach version's **Rowers** tab (CoachRowers; decisions 39, 43, 62, 67): every rowing member
+/// with this week against their target, their 2k and prediction, attendance and flags — filtered by
+/// squad and sorted from one button. Squads and the coach's own Profile sit top right.
+struct CoachRowersView: View {
+    /// Taps on the tab while it's showing: scroll to the top and refresh (decision 27).
+    var reselects = 0
+    /// Bumped by the coach app when a screen it opened closes, so a change made there shows here.
+    var refreshes = 0
 
-    private enum Tab: Int, CaseIterable {
-        case rowers, workouts
-        var label: String { self == .rowers ? "Rowers" : "Workouts" }
-    }
+    @State private var viewModel = CoachingViewModel()
     @State private var isShowingFilters = false
-    @Environment(\.dismiss) private var dismiss
     @Environment(\.navigate) private var navigate
 
     private static let statShape = RoundedRectangle(cornerRadius: Tokens.Coaching.statRadius, style: .continuous)
 
     var body: some View {
+        // The scroll view stays the tab's root view so the floating bar can track it.
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
-                PillSegmentedControl(
-                    options: Tab.allCases.map(\.label),
-                    selection: Binding(get: { tab.rawValue }, set: { tab = Tab(rawValue: $0) ?? .rowers })
-                )
-                .padding(.bottom, Tokens.Spacing.loose)
-
-                if tab == .workouts {
-                    workoutsContent
-                } else if let roster = viewModel.roster {
+                if let roster = viewModel.roster {
                     content(roster)
                 } else if viewModel.isLoading {
                     ProgressView()
@@ -50,23 +38,26 @@ struct CoachingView: View {
                         .padding(.horizontal, 4)
                         .padding(.top, Tokens.Spacing.loose)
                 }
+                Color.clear.frame(height: Tokens.Spacing.tabScrollBottom)
             }
             .padding(.horizontal, Tokens.Spacing.screen)
             .padding(.top, 4)
-            .padding(.bottom, 40)
         }
         .scrollIndicators(.hidden)
-        .safeAreaInset(edge: .top, spacing: 0) { header }
-        .background(Tokens.Base.ground)
-        .toolbar(.hidden, for: .navigationBar)
-        // Also on coming back from Squads, so a changed squad shows at once.
-        .onAppear {
-            Task { await viewModel.load() }
-            Task { await workouts.load() }
+        .scrollsToTopOnReselect(reselects) { ViewerContext.shared.invalidate(); await viewModel.load() }
+        .safeAreaInset(edge: .top, spacing: 0) {
+            CoachTabHeader(title: "Rowers") {
+                GlassIconButton(systemImage: "person.3", accessibilityLabel: "Squads") { navigate(.squads) }
+            }
         }
+        .background(Tokens.Base.ground)
+        .tracksFloatingBar()
+        .ignoresSafeArea(edges: .bottom)
+        .task { await viewModel.load() }
+        .onChange(of: refreshes) { Task { await viewModel.load() } }
         .refreshable {
             ViewerContext.shared.invalidate()
-            if tab == .workouts { await workouts.load() } else { await viewModel.load() }
+            await viewModel.load()
         }
         .onReceive(NotificationCenter.default.publisher(for: .rowerClubChanged)) { _ in
             Task { await viewModel.load() }
@@ -82,26 +73,6 @@ struct CoachingView: View {
                 viewModel.sort = sort
             }
         }
-    }
-
-    /// Close · Coaching · Squads.
-    private var header: some View {
-        ZStack {
-            HStack(spacing: 0) {
-                GlassIconButton(systemImage: "xmark", accessibilityLabel: "Close") { dismiss() }
-                Spacer(minLength: 0)
-                GlassIconButton(systemImage: "person.3", accessibilityLabel: "Squads") { navigate(.squads) }
-            }
-            Text("Coaching")
-                .textStyle(Typography.navTitle)
-                .foregroundStyle(Tokens.Ink.primary)
-                .accessibilityAddTraits(.isHeader)
-        }
-        .padding(.top, Tokens.Spacing.tight)
-        .padding(.horizontal, Tokens.Spacing.headerHorizontal)
-        .padding(.bottom, Tokens.Spacing.loose)
-        .frame(minHeight: Tokens.Size.navHeight)
-        .background(Tokens.Base.ground)
     }
 
     @ViewBuilder
@@ -156,57 +127,6 @@ struct CoachingView: View {
             .frame(maxWidth: .infinity)
             .multilineTextAlignment(.center)
             .padding(.top, Tokens.Spacing.loose)
-    }
-
-    // MARK: - Workouts
-
-    @ViewBuilder
-    private var workoutsContent: some View {
-        Button {
-            navigate(.newWorkout)
-        } label: {
-            Label("New workout", systemImage: "plus")
-        }
-        .buttonStyle(.rpPrimary)
-
-        if let error = workouts.errorMessage {
-            Text(error)
-                .textStyle(Typography.meta)
-                .foregroundStyle(Tokens.System.error)
-                .padding(.horizontal, 4)
-                .padding(.top, Tokens.Spacing.loose)
-        }
-        if workouts.hasLoaded && workouts.today.isEmpty && workouts.upcoming.isEmpty && workouts.past.isEmpty {
-            Text("No workouts yet. Set one and the rowers it's for are told, and see it on the day.")
-                .textStyle(Typography.meta)
-                .foregroundStyle(Tokens.Ink.secondary)
-                .padding(.horizontal, 4)
-                .padding(.top, Tokens.Spacing.group)
-        }
-        workoutSection("Today", workouts.today, isToday: true)
-        workoutSection("Upcoming", workouts.upcoming, isToday: false)
-        workoutSection("Past", workouts.past, isToday: false)
-    }
-
-    @ViewBuilder
-    private func workoutSection(_ title: String, _ items: [WorkoutsViewModel.Item], isToday: Bool) -> some View {
-        if !items.isEmpty {
-            Text(title)
-                .textStyle(Typography.sectionTitle)
-                .foregroundStyle(Tokens.Ink.secondary)
-                .padding(.horizontal, 4)
-                .padding(.top, Tokens.Spacing.group)
-                .padding(.bottom, Tokens.Spacing.tight)
-                .accessibilityAddTraits(.isHeader)
-            LazyVStack(spacing: Tokens.Spacing.tight) {
-                ForEach(items) { item in
-                    WorkoutCard(item: item, isToday: isToday)
-                        .asButton { navigate(.workoutResults(item.workout.id)) }
-                        // As well as Delete workout on its page (decision 60).
-                        .swipeToDelete { await workouts.delete(item.workout.id) }
-                }
-            }
-        }
     }
 
     private func stat(_ value: String, _ label: String) -> some View {

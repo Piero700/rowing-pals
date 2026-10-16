@@ -28,6 +28,10 @@ struct SettingsView: View {
     private static let supportMailtoURL = URL(string: "mailto:\(supportEmail)")
 
     @AppStorage(Appearance.storageKey) private var appearance: Appearance = .dark
+    /// The rower or coach version (decision 67); the switch row changes it.
+    @AppStorage(AppMode.storageKey) private var appMode: AppMode = .rowing
+    /// True for an account that rows and coaches: only it can switch.
+    @State private var canSwitchVersion = false
 
     private static let cardShape = RoundedRectangle(cornerRadius: Tokens.Radius.card, style: .continuous)
 
@@ -39,6 +43,9 @@ struct SettingsView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
+                    if canSwitchVersion {
+                        switchVersionRow
+                    }
                     group("Appearance") {
                         row(title: "Dark mode", subtitle: "Reduce glare in low light.") {
                             checkmark(appearance == .dark)
@@ -165,6 +172,11 @@ struct SettingsView: View {
             .background(Tokens.Base.ground)
             .toolbar(.hidden, for: .navigationBar)
             .task { await viewModel.load() }
+            .task {
+                if let viewer = try? await ViewerContext.shared.current() {
+                    canSwitchVersion = viewer.isCoach && viewer.isRower
+                }
+            }
             .sheet(isPresented: $isShowingTerms) {
                 TermsOfServiceView()
             }
@@ -213,6 +225,43 @@ struct SettingsView: View {
                 .clipShape(Self.cardShape)
                 .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
         }
+    }
+
+    /// Someone who rows and coaches moves between the two versions here (decision 67); the coach's
+    /// Profile has the same switch. The app then opens in whichever they used last.
+    private var switchVersionRow: some View {
+        let toCoaching = appMode == .rowing
+        return Button {
+            appMode = toCoaching ? .coaching : .rowing
+            dismiss()
+        } label: {
+            HStack(spacing: Tokens.Spacing.loose) {
+                Image(systemName: "arrow.left.arrow.right")
+                    .textStyle(Typography.rowTitle)
+                    .foregroundStyle(Tokens.Accent.brand)
+                    .frame(width: Tokens.Size.rowIcon, height: Tokens.Size.rowIcon)
+                    .background(Circle().fill(Tokens.Accent.brandSoft))
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(toCoaching ? "Switch to coaching" : "Switch to rowing")
+                        .textStyle(Typography.rowTitle)
+                        .foregroundStyle(Tokens.Accent.brand)
+                    Text("You row and coach. The app opens in the one you used last.")
+                        .textStyle(Typography.meta)
+                        .foregroundStyle(Tokens.Ink.secondary)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                chevron
+            }
+            .padding(.horizontal, Tokens.Spacing.card)
+            .padding(.vertical, Tokens.Spacing.loose)
+            .frame(minHeight: Tokens.Size.row)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(IconPressStyle())
+        .background(Self.cardShape.fill(Tokens.Surface.card))
+        .clipShape(Self.cardShape)
+        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+        .padding(.top, Tokens.Spacing.tight)
     }
 
     private var divider: some View {

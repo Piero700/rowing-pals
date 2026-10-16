@@ -28,7 +28,8 @@ struct Rowing_PalsApp: App {
             } else if authState.needsOnboarding == true {
                 ClubSearchView()
             } else {
-                RootView()
+                // The rower version or the coach version (decision 67).
+                AppShell()
             }
             }
             .onChange(of: appearance, initial: true) { appearance.apply() }
