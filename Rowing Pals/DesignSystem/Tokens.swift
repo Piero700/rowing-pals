@@ -152,7 +152,7 @@ enum Tokens {
         /// Above each grouped card in Settings, and above the version line.
         static let group: CGFloat = 24
         /// Bottom inset on tab screens so content clears the floating nav.
-        static let tabScrollBottom: CGFloat = 90
+        static let tabScrollBottom: CGFloat = 98
     }
 
     /// v3 component sizes.
@@ -165,8 +165,12 @@ enum Tokens {
         static let secondaryButton: CGFloat = 50
         static let input: CGFloat = 50
         static let navHeight: CGFloat = 55
-        /// v4: the floating bar sits 44 pt in from each side and 14 pt up, 8 pt from the Log button.
-        static let navSideInset: CGFloat = 44
+        /// The floating tab bar's pill and its + / Log button (user 2026-10-17: a little taller than
+        /// the v4 55 pt now the bar holds four tabs).
+        static let tabBarHeight: CGFloat = 62
+        /// The floating bar sits 28 pt in from each side (user 2026-10-17: wider than v4's 44 pt for
+        /// four tabs), 22 pt up, 8 pt from the + / Log button.
+        static let navSideInset: CGFloat = 28
         static let navBottomInset: CGFloat = 22
         static let navGap: CGFloat = 8
         static let headerMinHeight: CGFloat = 61
@@ -194,9 +198,9 @@ enum Tokens {
         static let rowCompact: CGFloat = 56
         /// The round icon at the start of Settings' Switch to coaching / rowing row (decision 67).
         static let rowIcon: CGFloat = 36
-        /// A coach-only account's bar has no Log button, so it sits 72 pt in from each side
-        /// (CoachOnlyFeed, decision 34).
-        static let navSideInsetNoLog: CGFloat = 72
+        /// An account's bar with no Log button sits 52 pt in from each side (CoachOnlyFeed,
+        /// decision 34; widened with the bar, user 2026-10-17).
+        static let navSideInsetNoLog: CGFloat = 52
         /// Coaching (docs/design/v4/Coach*.dc.html): a rower card's picture, one rower's page
         /// picture, the weekly-target bar, the volume chart, the zone-mix bar and its legend
         /// swatches, a flag chip, an onboarding choice card's tick.

@@ -67,7 +67,7 @@ struct MetresLeaderboardView: View {
         .overlay(alignment: .bottom) {
             if !isOwnRowVisible, let ownRow = viewModel.rankedRows.first(where: \.isCurrentUser) {
                 MetresPinnedRow(row: ownRow, periodLabel: viewModel.period.label.lowercased())
-                    .padding(.bottom, Tokens.Size.navHeight + Tokens.Size.navBottomInset + 30)
+                    .padding(.bottom, Tokens.Size.tabBarHeight + Tokens.Size.navBottomInset + 30)
                     .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }

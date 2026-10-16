@@ -6,9 +6,9 @@
 import SwiftUI
 
 /// The v3 bottom navigation (docs/design/rowing-pals-v3-spec.md §Layout — Bottom navigation):
-/// a 58 pt glass pill holding Feed / Rankings / Profile (three equal columns, 4 pt padding) and,
-/// 4 pt to its right, a separate 58 × 58 glass circle for Log. 16 pt from the screen sides,
-/// 6 pt from the bottom. Selected item: the stronger glass thumb (sliding) and brand colour.
+/// a glass pill holding the tabs (equal columns, 4 pt padding) and, beside it, a separate circle
+/// for Log (or the coach's +), both `Tokens.Size.tabBarHeight` tall and `navSideInset` from the
+/// screen sides. Selected item: the stronger glass thumb (sliding) and brand colour.
 ///
 /// Taps never pass through. Every item and the Log button are hittable across their whole
 /// shape, and the pill itself swallows taps that land in its padding. Before this, the items
@@ -74,7 +74,7 @@ struct FloatingTabBar<Tab: Hashable>: View {
             }
         }
         .padding(4)
-        .frame(height: Tokens.Size.navHeight)
+        .frame(height: Tokens.Size.tabBarHeight)
         .glassSurface(in: Capsule())
         // Taps on the pill's own padding stop here instead of reaching the screen below.
         .contentShape(Capsule())
@@ -126,7 +126,7 @@ struct FloatingTabBar<Tab: Hashable>: View {
             Image(systemName: "plus")
                 .font(.system(size: 22, weight: .semibold))
                 .foregroundStyle(Tokens.Ink.onBrand)
-                .frame(width: Tokens.Size.navHeight, height: Tokens.Size.navHeight)
+                .frame(width: Tokens.Size.tabBarHeight, height: Tokens.Size.tabBarHeight)
                 .background { Circle().fill(Tokens.Accent.brand) }
                 .shadow(color: Tokens.Accent.brand.opacity(0.4), radius: 9, y: 6)
                 .contentShape(Circle())
