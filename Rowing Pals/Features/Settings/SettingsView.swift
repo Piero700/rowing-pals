@@ -390,6 +390,8 @@ struct SettingsView: View {
                     )
                     divider
                     toggleRow(title: "New workouts", subtitle: "When your coach sets you a workout", \.newWorkouts)
+                    divider
+                    toggleRow(title: "Practice reminders", subtitle: "Two hours before a practice you’re going to", \.practiceReminders)
                 } else {
                     rowContent(title: "Notifications", subtitle: "Loading…") { ProgressView() }
                 }

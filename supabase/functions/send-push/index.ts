@@ -14,7 +14,9 @@
 
 import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2"
 
-type Kind = "comment" | "reply" | "pb" | "club_post" | "club_invite" | "new_workout"
+type Kind =
+  | "comment" | "reply" | "pb" | "club_post" | "club_invite" | "new_workout"
+  | "practice_changed" | "practice_cancelled" | "practice_reminder" | "new_event"
 
 interface NotificationRow {
   id: string
@@ -27,6 +29,9 @@ interface NotificationRow {
   club_id?: string | null
   // A coach's set workout (docs/migrations/2026-10-05-coaching.sql, decision 39).
   workout_id?: string | null
+  // A practice, or a race or event (docs/migrations/2026-10-16-calendar.sql, decision 68).
+  practice_id?: string | null
+  event_id?: string | null
 }
 
 interface DeviceToken {
@@ -81,7 +86,7 @@ Deno.serve(async (req) => {
   const body = {
     aps: {
       alert,
-      "thread-id": row.session_id ?? row.workout_id ?? row.club_id ?? row.id,
+      "thread-id": row.session_id ?? row.workout_id ?? row.practice_id ?? row.event_id ?? row.club_id ?? row.id,
       "interruption-level": "active",
       sound: "default",
     },
@@ -89,6 +94,8 @@ Deno.serve(async (req) => {
     ...(row.session_id ? { session_id: row.session_id } : {}),
     ...(row.club_id ? { club_id: row.club_id } : {}),
     ...(row.workout_id ? { workout_id: row.workout_id } : {}),
+    ...(row.practice_id ? { practice_id: row.practice_id } : {}),
+    ...(row.event_id ? { event_id: row.event_id } : {}),
     kind: row.kind,
   }
 
@@ -121,6 +128,40 @@ async function composeAlert(admin: SupabaseClient, row: NotificationRow) {
       title: "New workout from your coach",
       body: `${coach}: ${workout.title} · ${when(workout.workout_date, workout.start_time)}`,
     }
+  }
+  if (row.kind === "practice_changed" || row.kind === "practice_cancelled" || row.kind === "practice_reminder") {
+    const { data: practice } = await admin
+      .from("practices")
+      .select("title, place, starts_at, cancelled")
+      .eq("id", row.practice_id)
+      .maybeSingle()
+    if (!practice) return null
+    const what = (practice.title as string | null) ?? "Practice"
+    const where = practice.place ? ` · ${practice.place}` : ""
+    if (row.kind === "practice_reminder") {
+      if (practice.cancelled) return null
+      return { title: "Practice in 2 hours", body: `${what} · ${clock(practice.starts_at)}${where}` }
+    }
+    const coach = await displayName(admin, row.actor_id)
+    if (row.kind === "practice_cancelled") {
+      return { title: "Practice cancelled", body: `${coach}: ${what} · ${moment(practice.starts_at)} is off.` }
+    }
+    return { title: "Practice changed", body: `${coach}: ${what} · ${moment(practice.starts_at)}${where}` }
+  }
+  if (row.kind === "new_event") {
+    const { data: event } = await admin
+      .from("club_events")
+      .select("kind, name, first_day, last_day, place, asks_availability")
+      .eq("id", row.event_id)
+      .maybeSingle()
+    if (!event) return null
+    const coach = await displayName(admin, row.actor_id)
+    const days = event.first_day === event.last_day
+      ? when(event.first_day, null)
+      : `${when(event.first_day, null)} – ${when(event.last_day, null)}`
+    const where = event.place ? ` · ${event.place}` : ""
+    const ask = event.asks_availability ? (event.kind === "race" ? " Can you race? Tap to answer." : " Can you come? Tap to answer.") : ""
+    return { title: event.name as string, body: `${coach} added it: ${days}${where}.${ask}` }
   }
   if (!row.session_id) return null
 
@@ -189,6 +230,18 @@ function when(day: string, time: string | null) {
   const date = new Date(Date.UTC(y, m - 1, d))
   const text = date.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" })
   return time ? `${text.replace(",", "")}, ${time.slice(0, 5)}` : text.replace(",", "")
+}
+
+/// "Tue 20 Oct, 06:30": a practice's start, in UK time.
+function moment(iso: string) {
+  const date = new Date(iso)
+  const day = date.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", timeZone: "Europe/London" })
+  return `${day.replace(",", "")}, ${clock(iso)}`
+}
+
+/// "06:30" in UK time.
+function clock(iso: string) {
+  return new Date(iso).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/London" })
 }
 
 function snippet(text: string) {

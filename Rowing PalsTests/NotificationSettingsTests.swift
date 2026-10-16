@@ -27,7 +27,7 @@ struct NotificationSettingsTests {
     @Test func writesOnlyTheSwitches() throws {
         let settings = NotificationSettings.defaults(for: UUID())
         let object = try JSONSerialization.jsonObject(with: JSONEncoder().encode(settings)) as? [String: Any]
-        #expect(Set(object?.keys.map { $0 } ?? []) == ["user_id", "comments", "personal_bests", "club_activity", "new_workouts"])
+        #expect(Set(object?.keys.map { $0 } ?? []) == ["user_id", "comments", "personal_bests", "club_activity", "new_workouts", "practice_reminders"])
         #expect(object?["club_activity"] as? Bool == false)
     }
 

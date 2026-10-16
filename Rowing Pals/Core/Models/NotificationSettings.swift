@@ -18,17 +18,20 @@ nonisolated struct NotificationSettings: Codable, Equatable {
     var clubActivity: Bool
     /// A coach sets a workout for you (decision 36).
     var newWorkouts: Bool
+    /// Two hours before a practice you're going to (decision 68).
+    var practiceReminders: Bool
 
     static func defaults(for userId: UUID) -> NotificationSettings {
         NotificationSettings(userId: userId, comments: true, personalBests: true, clubActivity: false, newWorkouts: true)
     }
 
-    init(userId: UUID, comments: Bool, personalBests: Bool, clubActivity: Bool, newWorkouts: Bool) {
+    init(userId: UUID, comments: Bool, personalBests: Bool, clubActivity: Bool, newWorkouts: Bool, practiceReminders: Bool = true) {
         self.userId = userId
         self.comments = comments
         self.personalBests = personalBests
         self.clubActivity = clubActivity
         self.newWorkouts = newWorkouts
+        self.practiceReminders = practiceReminders
     }
 
     enum CodingKeys: String, CodingKey {
@@ -37,6 +40,7 @@ nonisolated struct NotificationSettings: Codable, Equatable {
         case personalBests = "personal_bests"
         case clubActivity = "club_activity"
         case newWorkouts = "new_workouts"
+        case practiceReminders = "practice_reminders"
     }
 
     init(from decoder: Decoder) throws {
@@ -47,5 +51,7 @@ nonisolated struct NotificationSettings: Codable, Equatable {
         clubActivity = try c.decode(Bool.self, forKey: .clubActivity)
         // Absent before the coaching migration's Phase 2 section has run.
         newWorkouts = try c.decodeIfPresent(Bool.self, forKey: .newWorkouts) ?? true
+        // Absent before docs/migrations/2026-10-16-calendar.sql has run.
+        practiceReminders = try c.decodeIfPresent(Bool.self, forKey: .practiceReminders) ?? true
     }
 }
