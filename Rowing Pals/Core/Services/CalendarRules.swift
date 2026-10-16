@@ -155,6 +155,26 @@ enum CalendarRules {
         }
     }
 
+    // MARK: - Practice times
+
+    /// A practice ends two hours after it starts unless the coach says otherwise (user,
+    /// 2026-10-17), on the same day: a late start ends at 23:59.
+    static func defaultEnd(after start: Date, calendar: Calendar) -> Date {
+        let twoHours = start.addingTimeInterval(2 * 60 * 60)
+        guard calendar.isDate(twoHours, inSameDayAs: start) else { return latestEnd(on: start, calendar: calendar) }
+        return twoHours
+    }
+
+    /// The end can't be before the start: the earliest it can be is a minute after.
+    static func earliestEnd(after start: Date) -> Date {
+        start.addingTimeInterval(60)
+    }
+
+    /// 23:59 on the practice's day.
+    static func latestEnd(on day: Date, calendar: Calendar) -> Date {
+        calendar.date(bySettingHour: 23, minute: 59, second: 0, of: day) ?? day
+    }
+
     // MARK: - Register
 
     /// The mark a register row starts on before the coach has saved one (CoachPracticeRegister):

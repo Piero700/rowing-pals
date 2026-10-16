@@ -212,4 +212,25 @@ struct CalendarRulesTests {
         #expect(CoachingRules.proRataTargetM(weeklyTargetM: 70_000, asOf: wednesday, calendar: Self.calendar(.monday)) == 20_000)
         #expect(CoachingRules.proRataTargetM(weeklyTargetM: 70_000, asOf: wednesday, calendar: Self.calendar(.sunday)) == 30_000)
     }
+
+    // MARK: - Practice times (user, 2026-10-17)
+
+    @Test func aPracticeEndsTwoHoursAfterItStarts() {
+        let london = Self.calendar(.monday)
+        let start = Self.date(2026, 10, 20, 17, 30)
+        #expect(CalendarRules.time(CalendarRules.defaultEnd(after: start, calendar: london), calendar: london) == "19:30")
+    }
+
+    @Test func aLateStartEndsBeforeMidnight() {
+        let london = Self.calendar(.monday)
+        let start = Self.date(2026, 10, 20, 22, 45)
+        let end = CalendarRules.defaultEnd(after: start, calendar: london)
+        #expect(CalendarRules.time(end, calendar: london) == "23:59")
+        #expect(london.isDate(end, inSameDayAs: start))
+    }
+
+    @Test func theEndCantBeBeforeTheStart() {
+        let start = Self.date(2026, 10, 20, 6, 30)
+        #expect(CalendarRules.earliestEnd(after: start) > start)
+    }
 }

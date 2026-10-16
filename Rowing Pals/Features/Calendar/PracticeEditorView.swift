@@ -101,7 +101,7 @@ struct PracticeEditorView: View {
             }
             VStack(alignment: .leading, spacing: 0) {
                 FormLabel("Ends")
-                DatePicker("Ends", selection: $viewModel.endTime, displayedComponents: .hourAndMinute)
+                DatePicker("Ends", selection: $viewModel.endTime, in: viewModel.endRange, displayedComponents: .hourAndMinute)
                     .labelsHidden()
                     .formFieldBox()
             }

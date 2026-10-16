@@ -17,7 +17,13 @@ final class PracticeEditorViewModel {
     var title = ""
     var place = ""
     var day: Date
-    var startTime: Date
+    /// Picking a start moves the end to two hours later (user, 2026-10-17).
+    var startTime: Date {
+        didSet {
+            guard startTime != oldValue else { return }
+            endTime = CalendarRules.defaultEnd(after: startTime, calendar: calendar)
+        }
+    }
     var endTime: Date
     var squadIds: Set<UUID> = []
     var repeats = false
@@ -38,8 +44,9 @@ final class PracticeEditorViewModel {
         self.practiceId = practiceId
         let start = calendar.startOfDay(for: day ?? Date())
         self.day = start
-        self.startTime = calendar.date(bySettingHour: 6, minute: 30, second: 0, of: start) ?? start
-        self.endTime = calendar.date(bySettingHour: 8, minute: 0, second: 0, of: start) ?? start
+        let startTime = calendar.date(bySettingHour: 6, minute: 30, second: 0, of: start) ?? start
+        self.startTime = startTime
+        self.endTime = CalendarRules.defaultEnd(after: startTime, calendar: calendar)
         self.repeatUntil = calendar.date(byAdding: .weekOfYear, value: 8, to: start) ?? start
         hasLoaded = practiceId == nil
     }
@@ -51,6 +58,12 @@ final class PracticeEditorViewModel {
 
     var startsAt: Date { combine(day, startTime) }
     var endsAt: Date { combine(day, endTime) }
+
+    /// The Ends picker's range: from a minute after the start to the end of that day.
+    var endRange: ClosedRange<Date> {
+        CalendarRules.earliestEnd(after: startTime)...max(CalendarRules.latestEnd(on: startTime, calendar: calendar),
+                                                          CalendarRules.earliestEnd(after: startTime))
+    }
 
     /// "On Tuesdays".
     var repeatDayText: String {
