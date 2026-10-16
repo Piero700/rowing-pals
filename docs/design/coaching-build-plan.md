@@ -59,6 +59,10 @@ Artboards: `CoachWorkouts`, `CoachWorkoutNew`, `CoachWorkoutResults`, `RowerFeed
 ## Phase 3 — Attendance (brief phase 3)
 Artboards: `CoachPractices`, `CoachPracticeNew`, `CoachPracticeRegister`, `CoachAttendance`,
 `RowerPractice`, the practice card in `RowerFeedCoaching`.
+**Changed 2026-10-16 (decisions 67–70, canvas v82):** `CoachPractices` is replaced by the coach's
+`CoachCalendar` tab, and Phase 3 now also covers `CoachCalendarAdd`, `CoachAvailability`, `CoachRace`,
+`CoachRaceNew`, `RowerCalendar` (per-session availability a week ahead, race availability) and the
+club's week start in `Settings`. Saved boats (`CoachSavedBoats`, `CoachAddBoat`) belong with the boats work.
 - Practices: date, start/end, place, squads; one-off or weekly until a date; edit/cancel one or
   the series (rowers notified).
 - Rowers: Going / Can't make it (+ reason, coaches only), check-in on the day.

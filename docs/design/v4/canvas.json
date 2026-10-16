@@ -40,7 +40,7 @@
       "title": "Coaching · Attendance totals",
       "w": 393,
       "x": 1419,
-      "y": 13844
+      "y": 14144
     },
     "CoachCrew.dc.html": {
       "h": 1000,
@@ -48,7 +48,7 @@
       "title": "Your crew · coach",
       "w": 393,
       "x": 0,
-      "y": 8568
+      "y": 8868
     },
     "CoachJoinNotice.dc.html": {
       "h": 860,
@@ -56,7 +56,7 @@
       "title": "Joining a club with coaches",
       "w": 393,
       "x": 1419,
-      "y": 8568
+      "y": 8868
     },
     "CoachMakeCoach.dc.html": {
       "h": 860,
@@ -64,7 +64,7 @@
       "title": "Manage club · make coach",
       "w": 393,
       "x": 473,
-      "y": 8568
+      "y": 8868
     },
     "CoachOnboarding.dc.html": {
       "h": 892,
@@ -72,7 +72,7 @@
       "title": "Onboarding · I’m a coach",
       "w": 393,
       "x": 946,
-      "y": 8568
+      "y": 8868
     },
     "CoachOnlyFeed.dc.html": {
       "h": 860,
@@ -80,7 +80,7 @@
       "title": "Feed · coach who doesn’t row",
       "w": 393,
       "x": 1892,
-      "y": 8568
+      "y": 8868
     },
     "CoachPracticeNew.dc.html": {
       "h": 1000,
@@ -88,7 +88,7 @@
       "title": "Coaching · Edit practice",
       "w": 393,
       "x": 473,
-      "y": 13844
+      "y": 14144
     },
     "CoachPracticeRegister.dc.html": {
       "h": 1308,
@@ -96,15 +96,7 @@
       "title": "Coaching · Register",
       "w": 393,
       "x": 946,
-      "y": 13844
-    },
-    "CoachPractices.dc.html": {
-      "h": 944,
-      "is_interactive": true,
-      "title": "Coach app · Practices tab",
-      "w": 393,
-      "x": 0,
-      "y": 13844
+      "y": 14144
     },
     "CoachRower.dc.html": {
       "h": 2028,
@@ -112,7 +104,7 @@
       "title": "Coaching · One rower",
       "w": 393,
       "x": 946,
-      "y": 9988
+      "y": 10288
     },
     "CoachRowers.dc.html": {
       "h": 1450,
@@ -120,7 +112,7 @@
       "title": "Coach app · Rowers tab",
       "w": 393,
       "x": 0,
-      "y": 9988
+      "y": 10288
     },
     "CoachSortSheet.dc.html": {
       "h": 860,
@@ -128,7 +120,7 @@
       "title": "Coaching · Squad and sort",
       "w": 393,
       "x": 473,
-      "y": 9988
+      "y": 10288
     },
     "CoachSquadEdit.dc.html": {
       "h": 996,
@@ -136,7 +128,7 @@
       "title": "Coaching · Edit squad",
       "w": 393,
       "x": 1892,
-      "y": 9988
+      "y": 10288
     },
     "CoachSquads.dc.html": {
       "h": 852,
@@ -144,7 +136,7 @@
       "title": "Coaching · Squads",
       "w": 393,
       "x": 1419,
-      "y": 9988
+      "y": 10288
     },
     "CoachWorkoutNew.dc.html": {
       "h": 1160,
@@ -152,7 +144,7 @@
       "title": "Coaching · New workout",
       "w": 393,
       "x": 473,
-      "y": 12236
+      "y": 12536
     },
     "CoachWorkoutResults.dc.html": {
       "h": 1188,
@@ -160,7 +152,7 @@
       "title": "Coaching · Workout results",
       "w": 393,
       "x": 946,
-      "y": 12236
+      "y": 12536
     },
     "CoachWorkouts.dc.html": {
       "h": 1152,
@@ -168,7 +160,7 @@
       "title": "Coach app · Workouts tab",
       "w": 393,
       "x": 0,
-      "y": 12236
+      "y": 12536
     },
     "CreateAccount.dc.html": {
       "h": 852,
@@ -296,7 +288,7 @@
       "title": "Rower · Feed with today’s workout",
       "w": 393,
       "x": 1419,
-      "y": 12236
+      "y": 12536
     },
     "RowerLogCoaching.dc.html": {
       "h": 860,
@@ -304,7 +296,7 @@
       "title": "Rower · Log, linked to workout",
       "w": 393,
       "x": 1892,
-      "y": 12236
+      "y": 12536
     },
     "RowerPractice.dc.html": {
       "h": 852,
@@ -312,7 +304,7 @@
       "title": "Rower · Practice",
       "w": 393,
       "x": 1892,
-      "y": 13844
+      "y": 14144
     },
     "RowerProfile.dc.html": {
       "h": 852,
@@ -323,7 +315,7 @@
       "y": 2544
     },
     "Settings.dc.html": {
-      "h": 1876,
+      "h": 2100,
       "is_interactive": true,
       "title": "Settings",
       "w": 393,
@@ -363,20 +355,20 @@
       "y": 3816
     },
     "CoachBoats.dc.html": {
-      "h": 1690,
+      "h": 1756,
       "is_interactive": true,
       "title": "Coach app · Boats tab",
       "w": 393,
       "x": 0,
-      "y": 15692
+      "y": 15992
     },
     "CoachBoatEdit.dc.html": {
-      "h": 1320,
+      "h": 1460,
       "is_interactive": true,
       "title": "Coach app · Crew a boat",
       "w": 393,
       "x": 473,
-      "y": 15692
+      "y": 15992
     },
     "CoachWaterSessionNew.dc.html": {
       "h": 1420,
@@ -384,7 +376,7 @@
       "title": "Coach app · New water session",
       "w": 393,
       "x": 946,
-      "y": 15692
+      "y": 15992
     },
     "RowerBoat.dc.html": {
       "h": 860,
@@ -392,7 +384,7 @@
       "title": "Rower · Feed with their boat",
       "w": 393,
       "x": 1419,
-      "y": 15692
+      "y": 15992
     },
     "CoachNew.dc.html": {
       "h": 852,
@@ -400,7 +392,7 @@
       "title": "Coach app · + New session",
       "w": 393,
       "x": 0,
-      "y": 17982
+      "y": 18282
     },
     "CoachProfile.dc.html": {
       "h": 1008,
@@ -408,7 +400,71 @@
       "title": "Coach app · Profile (avatar, top right)",
       "w": 393,
       "x": 473,
-      "y": 17982
+      "y": 18282
+    },
+    "CoachCalendar.dc.html": {
+      "h": 1380,
+      "is_interactive": true,
+      "title": "Coach app · Calendar tab (replaces Practices)",
+      "w": 393,
+      "x": 0,
+      "y": 14144
+    },
+    "CoachSavedBoats.dc.html": {
+      "h": 1452,
+      "is_interactive": true,
+      "title": "Coach app · Boats · Saved boats",
+      "w": 393,
+      "x": 1892,
+      "y": 15992
+    },
+    "CoachAddBoat.dc.html": {
+      "h": 852,
+      "is_interactive": true,
+      "title": "Coach app · Add a boat (saved or new)",
+      "w": 393,
+      "x": 2365,
+      "y": 15992
+    },
+    "CoachCalendarAdd.dc.html": {
+      "h": 852,
+      "is_interactive": true,
+      "title": "Coach app · Calendar · Add to a day",
+      "w": 393,
+      "x": 0,
+      "y": 19890
+    },
+    "CoachAvailability.dc.html": {
+      "h": 1920,
+      "is_interactive": true,
+      "title": "Coach app · Who’s available",
+      "w": 393,
+      "x": 473,
+      "y": 19890
+    },
+    "CoachRace.dc.html": {
+      "h": 1330,
+      "is_interactive": true,
+      "title": "Coach app · Race",
+      "w": 393,
+      "x": 946,
+      "y": 19890
+    },
+    "CoachRaceNew.dc.html": {
+      "h": 912,
+      "is_interactive": true,
+      "title": "Coach app · New race or event",
+      "w": 393,
+      "x": 1419,
+      "y": 19890
+    },
+    "RowerCalendar.dc.html": {
+      "h": 2240,
+      "is_interactive": true,
+      "title": "Rower · Calendar tab",
+      "w": 393,
+      "x": 1892,
+      "y": 19890
     }
   },
   "createdOnFiles": {
@@ -434,7 +490,7 @@
       "text": "Coaching (proposal) · entry and setup",
       "w": 240,
       "x": 0,
-      "y": 8268
+      "y": 8568
     },
     "coach1": {
       "kind": "title1",
@@ -442,7 +498,7 @@
       "text": "Coaching (proposal) · rowers and squads",
       "w": 240,
       "x": 0,
-      "y": 9688
+      "y": 9988
     },
     "coach2": {
       "kind": "title1",
@@ -450,7 +506,7 @@
       "text": "Coaching (proposal) · set workouts",
       "w": 240,
       "x": 0,
-      "y": 11936
+      "y": 12236
     },
     "coach3": {
       "kind": "title1",
@@ -458,7 +514,7 @@
       "text": "Coaching (proposal) · attendance",
       "w": 240,
       "x": 0,
-      "y": 13544
+      "y": 13844
     },
     "coachAbout": {
       "fill": "purple",
@@ -466,7 +522,7 @@
       "text": "Coach section · design proposal (5 Oct 2026), not in the app. Built from the brief’s decisions 1–6. Predicted 2k, effort, zone mix and flags would come from the Pace Engine: the numbers shown are samples. Coaches see age and bodyweight; quiet hours removed.",
       "w": 380,
       "x": 2365,
-      "y": 8568
+      "y": 8868
     },
     "row0": {
       "kind": "title1",
@@ -522,14 +578,14 @@
       "text": "Coach app (proposal) · water sessions and boats",
       "w": 240,
       "x": 0,
-      "y": 15392
+      "y": 15692
     },
     "boatsAbout": {
       "fill": "blue",
       "size": 24,
       "w": 380,
-      "x": 1892,
-      "y": 15692,
+      "x": 2838,
+      "y": 15992,
       "text": "Boats · proposal (16 Oct 2026), not in the app. Drawn upright, bow at the top, seats a seat-length apart. Stroke-side oars on the left, bow side on the right; stroke-rigged or bow-rigged sets which seats are which. A rower on their other side gets a ‘Usually stroke side’ note. Logging water metres stays out (decision 54)."
     },
     "coach5": {
@@ -538,15 +594,31 @@
       "text": "Coach app (proposal) · + menu and switching",
       "w": 240,
       "x": 0,
-      "y": 17682
+      "y": 17982
     },
     "coachAppAbout": {
       "fill": "purple",
       "size": 24,
       "w": 380,
       "x": 946,
-      "y": 17982,
-      "text": "Coach version · proposal (16 Oct 2026). A coach has their own bar: Rowers, Workouts, Practices, Boats and +. + asks Land session (erg workout) or Water session (crew boats). Profile and Settings sit behind the avatar, top right. Someone who rows and coaches switches with one button (Profile here, Settings in the rower version); the app opens in the last one used."
+      "y": 18282,
+      "text": "Coach version · proposal (16 Oct 2026). A coach has their own bar: Rowers, Workouts, Calendar, Boats and +. + asks Land session (erg workout) or Water session (crew boats). Profile and Settings sit behind the avatar, top right. Someone who rows and coaches switches with one button (Profile here, Settings in the rower version); the app opens in the last one used."
+    },
+    "coach6": {
+      "kind": "title1",
+      "maxW": 2758,
+      "text": "Coach app and rower Calendar (proposal) · availability, races and events",
+      "w": 240,
+      "x": 0,
+      "y": 19590
+    },
+    "calAbout": {
+      "fill": "blue",
+      "size": 24,
+      "w": 380,
+      "x": 2365,
+      "y": 19890,
+      "text": "Calendars · proposal (16 Oct 2026), not in the app. Rowers’ bar: Feed, Rankings, Calendar, Profile + Log. A week ahead, rowers say which sessions they can make (morning and evening separately, or the whole day at once) and which races. Coaches’ Calendar replaces Practices: tap a day to take a register or add a practice, land or water session, race or event; Who’s available feeds crewing. Boats can be saved and reused. The club’s week starts on Monday or Sunday (Settings, coaches)."
     }
   },
   "order": [
@@ -590,7 +662,6 @@
     "CoachWorkoutResults.dc.html",
     "RowerFeedCoaching.dc.html",
     "RowerLogCoaching.dc.html",
-    "CoachPractices.dc.html",
     "CoachPracticeNew.dc.html",
     "CoachPracticeRegister.dc.html",
     "CoachAttendance.dc.html",
@@ -600,7 +671,15 @@
     "CoachWaterSessionNew.dc.html",
     "RowerBoat.dc.html",
     "CoachNew.dc.html",
-    "CoachProfile.dc.html"
+    "CoachProfile.dc.html",
+    "CoachCalendar.dc.html",
+    "CoachSavedBoats.dc.html",
+    "CoachAddBoat.dc.html",
+    "CoachCalendarAdd.dc.html",
+    "CoachAvailability.dc.html",
+    "CoachRace.dc.html",
+    "CoachRaceNew.dc.html",
+    "RowerCalendar.dc.html"
   ],
   "pages": [],
   "title": "Rowing Pals — current app"
