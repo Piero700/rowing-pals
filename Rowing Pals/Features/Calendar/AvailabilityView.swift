@@ -170,6 +170,23 @@ struct AvailabilityView: View {
         AnswerListCard(title: "Available", people: lists.available) { navigate(.coachRower($0)) }
         AnswerListCard(title: "Can’t make it", people: lists.cant) { navigate(.coachRower($0)) }
         AnswerListCard(title: "No answer yet", people: lists.none) { navigate(.coachRower($0)) }
+        Button {
+            Task { await planBoats(for: practice) }
+        } label: {
+            Label("Plan boats for this session", systemImage: "water.waves")
+        }
+        .buttonStyle(.rpGlass)
+        .padding(.top, Tokens.Spacing.group)
+        FormFootnote("Only available rowers are offered when you crew the boats.")
+    }
+
+    /// Opens the water session already planned for this practice, or a new one from it.
+    private func planBoats(for practice: Practice) async {
+        if let existing = try? await BoatService.session(forPractice: practice.id) {
+            navigate(.waterSession(existing.id))
+        } else {
+            navigate(.newWaterSession(WaterSessionSeed(practiceId: practice.id)))
+        }
     }
 
     // MARK: - Races

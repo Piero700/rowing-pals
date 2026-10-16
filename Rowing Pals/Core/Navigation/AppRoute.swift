@@ -68,6 +68,12 @@ enum AppRoute: Hashable, Identifiable {
     case event(UUID)
     case newEvent(EventKind, Date)
     case editEvent(UUID)
+    /// A water session: one to edit, or a new one (decision 67). Its boats: one to crew in a
+    /// session (nil for a new boat), and a saved boat (nil for a new one; decision 70).
+    case waterSession(UUID)
+    case newWaterSession(WaterSessionSeed)
+    case sessionBoat(session: UUID, boat: UUID?)
+    case savedBoat(UUID?)
 
     var id: Self { self }
 }

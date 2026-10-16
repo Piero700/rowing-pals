@@ -5,22 +5,24 @@
 
 import SwiftUI
 
-/// The coach version's shell (decision 67): its own floating bar — Rowers, Workouts and Calendar
-/// in the glass pill, the solid + beside it — built like the rower's `RootView`. Boats joins the
-/// bar between Workouts and Calendar in phase CV3 (docs/design/coach-version-build-plan.md); until
-/// water sessions exist, + sets a workout.
+/// The coach version's shell (decision 67): its own floating bar — Rowers, Workouts, Boats and
+/// Calendar in the glass pill, the solid + beside it, which asks Land session or Water session —
+/// built like the rower's `RootView`.
 ///
-/// Every tab lives at once and are shown or hidden, so each keeps its scroll position. Anything a
+/// Every tab lives at once and is shown or hidden, so each keeps its scroll position. Anything a
 /// tab opens appears full screen over the bar through `RouteHost`, as in the rower version; when it
 /// closes, the tabs reload, so a new workout or a changed squad shows straight away.
 struct CoachRootView: View {
     private enum CoachTab: Hashable {
-        case rowers, workouts, calendar
+        case rowers, workouts, boats, calendar
     }
 
     @State private var selection: CoachTab = .rowers
     @State private var barVisibility = FloatingBarVisibility()
     @State private var presentedRoute: AppRoute?
+    /// + asks Land session or Water session; the choice opens once the sheet has gone.
+    @State private var isChoosingNew = false
+    @State private var chosenRoute: AppRoute?
     @State private var reselects: [CoachTab: Int] = [:]
     /// Counts screens closed over the tabs; each tab reloads when it changes.
     @State private var refreshes = 0
@@ -32,6 +34,7 @@ struct CoachRootView: View {
     private static let items: [FloatingTabBar<CoachTab>.Item] = [
         .init(tab: .rowers, label: "Rowers", systemImage: "person.2"),
         .init(tab: .workouts, label: "Workouts", systemImage: "stopwatch"),
+        .init(tab: .boats, label: "Boats", systemImage: "water.waves"),
         .init(tab: .calendar, label: "Calendar", systemImage: "calendar")
     ]
 
@@ -45,8 +48,8 @@ struct CoachRootView: View {
                         items: Self.items,
                         selection: $selection,
                         onReselect: { tab in reselects[tab, default: 0] += 1 },
-                        logLabel: "New workout",
-                        onTapLog: { presentedRoute = .newWorkout }
+                        logLabel: "New session",
+                        onTapLog: { isChoosingNew = true }
                     )
                 }
                 .ignoresSafeArea(.container, edges: .bottom)
@@ -58,6 +61,17 @@ struct CoachRootView: View {
                 if case .logWorkout = route { return }
                 presentedRoute = route
             })
+            .sheet(isPresented: $isChoosingNew, onDismiss: {
+                if let route = chosenRoute {
+                    chosenRoute = nil
+                    presentedRoute = route
+                }
+            }) {
+                NewSessionSheet { route in
+                    chosenRoute = route
+                    isChoosingNew = false
+                }
+            }
             .fullScreenCover(item: $presentedRoute, onDismiss: { refreshes += 1 }) { route in
                 RouteHost(root: route)
             }
@@ -83,6 +97,7 @@ struct CoachRootView: View {
         ZStack {
             tab(.rowers) { CoachRowersView(reselects: reselects[.rowers, default: 0], refreshes: refreshes) }
             tab(.workouts) { CoachWorkoutsView(reselects: reselects[.workouts, default: 0], refreshes: refreshes) }
+            tab(.boats) { CoachBoatsView(reselects: reselects[.boats, default: 0], refreshes: refreshes) }
             tab(.calendar) { CoachCalendarView(reselects: reselects[.calendar, default: 0], refreshes: refreshes) }
         }
         .ignoresSafeArea(.container, edges: .bottom)

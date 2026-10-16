@@ -23,6 +23,8 @@ final class PushNotificationService {
 
     /// A post opened from an alert. `RootView` presents it, then clears this.
     var pendingRoute: AppRoute?
+    /// A boat alert asks the rower app to show the Feed, where the boat card is (decision 67).
+    var opensFeed = false
     /// Whether iOS lets this app show alerts — Settings explains when it doesn't.
     private(set) var authorizationStatus: UNAuthorizationStatus = .notDetermined
 
@@ -104,11 +106,17 @@ final class PushNotificationService {
     }
 
     /// A tapped alert opens its post (`session_id`); a practice alert its practice, a race or
-    /// event alert its page (decision 68); a club invitation Your club, where it can be accepted
-    /// or declined (see send-push, decision 26).
+    /// event alert its page (decision 68); a boat alert the Feed, with the boat on top (decision
+    /// 67); a club invitation Your club, where it can be accepted or declined (see send-push,
+    /// decision 26).
     func open(sessionId: String?, kind: String?, practiceId: String? = nil, eventId: String? = nil) {
         if kind == "club_invite" {
             pendingRoute = .clubHub
+            return
+        }
+        if kind == "boat_seat" {
+            NotificationCenter.default.post(name: .boatsChanged, object: nil)
+            opensFeed = true
             return
         }
         if let practiceId, let id = UUID(uuidString: practiceId) {

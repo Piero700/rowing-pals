@@ -19,6 +19,9 @@ final class CoachCalendarViewModel {
     private(set) var practices: [Practice] = []
     private(set) var workouts: [CoachWorkout] = []
     private(set) var events: [ClubEvent] = []
+    /// Water sessions this month and their boats (decision 67).
+    private(set) var waterSessions: [WaterSession] = []
+    private(set) var waterBoats: [UUID: [SessionBoat]] = [:]
     private(set) var squads: [Squad] = []
     private(set) var practiceAudiences: [UUID: Set<UUID>] = [:]
     private(set) var responses: [UUID: [PracticeResponse]] = [:]
@@ -60,6 +63,20 @@ final class CoachCalendarViewModel {
         return workouts.filter { $0.workoutDate == text }
     }
 
+    func waterSessions(on day: Date) -> [WaterSession] {
+        waterSessions.filter { calendar.isDate($0.startsAt, inSameDayAs: day) }
+    }
+
+    /// "4 boats crewed · 12 rowers · sent", "· 1 of 4 sent", "· not sent", or "No boats yet".
+    func boatsLine(for session: WaterSession) -> String {
+        let boats = waterBoats[session.id] ?? []
+        guard !boats.isEmpty else { return "No boats yet" }
+        let rowers = Set(boats.flatMap { $0.seats.map(\.userId) }).count
+        let sent = boats.filter(\.isSent).count
+        let state = sent == boats.count ? "sent" : (sent == 0 ? "not sent" : "\(sent) of \(boats.count) sent")
+        return "\(boats.count) boat\(boats.count == 1 ? "" : "s") crewed · \(rowers) rower\(rowers == 1 ? "" : "s") · \(state)"
+    }
+
     func events(on day: Date) -> [ClubEvent] {
         let text = WorkoutRules.dayText(day, calendar: calendar)
         return events.filter { CalendarRules.event($0, covers: text) }
@@ -67,7 +84,7 @@ final class CoachCalendarViewModel {
 
     /// Practices drawn as dots under a day in the month (up to two).
     func dotCount(on day: Date) -> Int {
-        min(practices(on: day).filter { !$0.cancelled }.count, 2)
+        min(practices(on: day).filter { !$0.cancelled }.count + waterSessions(on: day).count, 2)
     }
 
     func counts(for practice: Practice) -> CalendarRules.Counts {
@@ -144,6 +161,10 @@ final class CoachCalendarViewModel {
             let lastText = WorkoutRules.dayText(last, calendar: calendar)
             workouts = workoutRows.filter { $0.workoutDate >= firstText && $0.workoutDate <= lastText }
             events = eventRows
+            // Water sessions are extra: before the boats migration the calendar still shows.
+            let water = (try? await BoatService.sessions(from: first, to: end)) ?? []
+            waterSessions = water
+            waterBoats = Dictionary(grouping: (try? await BoatService.boats(ofSessions: water.map(\.id))) ?? [], by: \.sessionId)
             let practiceIds = Array(Set((monthRows + weekRows).map(\.id)))
             async let audienceRows = CalendarService.audiences(ofPractices: practiceIds)
             async let responseRows = CalendarService.responses(toPractices: practiceIds)

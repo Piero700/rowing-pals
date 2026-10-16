@@ -95,6 +95,9 @@ struct CoachCalendarView: View {
         .onReceive(NotificationCenter.default.publisher(for: .calendarChanged)) { _ in
             Task { await viewModel.load() }
         }
+        .onReceive(NotificationCenter.default.publisher(for: .boatsChanged)) { _ in
+            Task { await viewModel.load() }
+        }
         .sheet(item: $addingTo, onDismiss: {
             if let route = chosenRoute {
                 chosenRoute = nil
@@ -128,8 +131,9 @@ struct CoachCalendarView: View {
         let practices = viewModel.practices(on: day)
         let workouts = viewModel.workouts(on: day)
         let events = viewModel.events(on: day)
-        if practices.isEmpty && workouts.isEmpty && events.isEmpty {
-            Text(viewModel.hasLoaded ? "Nothing on. Tap Add to set a practice, a land session, a race or an event." : "Loading…")
+        let water = viewModel.waterSessions(on: day)
+        if practices.isEmpty && workouts.isEmpty && events.isEmpty && water.isEmpty {
+            Text(viewModel.hasLoaded ? "Nothing on. Tap Add to set a practice, a land or water session, a race or an event." : "Loading…")
                 .textStyle(Typography.meta)
                 .foregroundStyle(Tokens.Ink.secondary)
                 .padding(.horizontal, 4)
@@ -140,6 +144,9 @@ struct CoachCalendarView: View {
             }
             ForEach(workouts) { workout in
                 workoutCard(workout)
+            }
+            ForEach(water) { session in
+                waterCard(session)
             }
             ForEach(events) { event in
                 eventCard(event)
@@ -213,6 +220,39 @@ struct CoachCalendarView: View {
                         .foregroundStyle(Tokens.Ink.primary)
                     Text(workout.zone ?? "Erg workout")
                         .textStyle(Typography.statLabel)
+                        .foregroundStyle(Tokens.Ink.secondary)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                Image(systemName: "chevron.right")
+                    .textStyle(Typography.pill)
+                    .foregroundStyle(Tokens.Ink.secondary)
+            }
+            .padding(Tokens.Spacing.card)
+            .background(Self.cardShape.fill(Tokens.Surface.card))
+            .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+            .contentShape(Self.cardShape)
+        }
+        .buttonStyle(IconPressStyle())
+    }
+
+    private func waterCard(_ session: WaterSession) -> some View {
+        Button {
+            navigate(.waterSession(session.id))
+        } label: {
+            HStack(spacing: Tokens.Spacing.gap) {
+                Text(CalendarRules.time(session.startsAt, calendar: viewModel.calendar))
+                    .textStyle(Typography.rowTitle)
+                    .tabularNumerals()
+                    .foregroundStyle(Tokens.Ink.primary)
+                    .frame(width: Tokens.Schedule.timeColumn, alignment: .leading)
+                VStack(alignment: .leading, spacing: 1) {
+                    Text("Water · \(session.title)")
+                        .textStyle(Typography.rowTitle)
+                        .foregroundStyle(Tokens.Ink.primary)
+                        .multilineTextAlignment(.leading)
+                    Text(viewModel.boatsLine(for: session))
+                        .textStyle(Typography.statLabel)
+                        .tabularNumerals()
                         .foregroundStyle(Tokens.Ink.secondary)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)

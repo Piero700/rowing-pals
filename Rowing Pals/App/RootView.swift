@@ -122,6 +122,11 @@ struct RootView: View {
             .onChange(of: scenePhase) { _, phase in
                 if phase == .active { Task { await membershipMonitor.check() } }
             }
+            .onChange(of: push.opensFeed, initial: true) {
+                guard push.opensFeed else { return }
+                push.opensFeed = false
+                selection = .feed
+            }
             .onChange(of: push.pendingRoute, initial: true) {
                 // Next run loop: on a launch from an alert, the window is still being set up.
                 Task { openPendingRoute() }

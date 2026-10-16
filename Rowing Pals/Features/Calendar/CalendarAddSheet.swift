@@ -6,7 +6,7 @@
 import SwiftUI
 
 /// Add on a day of the coach's Calendar (CoachCalendarAdd; decision 68): a practice, a land
-/// session, a race or regatta, or another event. Water sessions join with Boats.
+/// session, a water session, a race or regatta, or another event.
 struct CalendarAddSheet: View {
     let day: Date
     let calendar: Calendar
@@ -32,7 +32,9 @@ struct CalendarAddSheet: View {
             option("calendar", "Practice", "A time and place for squads. Can repeat every week, and rowers say if they can come.",
                    .newPractice(day))
             option("stopwatch", "Land session", "An erg workout with pieces and target splits.", .newWorkoutOn(day))
-            option("flag", "Race or regatta", "Rowers say if they can race.", .newEvent(.race, day))
+            option("water.waves", "Water session", "The plan, then crew the boats from who’s available.",
+                   .newWaterSession(WaterSessionSeed(day: day)))
+            option("flag", "Race or regatta", "Rowers say if they can race. Crew the boats when you know.", .newEvent(.race, day))
             option("clock", "Other event", "A meeting, social or kit day. Shows in everyone’s calendar.", .newEvent(.event, day))
         }
         .padding(.horizontal, Tokens.Spacing.screen)

@@ -253,6 +253,57 @@ enum Tokens {
         static let markRadius: CGFloat = 6
     }
 
+    /// A boat drawn upright, bow at the top (CoachBoats, CoachBoatEdit, RowerBoat; decision 67):
+    /// the small one on cards, the large one to crew it. All values from the canvas.
+    enum Boat {
+        struct Metrics: Sendable {
+            /// The drawing's width; the hull runs down its middle.
+            let width: CGFloat
+            /// The pale band behind the hull.
+            let bandWidth: CGFloat
+            /// The hull at its widest, and where the bow's taper ends.
+            let hullWidth: CGFloat
+            let bowTaper: CGFloat
+            /// The bow seat's centre, then a seat-length between seats, then the stern below stroke.
+            let firstSeat: CGFloat
+            let seatSpacing: CGFloat
+            let stern: CGFloat
+            /// Room for the cox below stroke.
+            let coxSpace: CGFloat
+            let seatRadius: CGFloat
+            let coxSize: CGFloat
+            /// A rigger's reach out from the hull and its drop, and the blade at its end.
+            let riggerReach: CGFloat
+            let riggerDrop: CGFloat
+            let bladeLength: CGFloat
+            let bladeDepth: CGFloat
+            let markFont: CGFloat
+            /// A name beside its seat, on the oar's side.
+            let nameGap: CGFloat
+            let nameWidth: CGFloat
+        }
+
+        static let small = Metrics(width: 166, bandWidth: 68, hullWidth: 18, bowTaper: 42, firstSeat: 65, seatSpacing: 30,
+                                   stern: 37, coxSpace: 28, seatRadius: 9, coxSize: 16, riggerReach: 16, riggerDrop: 6,
+                                   bladeLength: 10, bladeDepth: 5.2, markFont: 8, nameGap: 2, nameWidth: 47)
+        static let large = Metrics(width: 345, bandWidth: 100, hullWidth: 26, bowTaper: 54, firstSeat: 96, seatSpacing: 64,
+                                   stern: 62, coxSpace: 56, seatRadius: 12, coxSize: 22, riggerReach: 18, riggerDrop: 8,
+                                   bladeLength: 12, bladeDepth: 6.4, markFont: 10, nameGap: 4, nameWidth: 124)
+        /// A boat card on the Boats tab: the small drawing in a rounded tile.
+        static let cardWidth: CGFloat = 166
+        static let cardRadius: CGFloat = 22
+        /// A name button beside a seat when crewing, and its corners.
+        static let seatButtonHeight: CGFloat = 48
+        static let seatButtonRadius: CGFloat = 16
+        static let lineWidth: CGFloat = 1.3
+        static let selectedLineWidth: CGFloat = 2.2
+        static let riggerLineWidth: CGFloat = 1.8
+        static let dash: [CGFloat] = [4, 3]
+        /// The Feed card's seat list: the seat's name column.
+        static let seatColumn: CGFloat = 44
+        static let seatRow: CGFloat = 30
+    }
+
     /// Coaching's own radii and the zone-mix shades (docs/design/v4/CoachRower.dc.html).
     enum Coaching {
         /// The three stat cards over the Rowers list.

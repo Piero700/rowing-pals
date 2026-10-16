@@ -17,6 +17,7 @@ import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-
 type Kind =
   | "comment" | "reply" | "pb" | "club_post" | "club_invite" | "new_workout"
   | "new_practice" | "practice_changed" | "practice_cancelled" | "practice_reminder" | "new_event"
+  | "boat_seat"
 
 interface NotificationRow {
   id: string
@@ -32,6 +33,8 @@ interface NotificationRow {
   // A practice, or a race or event (docs/migrations/2026-10-16-calendar.sql, decision 68).
   practice_id?: string | null
   event_id?: string | null
+  // A boat in a water session (docs/migrations/2026-10-16-boats.sql, decision 67).
+  boat_id?: string | null
 }
 
 interface DeviceToken {
@@ -86,7 +89,7 @@ Deno.serve(async (req) => {
   const body = {
     aps: {
       alert,
-      "thread-id": row.session_id ?? row.workout_id ?? row.practice_id ?? row.event_id ?? row.club_id ?? row.id,
+      "thread-id": row.session_id ?? row.workout_id ?? row.practice_id ?? row.event_id ?? row.boat_id ?? row.club_id ?? row.id,
       "interruption-level": "active",
       sound: "default",
     },
@@ -96,6 +99,7 @@ Deno.serve(async (req) => {
     ...(row.workout_id ? { workout_id: row.workout_id } : {}),
     ...(row.practice_id ? { practice_id: row.practice_id } : {}),
     ...(row.event_id ? { event_id: row.event_id } : {}),
+    ...(row.boat_id ? { boat_id: row.boat_id } : {}),
     kind: row.kind,
   }
 
@@ -127,6 +131,29 @@ async function composeAlert(admin: SupabaseClient, row: NotificationRow) {
     return {
       title: "New workout from your coach",
       body: `${coach}: ${workout.title} · ${when(workout.workout_date, workout.start_time)}`,
+    }
+  }
+  if (row.kind === "boat_seat") {
+    const { data: boat } = await admin
+      .from("session_boats")
+      .select("name, boat_type, sent_at, water_sessions(starts_at)")
+      .eq("id", row.boat_id)
+      .maybeSingle()
+    if (!boat || !boat.sent_at) return null
+    const { data: seat } = await admin
+      .from("session_boat_seats")
+      .select("seat")
+      .eq("boat_id", row.boat_id)
+      .eq("user_id", row.recipient_id)
+      .maybeSingle()
+    if (!seat) return null
+    const session = boat.water_sessions as { starts_at?: string } | null
+    if (!session?.starts_at) return null
+    const day = new Date(session.starts_at)
+      .toLocaleDateString("en-GB", { weekday: "short", timeZone: "Europe/London" })
+    return {
+      title: "Your boat",
+      body: `${day} ${clock(session.starts_at)} · ${seatPhrase(seat.seat as number, boat.boat_type as string)} ${boat.name}`,
     }
   }
   if (row.kind === "new_practice" || row.kind === "practice_changed" || row.kind === "practice_cancelled" ||
@@ -236,6 +263,18 @@ function when(day: string, time: string | null) {
   const date = new Date(Date.UTC(y, m - 1, d))
   const text = date.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" })
   return time ? `${text.replace(",", "")}, ${time.slice(0, 5)}` : text.replace(",", "")
+}
+
+/// "you’re at stroke in", "you’re in seat 2 in", "you’re coxing": seat 1 is bow, the highest is
+/// stroke, 0 the cox (as BoatRules.seatPhrase in the app).
+function seatPhrase(seat: number, type: string) {
+  const rowers: Record<string, number> = { "1x": 1, "2x": 2, "2-": 2, "4-": 4, "4+": 4, "4x": 4, "8+": 8 }
+  const count = rowers[type] ?? 0
+  if (seat === 0) return "you’re coxing"
+  if (count === 1) return "you’re in"
+  if (seat === count) return "you’re at stroke in"
+  if (seat === 1) return "you’re at bow in"
+  return `you’re in seat ${seat} in`
 }
 
 /// "Tue 20 Oct, 06:30": a practice's start, in UK time.

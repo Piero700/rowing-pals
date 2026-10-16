@@ -53,7 +53,26 @@ Built 2026-10-16; checklist in `docs/testing/coach-version-phase2.md`. Server:
 - **Alerts**: New practice, Practice changed / cancelled, Practice in 2 hours (Settings → Practice
   reminders), and a new race or event; tapping one opens the practice or race.
 
-## Phase CV3 — Boats and water sessions (decisions 67, 70)
-The **Boats** tab (Sessions · Saved boats), crewing a boat (upright drawing, boat type, stroke- or
-bow-rigged, sides, availability in the picker), new water session and sending it, the rower's boat
-card on the Feed and its alert, saved boats and Add a boat, and **+** asking Land or Water.
+## Phase CV3 — Boats and water sessions (decisions 67, 70) — built
+Built 2026-10-17; checklist in `docs/testing/coach-version-phase3.md`. Server:
+`docs/migrations/2026-10-16-boats.sql` and the `send-push` function (deployed to staging).
+- **Coach bar**: Rowers · Workouts · **Boats** · Calendar; **+** asks Land session (New workout) or
+  Water session.
+- **Boats tab** (`Features/Coaching/Boats/CoachBoatsView.swift`): Sessions — Today ("4 boats · 12
+  rowers") and Upcoming, each session's boats as small upright drawings with first names and Sent /
+  Not sent, and Not in a boat yet for the next session — and Saved boats (Used N times, New saved
+  boat).
+- **Water session** (`WaterSessionView`): Title, Date, Time, Meet at, The plan; Boats; Add boat (saved
+  boats checked against who's available, or New boat); "Each rower is told their boat and seat";
+  Send to N rowers; Delete session. Saved as soon as it needs to exist (adding a boat, sending, or
+  leaving it with a title).
+- **Crew a boat** (`CrewBoatView`): name, type, rigging, the large upright drawing with a button per
+  seat on its oar's side, "Usually stroke side" for someone on their other side, tap a seat then a
+  rower, hold and drag to swap; the picker (available rowers, Fits, level, side, 2k prediction; can't
+  make it greyed); Keep in Saved boats; Save boat; Delete boat. The same screen edits a saved boat.
+- **Rower's Feed**: **Your boat · Sat 07:00** (`FeedBoatCard`) from sending until the session starts;
+  the "Your boat" alert opens the Feed.
+- **Calendar**: Add → Water session; a water session shows on its day ("4 boats crewed · 12 rowers ·
+  sent"); Who's available → **Plan boats for this session**; a race → **Crew boats for this race**
+  (each opens the session already planned from it, if there is one).
+

@@ -21,6 +21,9 @@ extension Notification.Name {
     /// A coach changed the calendar — a practice, a race, the register or the club's week — from
     /// a screen over their Calendar tab, which reloads.
     static let calendarChanged = Notification.Name("calendarChanged")
+    /// A coach saved, sent or deleted a water session or a boat (decision 67): the Boats tab, the
+    /// session and the Calendar reload.
+    static let boatsChanged = Notification.Name("boatsChanged")
 }
 
 extension NotificationCenter {

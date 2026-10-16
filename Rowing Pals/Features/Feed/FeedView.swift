@@ -30,6 +30,8 @@ struct FeedView: View {
     @State private var cover: Cover?
     /// The rower's next practice, under today's workout (decision 68).
     @State private var nextPractice = NextPracticeModel()
+    /// The rower's boat for their next water session (decision 67).
+    @State private var nextBoat = NextBoatModel()
     @Environment(\.navigate) private var navigate
     @Environment(\.scenePhase) private var scenePhase
 
@@ -47,6 +49,12 @@ struct FeedView: View {
 
                 ForEach(viewModel.todaysWorkouts) { today in
                     TodaysWorkoutCard(today: today) { navigate(.logWorkout(today.id)) }
+                        .padding(.bottom, Tokens.Spacing.loose)
+                }
+
+                if let boat = nextBoat.boat, let session = nextBoat.session {
+                    FeedBoatCard(boat: boat, session: session, names: nextBoat.names,
+                                 coachName: nextBoat.coachName, mySeat: nextBoat.mySeat)
                         .padding(.bottom, Tokens.Spacing.loose)
                 }
 
@@ -79,8 +87,10 @@ struct FeedView: View {
         .scrollsToTopOnReselect(reselects) {
             ViewerContext.shared.invalidate()
             async let practice: Void = nextPractice.load()
+            async let boat: Void = nextBoat.load()
             await viewModel.reload()
             await practice
+            await boat
         }
         .safeAreaInset(edge: .top, spacing: 0) { header }
         .background(Tokens.Base.ground)
@@ -88,11 +98,14 @@ struct FeedView: View {
         .ignoresSafeArea(edges: .bottom)
         .task { await viewModel.loadInitial() }
         .task { await nextPractice.load() }
+        .task { await nextBoat.load() }
         .refreshable {
             ViewerContext.shared.invalidate()
             async let practice: Void = nextPractice.load()
+            async let boat: Void = nextBoat.load()
             await viewModel.reload()
             await practice
+            await boat
         }
         // An answer from the Calendar or the practice page, or a coach's change, shows here too.
         .onReceive(NotificationCenter.default.publisher(for: .practiceAnswered)) { _ in
@@ -101,9 +114,13 @@ struct FeedView: View {
         .onReceive(NotificationCenter.default.publisher(for: .calendarChanged)) { _ in
             Task { await nextPractice.load() }
         }
+        .onReceive(NotificationCenter.default.publisher(for: .boatsChanged)) { _ in
+            Task { await nextBoat.load() }
+        }
         .onReceive(NotificationCenter.default.publisher(for: .rowerClubChanged)) { _ in
             Task { await viewModel.clubChanged() }
             Task { await nextPractice.load() }
+            Task { await nextBoat.load() }
         }
         // A new post shows, and a workout it was for leaves the Feed (decision 57).
         // A post you deleted leaves the feed at once (decision 63).
@@ -119,6 +136,7 @@ struct FeedView: View {
             if phase == .active {
                 Task { await viewModel.refreshWorkouts() }
                 Task { await nextPractice.load() }
+                Task { await nextBoat.load() }
             }
         }
         .fullScreenCover(item: $cover) { cover in

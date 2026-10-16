@@ -70,7 +70,7 @@ struct RouteHost: View {
         case .post, .profile, .people, .findClub, .clubHub, .createClub, .editClub, .manageClub,
              .coachProfile, .editProfile, .coachRower, .squads, .squadEdit, .pbHistory, .newWorkout, .workoutResults,
              .newWorkoutOn, .practice, .newPractice, .editPractice, .register, .attendanceTotals, .availability,
-             .event, .newEvent, .editEvent: true
+             .event, .newEvent, .editEvent, .waterSession, .newWaterSession, .sessionBoat, .savedBoat: true
         default: false
         }
     }
@@ -133,6 +133,14 @@ struct RouteHost: View {
             EventEditorView(eventId: nil, kind: kind, day: day)
         case .editEvent(let eventId):
             EventEditorView(eventId: eventId)
+        case .waterSession(let sessionId):
+            WaterSessionView(sessionId: sessionId)
+        case .newWaterSession(let seed):
+            WaterSessionView(sessionId: nil, seed: seed)
+        case .sessionBoat(let sessionId, let boatId):
+            CrewBoatView(mode: .session(sessionId, boat: boatId))
+        case .savedBoat(let id):
+            CrewBoatView(mode: .saved(id))
         case .pbHistory(let test, let userId):
             PBHistoryView(test: test, userId: userId)
                 .toolbar(.hidden, for: .navigationBar)

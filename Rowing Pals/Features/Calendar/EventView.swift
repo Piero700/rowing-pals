@@ -27,9 +27,18 @@ struct EventView: View {
                     summary(event)
                     if viewModel.isCoach {
                         coachLists(event)
-                        Button(viewModel.isRace ? "Edit race" : "Edit event") { navigate(.editEvent(event.id)) }
+                        if viewModel.isRace {
+                            Button {
+                                Task { await crewBoats(for: event) }
+                            } label: {
+                                Label("Crew boats for this race", systemImage: "water.waves")
+                            }
                             .buttonStyle(.rpGlass)
                             .padding(.top, Tokens.Spacing.group)
+                        }
+                        Button(viewModel.isRace ? "Edit race" : "Edit event") { navigate(.editEvent(event.id)) }
+                            .buttonStyle(.rpGlass)
+                            .padding(.top, viewModel.isRace ? Tokens.Spacing.tight : Tokens.Spacing.group)
                     } else if event.asksAvailability {
                         rowerAnswer
                     }
@@ -97,6 +106,16 @@ struct EventView: View {
         .padding(Tokens.Spacing.card)
         .background(Self.cardShape.fill(Tokens.Surface.card))
         .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+    }
+
+    /// Opens the water session already planned for this race, or a new one from it: its boats
+    /// are crewed from who said they can race.
+    private func crewBoats(for event: ClubEvent) async {
+        if let existing = try? await BoatService.session(event: event.id) {
+            navigate(.waterSession(existing.id))
+        } else {
+            navigate(.newWaterSession(WaterSessionSeed(eventId: event.id)))
+        }
     }
 
     private func stat(_ value: Int, _ label: String) -> some View {
