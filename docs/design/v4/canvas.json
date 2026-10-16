@@ -99,9 +99,9 @@
       "y": 13844
     },
     "CoachPractices.dc.html": {
-      "h": 928,
+      "h": 944,
       "is_interactive": true,
-      "title": "Coaching · Practices",
+      "title": "Coach app · Practices tab",
       "w": 393,
       "x": 0,
       "y": 13844
@@ -115,9 +115,9 @@
       "y": 9988
     },
     "CoachRowers.dc.html": {
-      "h": 1440,
+      "h": 1450,
       "is_interactive": true,
-      "title": "Coaching · Rowers",
+      "title": "Coach app · Rowers tab",
       "w": 393,
       "x": 0,
       "y": 9988
@@ -165,7 +165,7 @@
     "CoachWorkouts.dc.html": {
       "h": 1152,
       "is_interactive": true,
-      "title": "Coaching · Workouts",
+      "title": "Coach app · Workouts tab",
       "w": 393,
       "x": 0,
       "y": 12236
@@ -323,7 +323,7 @@
       "y": 2544
     },
     "Settings.dc.html": {
-      "h": 1788,
+      "h": 1876,
       "is_interactive": true,
       "title": "Settings",
       "w": 393,
@@ -339,7 +339,7 @@
       "y": 6360
     },
     "SettingsProfile.dc.html": {
-      "h": 1236,
+      "h": 1372,
       "is_interactive": true,
       "title": "Settings · Edit profile",
       "w": 393,
@@ -363,25 +363,25 @@
       "y": 3816
     },
     "CoachBoats.dc.html": {
-      "h": 1440,
+      "h": 1690,
       "is_interactive": true,
-      "title": "Coaching · Boats",
+      "title": "Coach app · Boats tab",
       "w": 393,
       "x": 0,
       "y": 15692
     },
     "CoachBoatEdit.dc.html": {
-      "h": 1260,
+      "h": 1320,
       "is_interactive": true,
-      "title": "Coaching · Crew a boat",
+      "title": "Coach app · Crew a boat",
       "w": 393,
       "x": 473,
       "y": 15692
     },
     "CoachWaterSessionNew.dc.html": {
-      "h": 1560,
+      "h": 1420,
       "is_interactive": true,
-      "title": "Coaching · New water session",
+      "title": "Coach app · New water session",
       "w": 393,
       "x": 946,
       "y": 15692
@@ -393,6 +393,22 @@
       "w": 393,
       "x": 1419,
       "y": 15692
+    },
+    "CoachNew.dc.html": {
+      "h": 852,
+      "is_interactive": true,
+      "title": "Coach app · + New session",
+      "w": 393,
+      "x": 0,
+      "y": 17982
+    },
+    "CoachProfile.dc.html": {
+      "h": 1008,
+      "is_interactive": true,
+      "title": "Coach app · Profile (avatar, top right)",
+      "w": 393,
+      "x": 473,
+      "y": 17982
     }
   },
   "createdOnFiles": {
@@ -503,7 +519,7 @@
     "coach4": {
       "kind": "title1",
       "maxW": 1812,
-      "text": "Coaching (proposal) · water sessions and boats",
+      "text": "Coach app (proposal) · water sessions and boats",
       "w": 240,
       "x": 0,
       "y": 15392
@@ -514,7 +530,23 @@
       "w": 380,
       "x": 1892,
       "y": 15692,
-      "text": "Water sessions and boats · proposal (15 Oct 2026), not in the app. A coach crews each boat seat by seat (bow at the top, stroke at the stern, cox behind) and sends the session; each rower is told their boat and seat. Logging water metres stays out (decision 54). Names are samples."
+      "text": "Boats · proposal (16 Oct 2026), not in the app. Drawn upright, bow at the top, seats a seat-length apart. Stroke-side oars on the left, bow side on the right; stroke-rigged or bow-rigged sets which seats are which. A rower on their other side gets a ‘Usually stroke side’ note. Logging water metres stays out (decision 54)."
+    },
+    "coach5": {
+      "kind": "title1",
+      "maxW": 1339,
+      "text": "Coach app (proposal) · + menu and switching",
+      "w": 240,
+      "x": 0,
+      "y": 17682
+    },
+    "coachAppAbout": {
+      "fill": "purple",
+      "size": 24,
+      "w": 380,
+      "x": 946,
+      "y": 17982,
+      "text": "Coach version · proposal (16 Oct 2026). A coach has their own bar: Rowers, Workouts, Practices, Boats and +. + asks Land session (erg workout) or Water session (crew boats). Profile and Settings sit behind the avatar, top right. Someone who rows and coaches switches with one button (Profile here, Settings in the rower version); the app opens in the last one used."
     }
   },
   "order": [
@@ -566,7 +598,9 @@
     "CoachBoats.dc.html",
     "CoachBoatEdit.dc.html",
     "CoachWaterSessionNew.dc.html",
-    "RowerBoat.dc.html"
+    "RowerBoat.dc.html",
+    "CoachNew.dc.html",
+    "CoachProfile.dc.html"
   ],
   "pages": [],
   "title": "Rowing Pals — current app"
