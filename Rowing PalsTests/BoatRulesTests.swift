@@ -37,6 +37,17 @@ struct BoatRulesTests {
         #expect(BoatType.pair.label == "2\u{2212}")
     }
 
+    @Test func aCoxedQuadIsFourScullersAndACox() {
+        let quad = BoatType.coxedQuad
+        #expect(quad.label == "4x+")
+        #expect(quad.isSculling && quad.isCoxed)
+        #expect(quad.crewSize == 5)
+        #expect(BoatRules.seats(quad) == [1, 2, 3, 4, 0])
+        #expect(BoatRules.side(ofSeat: 2, setup: BoatSetup(type: quad, rigging: .stroke)) == nil)
+        #expect(BoatRules.seatName(0, type: quad) == "Cox")
+        #expect(BoatType.allCases.map(\.label) == ["1x", "2x", "2\u{2212}", "4\u{2212}", "4+", "4x", "4x+", "8+"])
+    }
+
     @Test func seatsHaveTheirNames() {
         #expect(BoatRules.seatName(1, type: .four) == "Bow")
         #expect(BoatRules.seatName(4, type: .four) == "Stroke")

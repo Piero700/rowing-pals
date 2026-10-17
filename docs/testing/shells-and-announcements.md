@@ -110,3 +110,15 @@ In Xcode choose **RP Dev** and **your iPhone**, press **Cmd+R**.
       share at the far right. No separate reactions row.
 - [ ] Tapping the number opens the comments; tapping a reaction still toggles it.
 - [ ] With lots of different reactions on a post, the reactions slide sideways instead of wrapping.
+
+## 9. A coxed quad (decision 77)
+0. Run `docs/migrations/2026-10-18-coxed-quad.sql` on staging first (same steps as step 0 at the top).
+1. Coach_J: **Boats** → **Saved boats** → **New saved boat**.
+- [ ] **Boat type** is one row: **1x 2x 2− 4− 4+ 4x 4x+ 8+**, with 8+ cut off at the right edge. Swipe the
+      row left: it slides and 8+ comes into view. Nothing wraps onto a second line.
+2. Tap **4x+**.
+- [ ] **Rigging** disappears, each seat has two oars, and a **Cox** square sits at the stern with a dashed
+      **Cox** button.
+3. Name it `Novice quad`, fill the four seats and the cox → **Save boat**.
+- [ ] It saves (no red error) and its tile on Saved boats says **4x+** and **Sculls**, with the cox at the stern.
+4. Add it to a water session and **Send**: the cox's alert says "you're coxing", a sculler's says their seat.

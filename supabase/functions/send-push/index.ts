@@ -280,7 +280,7 @@ function when(day: string, time: string | null) {
 /// "you’re at stroke in", "you’re in seat 2 in", "you’re coxing": seat 1 is bow, the highest is
 /// stroke, 0 the cox (as BoatRules.seatPhrase in the app).
 function seatPhrase(seat: number, type: string) {
-  const rowers: Record<string, number> = { "1x": 1, "2x": 2, "2-": 2, "4-": 4, "4+": 4, "4x": 4, "8+": 8 }
+  const rowers: Record<string, number> = { "1x": 1, "2x": 2, "2-": 2, "4-": 4, "4+": 4, "4x": 4, "4x+": 4, "8+": 8 }
   const count = rowers[type] ?? 0
   if (seat === 0) return "you’re coxing"
   if (count === 1) return "you’re in"

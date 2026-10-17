@@ -70,13 +70,18 @@ struct CrewBoatView: View {
             .formFieldBox()
 
         FormLabel("Boat type").padding(.top, Tokens.Spacing.card)
-        WrapLayout(spacing: 6) {
-            ForEach(BoatType.allCases, id: \.self) { type in
-                Button(type.label) { viewModel.type = type }
-                    .buttonStyle(.rpPill(isOn: viewModel.type == type))
-                    .monospacedDigit()
+        // One row that scrolls sideways (user, 2026-10-18), so the eight types never stack.
+        ScrollView(.horizontal) {
+            HStack(spacing: 6) {
+                ForEach(BoatType.allCases, id: \.self) { type in
+                    Button(type.label) { viewModel.type = type }
+                        .buttonStyle(.rpPill(isOn: viewModel.type == type))
+                        .monospacedDigit()
+                }
             }
         }
+        .scrollIndicators(.hidden)
+        .scrollClipDisabled()
 
         if !viewModel.type.isSculling {
             FormLabel("Rigging").padding(.top, Tokens.Spacing.card)
