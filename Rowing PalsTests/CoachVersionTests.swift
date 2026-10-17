@@ -28,7 +28,9 @@ struct CoachVersionTests {
     @Test func theSideLoadsFromTheProfile() throws {
         let profile = try decodeProfile(side: "\"bow\"")
         #expect(profile.side == .bow)
-        #expect(RowingSide.allCases.map(\.label) == ["Stroke side", "Bow side", "Both"])
+        #expect(RowingSide.allCases.map(\.label) == ["Stroke side", "Bow side", "Both", "Cox"])
+        // Decision 78: a cox's profile reads back as one.
+        #expect(try decodeProfile(side: "\"cox\"").side == .cox)
     }
 
     @Test func aProfileWithNoSideStillLoads() throws {

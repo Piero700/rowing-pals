@@ -234,7 +234,7 @@ struct CrewBoatView: View {
                             .textStyle(Typography.rowTitle)
                             .foregroundStyle(Tokens.Ink.primary)
                             .lineLimit(1)
-                        if let note = BoatRules.offSideNote(person.side, seatSide: seatSide) {
+                        if let note = BoatRules.seatNote(person.side, seat: seat, seatSide: seatSide) {
                             Text(note)
                                 .textStyle(Typography.statLabel)
                                 .fontWeight(.semibold)
@@ -376,6 +376,14 @@ struct CrewBoatView: View {
                         .background(Capsule().fill(Tokens.Surface.raised))
                 } else if candidate.fits && candidate.blockedReason == nil {
                     BrandChip(text: "Fits")
+                } else if candidate.isCox {
+                    // A cox offered for a rowing seat (decision 78).
+                    Text(RowingSide.cox.label)
+                        .textStyle(Typography.chip)
+                        .foregroundStyle(Tokens.Ink.primary)
+                        .padding(.horizontal, 9)
+                        .padding(.vertical, 2)
+                        .background(Capsule().fill(Tokens.Surface.raised))
                 }
             }
             .padding(.horizontal, Tokens.Spacing.card)

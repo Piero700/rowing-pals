@@ -24,6 +24,8 @@ final class CrewBoatViewModel {
         let member: ClubMember
         let detail: String
         let fits: Bool
+        /// A cox offered for a rowing seat: tagged **Cox** in the list (decision 78).
+        let isCox: Bool
         /// Why they can't be chosen: "Can’t make it · “Away”", "In W1 four".
         let blockedReason: String?
         /// Their seat in this boat already, if any ("Seat 3").
@@ -124,8 +126,8 @@ final class CrewBoatViewModel {
         return "Only rowers who said they can make it are offered. \(count) \(count == 1 ? "hasn’t" : "haven’t") answered yet."
     }
 
-    /// Who the picker offers for the chosen seat: fitting their side first, then by name; those
-    /// who can't be chosen last.
+    /// Who the picker offers for the chosen seat: fitting their side first (coxes first for the cox
+    /// seat), then by name; those who can't be chosen last.
     var candidates: [Candidate] {
         guard let seat = selectedSeat else { return [] }
         let seatSide = side(of: seat)
@@ -139,9 +141,10 @@ final class CrewBoatViewModel {
             } else if let available, !available.contains(member.id) {
                 return nil
             }
-            let fits = seat > 0 && seatSide != nil && member.side != nil && BoatRules.fits(member.side, seatSide: seatSide)
-            return Candidate(member: member, detail: detail(member), fits: fits, blockedReason: blocked,
-                             currentSeat: seatOf[member.id])
+            // The cox seat puts coxes first; a rowing seat tags a cox instead (decision 78).
+            let fits = BoatRules.suits(member.side, seat: seat, seatSide: seatSide)
+            return Candidate(member: member, detail: detail(member), fits: fits, isCox: seat > 0 && member.side == .cox,
+                             blockedReason: blocked, currentSeat: seatOf[member.id])
         }
         return list.sorted { a, b in
             if (a.blockedReason == nil) != (b.blockedReason == nil) { return a.blockedReason == nil }

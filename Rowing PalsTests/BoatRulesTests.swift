@@ -66,6 +66,23 @@ struct BoatRulesTests {
         #expect(!BoatRules.fits(.bow, seatSide: .stroke))
     }
 
+    @Test func aCoxSuitsTheCoxSeatAndIsTaggedElsewhere() {
+        // Decision 78: coxes are Fits for the cox seat, everyone else isn't.
+        #expect(BoatRules.suits(.cox, seat: 0, seatSide: nil))
+        #expect(!BoatRules.suits(.both, seat: 0, seatSide: nil))
+        #expect(!BoatRules.suits(.cox, seat: 2, seatSide: .stroke))
+        #expect(BoatRules.suits(.stroke, seat: 2, seatSide: .stroke))
+        // Sculling seats have no side, so nobody's marked.
+        #expect(!BoatRules.suits(.both, seat: 2, seatSide: nil))
+        // A cox placed in a rowing seat carries a Cox tag, never "Usually cox".
+        #expect(BoatRules.seatNote(.cox, seat: 3, seatSide: .bow) == "Cox")
+        #expect(BoatRules.seatNote(.cox, seat: 3, seatSide: nil) == "Cox")
+        #expect(BoatRules.seatNote(.cox, seat: 0, seatSide: nil) == nil)
+        #expect(BoatRules.offSideNote(.cox, seatSide: .bow) == nil)
+        #expect(BoatRules.seatNote(.stroke, seat: 3, seatSide: .bow) == "Usually stroke side")
+        #expect(RowingSide.allCases.map(\.label) == ["Stroke side", "Bow side", "Both", "Cox"])
+    }
+
     @Test func theCrewLineGoesStrokeToBowThenCox() {
         let ids = (0..<5).map { _ in UUID() }
         let names = Dictionary(uniqueKeysWithValues: zip(ids, ["Marcus Reilly", "Joe Fenwick", "Tom Ashworth", "Piero Ciobanu", "Kate Simmons"]))

@@ -482,7 +482,7 @@ struct ClubSearchView: View {
                         .padding(.top, 16)
                         .padding(.bottom, 6)
                     PillSegmentedControl(options: RowingSide.allCases.map(\.label), selection: $sideSelection)
-                    Text("The side you row on in a pair, four or eight. Your coach sees it when they seat you.")
+                    Text("The side you row on in a pair, four or eight, or Cox if you cox. Your coach sees it when they seat you.")
                         .textStyle(Typography.meta)
                         .foregroundStyle(Tokens.Ink.secondary)
                         .padding(.top, 8)

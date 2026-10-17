@@ -122,3 +122,12 @@ In Xcode choose **RP Dev** and **your iPhone**, press **Cmd+R**.
 3. Name it `Novice quad`, fill the four seats and the cox → **Save boat**.
 - [ ] It saves (no red error) and its tile on Saved boats says **4x+** and **Sculls**, with the cox at the stern.
 4. Add it to a water session and **Send**: the cox's alert says "you're coxing", a sculler's says their seat.
+
+## 10. Coxes (decision 78)
+0. Run `docs/migrations/2026-10-18-cox-side.sql` on staging first (same steps as step 0 at the top).
+1. A rower: **Settings → Edit profile → Side**.
+- [ ] Four choices: **Stroke side · Bow side · Both · Cox**, and the line "…or Cox if you cox." Pick **Cox** → **Save**: it saves.
+2. Coach_J: a boat with a cox seat (4+, 4x+ or 8+) → tap the **Cox** seat.
+- [ ] The cox is at the top of the list with **Fits**; everyone else follows.
+3. Tap a rowing seat instead.
+- [ ] The cox is in the list with a grey **Cox** tag (no Fits). Choose them: under their name in the boat it says **Cox**.

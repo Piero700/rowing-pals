@@ -77,7 +77,7 @@ struct EditProfileView: View {
                         }
                         Rectangle().fill(Tokens.Surface.line).frame(height: 1)
                         // Decision 67: coaches see it when they seat the rower in a boat.
-                        stackedRow(title: "Side", subtitle: "The side you row on in sweep boats. Your coach sees it when seating you.") {
+                        stackedRow(title: "Side", subtitle: "The side you row on in sweep boats, or Cox if you cox. Your coach sees it when seating you.") {
                             PillSegmentedControl(options: RowingSide.allCases.map(\.label), selection: Binding(
                                 get: { viewModel.side.flatMap { RowingSide.allCases.firstIndex(of: $0) } ?? -1 },
                                 set: { viewModel.side = RowingSide.allCases[$0] }

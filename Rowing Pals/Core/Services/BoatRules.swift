@@ -107,16 +107,34 @@ nonisolated enum BoatRules {
         return "You’re in seat \(seat) in"
     }
 
-    /// Whether someone who rows `side` suits a seat on `seatSide` (either suits anyone).
+    /// Whether someone who rows `side` suits a seat on `seatSide` (either suits anyone who rows; a
+    /// cox suits no rowing side, decision 78).
     static func fits(_ side: RowingSide?, seatSide: RowingSide?) -> Bool {
+        if side == .cox { return false }
         guard let seatSide, let side else { return true }
         return side == .both || side == seatSide
     }
 
-    /// "Usually stroke side" for someone seated on their other side; nil otherwise.
+    /// Whether the picker marks someone **Fits** for `seat`: a cox for the cox seat (seat 0), and
+    /// a rower on the seat's side for a sweep seat. Sculling seats mark nobody (decision 78).
+    static func suits(_ side: RowingSide?, seat: Int, seatSide: RowingSide?) -> Bool {
+        if seat == 0 { return side == .cox }
+        guard seatSide != nil, side != nil else { return false }
+        return fits(side, seatSide: seatSide)
+    }
+
+    /// "Usually stroke side" for someone seated on their other side; nil otherwise (and for a cox,
+    /// who gets `seatNote`'s Cox tag instead).
     static func offSideNote(_ side: RowingSide?, seatSide: RowingSide?) -> String? {
-        guard let side, let seatSide, side != .both, side != seatSide else { return nil }
+        guard let side, let seatSide, side != .both, side != .cox, side != seatSide else { return nil }
         return "Usually \(side.label.lowercased())"
+    }
+
+    /// The tag under someone seated in a boat: **Cox** for a cox in a rowing seat (decision 78),
+    /// else "Usually stroke side" when they're on their other side; nil when they suit the seat.
+    static func seatNote(_ side: RowingSide?, seat: Int, seatSide: RowingSide?) -> String? {
+        if seat > 0 && side == .cox { return RowingSide.cox.label }
+        return offSideNote(side, seatSide: seatSide)
     }
 
     /// Stroke to bow, then the cox: "Piero, Tom, Joe, Marcus · cox Kate".
