@@ -7,7 +7,7 @@ import SwiftUI
 
 /// One v3 feed post (docs/design/rowing-pals-v3-spec.md §Feed post card, exact values from
 /// `docs/design/v3/RP Screen.dc.html` §02): header, 4:3 photo carousel, the lead piece's
-/// numbers, caption, workout link, reactions, comments and share. A new PB glows.
+/// numbers, caption, workout link, then one row: comments, the reactions and share. A new PB glows.
 ///
 /// Only specific parts are tappable — never the whole card: the header opens the author's
 /// profile; the photo and workout link open the post; the comments pill opens the thread; the
@@ -54,10 +54,8 @@ struct FeedCardView: View {
                     .padding(.bottom, 8)
             }
             workoutLink
-            reactionRow
-                .padding(.top, 14)
             actionRow
-                .padding(.top, Tokens.Spacing.loose)
+                .padding(.top, 14)
         }
         .padding(Tokens.Spacing.card)
         .background { Self.cardShape.fill(Tokens.Surface.card) }
@@ -267,8 +265,9 @@ struct FeedCardView: View {
 
     // MARK: - Reactions
 
+    /// The reactions, then the add button, side by side; they scroll sideways when a post has many.
     private var reactionRow: some View {
-        WrapLayout(spacing: Tokens.Spacing.tight) {
+        HStack(spacing: Tokens.Spacing.tight) {
             ForEach(reactions) { reaction in
                 Button {
                     onToggleReaction(reaction.kind)
@@ -330,18 +329,26 @@ struct FeedCardView: View {
 
     // MARK: - Comments and share
 
+    /// Comments, the reactions beside them, and share on the right, in one row (user, 2026-10-17:
+    /// reactions no longer take a row of their own).
     private var actionRow: some View {
         HStack(spacing: Tokens.Spacing.tight) {
             Button(action: onOpenComments) {
-                Label(
-                    post.commentCount == 1 ? "1 comment" : "\(post.commentCount) comments",
-                    systemImage: "bubble.left"
-                )
-                .tabularNumerals()
+                Label("\(post.commentCount)", systemImage: "bubble.left")
+                    .tabularNumerals()
             }
-            .buttonStyle(.rpPill)
+            .buttonStyle(.rpPill(isOn: false, minHeight: 40))
+            .accessibilityLabel(post.commentCount == 1 ? "1 comment" : "\(post.commentCount) comments")
 
-            Spacer(minLength: 0)
+            // All the reactions when they fit; otherwise they scroll sideways.
+            ViewThatFits(in: .horizontal) {
+                reactionRow
+                ScrollView(.horizontal) {
+                    reactionRow
+                }
+                .scrollIndicators(.hidden)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
 
             Button {
                 isShowingShare = true

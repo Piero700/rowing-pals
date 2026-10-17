@@ -310,6 +310,15 @@ enum Tokens {
         static let seatRow: CGFloat = 30
         /// "Stern" / "Bow" above and below a drawn boat.
         static let endLabelHeight: CGFloat = 13
+        /// A single on the rower's Feed, drawn on its side across the card (user, 2026-10-17): its
+        /// height, half the hull's width, the rigger's reach, the oar and its blade.
+        static let singleHeight: CGFloat = 92
+        static let singleHullHalfWidth: CGFloat = 7
+        static let singleRiggerReach: CGFloat = 16
+        static let singleOarLength: CGFloat = 16
+        static let singleBladeLength: CGFloat = 13
+        static let singleBladeDepth: CGFloat = 5
+        static let singleSeatRadius: CGFloat = 9
     }
 
     /// Coaching's own radii and the zone-mix shades (docs/design/v4/CoachRower.dc.html).

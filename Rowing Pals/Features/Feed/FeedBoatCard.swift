@@ -8,7 +8,8 @@ import SwiftUI
 /// The rower's boat for their next water session, at the top of the Feed (RowerBoat; decision 67):
 /// "Your boat · Sat 07:00" and the boat type, "You’re at stroke in M1 four", who set it, the
 /// rigging and where to meet, the boat drawn as a shell with their seat filled in, the crew seat by
-/// seat, and the plan. It stays until the session starts.
+/// seat, and the plan. A single is just the boat on its side (user, 2026-10-17). It stays until the
+/// session starts.
 struct FeedBoatCard: View {
     let boat: SessionBoat
     let session: WaterSession
@@ -40,20 +41,26 @@ struct FeedBoatCard: View {
                 .foregroundStyle(Tokens.Ink.secondary)
                 .padding(.top, 2)
                 .padding(.bottom, Tokens.Spacing.tight)
-            HStack(alignment: .top, spacing: Tokens.Spacing.tight) {
-                VStack(spacing: 0) {
-                    BoatEndLabel(text: orientation == .sternAtTop ? "Stern" : "Bow")
-                    BoatDrawing(setup: boat.setup, orientation: orientation, names: firstNames, highlightedSeat: mySeat)
-                    BoatEndLabel(text: orientation == .sternAtTop ? "Bow" : "Stern")
-                }
-                // The crew seat by seat, in the drawing's order: stroke first with the stern at the top.
-                VStack(alignment: .leading, spacing: 0) {
-                    ForEach(BoatRules.seatsTopToBottom(boat.boatType, orientation: orientation), id: \.self) { seat in
-                        seatRow(seat)
+            if boat.boatType == .single {
+                // A single is just you: the boat on its side, no names, ends or seat list.
+                SingleScullDrawing()
+                    .padding(.vertical, Tokens.Spacing.tight)
+            } else {
+                HStack(alignment: .top, spacing: Tokens.Spacing.tight) {
+                    VStack(spacing: 0) {
+                        BoatEndLabel(text: orientation == .sternAtTop ? "Stern" : "Bow")
+                        BoatDrawing(setup: boat.setup, orientation: orientation, names: firstNames, highlightedSeat: mySeat)
+                        BoatEndLabel(text: orientation == .sternAtTop ? "Bow" : "Stern")
                     }
+                    // The crew seat by seat, in the drawing's order: stroke first with the stern at the top.
+                    VStack(alignment: .leading, spacing: 0) {
+                        ForEach(BoatRules.seatsTopToBottom(boat.boatType, orientation: orientation), id: \.self) { seat in
+                            seatRow(seat)
+                        }
+                    }
+                    .padding(.top, firstRowTop)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                .padding(.top, firstRowTop)
-                .frame(maxWidth: .infinity, alignment: .leading)
             }
             if let plan = session.plan {
                 Text(plan)

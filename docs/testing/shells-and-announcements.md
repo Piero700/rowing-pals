@@ -97,3 +97,16 @@ In Xcode choose **RP Dev** and **your iPhone**, press **Cmd+R**.
 3. The Feed's announcements start folded; the design showed the first one open as an example.
 4. **Draw boats** is kept on each phone, like Appearance.
 5. The alert's text is "New announcement" with the heading as the message.
+
+## 8. A tidier Feed (decision 76)
+1. Coach_J: **+** → **Water session** → **Add boat** → **New boat** → type **1x** → put **Piero** in it →
+   **Save boat** → **Send to 1 rower**.
+2. Piero: **Feed**.
+- [ ] **Your boat** shows the single **lying on its side**, bow to the right, Piero's seat in blue — with
+      no name beside it, no Bow / Stern labels and no seat list.
+- [ ] Coach_J opening the same boat still sees it upright with STERN / BOW and Piero's name.
+3. Piero: scroll to any post.
+- [ ] One row under the caption: the comments button (just the number), then the reactions, then
+      share at the far right. No separate reactions row.
+- [ ] Tapping the number opens the comments; tapping a reaction still toggles it.
+- [ ] With lots of different reactions on a post, the reactions slide sideways instead of wrapping.
