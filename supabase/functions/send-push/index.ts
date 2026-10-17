@@ -17,7 +17,7 @@ import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-
 type Kind =
   | "comment" | "reply" | "pb" | "club_post" | "club_invite" | "new_workout"
   | "new_practice" | "practice_changed" | "practice_cancelled" | "practice_reminder" | "new_event"
-  | "boat_seat"
+  | "boat_seat" | "announcement"
 
 interface NotificationRow {
   id: string
@@ -35,6 +35,8 @@ interface NotificationRow {
   event_id?: string | null
   // A boat in a water session (docs/migrations/2026-10-16-boats.sql, decision 67).
   boat_id?: string | null
+  // A coach's announcement (docs/migrations/2026-10-17-rigging-and-announcements.sql, decision 75).
+  announcement_id?: string | null
 }
 
 interface DeviceToken {
@@ -89,7 +91,7 @@ Deno.serve(async (req) => {
   const body = {
     aps: {
       alert,
-      "thread-id": row.session_id ?? row.workout_id ?? row.practice_id ?? row.event_id ?? row.boat_id ?? row.club_id ?? row.id,
+      "thread-id": row.session_id ?? row.workout_id ?? row.practice_id ?? row.event_id ?? row.boat_id ?? row.announcement_id ?? row.club_id ?? row.id,
       "interruption-level": "active",
       sound: "default",
     },
@@ -100,6 +102,7 @@ Deno.serve(async (req) => {
     ...(row.practice_id ? { practice_id: row.practice_id } : {}),
     ...(row.event_id ? { event_id: row.event_id } : {}),
     ...(row.boat_id ? { boat_id: row.boat_id } : {}),
+    ...(row.announcement_id ? { announcement_id: row.announcement_id } : {}),
     kind: row.kind,
   }
 
@@ -132,6 +135,15 @@ async function composeAlert(admin: SupabaseClient, row: NotificationRow) {
       title: "New workout from your coach",
       body: `${coach}: ${workout.title} · ${when(workout.workout_date, workout.start_time)}`,
     }
+  }
+  if (row.kind === "announcement") {
+    const { data: announcement } = await admin
+      .from("announcements")
+      .select("heading, expires_at")
+      .eq("id", row.announcement_id)
+      .maybeSingle()
+    if (!announcement || new Date(announcement.expires_at as string) <= new Date()) return null
+    return { title: "New announcement", body: announcement.heading as string }
   }
   if (row.kind === "boat_seat") {
     const { data: boat } = await admin

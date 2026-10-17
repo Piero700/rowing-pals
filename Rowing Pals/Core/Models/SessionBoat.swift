@@ -14,12 +14,14 @@ nonisolated struct SessionBoat: Decodable, Identifiable, Equatable, Hashable {
     let name: String
     let boatType: BoatType
     let rigging: Rigging
+    /// Custom rigging's seat sides, bow first (decision 74).
+    let sides: String?
     let savedBoatId: UUID?
     let sentAt: Date?
     let seats: [BoatSeat]
 
     enum CodingKeys: String, CodingKey {
-        case id, position, name, rigging
+        case id, position, name, rigging, sides
         case sessionId = "session_id"
         case boatType = "boat_type"
         case savedBoatId = "saved_boat_id"
@@ -27,7 +29,7 @@ nonisolated struct SessionBoat: Decodable, Identifiable, Equatable, Hashable {
         case seats = "session_boat_seats"
     }
 
-    init(id: UUID, sessionId: UUID, position: Int = 0, name: String, boatType: BoatType, rigging: Rigging,
+    init(id: UUID, sessionId: UUID, position: Int = 0, name: String, boatType: BoatType, rigging: Rigging, sides: String? = nil,
          savedBoatId: UUID? = nil, sentAt: Date? = nil, seats: [BoatSeat]) {
         self.id = id
         self.sessionId = sessionId
@@ -35,6 +37,7 @@ nonisolated struct SessionBoat: Decodable, Identifiable, Equatable, Hashable {
         self.name = name
         self.boatType = boatType
         self.rigging = rigging
+        self.sides = sides
         self.savedBoatId = savedBoatId
         self.sentAt = sentAt
         self.seats = seats
@@ -48,10 +51,13 @@ nonisolated struct SessionBoat: Decodable, Identifiable, Equatable, Hashable {
         name = try c.decode(String.self, forKey: .name)
         boatType = try c.decode(BoatType.self, forKey: .boatType)
         rigging = try c.decodeIfPresent(Rigging.self, forKey: .rigging) ?? .stroke
+        sides = try c.decodeIfPresent(String.self, forKey: .sides)
         savedBoatId = try c.decodeIfPresent(UUID.self, forKey: .savedBoatId)
         sentAt = try c.decodeIfPresent(Date.self, forKey: .sentAt)
         seats = try c.decodeIfPresent([BoatSeat].self, forKey: .seats) ?? []
     }
 
     var isSent: Bool { sentAt != nil }
+
+    var setup: BoatSetup { BoatSetup(type: boatType, rigging: rigging, sides: sides) }
 }

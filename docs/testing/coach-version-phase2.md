@@ -96,11 +96,12 @@ and sign in as the other account when a step says so.
 - [ ] **This week · Next week** (Next week chosen) and a line with the dates and "UEA Boat Club's
       weeks start on Monday".
 - [ ] A banner "Say which sessions you can make" with **Available for the other N** (if any are
-      unanswered), a card per day with **Whole day** and each session, and **Races and events**
+      unanswered), a card per day with a short summary ("Not answered", "Both sessions"…) and each
+      session with its own **Available · Can't**, and **Races and events**
       with Norwich Autumn Head and **Available · Can't**.
 4. Tap **This week**: today's Erg shows **Available** (the answer from the Feed).
-5. On next week's day, tap **Whole day → Can't**.
-- [ ] Every session that day switches to Can't, and the line under Whole day reads "Can't make it".
+5. On next week's day, tap **Can't** on each session (there's no Whole day control any more, decision 68).
+- [ ] The line beside the date reads "Can't make it".
 6. Tap the session's name (left side).
 - [ ] **Practice** opens: date tile, Erg, Weekly · every Friday, time, place, Set by Coach_J, YOUR
       ANSWER with Can't chosen and a **Reason (optional)** box. Type `Exam`, tap **Save** (or Return).

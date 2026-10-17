@@ -6,7 +6,7 @@
 import SwiftUI
 
 /// One boat as the Boats tab and a water session show it (CoachBoats, CoachSavedBoats): its name
-/// and type, its rigging ("Sculls" for a sculling boat), the small upright drawing with first
+/// and type, its rigging ("Sculls" for a sculling boat), the small shell drawing with first
 /// names, and a line under it — Sent / Not sent, or how often a saved boat has been used.
 struct BoatTile: View {
     enum Footer {
@@ -15,11 +15,11 @@ struct BoatTile: View {
     }
 
     let name: String
-    let type: BoatType
-    let rigging: Rigging
+    let setup: BoatSetup
     let seats: [BoatSeat]
     let names: [UUID: String]
     let footer: Footer
+    var orientation: BoatOrientation = .sternAtTop
 
     private static let shape = RoundedRectangle(cornerRadius: Tokens.Boat.cardRadius, style: .continuous)
 
@@ -30,15 +30,17 @@ struct BoatTile: View {
                     .textStyle(Typography.name)
                     .foregroundStyle(Tokens.Ink.primary)
                     .lineLimit(1)
-                BrandChip(text: type.label)
+                BrandChip(text: setup.type.label)
             }
             .padding(.horizontal, Tokens.Spacing.tight)
-            Text(type.isSculling ? "Sculls" : rigging.label)
+            Text(BoatRules.riggingLine(setup))
                 .textStyle(Typography.statLabel)
                 .foregroundStyle(Tokens.Ink.secondary)
                 .padding(.top, 2)
                 .padding(.bottom, 6)
-            BoatDrawing(type: type, rigging: rigging, names: firstNames)
+            BoatEndLabel(text: orientation == .sternAtTop ? "Stern" : "Bow")
+            BoatDrawing(setup: setup, orientation: orientation, names: firstNames)
+            BoatEndLabel(text: orientation == .sternAtTop ? "Bow" : "Stern")
             footerView
                 .padding(.top, 6)
         }

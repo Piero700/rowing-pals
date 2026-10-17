@@ -15,21 +15,58 @@ nonisolated enum BoatRules {
         Array(1...type.rowers) + (type.isCoxed ? [0] : [])
     }
 
-    /// The side a seat's oar is on; nil for a sculling boat or the cox.
-    static func side(ofSeat seat: Int, type: BoatType, rigging: Rigging) -> RowingSide? {
-        guard !type.isSculling, seat > 0 else { return nil }
-        let sameParityAsStroke = (type.rowers - seat) % 2 == 0
-        switch rigging {
-        case .stroke: return sameParityAsStroke ? .stroke : .bow
-        case .bow: return sameParityAsStroke ? .bow : .stroke
+    /// Every seat from the top of the drawing down: stern first (the cox, then stroke to bow), or
+    /// bow first (decision 74).
+    static func seatsTopToBottom(_ type: BoatType, orientation: BoatOrientation) -> [Int] {
+        switch orientation {
+        case .sternAtTop: (type.isCoxed ? [0] : []) + Array((1...type.rowers).reversed())
+        case .bowAtTop: seats(type)
         }
     }
 
-    /// Whether the oar sits on the drawing's right: bow side in a sweep boat; in a sculling boat
-    /// the names alternate, bow on the right.
-    static func isOnRight(seat: Int, type: BoatType, rigging: Rigging) -> Bool {
-        if let side = side(ofSeat: seat, type: type, rigging: rigging) { return side == .bow }
-        return seat % 2 == 1
+    /// The sides of a standard rig, bow first: "BSBS" for a stroke-rigged four.
+    static func standardSides(_ type: BoatType, rigging: Rigging) -> String {
+        String((1...type.rowers).map { seat -> Character in
+            let sameParityAsStroke = (type.rowers - seat) % 2 == 0
+            let strokeSide = rigging == .bow ? !sameParityAsStroke : sameParityAsStroke
+            return strokeSide ? "S" : "B"
+        })
+    }
+
+    /// The side a seat's oar is on; nil for a sculling boat or the cox.
+    static func side(ofSeat seat: Int, setup: BoatSetup) -> RowingSide? {
+        guard !setup.type.isSculling, seat > 0, seat <= setup.type.rowers else { return nil }
+        let sides = setup.rigging == .custom
+            ? (setup.sides ?? standardSides(setup.type, rigging: .stroke))
+            : standardSides(setup.type, rigging: setup.rigging)
+        let letters = Array(sides)
+        guard seat - 1 < letters.count else { return nil }
+        return letters[seat - 1] == "S" ? .stroke : .bow
+    }
+
+    /// The setup with one seat's oar on the other side: the boat becomes custom (decision 74).
+    static func flipping(_ seat: Int, in setup: BoatSetup) -> BoatSetup {
+        guard !setup.type.isSculling, seat > 0, seat <= setup.type.rowers else { return setup }
+        var letters = Array(setup.rigging == .custom
+            ? (setup.sides ?? standardSides(setup.type, rigging: .stroke))
+            : standardSides(setup.type, rigging: setup.rigging))
+        letters[seat - 1] = letters[seat - 1] == "S" ? "B" : "S"
+        return BoatSetup(type: setup.type, rigging: .custom, sides: String(letters))
+    }
+
+    /// Whether the oar sits on the drawing's right. With the stern at the top the boat is turned
+    /// round, so stroke side is on the right (as the rowers see it, facing the stern); with the bow
+    /// at the top bow side is. A sculling boat's names alternate, bow on the right; the cox's name
+    /// goes on the right.
+    static func isOnRight(seat: Int, setup: BoatSetup, orientation: BoatOrientation) -> Bool {
+        if seat == 0 { return true }
+        guard let side = side(ofSeat: seat, setup: setup) else { return seat % 2 == 1 }
+        return orientation == .sternAtTop ? side == .stroke : side == .bow
+    }
+
+    /// The line under a boat's name: "Stroke-rigged", "Custom", "Sculls".
+    static func riggingLine(_ setup: BoatSetup) -> String {
+        setup.type.isSculling ? "Sculls" : setup.rigging.label
     }
 
     /// "Bow", "2", "Stroke", "Cox"; a single's one seat is "Sculler".

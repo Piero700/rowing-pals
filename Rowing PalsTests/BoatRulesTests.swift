@@ -11,20 +11,23 @@ import Testing
 struct BoatRulesTests {
     @Test func aStrokeRiggedFourAlternatesFromStroke() {
         // Seat 4 (stroke) on stroke side, then alternating: B bow side, 2 stroke, 3 bow, S stroke.
-        let sides = (1...4).map { BoatRules.side(ofSeat: $0, type: .four, rigging: .stroke) }
+        let four = BoatSetup(type: .four, rigging: .stroke)
+        let sides = (1...4).map { BoatRules.side(ofSeat: $0, setup: four) }
         #expect(sides == [.bow, .stroke, .bow, .stroke])
+        #expect(BoatRules.standardSides(.four, rigging: .stroke) == "BSBS")
     }
 
     @Test func bowRiggingSwapsEverySide() {
-        let sides = (1...4).map { BoatRules.side(ofSeat: $0, type: .four, rigging: .bow) }
+        let sides = (1...4).map { BoatRules.side(ofSeat: $0, setup: BoatSetup(type: .four, rigging: .bow)) }
         #expect(sides == [.stroke, .bow, .stroke, .bow])
-        #expect(BoatRules.side(ofSeat: 8, type: .eight, rigging: .stroke) == .stroke)
-        #expect(BoatRules.side(ofSeat: 1, type: .eight, rigging: .stroke) == .bow)
+        let eight = BoatSetup(type: .eight, rigging: .stroke)
+        #expect(BoatRules.side(ofSeat: 8, setup: eight) == .stroke)
+        #expect(BoatRules.side(ofSeat: 1, setup: eight) == .bow)
     }
 
     @Test func scullsAndTheCoxHaveNoSide() {
-        #expect(BoatRules.side(ofSeat: 1, type: .double, rigging: .stroke) == nil)
-        #expect(BoatRules.side(ofSeat: 0, type: .eight, rigging: .stroke) == nil)
+        #expect(BoatRules.side(ofSeat: 1, setup: BoatSetup(type: .double, rigging: .stroke)) == nil)
+        #expect(BoatRules.side(ofSeat: 0, setup: BoatSetup(type: .eight, rigging: .stroke)) == nil)
     }
 
     @Test func seatsRunBowToStrokeThenCox() {
@@ -77,5 +80,44 @@ struct BoatRulesTests {
         let seats = [BoatSeat(seat: 1, userId: a), BoatSeat(seat: 4, userId: b), BoatSeat(seat: 0, userId: c)]
         #expect(BoatRules.seats(seats, fittingInto: .pair).map(\.seat) == [1])
         #expect(BoatRules.seats(seats, fittingInto: .coxedFour).map(\.seat) == [1, 4, 0])
+    }
+
+    // MARK: - Custom rigging and orientation (decision 74)
+
+    @Test func aBucketFourHasTheMiddlePairOnOneSide() {
+        // Bow first: bow and stroke on stroke side, 2 and 3 on bow side.
+        let bucket = BoatSetup(type: .four, rigging: .custom, sides: "SBBS")
+        let sides = (1...4).map { BoatRules.side(ofSeat: $0, setup: bucket) }
+        #expect(sides == [.stroke, .bow, .bow, .stroke])
+    }
+
+    @Test func flippingAnOarMakesTheRiggingCustom() {
+        let four = BoatSetup(type: .four, rigging: .stroke)
+        let flipped = BoatRules.flipping(1, in: four)
+        #expect(flipped.rigging == .custom)
+        #expect(flipped.sides == "SSBS")
+        #expect(BoatRules.flipping(1, in: flipped).sides == "BSBS")
+        // A sculling boat has no sides to flip.
+        #expect(BoatRules.flipping(1, in: BoatSetup(type: .double, rigging: .stroke)) == BoatSetup(type: .double, rigging: .stroke))
+    }
+
+    @Test func onlyCustomRiggingKeepsSides() {
+        #expect(BoatSetup(type: .four, rigging: .stroke, sides: "SBBS").sides == nil)
+        #expect(BoatSetup(type: .four, rigging: .custom, sides: "SBBS").sides == "SBBS")
+    }
+
+    @Test func sternAtTheTopPutsStrokeSideOnTheRight() {
+        let four = BoatSetup(type: .four, rigging: .stroke)
+        // Stroke (seat 4) rows on stroke side.
+        #expect(BoatRules.isOnRight(seat: 4, setup: four, orientation: .sternAtTop))
+        #expect(!BoatRules.isOnRight(seat: 4, setup: four, orientation: .bowAtTop))
+        #expect(BoatRules.isOnRight(seat: 0, setup: BoatSetup(type: .coxedFour, rigging: .stroke), orientation: .sternAtTop))
+    }
+
+    @Test func theSternAtTheTopReadsCoxThenStrokeToBow() {
+        #expect(BoatRules.seatsTopToBottom(.coxedFour, orientation: .sternAtTop) == [0, 4, 3, 2, 1])
+        #expect(BoatRules.seatsTopToBottom(.coxedFour, orientation: .bowAtTop) == [1, 2, 3, 4, 0])
+        #expect(BoatRules.riggingLine(BoatSetup(type: .quad, rigging: .stroke)) == "Sculls")
+        #expect(BoatRules.riggingLine(BoatSetup(type: .four, rigging: .custom, sides: "SBBS")) == "Custom")
     }
 }

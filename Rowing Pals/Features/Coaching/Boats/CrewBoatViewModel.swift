@@ -6,7 +6,8 @@
 import Foundation
 import PaceEngine
 
-/// Crew a boat (CoachBoatEdit; decisions 67, 70): its name, type and rigging, and who sits where.
+/// Crew a boat (CoachBoatEdit; decisions 67, 70, 74): its name, type and rigging (custom too), and who
+/// sits where.
 /// In a water session the picker offers the rowers who said they can make it (decision 68) — those
 /// who can't are shown greyed with their reason — and nobody already in another of its boats; a
 /// saved boat offers everyone. Saving a sent boat with changes makes it Not sent again.
@@ -38,9 +39,28 @@ final class CrewBoatViewModel {
             let kept = BoatRules.seats(seats.map { BoatSeat(seat: $0.key, userId: $0.value) }, fittingInto: type)
             seats = Dictionary(kept.map { ($0.seat, $0.userId) }, uniquingKeysWith: { first, _ in first })
             if let selectedSeat, !BoatRules.seats(type).contains(selectedSeat) { self.selectedSeat = nil }
+            // Custom sides are per seat, so a new boat type starts from the standard rig.
+            if rigging == .custom { sides = type.isSculling ? nil : BoatRules.standardSides(type, rigging: .stroke) }
         }
     }
-    var rigging: Rigging = .stroke
+    /// Stroke-rigged, bow-rigged or custom (decision 74). Choosing Custom starts from the rig the
+    /// boat had, ready to move single oars across with ⇄.
+    var rigging: Rigging = .stroke {
+        didSet {
+            guard rigging != oldValue else { return }
+            if rigging == .custom {
+                if sides?.count != type.rowers {
+                    sides = BoatRules.standardSides(type, rigging: oldValue == .bow ? .bow : .stroke)
+                }
+            } else {
+                sides = nil
+            }
+        }
+    }
+    /// Custom rigging's sides, bow first ("SBBS").
+    private(set) var sides: String?
+
+    var setup: BoatSetup { BoatSetup(type: type, rigging: rigging, sides: sides) }
     /// Seat → rower.
     private(set) var seats: [Int: UUID] = [:]
     var selectedSeat: Int?
@@ -72,7 +92,14 @@ final class CrewBoatViewModel {
 
     func member(_ id: UUID?) -> ClubMember? { members.first { $0.id == id } }
 
-    func side(of seat: Int) -> RowingSide? { BoatRules.side(ofSeat: seat, type: type, rigging: rigging) }
+    func side(of seat: Int) -> RowingSide? { BoatRules.side(ofSeat: seat, setup: setup) }
+
+    /// ⇄: this seat's oar goes to the other side, and the rigging becomes custom.
+    func flip(_ seat: Int) {
+        let flipped = BoatRules.flipping(seat, in: setup)
+        rigging = .custom
+        sides = flipped.sides
+    }
 
     /// "Choose for seat 2 · stroke side".
     var pickerTitle: String? {
@@ -155,7 +182,7 @@ final class CrewBoatViewModel {
                     for seat in boat.seats { otherBoats[seat.userId] = boat.name }
                 }
                 if let boat = boats.first(where: { $0.id == boatId }) {
-                    fill(name: boat.name, type: boat.boatType, rigging: boat.rigging, seats: boat.seats)
+                    fill(name: boat.name, setup: boat.setup, seats: boat.seats)
                     keepSaved = boat.savedBoatId != nil
                 }
                 if let availability = try await BoatService.availability(of: session) {
@@ -165,7 +192,7 @@ final class CrewBoatViewModel {
             case .saved(let id):
                 if let id {
                     let boat = try await BoatService.savedBoat(id)
-                    fill(name: boat.name, type: boat.boatType, rigging: boat.rigging, seats: boat.seats)
+                    fill(name: boat.name, setup: boat.setup, seats: boat.seats)
                 }
             }
             if selectedSeat == nil { selectedSeat = BoatRules.seats(type).first { seats[$0] == nil } }
@@ -176,10 +203,11 @@ final class CrewBoatViewModel {
         hasLoaded = true
     }
 
-    private func fill(name: String, type: BoatType, rigging: Rigging, seats: [BoatSeat]) {
+    private func fill(name: String, setup: BoatSetup, seats: [BoatSeat]) {
         self.name = name
-        self.type = type
-        self.rigging = rigging
+        self.type = setup.type
+        self.rigging = setup.rigging
+        self.sides = setup.sides
         self.seats = Dictionary(seats.map { ($0.seat, $0.userId) }, uniquingKeysWith: { first, _ in first })
     }
 
@@ -213,7 +241,7 @@ final class CrewBoatViewModel {
         guard problem == nil else { return false }
         isSaving = true
         defer { isSaving = false }
-        let draft = BoatService.BoatDraft(name: name, boatType: type, rigging: rigging,
+        let draft = BoatService.BoatDraft(name: name, setup: setup,
                                           seats: seats.map { BoatSeat(seat: $0.key, userId: $0.value) }.sorted { $0.seat < $1.seat })
         do {
             switch mode {

@@ -73,14 +73,6 @@ struct CalendarRulesTests {
         #expect(!CalendarRules.canCheckIn(practice, now: start.addingTimeInterval(91 * 60)))
     }
 
-    @Test func wholeDayIsAnAnswerOnlyWhenEverySessionShares_it() {
-        #expect(CalendarRules.wholeDay([.going, .going]) == .going)
-        #expect(CalendarRules.wholeDay([.cant]) == .cant)
-        #expect(CalendarRules.wholeDay([.going, .cant]) == nil)
-        #expect(CalendarRules.wholeDay([.going, nil]) == nil)
-        #expect(CalendarRules.wholeDay([]) == nil)
-    }
-
     @Test func theDaySummaryReadsLikeTheCanvas() {
         let calendar = Self.calendar(.monday)
         let morning = Self.practice(Self.date(2026, 10, 20, 6, 30))

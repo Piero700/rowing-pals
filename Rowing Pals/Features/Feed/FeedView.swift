@@ -32,8 +32,17 @@ struct FeedView: View {
     @State private var nextPractice = NextPracticeModel()
     /// The rower's boat for their next water session (decision 67).
     @State private var nextBoat = NextBoatModel()
+    /// The club's announcements, folded to their headings until tapped (decision 75).
+    @State private var announcements = FeedAnnouncementsModel()
+    @State private var openAnnouncements: Set<UUID> = []
     @Environment(\.navigate) private var navigate
     @Environment(\.scenePhase) private var scenePhase
+
+    private func toggle(_ id: UUID) {
+        withAnimation(.easeOut(duration: 0.2)) {
+            if openAnnouncements.contains(id) { openAnnouncements.remove(id) } else { openAnnouncements.insert(id) }
+        }
+    }
 
     var body: some View {
         // The scroll view stays the tab's root view so the floating bar can track it.
@@ -46,6 +55,22 @@ struct FeedView: View {
                     .foregroundStyle(Tokens.Ink.secondary)
                     .padding(.horizontal, 2)
                     .padding(.vertical, Tokens.Spacing.loose)
+
+                if !announcements.announcements.isEmpty {
+                    VStack(spacing: Tokens.Spacing.tight) {
+                        ForEach(announcements.announcements) { announcement in
+                            FeedAnnouncementCard(
+                                announcement: announcement,
+                                meta: announcements.meta(announcement),
+                                isExpanded: openAnnouncements.contains(announcement.id),
+                                canEdit: announcements.canManage,
+                                onToggle: { toggle(announcement.id) },
+                                onEdit: { navigate(.editAnnouncement(announcement.id)) }
+                            )
+                        }
+                    }
+                    .padding(.bottom, Tokens.Spacing.loose)
+                }
 
                 ForEach(viewModel.todaysWorkouts) { today in
                     TodaysWorkoutCard(today: today) { navigate(.logWorkout(today.id)) }
@@ -88,9 +113,11 @@ struct FeedView: View {
             ViewerContext.shared.invalidate()
             async let practice: Void = nextPractice.load()
             async let boat: Void = nextBoat.load()
+            async let notices: Void = announcements.load()
             await viewModel.reload()
             await practice
             await boat
+            await notices
         }
         .safeAreaInset(edge: .top, spacing: 0) { header }
         .background(Tokens.Base.ground)
@@ -99,13 +126,19 @@ struct FeedView: View {
         .task { await viewModel.loadInitial() }
         .task { await nextPractice.load() }
         .task { await nextBoat.load() }
+        .task { await announcements.load() }
+        .onReceive(NotificationCenter.default.publisher(for: .announcementsChanged)) { _ in
+            Task { await announcements.load() }
+        }
         .refreshable {
             ViewerContext.shared.invalidate()
             async let practice: Void = nextPractice.load()
             async let boat: Void = nextBoat.load()
+            async let notices: Void = announcements.load()
             await viewModel.reload()
             await practice
             await boat
+            await notices
         }
         // An answer from the Calendar or the practice page, or a coach's change, shows here too.
         .onReceive(NotificationCenter.default.publisher(for: .practiceAnswered)) { _ in
@@ -137,6 +170,7 @@ struct FeedView: View {
                 Task { await viewModel.refreshWorkouts() }
                 Task { await nextPractice.load() }
                 Task { await nextBoat.load() }
+                Task { await announcements.load() }
             }
         }
         .fullScreenCover(item: $cover) { cover in

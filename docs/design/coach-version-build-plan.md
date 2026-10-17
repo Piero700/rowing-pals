@@ -76,3 +76,10 @@ Built 2026-10-17; checklist in `docs/testing/coach-version-phase3.md`. Server:
   sent"); Who's available → **Plan boats for this session**; a race → **Crew boats for this race**
   (each opens the session already planned from it, if there is one).
 
+## After CV3 — shells, custom rigging and announcements (decisions 68, 73–75)
+Built 2026-10-17; checklist in `docs/testing/shells-and-announcements.md`. Server:
+`docs/migrations/2026-10-17-rigging-and-announcements.sql` and `send-push` (deployed to staging).
+- Boats drawn as rowing shells, stern at the top (Settings → Boats → Draw boats), Custom rigging
+  with ⇄ on each oar.
+- Announcements: + → Announcement, the Feed's folded headings, the Calendar's Announcements.
+- A practice's end follows its start (two hours later); no Whole day control in the rower's Calendar.

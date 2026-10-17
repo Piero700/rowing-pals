@@ -27,10 +27,10 @@ struct BoatSnapshotTests {
     @Test func boatTilesRender() throws {
         let columns = [GridItem(.adaptive(minimum: Tokens.Boat.cardWidth), spacing: 6, alignment: .top)]
         let view = LazyVGrid(columns: columns, spacing: 6) {
-            BoatTile(name: "M1 four", type: .four, rigging: .stroke, seats: Self.seats(0..<4), names: Self.names, footer: .sent(true))
-            BoatTile(name: "W1 four", type: .coxedFour, rigging: .bow, seats: Self.seats(4..<8, cox: 8), names: Self.names, footer: .sent(true))
-            BoatTile(name: "Double", type: .double, rigging: .stroke, seats: Self.seats(9..<11), names: Self.names, footer: .sent(false))
-            BoatTile(name: "Novice four", type: .four, rigging: .stroke, seats: Self.seats(0..<4), names: Self.names, footer: .uses(6))
+            BoatTile(name: "M1 four", setup: BoatSetup(type: .four, rigging: .stroke), seats: Self.seats(0..<4), names: Self.names, footer: .sent(true))
+            BoatTile(name: "W1 four", setup: BoatSetup(type: .coxedFour, rigging: .bow), seats: Self.seats(4..<8, cox: 8), names: Self.names, footer: .sent(true))
+            BoatTile(name: "Double", setup: BoatSetup(type: .double, rigging: .stroke), seats: Self.seats(9..<11), names: Self.names, footer: .sent(false))
+            BoatTile(name: "Bucket four", setup: BoatSetup(type: .four, rigging: .custom, sides: "SBBS"), seats: Self.seats(0..<4), names: Self.names, footer: .uses(6))
         }
         .padding(Tokens.Spacing.screen)
         try Self.render(view, name: "tiles")

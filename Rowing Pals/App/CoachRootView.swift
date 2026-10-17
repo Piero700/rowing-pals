@@ -6,7 +6,8 @@
 import SwiftUI
 
 /// The coach version's shell (decision 67): its own floating bar — Rowers, Workouts, Boats and
-/// Calendar in the glass pill, the solid + beside it, which asks Land session or Water session —
+/// Calendar in the glass pill, the solid + beside it, which asks Land session, Water session or
+/// Announcement —
 /// built like the rower's `RootView`.
 ///
 /// Every tab lives at once and is shown or hidden, so each keeps its scroll position. Anything a
@@ -48,7 +49,7 @@ struct CoachRootView: View {
                         items: Self.items,
                         selection: $selection,
                         onReselect: { tab in reselects[tab, default: 0] += 1 },
-                        logLabel: "New session",
+                        logLabel: "New: session or announcement",
                         onTapLog: { isChoosingNew = true }
                     )
                 }

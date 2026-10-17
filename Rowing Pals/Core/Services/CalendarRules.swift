@@ -57,14 +57,7 @@ enum CalendarRules {
         !practice.cancelled && now >= practice.startsAt.addingTimeInterval(-30 * 60) && now <= practice.endsAt
     }
 
-    /// The Whole day control: Available or Can't when every session that day has that answer,
-    /// otherwise neither.
-    static func wholeDay(_ answers: [PracticeAnswer?]) -> PracticeAnswer? {
-        guard let first = answers.first, let answer = first, answers.allSatisfy({ $0 == answer }) else { return nil }
-        return answer
-    }
-
-    /// The line under Whole day: "Both sessions", "Evening only", "Can't make it", "Not answered"…
+    /// How a day stands beside its date: "Both sessions", "Evening only", "Can't make it", "Not answered"…
     /// `sessions` are that day's practices in time order with the rower's answer to each.
     static func daySummary(_ sessions: [(practice: Practice, answer: PracticeAnswer?)], calendar: Calendar) -> String {
         let answers = sessions.map(\.answer)

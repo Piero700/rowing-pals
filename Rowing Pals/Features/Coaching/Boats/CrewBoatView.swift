@@ -7,14 +7,17 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 /// Crew a boat (CoachBoatEdit; decisions 67, 70): Boat name, Boat type (1x 2x 2− 4− 4+ 4x 8+),
-/// Rigging (stroke- or bow-rigged; none for sculls), then the crew drawn upright — bow at the top,
-/// each rower's name beside their seat on their oar's side, "Usually stroke side" when they're on
+/// Rigging (stroke-rigged, bow-rigged or custom with ⇄ on each oar; none for sculls), then the crew
+/// drawn as a shell — stern at the top unless the viewer chose otherwise — each rower's name beside
+/// their seat on their oar's side, "Usually stroke side" when they're on
 /// their other side. Tap a seat, then a rower; hold and drag a name onto another seat to swap.
 /// In a session: Keep in Saved boats, Save boat, Delete boat. For a saved boat: Save, Delete.
 struct CrewBoatView: View {
     @State private var viewModel: CrewBoatViewModel
     @State private var isConfirmingDelete = false
     @Environment(\.dismiss) private var dismiss
+    /// Stern or bow at the top (Settings → Boats → Draw boats, decision 74).
+    @AppStorage(BoatOrientation.storageKey) private var orientation: BoatOrientation = .sternAtTop
 
     private static let cardShape = RoundedRectangle(cornerRadius: Tokens.Radius.card, style: .continuous)
     private static let buttonShape = RoundedRectangle(cornerRadius: Tokens.Boat.seatButtonRadius, style: .continuous)
@@ -81,13 +84,15 @@ struct CrewBoatView: View {
                 get: { Rigging.allCases.firstIndex(of: viewModel.rigging) ?? 0 },
                 set: { viewModel.rigging = Rigging.allCases[$0] }
             ))
-            FormFootnote("Stroke-rigged: the stroke’s oar is on stroke side, then the seats alternate. Bow-rigged is the other way round.")
+            FormFootnote(viewModel.rigging == .custom
+                ? "Custom: tap ⇄ beside an oar to put it on the other side — for a bucket rig or any staggered setup."
+                : "Stroke-rigged: the stroke’s oar is on stroke side, then the seats alternate. Bow-rigged is the other way round.")
         }
 
         HStack(alignment: .firstTextBaseline) {
             FormSectionTitle("Crew")
             Spacer(minLength: 0)
-            Text("Bow at the top")
+            Text("\(orientation.label) · change in Settings")
                 .textStyle(Typography.statLabel)
                 .foregroundStyle(Tokens.Ink.secondary)
                 .padding(.top, Tokens.Spacing.group)
@@ -135,34 +140,40 @@ struct CrewBoatView: View {
 
     private var crewCard: some View {
         let metrics = Tokens.Boat.large
-        let layout = BoatDrawing.Layout(type: viewModel.type, metrics: metrics)
+        let layout = BoatDrawing.Layout(type: viewModel.type, metrics: metrics, orientation: orientation)
+        let sternAtTop = orientation == .sternAtTop
         let empty = Set(BoatRules.seats(viewModel.type).filter { viewModel.seats[$0] == nil })
         return VStack(spacing: 0) {
             if !viewModel.type.isSculling {
+                // Turned round with the stern at the top, stroke side is on the right.
                 HStack {
-                    Text("Stroke side")
+                    Text(sternAtTop ? "Bow side" : "Stroke side")
                     Spacer(minLength: 0)
-                    Text("Bow side")
+                    Text(sternAtTop ? "Stroke side" : "Bow side")
                 }
                 .textStyle(Typography.tag)
                 .foregroundStyle(Tokens.Ink.secondary)
                 .padding(.horizontal, Tokens.Spacing.card)
                 .padding(.bottom, Tokens.Spacing.tight)
             }
+            BoatEndLabel(text: sternAtTop ? "Stern" : "Bow")
             ZStack(alignment: .topLeading) {
-                BoatDrawing(type: viewModel.type, rigging: viewModel.rigging, metrics: metrics,
+                BoatDrawing(setup: viewModel.setup, orientation: orientation, metrics: metrics,
                             selectedSeat: viewModel.selectedSeat, emptySeats: empty)
+                if viewModel.rigging == .custom && !viewModel.type.isSculling {
+                    ForEach(1...viewModel.type.rowers, id: \.self) { seat in
+                        flipButton(seat)
+                            .position(x: flipButtonX(seat, layout: layout), y: layout.seatY(seat) - metrics.seatRadius - Tokens.Boat.flipButton / 3)
+                    }
+                }
                 ForEach(BoatRules.seats(viewModel.type), id: \.self) { seat in
                     seatButton(seat)
                         .frame(width: metrics.nameWidth)
-                        .position(x: seatButtonX(seat, metrics: metrics), y: layout.seatY(seat))
+                        .position(x: seatButtonX(seat, layout: layout), y: layout.seatY(seat))
                 }
             }
             .frame(width: metrics.width, height: layout.height)
-            Text("Stern")
-                .textStyle(Typography.statLabel)
-                .foregroundStyle(Tokens.Ink.secondary)
-                .padding(.top, Tokens.Spacing.gap)
+            BoatEndLabel(text: sternAtTop ? "Bow" : "Stern")
         }
         .frame(maxWidth: .infinity)
         .padding(.top, Tokens.Spacing.loose)
@@ -171,16 +182,42 @@ struct CrewBoatView: View {
         .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
     }
 
-    private func seatButtonX(_ seat: Int, metrics: Tokens.Boat.Metrics) -> CGFloat {
-        let right = seat == 0 || BoatRules.isOnRight(seat: seat, type: viewModel.type, rigging: viewModel.rigging)
-        return right ? metrics.width - 4 - metrics.nameWidth / 2 : 4 + metrics.nameWidth / 2
+    /// Past the blade, on the oar's side.
+    private func seatButtonX(_ seat: Int, layout: BoatDrawing.Layout) -> CGFloat {
+        let right = BoatRules.isOnRight(seat: seat, setup: viewModel.setup, orientation: orientation)
+        let offset = layout.reach + layout.metrics.nameWidth / 2
+        return right ? layout.centreX + offset : layout.centreX - offset
+    }
+
+    /// Just above the oar's pin.
+    private func flipButtonX(_ seat: Int, layout: BoatDrawing.Layout) -> CGFloat {
+        let right = BoatRules.isOnRight(seat: seat, setup: viewModel.setup, orientation: orientation)
+        return layout.pinX(right: right) + (right ? 4 : -4)
+    }
+
+    /// ⇄: moves this seat's oar to the other side (custom rigging, decision 74).
+    private func flipButton(_ seat: Int) -> some View {
+        Button {
+            viewModel.flip(seat)
+        } label: {
+            Text("⇄")
+                .textStyle(Typography.chip)
+                .foregroundStyle(Tokens.Accent.brand)
+                .frame(width: Tokens.Boat.flipButton, height: Tokens.Boat.flipButton)
+                .background(Circle().fill(Tokens.Accent.brandSoft))
+                .overlay { Circle().strokeBorder(Tokens.Accent.brand, lineWidth: 1) }
+                .frame(width: Tokens.Size.minTap, height: Tokens.Size.minTap)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(IconPressStyle())
+        .accessibilityLabel("Move \(BoatRules.seatName(seat, type: viewModel.type).lowercased())'s oar to \(viewModel.side(of: seat) == .stroke ? "bow" : "stroke") side")
     }
 
     @ViewBuilder
     private func seatButton(_ seat: Int) -> some View {
         let person = viewModel.member(viewModel.seats[seat])
         let isSelected = viewModel.selectedSeat == seat
-        let right = seat == 0 || BoatRules.isOnRight(seat: seat, type: viewModel.type, rigging: viewModel.rigging)
+        let right = BoatRules.isOnRight(seat: seat, setup: viewModel.setup, orientation: orientation)
         let seatSide = viewModel.side(of: seat)
         let button = Button {
             viewModel.selectedSeat = seat

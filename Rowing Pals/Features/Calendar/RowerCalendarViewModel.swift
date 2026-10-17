@@ -103,11 +103,6 @@ final class RowerCalendarViewModel {
         await save([practice], answer: answer)
     }
 
-    /// Whole day: every session that day still open takes this answer.
-    func answerDay(_ day: Date, _ answer: PracticeAnswer) async {
-        await save(practices(on: day).filter { CalendarRules.canAnswer($0, now: Date()) }, answer: answer)
-    }
-
     /// "Available for the other N".
     func answerRestAvailable() async {
         await save(restToAnswer, answer: .going)

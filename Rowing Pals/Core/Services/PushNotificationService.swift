@@ -106,8 +106,8 @@ final class PushNotificationService {
     }
 
     /// A tapped alert opens its post (`session_id`); a practice alert its practice, a race or
-    /// event alert its page (decision 68); a boat alert the Feed, with the boat on top (decision
-    /// 67); a club invitation Your club, where it can be accepted or declined (see send-push,
+    /// event alert its page (decision 68); a boat or announcement alert the Feed, where it sits on
+    /// top (decisions 67, 75); a club invitation Your club, where it can be accepted or declined (see send-push,
     /// decision 26).
     func open(sessionId: String?, kind: String?, practiceId: String? = nil, eventId: String? = nil) {
         if kind == "club_invite" {
@@ -116,6 +116,11 @@ final class PushNotificationService {
         }
         if kind == "boat_seat" {
             NotificationCenter.default.post(name: .boatsChanged, object: nil)
+            opensFeed = true
+            return
+        }
+        if kind == "announcement" {
+            NotificationCenter.default.post(name: .announcementsChanged, object: nil)
             opensFeed = true
             return
         }

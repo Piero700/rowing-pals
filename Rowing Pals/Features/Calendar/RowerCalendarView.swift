@@ -168,22 +168,13 @@ struct RowerCalendarView: View {
                 HStack(spacing: Tokens.Spacing.gap) {
                     DateBlock(date: day, calendar: calendar)
                     if !sessions.isEmpty {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("Whole day")
-                                .textStyle(Typography.pill)
-                                .foregroundStyle(Tokens.Ink.primary)
-                            Text(CalendarRules.daySummary(sessions.map { ($0, viewModel.answers[$0.id]) }, calendar: calendar))
-                                .textStyle(Typography.statLabel)
-                                .tabularNumerals()
-                                .foregroundStyle(Tokens.Ink.secondary)
-                        }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        AnswerControl(
-                            answer: CalendarRules.wholeDay(sessions.map { viewModel.answers[$0.id] }),
-                            isEnabled: sessions.contains { CalendarRules.canAnswer($0, now: Date()) }
-                        ) { answer in
-                            Task { await viewModel.answerDay(day, answer) }
-                        }
+                        // How the day stands: "Both sessions", "Evening only", "Not answered" (no
+                        // Whole day control any more: each session is answered on its own, user 2026-10-17).
+                        Text(CalendarRules.daySummary(sessions.map { ($0, viewModel.answers[$0.id]) }, calendar: calendar))
+                            .textStyle(Typography.statLabel)
+                            .tabularNumerals()
+                            .foregroundStyle(Tokens.Ink.secondary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
                     } else {
                         Spacer(minLength: 0)
                     }

@@ -22,6 +22,9 @@ final class CoachCalendarViewModel {
     /// Water sessions this month and their boats (decision 67).
     private(set) var waterSessions: [WaterSession] = []
     private(set) var waterBoats: [UUID: [SessionBoat]] = [:]
+    /// Announcements on rowers' Feeds, and those that came off in the last two weeks (decision 75).
+    private(set) var announcements: [Announcement] = []
+    private(set) var authorNames: [UUID: String] = [:]
     private(set) var squads: [Squad] = []
     private(set) var practiceAudiences: [UUID: Set<UUID>] = [:]
     private(set) var responses: [UUID: [PracticeResponse]] = [:]
@@ -75,6 +78,22 @@ final class CoachCalendarViewModel {
         let sent = boats.filter(\.isSent).count
         let state = sent == boats.count ? "sent" : (sent == 0 ? "not sent" : "\(sent) of \(boats.count) sent")
         return "\(boats.count) boat\(boats.count == 1 ? "" : "s") crewed · \(rowers) rower\(rowers == 1 ? "" : "s") · \(state)"
+    }
+
+    /// How many are on rowers' Feeds now.
+    var liveAnnouncementCount: Int { announcements.filter { AnnouncementRules.isLive($0, now: Date()) }.count }
+
+    /// "Sarah Lin · posted Fri 16 Oct · until Fri 23 Oct", or "… · ended Sat 10 Oct".
+    func announcementLine(_ announcement: Announcement) -> String {
+        var parts: [String] = []
+        if let author = announcement.createdBy, let name = authorNames[author] { parts.append(name) }
+        if AnnouncementRules.isLive(announcement, now: Date()) {
+            parts.append("posted \(CalendarRules.dayLabel(announcement.createdAt, calendar: calendar))")
+            parts.append("until \(AnnouncementRules.momentText(announcement.expiresAt, calendar: calendar))")
+        } else {
+            parts.append("ended \(CalendarRules.dayLabel(announcement.expiresAt, calendar: calendar))")
+        }
+        return parts.joined(separator: " · ")
     }
 
     func events(on day: Date) -> [ClubEvent] {
@@ -161,6 +180,15 @@ final class CoachCalendarViewModel {
             let lastText = WorkoutRules.dayText(last, calendar: calendar)
             workouts = workoutRows.filter { $0.workoutDate >= firstText && $0.workoutDate <= lastText }
             events = eventRows
+            // Announcements are extra too: before their migration the calendar still shows.
+            let twoWeeksAgo = Date().addingTimeInterval(-14 * 24 * 60 * 60)
+            announcements = (try? await AnnouncementService.club(since: twoWeeksAgo)) ?? []
+            if let members = try? await CalendarService.members() {
+                authorNames = Dictionary(members.map { ($0.id, $0.displayName) }, uniquingKeysWith: { first, _ in first })
+            }
+            for author in Set(announcements.compactMap(\.createdBy)) where authorNames[author] == nil {
+                authorNames[author] = try? await CalendarService.displayName(of: author)
+            }
             // Water sessions are extra: before the boats migration the calendar still shows.
             let water = (try? await BoatService.sessions(from: first, to: end)) ?? []
             waterSessions = water

@@ -5,20 +5,21 @@
 
 import SwiftUI
 
-/// The coach bar's + (CoachNew; decision 67): a land session — an erg workout — or a water
-/// session, crewed seat by seat. Practices, races and events come from the Calendar.
+/// The coach bar's + (CoachNew; decisions 67, 75): a land session — an erg workout — a water
+/// session, crewed seat by seat, or an announcement to every rower. Practices, races and events
+/// come from the Calendar.
 struct NewSessionSheet: View {
     let onChoose: (AppRoute) -> Void
 
     @Environment(\.dismiss) private var dismiss
-    @State private var contentHeight: CGFloat = 420
+    @State private var contentHeight: CGFloat = 520
 
     private static let rowShape = RoundedRectangle(cornerRadius: Tokens.Radius.panel, style: .continuous)
 
     var body: some View {
         VStack(alignment: .leading, spacing: Tokens.Spacing.tight) {
             HStack {
-                Text("New session")
+                Text("New")
                     .textStyle(Typography.selectedValue)
                     .foregroundStyle(Tokens.Ink.primary)
                 Spacer(minLength: 0)
@@ -32,7 +33,10 @@ struct NewSessionSheet: View {
             option("water.waves", "Water session",
                    "On the river: the plan, then crew the boats seat by seat. Each rower is told their boat and seat; it shows in Boats.",
                    .newWaterSession(WaterSessionSeed()))
-            Text("Practices, races and other events are added from the Calendar.")
+            option("megaphone", "Announcement",
+                   "A notice for every rower. Its heading sits at the top of their Feed; they tap it to read the rest.",
+                   .newAnnouncement)
+            Text("Practices, races and other events are added from the Calendar. Announcements are kept in the Calendar too.")
                 .textStyle(Typography.meta)
                 .foregroundStyle(Tokens.Ink.secondary)
                 .padding(.horizontal, 4)

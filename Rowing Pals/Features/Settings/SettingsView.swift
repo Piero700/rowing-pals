@@ -30,6 +30,8 @@ struct SettingsView: View {
     @AppStorage(Appearance.storageKey) private var appearance: Appearance = .dark
     /// The rower or coach version (decision 67); the switch row changes it.
     @AppStorage(AppMode.storageKey) private var appMode: AppMode = .rowing
+    /// How boats are drawn for this person (decision 74).
+    @AppStorage(BoatOrientation.storageKey) private var boatOrientation: BoatOrientation = .sternAtTop
     /// True for an account that rows and coaches: only it can switch.
     @State private var canSwitchVersion = false
     /// Coaches set the day the club's week starts (decision 69); nil for anyone else.
@@ -39,7 +41,8 @@ struct SettingsView: View {
     private static let cardShape = RoundedRectangle(cornerRadius: Tokens.Radius.card, style: .continuous)
 
     /// v3 Settings (`docs/design/v3/RP Screen.dc.html` §07): grouped cards of 66 pt rows —
-    /// Appearance, Club · coaches (coaches only: the week start, decision 69), Units and display,
+    /// Appearance, Boats (Draw boats, decision 74), Club · coaches (coaches only: the week start,
+    /// decision 69), Units and display,
     /// Notifications, Privacy, Account — then Delete account and
     /// the version. Left out by decision: the app-icon section (14) and CSV export (15). No
     /// "Who can comment" row: anyone who can see a post can comment on it (decision 33).
@@ -63,6 +66,28 @@ struct SettingsView: View {
                             checkmark(appearance == .system)
                         } action: { appearance = .system }
                     }
+
+                    group("Boats") {
+                        stackedRow(title: "Draw boats", subtitle: "How every boat is drawn: crewing, the Boats tab and your Feed.") {
+                            VStack(spacing: Tokens.Spacing.tight) {
+                                PillSegmentedControl(options: BoatOrientation.allCases.map(\.label), selection: Binding(
+                                    get: { BoatOrientation.allCases.firstIndex(of: boatOrientation) ?? 0 },
+                                    set: { boatOrientation = BoatOrientation.allCases[$0] }
+                                ), compact: true)
+                                VStack(spacing: 0) {
+                                    BoatEndLabel(text: boatOrientation == .sternAtTop ? "Stern" : "Bow")
+                                    BoatDrawing(setup: BoatSetup(type: .four, rigging: .stroke), orientation: boatOrientation)
+                                    BoatEndLabel(text: boatOrientation == .sternAtTop ? "Bow" : "Stern")
+                                }
+                                .frame(maxWidth: .infinity)
+                            }
+                        }
+                    }
+                    Text("Just for you: every rower and coach picks their own. With the stern at the top, stroke side is on the right, as the rowers see it facing the stern.")
+                        .textStyle(Typography.meta)
+                        .foregroundStyle(Tokens.Ink.secondary)
+                        .padding(.horizontal, 4)
+                        .padding(.top, Tokens.Spacing.tight)
 
                     if let clubWeek {
                         group("Club · coaches") {

@@ -14,6 +14,8 @@ struct WaterSessionView: View {
     @State private var isConfirmingDelete = false
     @Environment(\.dismiss) private var dismiss
     @Environment(\.navigate) private var navigate
+    /// Stern or bow at the top (Settings → Boats → Draw boats, decision 74).
+    @AppStorage(BoatOrientation.storageKey) private var orientation: BoatOrientation = .sternAtTop
 
     private static let cardShape = RoundedRectangle(cornerRadius: Tokens.Radius.card, style: .continuous)
     private static let columns = [GridItem(.adaptive(minimum: Tokens.Boat.cardWidth), spacing: 6, alignment: .top)]
@@ -119,8 +121,8 @@ struct WaterSessionView: View {
                     Button {
                         if let id = viewModel.sessionId { navigate(.sessionBoat(session: id, boat: boat.id)) }
                     } label: {
-                        BoatTile(name: boat.name, type: boat.boatType, rigging: boat.rigging, seats: boat.seats,
-                                 names: viewModel.names, footer: .sent(boat.isSent))
+                        BoatTile(name: boat.name, setup: boat.setup, seats: boat.seats,
+                                 names: viewModel.names, footer: .sent(boat.isSent), orientation: orientation)
                     }
                     .buttonStyle(IconPressStyle())
                 }

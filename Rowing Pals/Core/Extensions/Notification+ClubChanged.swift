@@ -24,6 +24,8 @@ extension Notification.Name {
     /// A coach saved, sent or deleted a water session or a boat (decision 67): the Boats tab, the
     /// session and the Calendar reload.
     static let boatsChanged = Notification.Name("boatsChanged")
+    /// An announcement was posted, changed or deleted (decision 75): the Feed and Calendar reload.
+    static let announcementsChanged = Notification.Name("announcementsChanged")
 }
 
 extension NotificationCenter {

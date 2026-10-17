@@ -48,6 +48,10 @@ struct CoachCalendarView: View {
                         .padding(.top, Tokens.Spacing.loose)
                 }
 
+                if !viewModel.announcements.isEmpty {
+                    announcementsSection
+                }
+
                 ForEach(viewModel.shownDays, id: \.self) { day in
                     daySection(day)
                 }
@@ -96,6 +100,9 @@ struct CoachCalendarView: View {
             Task { await viewModel.load() }
         }
         .onReceive(NotificationCenter.default.publisher(for: .boatsChanged)) { _ in
+            Task { await viewModel.load() }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .announcementsChanged)) { _ in
             Task { await viewModel.load() }
         }
         .sheet(item: $addingTo, onDismiss: {
@@ -303,6 +310,75 @@ struct CoachCalendarView: View {
             .background(Self.cardShape.fill(Tokens.Surface.card))
             .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
             .contentShape(Self.cardShape)
+        }
+        .buttonStyle(IconPressStyle())
+    }
+
+    // MARK: - Announcements (decision 75)
+
+    @ViewBuilder
+    private var announcementsSection: some View {
+        HStack(alignment: .firstTextBaseline) {
+            SectionTitle("Announcements")
+            Spacer(minLength: 0)
+            Text("\(viewModel.liveAnnouncementCount) on rowers’ Feeds")
+                .textStyle(Typography.statLabel)
+                .tabularNumerals()
+                .foregroundStyle(Tokens.Ink.secondary)
+        }
+        .padding(.top, Tokens.Spacing.group)
+        .padding(.bottom, Tokens.Spacing.tight)
+        VStack(spacing: 0) {
+            ForEach(Array(viewModel.announcements.enumerated()), id: \.element.id) { index, announcement in
+                if index > 0 {
+                    Rectangle().fill(Tokens.Surface.line).frame(height: 1)
+                }
+                announcementRow(announcement)
+            }
+        }
+        .background(Self.cardShape.fill(Tokens.Surface.card))
+        .clipShape(Self.cardShape)
+        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+        Text("Tap one to change it or take it down. New ones come from +.")
+            .textStyle(Typography.meta)
+            .foregroundStyle(Tokens.Ink.secondary)
+            .padding(.horizontal, 4)
+            .padding(.top, Tokens.Spacing.tight)
+    }
+
+    private func announcementRow(_ announcement: Announcement) -> some View {
+        let isLive = AnnouncementRules.isLive(announcement, now: Date())
+        return Button {
+            navigate(.editAnnouncement(announcement.id))
+        } label: {
+            HStack(spacing: Tokens.Spacing.loose) {
+                Image(systemName: "megaphone")
+                    .textStyle(Typography.rowTitle)
+                    .foregroundStyle(Tokens.Accent.brand)
+                    .frame(width: Tokens.Size.rowIcon, height: Tokens.Size.rowIcon)
+                    .background(RoundedRectangle(cornerRadius: Tokens.Schedule.iconTileRadius, style: .continuous).fill(Tokens.Accent.brandSoft))
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(announcement.heading)
+                        .textStyle(Typography.rowTitle)
+                        .foregroundStyle(Tokens.Ink.primary)
+                        .lineLimit(1)
+                    Text(viewModel.announcementLine(announcement))
+                        .textStyle(Typography.statLabel)
+                        .tabularNumerals()
+                        .foregroundStyle(Tokens.Ink.secondary)
+                        .lineLimit(2)
+                        .multilineTextAlignment(.leading)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                Image(systemName: "chevron.right")
+                    .textStyle(Typography.pill)
+                    .foregroundStyle(Tokens.Ink.secondary)
+            }
+            .padding(.horizontal, Tokens.Spacing.card)
+            .padding(.vertical, Tokens.Spacing.gap)
+            .frame(minHeight: Tokens.Size.row)
+            .opacity(isLive ? 1 : 0.6)
+            .contentShape(Rectangle())
         }
         .buttonStyle(IconPressStyle())
     }

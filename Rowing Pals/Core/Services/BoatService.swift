@@ -152,8 +152,7 @@ enum BoatService {
 
     nonisolated struct BoatDraft: Sendable {
         var name: String
-        var boatType: BoatType
-        var rigging: Rigging
+        var setup: BoatSetup
         var seats: [BoatSeat]
     }
 
@@ -166,6 +165,7 @@ enum BoatService {
             let p_name: String
             let p_type: String
             let p_rigging: String
+            let p_sides: String?
             let p_seats: [SeatParam]
             let p_keep_saved: Bool
             func encode(to encoder: Encoder) throws {
@@ -175,14 +175,15 @@ enum BoatService {
                 try c.encode(p_name, forKey: .p_name)
                 try c.encode(p_type, forKey: .p_type)
                 try c.encode(p_rigging, forKey: .p_rigging)
+                try c.encode(p_sides, forKey: .p_sides)
                 try c.encode(p_seats, forKey: .p_seats)
                 try c.encode(p_keep_saved, forKey: .p_keep_saved)
             }
-            enum Keys: String, CodingKey { case p_boat, p_session, p_name, p_type, p_rigging, p_seats, p_keep_saved }
+            enum Keys: String, CodingKey { case p_boat, p_session, p_name, p_type, p_rigging, p_sides, p_seats, p_keep_saved }
         }
         return try await SupabaseService.shared.rpc("save_session_boat", params: Params(
             p_boat: id, p_session: session, p_name: draft.name.trimmingCharacters(in: .whitespacesAndNewlines),
-            p_type: draft.boatType.rawValue, p_rigging: draft.rigging.rawValue,
+            p_type: draft.setup.type.rawValue, p_rigging: draft.setup.rigging.rawValue, p_sides: draft.setup.sides,
             p_seats: draft.seats.map { SeatParam(seat: $0.seat, user: $0.userId) }, p_keep_saved: keepSaved
         )).execute().value
     }
@@ -208,6 +209,7 @@ enum BoatService {
             let p_name: String
             let p_type: String
             let p_rigging: String
+            let p_sides: String?
             let p_seats: [SeatParam]
             func encode(to encoder: Encoder) throws {
                 var c = encoder.container(keyedBy: Keys.self)
@@ -215,13 +217,14 @@ enum BoatService {
                 try c.encode(p_name, forKey: .p_name)
                 try c.encode(p_type, forKey: .p_type)
                 try c.encode(p_rigging, forKey: .p_rigging)
+                try c.encode(p_sides, forKey: .p_sides)
                 try c.encode(p_seats, forKey: .p_seats)
             }
-            enum Keys: String, CodingKey { case p_saved, p_name, p_type, p_rigging, p_seats }
+            enum Keys: String, CodingKey { case p_saved, p_name, p_type, p_rigging, p_sides, p_seats }
         }
         return try await SupabaseService.shared.rpc("save_saved_boat", params: Params(
             p_saved: id, p_name: draft.name.trimmingCharacters(in: .whitespacesAndNewlines),
-            p_type: draft.boatType.rawValue, p_rigging: draft.rigging.rawValue,
+            p_type: draft.setup.type.rawValue, p_rigging: draft.setup.rigging.rawValue, p_sides: draft.setup.sides,
             p_seats: draft.seats.map { SeatParam(seat: $0.seat, user: $0.userId) }
         )).execute().value
     }

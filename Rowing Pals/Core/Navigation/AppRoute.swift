@@ -74,6 +74,9 @@ enum AppRoute: Hashable, Identifiable {
     case newWaterSession(WaterSessionSeed)
     case sessionBoat(session: UUID, boat: UUID?)
     case savedBoat(UUID?)
+    /// A new announcement; one to edit or delete (decision 75).
+    case newAnnouncement
+    case editAnnouncement(UUID)
 
     var id: Self { self }
 }

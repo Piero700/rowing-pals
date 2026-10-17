@@ -15,6 +15,8 @@ struct CoachBoatsView: View {
 
     @State private var viewModel = CoachBoatsViewModel()
     @Environment(\.navigate) private var navigate
+    /// Stern or bow at the top (Settings → Boats → Draw boats, decision 74).
+    @AppStorage(BoatOrientation.storageKey) private var orientation: BoatOrientation = .sternAtTop
 
     private static let cardShape = RoundedRectangle(cornerRadius: Tokens.Radius.card, style: .continuous)
     private static let columns = [GridItem(.adaptive(minimum: Tokens.Boat.cardWidth), spacing: 6, alignment: .top)]
@@ -169,8 +171,8 @@ struct CoachBoatsView: View {
                         Button {
                             navigate(.sessionBoat(session: session.id, boat: boat.id))
                         } label: {
-                            BoatTile(name: boat.name, type: boat.boatType, rigging: boat.rigging, seats: boat.seats,
-                                     names: viewModel.names, footer: .sent(boat.isSent))
+                            BoatTile(name: boat.name, setup: boat.setup, seats: boat.seats,
+                                     names: viewModel.names, footer: .sent(boat.isSent), orientation: orientation)
                         }
                         .buttonStyle(IconPressStyle())
                     }
@@ -205,8 +207,8 @@ struct CoachBoatsView: View {
                     Button {
                         navigate(.savedBoat(boat.id))
                     } label: {
-                        BoatTile(name: boat.name, type: boat.boatType, rigging: boat.rigging, seats: boat.seats,
-                                 names: viewModel.names, footer: .uses(boat.uses))
+                        BoatTile(name: boat.name, setup: boat.setup, seats: boat.seats,
+                                 names: viewModel.names, footer: .uses(boat.uses), orientation: orientation)
                     }
                     .buttonStyle(IconPressStyle())
                 }
