@@ -115,6 +115,9 @@ final class PushNotificationService {
             return
         }
         if kind == "boat_seat" {
+            // Someone who rows and coaches may be in the coach version, which has no Feed: switch to
+            // rowing first (decision 79). AppShell follows the stored mode.
+            UserDefaults.standard.set(AppMode.rowing.rawValue, forKey: AppMode.storageKey)
             NotificationCenter.default.post(name: .boatsChanged, object: nil)
             opensFeed = true
             return

@@ -5,13 +5,15 @@
 
 import SwiftUI
 
-/// One boat as the Boats tab and a water session show it (CoachBoats, CoachSavedBoats): its name
-/// and type, its rigging ("Sculls" for a sculling boat), the small shell drawing with first
-/// names, and a line under it — Sent / Not sent, or how often a saved boat has been used.
+/// One boat as the Boats tab and a water session show it (CoachBoats, CoachSavedBoats; and the
+/// rower's read-only water session, decision 79): its name and type, its rigging ("Sculls" for a
+/// sculling boat), the small shell drawing with first names, and a line under it — Sent / Not sent,
+/// how often a saved boat has been used, or nothing.
 struct BoatTile: View {
     enum Footer {
         case sent(Bool)
         case uses(Int)
+        case hidden
     }
 
     let name: String
@@ -20,6 +22,8 @@ struct BoatTile: View {
     let names: [UUID: String]
     let footer: Footer
     var orientation: BoatOrientation = .sternAtTop
+    /// The viewer's own seat, filled in brand blue (the read-only session page).
+    var highlightedSeat: Int?
 
     private static let shape = RoundedRectangle(cornerRadius: Tokens.Boat.cardRadius, style: .continuous)
 
@@ -39,10 +43,12 @@ struct BoatTile: View {
                 .padding(.top, 2)
                 .padding(.bottom, 6)
             BoatEndLabel(text: orientation == .sternAtTop ? "Stern" : "Bow")
-            BoatDrawing(setup: setup, orientation: orientation, names: firstNames)
+            BoatDrawing(setup: setup, orientation: orientation, names: firstNames, highlightedSeat: highlightedSeat)
             BoatEndLabel(text: orientation == .sternAtTop ? "Bow" : "Stern")
-            footerView
-                .padding(.top, 6)
+            if case .hidden = footer {} else {
+                footerView
+                    .padding(.top, 6)
+            }
         }
         .padding(.top, Tokens.Spacing.gap)
         .padding(.bottom, Tokens.Spacing.tight)
@@ -71,6 +77,8 @@ struct BoatTile: View {
                 .textStyle(Typography.statLabel)
                 .tabularNumerals()
                 .foregroundStyle(Tokens.Ink.secondary)
+        case .hidden:
+            EmptyView()
         }
     }
 }

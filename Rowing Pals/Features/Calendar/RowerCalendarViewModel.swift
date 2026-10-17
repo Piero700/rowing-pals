@@ -13,6 +13,25 @@ import Foundation
 final class RowerCalendarViewModel {
     enum Week: Int { case this, next }
 
+    /// A water session on a day (decision 79), with the rower's boat and seat in it if they have one.
+    struct WaterRow: Identifiable {
+        let session: WaterSession
+        let myBoat: SessionBoat?
+        let mySeat: Int?
+        /// Boats in it (the whole club's view; 0 when only the rower's own are loaded).
+        let boatCount: Int
+        var id: UUID { session.id }
+
+        /// "You’re at stroke in M1 four", "3 boats", "No boats yet".
+        var detail: String {
+            if let myBoat, let mySeat {
+                return "\(BoatRules.seatPhrase(mySeat, type: myBoat.boatType)) \(myBoat.name)"
+            }
+            if boatCount == 0 { return "No boats yet" }
+            return boatCount == 1 ? "1 boat" : "\(boatCount) boats"
+        }
+    }
+
     var week: Week = .next {
         didSet { if week != oldValue { Task { await load() } } }
     }
@@ -24,6 +43,9 @@ final class RowerCalendarViewModel {
     private(set) var reasons: [UUID: String] = [:]
     private(set) var events: [ClubEvent] = []
     private(set) var eventAnswers: [UUID: Bool] = [:]
+    /// Water sessions this week (decision 79): the rower's own, or the whole club's for those who
+    /// chose it in Settings.
+    private(set) var water: [WaterRow] = []
     private(set) var hasLoaded = false
     var errorMessage: String?
 
@@ -49,6 +71,10 @@ final class RowerCalendarViewModel {
 
     func practices(on day: Date) -> [Practice] {
         practices.filter { calendar.isDate($0.startsAt, inSameDayAs: day) }
+    }
+
+    func water(on day: Date) -> [WaterRow] {
+        water.filter { calendar.isDate($0.session.startsAt, inSameDayAs: day) }
     }
 
     /// Workouts set for `day` that sit inside `practice`'s time.
@@ -91,11 +117,41 @@ final class RowerCalendarViewModel {
                                  uniquingKeysWith: { first, _ in first })
             eventAnswers = Dictionary(eventResponses.filter { $0.userId == me }.map { ($0.eventId, $0.canCome) },
                                       uniquingKeysWith: { first, _ in first })
+            // Before the boats migration there are none; the rest of the Calendar carries on.
+            water = (try? await loadWater(from: first, to: end)) ?? []
             errorMessage = nil
         } catch {
             errorMessage = "Couldn’t load your calendar. \(error.localizedDescription)"
         }
         hasLoaded = true
+    }
+
+    /// The week's water sessions: the sent boats the rower is in, or — for a coach, owner, co-owner
+    /// or admin who chose Whole club in Settings — every water session in the club (decision 79).
+    private func loadWater(from first: Date, to end: Date) async throws -> [WaterRow] {
+        let viewer = try await ViewerContext.shared.current()
+        let preferred = UserDefaults.standard.string(forKey: WaterCalendarScope.storageKey)
+            .flatMap(WaterCalendarScope.init(rawValue:)) ?? .club
+        let scope = WaterCalendarScope.resolved(preferred, isCoach: viewer.isCoach, clubRole: viewer.clubRole)
+        switch scope {
+        case .mine:
+            return try await BoatService.myBoats(from: first)
+                .filter { $0.session.startsAt < end }
+                .map { pair in
+                    WaterRow(session: pair.session, myBoat: pair.boat,
+                             mySeat: pair.boat.seats.first { $0.userId == viewer.userId }?.seat, boatCount: 0)
+                }
+        case .club:
+            let sessions = try await BoatService.sessions(from: first, to: end)
+            let boats = try await BoatService.boats(ofSessions: sessions.map(\.id))
+            return sessions.map { session in
+                let inSession = boats.filter { $0.sessionId == session.id }
+                let mine = inSession.first { boat in boat.seats.contains { $0.userId == viewer.userId } }
+                return WaterRow(session: session, myBoat: mine,
+                                mySeat: mine?.seats.first { $0.userId == viewer.userId }?.seat,
+                                boatCount: inSession.count)
+            }
+        }
     }
 
     /// Answers one session. Can't keeps any reason given on the practice page.

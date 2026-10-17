@@ -30,8 +30,8 @@ struct FeedView: View {
     @State private var cover: Cover?
     /// The rower's next practice, under today's workout (decision 68).
     @State private var nextPractice = NextPracticeModel()
-    /// The rower's boat for their next water session (decision 67).
-    @State private var nextBoat = NextBoatModel()
+    /// The rower's boats for today's water sessions, or tomorrow's (decisions 67, 79).
+    @State private var feedBoats = FeedBoatsModel()
     /// The club's announcements, folded to their headings until tapped (decision 75).
     @State private var announcements = FeedAnnouncementsModel()
     @State private var openAnnouncements: Set<UUID> = []
@@ -77,9 +77,10 @@ struct FeedView: View {
                         .padding(.bottom, Tokens.Spacing.loose)
                 }
 
-                if let boat = nextBoat.boat, let session = nextBoat.session {
-                    FeedBoatCard(boat: boat, session: session, names: nextBoat.names,
-                                 coachName: nextBoat.coachName, mySeat: nextBoat.mySeat)
+                // Today's boats, then tomorrow's once today's are over (decision 79).
+                ForEach(feedBoats.items) { item in
+                    FeedBoatCard(boat: item.boat, session: item.session, names: feedBoats.names,
+                                 coachName: item.coachName, mySeat: item.mySeat)
                         .padding(.bottom, Tokens.Spacing.loose)
                 }
 
@@ -112,7 +113,7 @@ struct FeedView: View {
         .scrollsToTopOnReselect(reselects) {
             ViewerContext.shared.invalidate()
             async let practice: Void = nextPractice.load()
-            async let boat: Void = nextBoat.load()
+            async let boat: Void = feedBoats.load()
             async let notices: Void = announcements.load()
             await viewModel.reload()
             await practice
@@ -125,7 +126,7 @@ struct FeedView: View {
         .ignoresSafeArea(edges: .bottom)
         .task { await viewModel.loadInitial() }
         .task { await nextPractice.load() }
-        .task { await nextBoat.load() }
+        .task { await feedBoats.load() }
         .task { await announcements.load() }
         .onReceive(NotificationCenter.default.publisher(for: .announcementsChanged)) { _ in
             Task { await announcements.load() }
@@ -133,7 +134,7 @@ struct FeedView: View {
         .refreshable {
             ViewerContext.shared.invalidate()
             async let practice: Void = nextPractice.load()
-            async let boat: Void = nextBoat.load()
+            async let boat: Void = feedBoats.load()
             async let notices: Void = announcements.load()
             await viewModel.reload()
             await practice
@@ -148,12 +149,12 @@ struct FeedView: View {
             Task { await nextPractice.load() }
         }
         .onReceive(NotificationCenter.default.publisher(for: .boatsChanged)) { _ in
-            Task { await nextBoat.load() }
+            Task { await feedBoats.load() }
         }
         .onReceive(NotificationCenter.default.publisher(for: .rowerClubChanged)) { _ in
             Task { await viewModel.clubChanged() }
             Task { await nextPractice.load() }
-            Task { await nextBoat.load() }
+            Task { await feedBoats.load() }
         }
         // A new post shows, and a workout it was for leaves the Feed (decision 57).
         // A post you deleted leaves the feed at once (decision 63).
@@ -169,7 +170,7 @@ struct FeedView: View {
             if phase == .active {
                 Task { await viewModel.refreshWorkouts() }
                 Task { await nextPractice.load() }
-                Task { await nextBoat.load() }
+                Task { await feedBoats.load() }
                 Task { await announcements.load() }
             }
         }

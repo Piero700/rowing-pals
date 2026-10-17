@@ -107,6 +107,16 @@ nonisolated enum BoatRules {
         return "You’re in seat \(seat) in"
     }
 
+    /// The Feed's boats (decision 79): today's whose session hasn't ended; once they're all over,
+    /// tomorrow's. Nothing further ahead — the Calendar has those. Keeps the order given.
+    static func feedBoats<Item>(_ items: [Item], session: (Item) -> WaterSession, now: Date, calendar: Calendar) -> [Item] {
+        let unfinished = items.filter { session($0).endsAt > now }
+        let today = unfinished.filter { calendar.isDate(session($0).startsAt, inSameDayAs: now) }
+        if !today.isEmpty { return today }
+        guard let tomorrow = calendar.date(byAdding: .day, value: 1, to: now) else { return [] }
+        return unfinished.filter { calendar.isDate(session($0).startsAt, inSameDayAs: tomorrow) }
+    }
+
     /// Whether someone who rows `side` suits a seat on `seatSide` (either suits anyone who rows; a
     /// cox suits no rowing side, decision 78).
     static func fits(_ side: RowingSide?, seatSide: RowingSide?) -> Bool {

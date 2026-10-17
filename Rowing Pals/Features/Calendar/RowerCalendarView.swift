@@ -15,6 +15,8 @@ struct RowerCalendarView: View {
 
     @State private var viewModel = RowerCalendarViewModel()
     @Environment(\.navigate) private var navigate
+    /// Mine or the whole club's water sessions (Settings → Boats, decision 79).
+    @AppStorage(WaterCalendarScope.storageKey) private var waterScope: WaterCalendarScope = .club
 
     private static let cardShape = RoundedRectangle(cornerRadius: Tokens.Radius.card, style: .continuous)
 
@@ -47,7 +49,7 @@ struct RowerCalendarView: View {
                 } else {
                     if !viewModel.openPractices.isEmpty {
                         answerBanner
-                    } else if viewModel.practices.isEmpty {
+                    } else if viewModel.practices.isEmpty && viewModel.water.isEmpty {
                         Text("No sessions set for you this week yet. When your coaches add practices, they show here.")
                             .textStyle(Typography.meta)
                             .foregroundStyle(Tokens.Ink.secondary)
@@ -89,6 +91,10 @@ struct RowerCalendarView: View {
         .onReceive(NotificationCenter.default.publisher(for: .calendarChanged)) { _ in
             Task { await viewModel.load() }
         }
+        .onReceive(NotificationCenter.default.publisher(for: .boatsChanged)) { _ in
+            Task { await viewModel.load() }
+        }
+        .onChange(of: waterScope) { Task { await viewModel.load() } }
     }
 
     private var header: some View {
@@ -150,8 +156,9 @@ struct RowerCalendarView: View {
     private func dayCard(_ day: Date) -> some View {
         let sessions = viewModel.practices(on: day)
         let others = viewModel.otherWorkouts(on: day)
+        let water = viewModel.water(on: day)
         let calendar = viewModel.calendar
-        if sessions.isEmpty && others.isEmpty {
+        if sessions.isEmpty && others.isEmpty && water.isEmpty {
             HStack(spacing: Tokens.Spacing.loose) {
                 DateBlock(date: day, calendar: calendar, isQuiet: true)
                 Text("Nothing on")
@@ -184,6 +191,9 @@ struct RowerCalendarView: View {
                 }
                 ForEach(others) { workout in
                     workoutRow(workout, isFirst: sessions.isEmpty)
+                }
+                ForEach(Array(water.enumerated()), id: \.element.id) { index, row in
+                    waterRow(row, isFirst: sessions.isEmpty && others.isEmpty && index == 0)
                 }
             }
             .padding(.horizontal, Tokens.Spacing.card)
@@ -245,6 +255,44 @@ struct RowerCalendarView: View {
                     .foregroundStyle(Tokens.Ink.secondary)
                     .padding(.leading, Tokens.Schedule.timeColumn + Tokens.Spacing.gap)
             }
+        }
+        .padding(.top, Tokens.Spacing.loose)
+    }
+
+    /// A water session (decision 79): its times, title and the rower's boat and seat, or how many
+    /// boats it has; tapping opens it, read-only.
+    private func waterRow(_ row: RowerCalendarViewModel.WaterRow, isFirst: Bool) -> some View {
+        let calendar = viewModel.calendar
+        return VStack(alignment: .leading, spacing: 6) {
+            if !isFirst { Rectangle().fill(Tokens.Surface.line).frame(height: 1) }
+            Button {
+                navigate(.rowerWaterSession(row.session.id))
+            } label: {
+                HStack(spacing: Tokens.Spacing.gap) {
+                    VStack(alignment: .leading, spacing: 0) {
+                        Text(CalendarRules.time(row.session.startsAt, calendar: calendar))
+                            .textStyle(Typography.rowTitle)
+                        Text(CalendarRules.time(row.session.endsAt, calendar: calendar))
+                            .textStyle(Typography.statLabel)
+                            .foregroundStyle(Tokens.Ink.secondary)
+                    }
+                    .tabularNumerals()
+                    .frame(width: Tokens.Schedule.timeColumn, alignment: .leading)
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text(row.session.title)
+                            .textStyle(Typography.rowTitle)
+                        Text(row.detail)
+                            .textStyle(Typography.statLabel)
+                            .foregroundStyle(row.myBoat == nil ? Tokens.Ink.secondary : Tokens.Accent.brand)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    WaterChip(text: "Water")
+                }
+                .foregroundStyle(Tokens.Ink.primary)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(IconPressStyle())
+            .accessibilityHint("Opens the water session")
         }
         .padding(.top, Tokens.Spacing.loose)
     }

@@ -17,7 +17,15 @@ final class WaterSessionViewModel {
 
     var title = ""
     var day: Date
-    var time: Date
+    /// The start; picking it moves the end to two hours later, as for a practice (decisions 73, 79).
+    var time: Date {
+        didSet {
+            guard time != oldValue else { return }
+            endTime = CalendarRules.defaultEnd(after: time, calendar: calendar)
+        }
+    }
+    /// The end, on the same day as `time`; never before the start (`endRange`).
+    var endTime: Date
     var meetAt = ""
     var plan = ""
     private(set) var practiceId: UUID?
@@ -42,7 +50,9 @@ final class WaterSessionViewModel {
         self.seed = seed
         let base = Calendar.current.startOfDay(for: seed.day ?? Date())
         day = base
-        time = Calendar.current.date(bySettingHour: 7, minute: 0, second: 0, of: base) ?? base
+        let start = Calendar.current.date(bySettingHour: 7, minute: 0, second: 0, of: base) ?? base
+        time = start
+        endTime = CalendarRules.defaultEnd(after: start, calendar: .current)
         practiceId = seed.practiceId
         eventId = seed.eventId
     }
@@ -51,6 +61,17 @@ final class WaterSessionViewModel {
     var startsAt: Date {
         let parts = calendar.dateComponents([.hour, .minute], from: time)
         return calendar.date(bySettingHour: parts.hour ?? 0, minute: parts.minute ?? 0, second: 0, of: day) ?? day
+    }
+    /// The end on the chosen day; at least a minute after the start.
+    var endsAt: Date {
+        let parts = calendar.dateComponents([.hour, .minute], from: endTime)
+        let end = calendar.date(bySettingHour: parts.hour ?? 0, minute: parts.minute ?? 0, second: 0, of: day) ?? day
+        return max(end, CalendarRules.earliestEnd(after: startsAt))
+    }
+    /// From a minute after the start to 23:59 that day, as for a practice (decision 73).
+    var endRange: ClosedRange<Date> {
+        CalendarRules.earliestEnd(after: time)...max(CalendarRules.latestEnd(on: time, calendar: calendar),
+                                                     CalendarRules.earliestEnd(after: time))
     }
     var hasTitle: Bool { !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
 
@@ -65,9 +86,9 @@ final class WaterSessionViewModel {
         return "\(boats.count) boat\(boats.count == 1 ? "" : "s") · \(rowers) rower\(rowers == 1 ? "" : "s")"
     }
 
-    /// "Sat 17 Oct · 07:00".
+    /// "Sat 17 Oct · 07:00–09:00".
     var whenText: String {
-        "\(CalendarRules.dayLabel(startsAt, calendar: calendar)) · \(CalendarRules.time(startsAt, calendar: calendar))"
+        "\(CalendarRules.dayLabel(startsAt, calendar: calendar)) · \(CalendarRules.time(startsAt, calendar: calendar))–\(CalendarRules.time(endsAt, calendar: calendar))"
     }
 
     /// "Sat 07:00 · you’re at stroke in M1 four", as the rower is told.
@@ -84,7 +105,9 @@ final class WaterSessionViewModel {
         return result
     }
 
-    private var details: String { [title, meetAt, plan, CalendarService.iso(startsAt)].joined(separator: "|") }
+    private var details: String {
+        [title, meetAt, plan, CalendarService.iso(startsAt), CalendarService.iso(endsAt)].joined(separator: "|")
+    }
 
     func load() async {
         do {
@@ -114,6 +137,8 @@ final class WaterSessionViewModel {
             let practice = try await CalendarService.practice(practiceId)
             day = calendar.startOfDay(for: practice.startsAt)
             time = practice.startsAt
+            // Planned from a practice: it ends when the practice does (decision 79).
+            if practice.endsAt > practice.startsAt { endTime = practice.endsAt }
             title = practice.title ?? ""
             meetAt = practice.place ?? ""
             let responses = try await CalendarService.responses(toPractices: [practiceId])
@@ -138,6 +163,7 @@ final class WaterSessionViewModel {
         title = session.title
         day = calendar.startOfDay(for: session.startsAt)
         time = session.startsAt
+        endTime = session.endsAt
         meetAt = session.meetAt ?? ""
         plan = session.plan ?? ""
         practiceId = session.practiceId
@@ -165,7 +191,8 @@ final class WaterSessionViewModel {
         if let sessionId, savedDetails == details { return sessionId }
         do {
             let id = try await BoatService.saveSession(id: sessionId, BoatService.SessionDraft(
-                title: title, startsAt: startsAt, meetAt: meetAt, plan: plan, practiceId: practiceId, eventId: eventId
+                title: title, startsAt: startsAt, endsAt: endsAt, meetAt: meetAt, plan: plan,
+                practiceId: practiceId, eventId: eventId
             ))
             sessionId = id
             savedDetails = details

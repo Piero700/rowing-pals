@@ -36,17 +36,21 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
     }
 
     /// Tapping an alert opens its post, practice or race, or Your club for an invitation.
-    nonisolated func userNotificationCenter(
+    ///
+    /// On the main actor, not `nonisolated`: iOS is told the tap is handled when this returns, and
+    /// UIKit aborts the app if that happens off the main thread (the crash on tapping a "Your boat"
+    /// alert, 2026-10-18).
+    @MainActor
+    func userNotificationCenter(
         _ center: UNUserNotificationCenter,
         didReceive response: UNNotificationResponse
     ) async {
         let userInfo = response.notification.request.content.userInfo
-        let sessionId = userInfo["session_id"] as? String
-        let kind = userInfo["kind"] as? String
-        let practiceId = userInfo["practice_id"] as? String
-        let eventId = userInfo["event_id"] as? String
-        await MainActor.run {
-            PushNotificationService.shared.open(sessionId: sessionId, kind: kind, practiceId: practiceId, eventId: eventId)
-        }
+        PushNotificationService.shared.open(
+            sessionId: userInfo["session_id"] as? String,
+            kind: userInfo["kind"] as? String,
+            practiceId: userInfo["practice_id"] as? String,
+            eventId: userInfo["event_id"] as? String
+        )
     }
 }

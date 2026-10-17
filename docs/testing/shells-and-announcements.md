@@ -131,3 +131,26 @@ In Xcode choose **RP Dev** and **your iPhone**, press **Cmd+R**.
 - [ ] The cox is at the top of the list with **Fits**; everyone else follows.
 3. Tap a rowing seat instead.
 - [ ] The cox is in the list with a grey **Cox** tag (no Fits). Choose them: under their name in the boat it says **Cox**.
+
+## 11. Water sessions for rowers (decision 79)
+0. Run `docs/migrations/2026-10-18-water-session-ends.sql` on staging first (same steps as step 0 at the top).
+   Then install the new build (**RP Dev**, your iPhone, **Cmd+R**).
+1. Coach_J: **+** → **Water session**.
+- [ ] Under **Date** there's **Starts 07:00 · Ends 09:00**. Change Starts to 17:15: Ends moves to **19:15**. Ends
+      won't go earlier than the start.
+2. Make two water sessions for **today** (one earlier, one later) and one for **tomorrow**, each with a boat that
+   has Piero in it → **Send** each.
+3. Piero: **Feed**.
+- [ ] Only **today's** boats show, one card each. After the earlier one's **end time**, its card goes. After the
+      last of today's ends, **tomorrow's** appears.
+4. Piero: **Calendar** (This week / Next week).
+- [ ] Each water session shows on its day: start and end time, the title, "You're at … in <boat>" in blue, and a
+      **Water** chip. Tap one: **Water session** opens, read-only, with the times, meet at, set by, the plan and
+      **Your boat** with your seat in blue.
+5. Piero (owner, and a coach): **Settings → Boats**.
+- [ ] **Water sessions in Calendar: Mine · Whole club** (Whole club chosen). With **Whole club**, the Calendar shows
+      every water session in the club ("3 boats", "No boats yet" for ones you're not in); the page lists
+      **Other boats**. Switch to **Mine**: only yours.
+- [ ] A rower who isn't a coach, owner, co-owner or admin doesn't see that setting and sees only their own.
+6. Piero: switch to **coaching**. Have Coach_J send a boat with Piero in it, then tap the **Your boat** alert.
+- [ ] No crash. The app switches to the rowing version and shows the **Feed** with the boat.

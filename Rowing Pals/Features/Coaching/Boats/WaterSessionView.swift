@@ -76,16 +76,22 @@ struct WaterSessionView: View {
             .padding(.horizontal, Tokens.Spacing.card)
             .formFieldBox()
 
+        FormLabel("Date").padding(.top, Tokens.Spacing.loose)
+        DatePicker("Date", selection: $viewModel.day, displayedComponents: .date)
+            .labelsHidden()
+            .formFieldBox()
+
+        // Starts and Ends, as a practice's (decisions 73, 79): the end follows the start.
         HStack(spacing: Tokens.Spacing.loose) {
             VStack(alignment: .leading, spacing: 0) {
-                FormLabel("Date")
-                DatePicker("Date", selection: $viewModel.day, displayedComponents: .date)
+                FormLabel("Starts")
+                DatePicker("Starts", selection: $viewModel.time, displayedComponents: .hourAndMinute)
                     .labelsHidden()
                     .formFieldBox()
             }
             VStack(alignment: .leading, spacing: 0) {
-                FormLabel("Time")
-                DatePicker("Time", selection: $viewModel.time, displayedComponents: .hourAndMinute)
+                FormLabel("Ends")
+                DatePicker("Ends", selection: $viewModel.endTime, in: viewModel.endRange, displayedComponents: .hourAndMinute)
                     .labelsHidden()
                     .formFieldBox()
             }
@@ -145,7 +151,7 @@ struct WaterSessionView: View {
             Text("Each rower is told their boat and seat")
                 .textStyle(Typography.rowTitle)
                 .foregroundStyle(Tokens.Ink.primary)
-            Text("\(viewModel.exampleAlert), and it stays on their Feed until the session.")
+            Text("\(viewModel.exampleAlert). It’s on their Feed on the day until the session ends, and in their Calendar.")
                 .textStyle(Typography.meta)
                 .tabularNumerals()
                 .foregroundStyle(Tokens.Ink.secondary)

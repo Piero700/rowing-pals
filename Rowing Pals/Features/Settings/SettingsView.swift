@@ -32,6 +32,10 @@ struct SettingsView: View {
     @AppStorage(AppMode.storageKey) private var appMode: AppMode = .rowing
     /// How boats are drawn for this person (decision 74).
     @AppStorage(BoatOrientation.storageKey) private var boatOrientation: BoatOrientation = .sternAtTop
+    /// Which water sessions the Calendar shows (decision 79): theirs or the whole club's.
+    @AppStorage(WaterCalendarScope.storageKey) private var waterScope: WaterCalendarScope = .club
+    /// True for a rower who's a coach, owner, co-owner or admin: only they can see the whole club's.
+    @State private var canChooseWaterScope = false
     /// True for an account that rows and coaches: only it can switch.
     @State private var canSwitchVersion = false
     /// Coaches set the day the club's week starts (decision 69); nil for anyone else.
@@ -80,6 +84,16 @@ struct SettingsView: View {
                                     BoatEndLabel(text: boatOrientation == .sternAtTop ? "Bow" : "Stern")
                                 }
                                 .frame(maxWidth: .infinity)
+                            }
+                        }
+                        if canChooseWaterScope {
+                            divider
+                            stackedRow(title: "Water sessions in Calendar",
+                                       subtitle: "Just the ones you’re in, or every water session in the club.") {
+                                PillSegmentedControl(options: WaterCalendarScope.allCases.map(\.label), selection: Binding(
+                                    get: { WaterCalendarScope.allCases.firstIndex(of: waterScope) ?? 0 },
+                                    set: { waterScope = WaterCalendarScope.allCases[$0] }
+                                ), compact: true)
                             }
                         }
                     }
@@ -221,6 +235,8 @@ struct SettingsView: View {
             .task {
                 if let viewer = try? await ViewerContext.shared.current() {
                     canSwitchVersion = viewer.isCoach && viewer.isRower
+                    canChooseWaterScope = viewer.isRower && viewer.clubId != nil
+                        && WaterCalendarScope.canChoose(isCoach: viewer.isCoach, clubRole: viewer.clubRole)
                     if viewer.isCoach, viewer.clubId != nil {
                         clubWeek = (viewer.clubName ?? "your club", await CalendarService.weekStart())
                     }

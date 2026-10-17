@@ -141,6 +141,8 @@ struct RouteHost: View {
             CrewBoatView(mode: .session(sessionId, boat: boatId))
         case .savedBoat(let id):
             CrewBoatView(mode: .saved(id))
+        case .rowerWaterSession(let sessionId):
+            RowerWaterSessionView(sessionId: sessionId)
         case .newAnnouncement:
             AnnouncementEditorView(announcementId: nil)
         case .editAnnouncement(let id):

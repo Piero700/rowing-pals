@@ -75,9 +75,9 @@ enum BoatService {
         try await SupabaseService.shared.from("saved_boats").select(savedColumns).eq("id", value: id).single().execute().value
     }
 
-    /// The signed-in rower's next sent boat whose session hasn't started (their Feed), with its
-    /// session; nil when there's none.
-    static func myNextBoat(now: Date = Date()) async throws -> (boat: SessionBoat, session: WaterSession)? {
+    /// The signed-in rower's sent boats whose session hasn't ended by `from` (decision 79), soonest
+    /// first, each with its session: the Feed picks today's or tomorrow's, the Calendar the month's.
+    static func myBoats(from: Date = Date()) async throws -> [(boat: SessionBoat, session: WaterSession)] {
         struct Params: Encodable { let p_from: String }
         nonisolated struct Row: Decodable {
             let id: UUID
@@ -88,11 +88,20 @@ enum BoatService {
             }
         }
         let rows: [Row] = try await SupabaseService.shared
-            .rpc("my_boats", params: Params(p_from: CalendarService.iso(now))).execute().value
-        guard let first = rows.first else { return nil }
-        async let boatTask = boat(first.id)
-        async let sessionTask = session(first.sessionId)
-        return try await (boatTask, sessionTask)
+            .rpc("my_boats", params: Params(p_from: CalendarService.iso(from))).execute().value
+        guard !rows.isEmpty else { return [] }
+        let sessionIds = Array(Set(rows.map(\.sessionId)))
+        async let boatsTask = boats(ofSessions: sessionIds)
+        async let sessionsTask: [WaterSession] = SupabaseService.shared
+            .from("water_sessions").select().in("id", values: sessionIds).execute().value
+        let (boats, sessions) = try await (boatsTask, sessionsTask)
+        let boatsById = Dictionary(boats.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+        let sessionsById = Dictionary(sessions.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+        return rows.compactMap { row in
+            guard let boat = boatsById[row.id], let session = sessionsById[row.sessionId] else { return nil }
+            return (boat, session)
+        }
+        .sorted { $0.session.startsAt < $1.session.startsAt }
     }
 
     // MARK: - Water sessions
@@ -100,6 +109,7 @@ enum BoatService {
     nonisolated struct SessionDraft: Sendable {
         var title: String
         var startsAt: Date
+        var endsAt: Date
         var meetAt: String
         var plan: String
         var practiceId: UUID?
@@ -113,6 +123,7 @@ enum BoatService {
             let p_session: UUID?
             let p_title: String
             let p_starts_at: String
+            let p_ends_at: String
             let p_meet_at: String?
             let p_plan: String?
             let p_practice: UUID?
@@ -122,16 +133,18 @@ enum BoatService {
                 try c.encode(p_session, forKey: .p_session)
                 try c.encode(p_title, forKey: .p_title)
                 try c.encode(p_starts_at, forKey: .p_starts_at)
+                try c.encode(p_ends_at, forKey: .p_ends_at)
                 try c.encode(p_meet_at, forKey: .p_meet_at)
                 try c.encode(p_plan, forKey: .p_plan)
                 try c.encode(p_practice, forKey: .p_practice)
                 try c.encode(p_event, forKey: .p_event)
             }
-            enum Keys: String, CodingKey { case p_session, p_title, p_starts_at, p_meet_at, p_plan, p_practice, p_event }
+            enum Keys: String, CodingKey { case p_session, p_title, p_starts_at, p_ends_at, p_meet_at, p_plan, p_practice, p_event }
         }
         return try await SupabaseService.shared.rpc("save_water_session", params: Params(
             p_session: id, p_title: draft.title.trimmingCharacters(in: .whitespacesAndNewlines),
-            p_starts_at: CalendarService.iso(draft.startsAt), p_meet_at: trimmed(draft.meetAt), p_plan: trimmed(draft.plan),
+            p_starts_at: CalendarService.iso(draft.startsAt), p_ends_at: CalendarService.iso(draft.endsAt),
+            p_meet_at: trimmed(draft.meetAt), p_plan: trimmed(draft.plan),
             p_practice: draft.practiceId, p_event: draft.eventId
         )).execute().value
     }
