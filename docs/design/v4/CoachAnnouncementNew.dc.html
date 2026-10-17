@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<title>Coach · New announcement</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+*{box-sizing:border-box}
+button,input,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer}
+a{color:#91b8ff}a:hover{color:#c6adff}
+</style>
+</helmet>
+<div data-scaled="95" data-screen-label="Coach · New announcement" style="--bg:{{ t.bg }};--base:{{ t.base }};--card:{{ t.card }};--raised:{{ t.raised }};--line:{{ t.line }};--cardEdge:{{ t.cardEdge }};--text:{{ t.text }};--muted:{{ t.muted }};--faint:{{ t.faint }};--brand:{{ t.brand }};--brandSoft:{{ t.brandSoft }};--onBrand:{{ t.onBrand }};--good:{{ t.good }};--accent:{{ t.accent }};--accentSoft:{{ t.accentSoft }};--gold:{{ t.gold }};--goldSoft:{{ t.goldSoft }};--bad:{{ t.bad }};--lg-fill:{{ t.lgFill }};--lg-fill-strong:{{ t.lgFillStrong }};--lg-edge:{{ t.lgEdge }};--lg-hi:{{ t.lgHi }};--lg-lo:{{ t.lgLo }};--lg-shadow:{{ t.lgShadow }};--dim:{{ t.dim }};--sep:{{ t.sep }};--switchOn:{{ t.switchOn }};--switchOff:{{ t.switchOff }};--fieldFill:{{ t.fieldFill }};position:relative;width:393px;min-height:1000px;background:var(--base);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','SF Pro Display','Helvetica Neue',sans-serif;-webkit-font-smoothing:antialiased;font-size:17px">
+<div style="position:absolute;z-index:30;top:10px;left:50%;transform:translateX(-50%);width:106px;height:27px;border-radius:99px;background:#030408"></div><div style="height:51px;flex:none"></div><header style="position:relative;min-height:58px;flex:none;padding:8px 16px 12px;display:flex;align-items:center;gap:8px"><a href="CoachNew.dc.html" aria-label="Back" style="width:42px;height:42px;border-radius:50%;display:grid;place-items:center;flex:none;color:var(--text);background:var(--lg-fill);border:1px solid var(--lg-edge);box-shadow:inset 0 1px 0 var(--lg-hi),inset 0 -1px 0 var(--lg-lo),var(--lg-shadow);backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%);text-decoration:none"><svg viewBox="0 0 24 24" aria-hidden="true" style="width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round"><path d="m15 18-6-6 6-6"></path></svg></a><h1 style="margin:0;position:absolute;left:72px;right:72px;text-align:center;font-size:17px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none">New announcement</h1><span style="flex:1"></span></header><div style="padding:4px 16px 40px"><label style="display:block;font-size:12px;color:var(--muted);font-weight:600;margin:16px 4px 6px">Heading</label><div style="min-height:50px;border:1px solid var(--line);border-radius:24px;background:var(--card);padding:0 16px;display:flex;align-items:center;font-size:17px;font-variant-numeric:tabular-nums;">Kit order closes Friday</div><p style="font-size:13px;line-height:1.4;color:var(--muted);margin:6px 4px 0">This is all rowers see on their Feed until they tap it.</p><label style="display:block;font-size:12px;color:var(--muted);font-weight:600;margin:16px 4px 6px">Message</label><div style="min-height:110px;border:1px solid var(--line);border-radius:24px;background:var(--card);padding:14px 16px;font-size:17px;line-height:1.35;">Club kit orders close this Friday at 18:00. Sizes are on the noticeboard in the boathouse; pay on the club account and put your name in the reference. Ask Sarah if you’re not sure.</div><label style="display:block;font-size:12px;color:var(--muted);font-weight:600;margin:16px 4px 6px">On the Feed for</label><div style="display:flex;padding:3px;border-radius:999px;background:var(--lg-fill);border:1px solid var(--lg-edge);box-shadow:inset 0 1px 0 var(--lg-hi),inset 0 -1px 0 var(--lg-lo),var(--lg-shadow);backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%)"><button onClick="{{ ck.dur.day.pick }}" aria-pressed="{{ ck.dur.day.on }}" style="flex:1;min-width:0;min-height:34px;border-radius:999px;font-size:13px;font-weight:600;color:{{ ck.dur.day.color }};background:{{ ck.dur.day.bg }};border:1px solid {{ ck.dur.day.border }};box-shadow:{{ ck.dur.day.shadow }}">24 hours</button><button onClick="{{ ck.dur.three.pick }}" aria-pressed="{{ ck.dur.three.on }}" style="flex:1;min-width:0;min-height:34px;border-radius:999px;font-size:13px;font-weight:600;color:{{ ck.dur.three.color }};background:{{ ck.dur.three.bg }};border:1px solid {{ ck.dur.three.border }};box-shadow:{{ ck.dur.three.shadow }}">3 days</button><button onClick="{{ ck.dur.week.pick }}" aria-pressed="{{ ck.dur.week.on }}" style="flex:1;min-width:0;min-height:34px;border-radius:999px;font-size:13px;font-weight:600;color:{{ ck.dur.week.color }};background:{{ ck.dur.week.bg }};border:1px solid {{ ck.dur.week.border }};box-shadow:{{ ck.dur.week.shadow }}">1 week</button><button onClick="{{ ck.dur.until.pick }}" aria-pressed="{{ ck.dur.until.on }}" style="flex:1;min-width:0;min-height:34px;border-radius:999px;font-size:13px;font-weight:600;color:{{ ck.dur.until.color }};background:{{ ck.dur.until.bg }};border:1px solid {{ ck.dur.until.border }};box-shadow:{{ ck.dur.until.shadow }}">Until…</button></div><div style="display:{{ ck.dur.until.show }};margin-top:8px"><div style="min-height:50px;border:1px solid var(--line);border-radius:24px;background:var(--card);padding:0 16px;display:flex;align-items:center;font-size:17px;font-variant-numeric:tabular-nums;">Fri 23 Oct, 18:00</div></div><p style="font-size:13px;line-height:1.4;color:var(--muted);margin:6px 4px 0">Comes off the Feed Sat 18 Oct, 18:20. It stays in the Calendar.</p><div style="background:var(--card);border:1px solid var(--cardEdge);border-radius:28px;display:flex;align-items:center;gap:12px;padding:14px 16px;margin-top:20px"><span style="flex:1;min-width:0"><strong style="display:block;font-size:15px">Send an alert</strong><span style="display:block;font-size:13px;line-height:1.4;color:var(--muted)">Rowers also get “New announcement: Kit order closes Friday”.</span></span><button role="switch" aria-checked="{{ tg.alert.on }}" aria-label="Send an alert" onClick="{{ tg.alert.flip }}" style="width:51px;height:31px;flex:none;border-radius:99px;background:{{ tg.alert.bg }};position:relative;border:0;padding:0"><span style="position:absolute;top:2px;left:2px;width:27px;height:27px;border-radius:50%;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.25);transform:{{ tg.alert.x }}"></span></button></div><a href="CoachCalendarAnnouncements.dc.html" style="width:100%;min-height:51px;border-radius:999px;display:flex;align-items:center;justify-content:center;gap:8px;font-size:17px;font-weight:600;color:var(--onBrand);background:linear-gradient(180deg,color-mix(in srgb,var(--brand) 88%,#fff 12%),var(--brand));border:1px solid color-mix(in srgb,var(--brand) 60%,#fff 40%);box-shadow:inset 0 1px 0 rgba(255,255,255,.45),inset 0 -1px 0 rgba(0,0,0,.18),0 8px 22px color-mix(in srgb,var(--brand) 30%,transparent);text-decoration:none;margin-top:20px">Post announcement</a><span style="display:block;text-align:center;font-size:13px;color:var(--muted);margin-top:10px">Every rower in your club sees it on their Feed.</span></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme": {"editor": "enum", "options": ["dark", "light"], "default": "dark", "tsType": "string"}, "$preview": {"width": 393, "height": 1000}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const DARK = {"bg": "#09090b", "base": "#101114", "card": "#1b1c21", "raised": "#292c34", "line": "#464a56", "cardEdge": "rgba(70,74,86,.7)", "text": "#f7f8fc", "muted": "#bbc0ce", "faint": "#a3abba", "brand": "#91b8ff", "brandSoft": "rgba(145,184,255,.14)", "onBrand": "#09090b", "good": "#78d7ac", "accent": "#c6adff", "accentSoft": "rgba(198,173,255,.12)", "gold": "#efc37c", "goldSoft": "rgba(239,195,124,.12)", "bad": "#ff766f", "lgFill": "rgba(58,62,74,.42)", "lgFillStrong": "rgba(92,98,114,.55)", "lgEdge": "rgba(255,255,255,.16)", "lgHi": "rgba(255,255,255,.28)", "lgLo": "rgba(0,0,0,.22)", "lgShadow": "0 8px 24px rgba(0,0,0,.22)", "dim": "rgba(0,0,0,.5)", "sep": "rgba(255,255,255,.12)", "switchOn": "#91b8ff", "switchOff": "rgba(120,120,128,.36)", "fieldFill": "rgba(118,118,128,.24)"};
+    const LIGHT = {"bg": "#dfe3eb", "base": "#edf0f5", "card": "#ffffff", "raised": "#dce2ec", "line": "#949eae", "cardEdge": "#a8b1bf", "text": "#111723", "muted": "#3e4c61", "faint": "#4e5c70", "brand": "#214fa3", "brandSoft": "rgba(33,79,163,.12)", "onBrand": "#ffffff", "good": "#176a4a", "accent": "#67409b", "accentSoft": "rgba(103,64,155,.10)", "gold": "#84500b", "goldSoft": "rgba(132,80,11,.10)", "bad": "#c93c36", "lgFill": "rgba(255,255,255,.52)", "lgFillStrong": "rgba(255,255,255,.92)", "lgEdge": "rgba(40,55,85,.16)", "lgHi": "rgba(255,255,255,.95)", "lgLo": "rgba(30,45,75,.08)", "lgShadow": "0 6px 20px rgba(25,40,70,.12)", "dim": "rgba(17,23,35,.35)", "sep": "rgba(60,60,67,.18)", "switchOn": "#214fa3", "switchOff": "rgba(120,120,128,.20)", "fieldFill": "rgba(118,118,128,.12)"};
+    const t = (this.props.theme ?? 'dark') === 'light' ? LIGHT : DARK;
+    const TG = {"alert": true};
+    const tg = {};
+    for (const k of Object.keys(TG)) {
+      const on = (this.state['tg_' + k] ?? TG[k]);
+      tg[k] = { on: on ? 'true' : 'false', bg: on ? t.switchOn : t.switchOff, x: on ? 'translateX(20px)' : 'translateX(0)',
+        show: on ? 'block' : 'none', hide: on ? 'none' : 'block', flip: () => this.setState({ ['tg_' + k]: !on }) };
+    }
+    const CK = {"dur": {"value": "day", "options": ["day", "three", "week", "until"]}};
+    const ck = {};
+    for (const g of Object.keys(CK)) {
+      const cur = this.state[g] ?? CK[g].value;
+      ck[g] = {};
+      for (const o of CK[g].options) {
+        const on = cur === o;
+        ck[g][o] = { on, pick: () => this.setState({ [g]: o }),
+          color: on ? 'var(--text)' : 'var(--muted)', bg: on ? 'var(--lg-fill-strong)' : 'transparent',
+          border: on ? 'var(--lg-edge)' : 'transparent', shadow: on ? 'inset 0 1px 0 var(--lg-hi),0 2px 8px rgba(0,0,0,.18)' : 'none',
+          show: on ? 'block' : 'none' };
+      }
+    }
+    return { t, tg, ck };
+  }
+}
+</script>
+</body>
+</html>

@@ -35,7 +35,7 @@
       "y": 2544
     },
     "CoachAddBoat.dc.html": {
-      "h": 852,
+      "h": 1480,
       "is_interactive": true,
       "title": "Coach app · Add a boat (saved or new)",
       "w": 393,
@@ -59,7 +59,7 @@
       "y": 19628
     },
     "CoachBoatEdit.dc.html": {
-      "h": 1460,
+      "h": 1760,
       "is_interactive": true,
       "title": "Coach app · Crew a boat",
       "w": 393,
@@ -67,7 +67,7 @@
       "y": 15292
     },
     "CoachBoats.dc.html": {
-      "h": 1756,
+      "h": 1240,
       "is_interactive": true,
       "title": "Coach app · Boats tab",
       "w": 393,
@@ -117,7 +117,7 @@
     "CoachNew.dc.html": {
       "h": 852,
       "is_interactive": true,
-      "title": "Coach app · + New session",
+      "title": "Coach app · + New (land, water, announcement)",
       "w": 393,
       "x": 2365,
       "y": 9268
@@ -187,7 +187,7 @@
       "y": 10876
     },
     "CoachSavedBoats.dc.html": {
-      "h": 1452,
+      "h": 1380,
       "is_interactive": true,
       "title": "Coach app · Boats · Saved boats",
       "w": 393,
@@ -219,7 +219,7 @@
       "y": 10876
     },
     "CoachWaterSessionNew.dc.html": {
-      "h": 1420,
+      "h": 1480,
       "is_interactive": true,
       "title": "Coach app · New water session",
       "w": 393,
@@ -371,7 +371,7 @@
       "y": 1272
     },
     "RowerBoat.dc.html": {
-      "h": 860,
+      "h": 900,
       "is_interactive": true,
       "title": "Rower · Feed with their boat",
       "w": 393,
@@ -497,6 +497,54 @@
       "x": 1419,
       "y": 6560,
       "h": 852
+    },
+    "BoatShellsDesign.dc.html": {
+      "h": 1180,
+      "is_interactive": true,
+      "title": "Boats drawn as rowing shells (every type)",
+      "w": 880,
+      "x": 0,
+      "y": 22468
+    },
+    "SettingsBoatsDesign.dc.html": {
+      "h": 1000,
+      "is_interactive": true,
+      "title": "Settings · Draw boats",
+      "w": 393,
+      "x": 960,
+      "y": 22468
+    },
+    "CoachAnnouncementNew.dc.html": {
+      "h": 1000,
+      "is_interactive": true,
+      "title": "Coach app · New announcement",
+      "w": 393,
+      "x": 0,
+      "y": 24768
+    },
+    "RowerFeedAnnouncement.dc.html": {
+      "h": 852,
+      "is_interactive": true,
+      "title": "Rower · Feed with announcements",
+      "w": 393,
+      "x": 473,
+      "y": 24768
+    },
+    "CoachCalendarAnnouncements.dc.html": {
+      "h": 1660,
+      "is_interactive": true,
+      "title": "Coach app · Calendar with announcements",
+      "w": 393,
+      "x": 946,
+      "y": 24768
+    },
+    "CoachAnnouncementEdit.dc.html": {
+      "h": 1000,
+      "is_interactive": true,
+      "title": "Coach app · Edit announcement",
+      "w": 393,
+      "x": 1419,
+      "y": 24768
     }
   },
   "createdOnFiles": {
@@ -519,7 +567,7 @@
     "boatsAbout": {
       "fill": "blue",
       "size": 24,
-      "text": "Boats · in the app (phase CV3, 17 Oct 2026). Drawn upright, bow at the top, seats a seat-length apart. Stroke-side oars on the left, bow side on the right; stroke-rigged or bow-rigged sets which seats are which. A rower on their other side gets a ‘Usually stroke side’ note. In the app the cox is drawn in the text colour (purple stays for PBs and avatars). Logging water metres stays out (decision 54).",
+      "text": "Boats · in the app (phase CV3 and decision 74). Drawn as racing shells, stern at the top (Settings → Draw boats turns them round); stroke side on the right with the stern at the top. Stroke-rigged, bow-rigged or custom rigging. A rower on their other side gets a ‘Usually stroke side’ note. Logging water metres stays out (decision 54).",
       "w": 380,
       "x": 2838,
       "y": 15292
@@ -527,7 +575,7 @@
     "calAbout": {
       "fill": "blue",
       "size": 24,
-      "text": "Calendars · in the app (phase CV2, 16 Oct 2026). Rowers’ bar: Feed, Rankings, Calendar, Profile + Log. A week ahead, rowers say which sessions they can make (morning and evening separately, or the whole day at once) and which races. Coaches’ Calendar replaces Practices: tap a day to take a register or add a practice, land or water session, race or event; Who’s available feeds crewing. Boats can be saved and reused. The club’s week starts on Monday or Sunday (Settings, coaches).",
+      "text": "Calendars · in the app (phase CV2, 16 Oct 2026). Rowers’ bar: Feed, Rankings, Calendar, Profile + Log. A week ahead, rowers say which sessions they can make (each session on its own; no Whole day, 17 Oct) and which races. Coaches’ Calendar replaces Practices: tap a day to take a register or add a practice, land or water session, race or event; Who’s available feeds crewing. Boats can be saved and reused. The club’s week starts on Monday or Sunday (Settings, coaches).",
       "w": 380,
       "x": 2365,
       "y": 19628
@@ -635,6 +683,38 @@
       "w": 240,
       "x": 0,
       "y": 6260
+    },
+    "design1": {
+      "kind": "title1",
+      "maxW": 1353,
+      "text": "Boats · rowing shells, stern at the top",
+      "w": 240,
+      "x": 0,
+      "y": 22168
+    },
+    "design2": {
+      "kind": "title1",
+      "maxW": 1812,
+      "text": "Coach app · announcements",
+      "w": 240,
+      "x": 0,
+      "y": 24468
+    },
+    "designBoatsAbout": {
+      "fill": "blue",
+      "size": 24,
+      "w": 420,
+      "x": 1433,
+      "y": 22468,
+      "text": "Boats, 17 Oct 2026 · in the app (decision 74). Every boat is a racing shell: long and narrow, pointed at both ends, a bow ball, wing riggers and oars with spoon blades. Stern at the top by default, so crews read stroke first; turned round, stroke side is on the right, as the rowers see it facing the stern. Settings → Boats → Draw boats switches anyone to bow at the top. Rigging: Stroke-rigged, Bow-rigged or Custom (⇄ on each oar) for bucket and other staggered rigs."
+    },
+    "designAnnAbout": {
+      "fill": "blue",
+      "size": 24,
+      "w": 420,
+      "x": 1892,
+      "y": 24768,
+      "text": "Announcements, 17 Oct 2026 · in the app (decision 75). A coach posts one from + → Announcement: on rowers’ Feeds for 24 hours unless they choose 3 days, 1 week or a day and time, with an optional alert. Rowers see the heading; tapping opens the message, tapping again folds it. Coaches, the owner and co-owners edit or delete them: coaches in the Calendar tab, anyone allowed from Edit on the open card in their Feed."
     }
   },
   "order": [
@@ -699,7 +779,13 @@
     "CheckEmail.dc.html",
     "ResetPassword.dc.html",
     "YourBests.dc.html",
-    "SettingsBests.dc.html"
+    "SettingsBests.dc.html",
+    "BoatShellsDesign.dc.html",
+    "SettingsBoatsDesign.dc.html",
+    "CoachAnnouncementNew.dc.html",
+    "RowerFeedAnnouncement.dc.html",
+    "CoachCalendarAnnouncements.dc.html",
+    "CoachAnnouncementEdit.dc.html"
   ],
   "pages": [],
   "title": "Rowing Pals — current app"
