@@ -127,6 +127,11 @@ struct RootView: View {
                 push.opensFeed = false
                 selection = .feed
             }
+            .onChange(of: push.opensRankings, initial: true) {
+                guard push.opensRankings else { return }
+                push.opensRankings = false
+                selection = .rankings
+            }
             .onChange(of: push.pendingRoute, initial: true) {
                 // Next run loop: on a launch from an alert, the window is still being set up.
                 Task { openPendingRoute() }

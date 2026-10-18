@@ -27,12 +27,28 @@ struct NotificationSettingsTests {
     @Test func writesOnlyTheSwitches() throws {
         let settings = NotificationSettings.defaults(for: UUID())
         let object = try JSONSerialization.jsonObject(with: JSONEncoder().encode(settings)) as? [String: Any]
-        #expect(Set(object?.keys.map { $0 } ?? []) == ["user_id", "comments", "personal_bests", "club_activity", "new_workouts", "practice_reminders"])
+        #expect(Set(object?.keys.map { $0 } ?? []) == ["user_id", "comments", "personal_bests", "club_activity", "new_workouts",
+                                                                     "practice_reminders", "rank_changes"])
         #expect(object?["club_activity"] as? Bool == false)
     }
 
     @Test func defaultsMatchTheDesign() {
         let settings = NotificationSettings.defaults(for: UUID())
         #expect(settings.comments && settings.personalBests && !settings.clubActivity)
+        // Rank changes are on unless turned off (decision 89).
+        #expect(settings.rankChanges)
+    }
+
+    @Test func aRowFromBeforeRankChangesReadsAsOn() throws {
+        let json = """
+        {"user_id":"6F9619FF-8B86-D011-B42D-00C04FC964FF","comments":true,"personal_bests":true,
+         "club_activity":false,"new_workouts":true,"practice_reminders":false}
+        """
+        let settings = try JSONDecoder().decode(NotificationSettings.self, from: Data(json.utf8))
+        #expect(settings.rankChanges)
+        #expect(!settings.practiceReminders)
+        let off = try JSONDecoder().decode(NotificationSettings.self, from: Data(json.replacingOccurrences(
+            of: "\"practice_reminders\":false", with: "\"practice_reminders\":false,\"rank_changes\":false").utf8))
+        #expect(!off.rankChanges)
     }
 }

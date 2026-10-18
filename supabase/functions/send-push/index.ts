@@ -17,7 +17,7 @@ import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-
 type Kind =
   | "comment" | "reply" | "pb" | "club_post" | "club_invite" | "new_workout"
   | "new_practice" | "practice_changed" | "practice_cancelled" | "practice_reminder" | "new_event"
-  | "boat_seat" | "announcement"
+  | "boat_seat" | "announcement" | "rank_change"
 
 interface NotificationRow {
   id: string
@@ -37,6 +37,8 @@ interface NotificationRow {
   boat_id?: string | null
   // A coach's announcement (docs/migrations/2026-10-17-rigging-and-announcements.sql, decision 75).
   announcement_id?: string | null
+  // Last week's place on the weekly metres board (docs/migrations/2026-10-18-rank-change-alerts.sql, decision 89).
+  rank_change_id?: string | null
 }
 
 interface DeviceToken {
@@ -91,7 +93,8 @@ Deno.serve(async (req) => {
   const body = {
     aps: {
       alert,
-      "thread-id": row.session_id ?? row.workout_id ?? row.practice_id ?? row.event_id ?? row.boat_id ?? row.announcement_id ?? row.club_id ?? row.id,
+      "thread-id": row.session_id ?? row.workout_id ?? row.practice_id ?? row.event_id ?? row.boat_id ?? row.announcement_id ??
+        (row.rank_change_id ? "rank_change" : null) ?? row.club_id ?? row.id,
       "interruption-level": "active",
       sound: "default",
     },
@@ -144,6 +147,23 @@ async function composeAlert(admin: SupabaseClient, row: NotificationRow) {
       .maybeSingle()
     if (!announcement || new Date(announcement.expires_at as string) <= new Date()) return null
     return { title: "New announcement", body: announcement.heading as string }
+  }
+  if (row.kind === "rank_change") {
+    const { data: change } = await admin
+      .from("rank_changes")
+      .select("rank, previous_rank, group_size, group_label, metres")
+      .eq("id", row.rank_change_id)
+      .maybeSingle()
+    if (!change) return null
+    const rank = change.rank as number
+    const before = change.previous_rank as number | null
+    const moved = before === null
+      ? ""
+      : `, ${rank < before ? "up" : "down"} ${Math.abs(before - rank)} place${Math.abs(before - rank) === 1 ? "" : "s"}`
+    return {
+      title: "Last week’s metres",
+      body: `You finished ${ordinal(rank)} of ${change.group_size} ${change.group_label} last week with ${metres(change.metres as number)}${moved}.`,
+    }
   }
   if (row.kind === "boat_seat") {
     const { data: boat } = await admin
@@ -257,6 +277,13 @@ async function composeAlert(admin: SupabaseClient, row: NotificationRow) {
       return { title: club, body: `${actor} posted ${posted}` }
     }
   }
+}
+
+/// "1st", "2nd", "3rd", "11th", "22nd".
+function ordinal(n: number) {
+  const teen = n % 100 >= 11 && n % 100 <= 13
+  const suffix = teen ? "th" : ({ 1: "st", 2: "nd", 3: "rd" } as Record<number, string>)[n % 10] ?? "th"
+  return `${n}${suffix}`
 }
 
 async function displayName(admin: SupabaseClient, userId: string) {

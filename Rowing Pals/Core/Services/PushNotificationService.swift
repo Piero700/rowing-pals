@@ -25,6 +25,8 @@ final class PushNotificationService {
     var pendingRoute: AppRoute?
     /// A boat alert asks the rower app to show the Feed, where the boat card is (decision 67).
     var opensFeed = false
+    /// A rank-change alert asks the rower app to show Rankings (decision 89).
+    var opensRankings = false
     /// Whether iOS lets this app show alerts — Settings explains when it doesn't.
     private(set) var authorizationStatus: UNAuthorizationStatus = .notDetermined
 
@@ -107,7 +109,7 @@ final class PushNotificationService {
 
     /// A tapped alert opens its post (`session_id`); a practice alert its practice, a race or
     /// event alert its page (decision 68); a boat or announcement alert the Feed, where it sits on
-    /// top (decisions 67, 75); a club invitation Your club, where it can be accepted or declined (see send-push,
+    /// top (decisions 67, 75); a rank change Rankings (decision 89); a club invitation Your club, where it can be accepted or declined (see send-push,
     /// decision 26).
     func open(sessionId: String?, kind: String?, practiceId: String? = nil, eventId: String? = nil) {
         if kind == "club_invite" {
@@ -120,6 +122,12 @@ final class PushNotificationService {
             UserDefaults.standard.set(AppMode.rowing.rawValue, forKey: AppMode.storageKey)
             NotificationCenter.default.post(name: .boatsChanged, object: nil)
             opensFeed = true
+            return
+        }
+        if kind == "rank_change" {
+            // Last week's metres (decision 89): Rankings, in the rowing version.
+            UserDefaults.standard.set(AppMode.rowing.rawValue, forKey: AppMode.storageKey)
+            opensRankings = true
             return
         }
         if kind == "announcement" {

@@ -20,18 +20,22 @@ nonisolated struct NotificationSettings: Codable, Equatable {
     var newWorkouts: Bool
     /// Two hours before a practice you're going to (decision 68).
     var practiceReminders: Bool
+    /// Monday: your place on last week's metres board moved (decision 89).
+    var rankChanges: Bool
 
     static func defaults(for userId: UUID) -> NotificationSettings {
         NotificationSettings(userId: userId, comments: true, personalBests: true, clubActivity: false, newWorkouts: true)
     }
 
-    init(userId: UUID, comments: Bool, personalBests: Bool, clubActivity: Bool, newWorkouts: Bool, practiceReminders: Bool = true) {
+    init(userId: UUID, comments: Bool, personalBests: Bool, clubActivity: Bool, newWorkouts: Bool, practiceReminders: Bool = true,
+         rankChanges: Bool = true) {
         self.userId = userId
         self.comments = comments
         self.personalBests = personalBests
         self.clubActivity = clubActivity
         self.newWorkouts = newWorkouts
         self.practiceReminders = practiceReminders
+        self.rankChanges = rankChanges
     }
 
     enum CodingKeys: String, CodingKey {
@@ -41,6 +45,7 @@ nonisolated struct NotificationSettings: Codable, Equatable {
         case clubActivity = "club_activity"
         case newWorkouts = "new_workouts"
         case practiceReminders = "practice_reminders"
+        case rankChanges = "rank_changes"
     }
 
     init(from decoder: Decoder) throws {
@@ -53,5 +58,7 @@ nonisolated struct NotificationSettings: Codable, Equatable {
         newWorkouts = try c.decodeIfPresent(Bool.self, forKey: .newWorkouts) ?? true
         // Absent before docs/migrations/2026-10-16-calendar.sql has run.
         practiceReminders = try c.decodeIfPresent(Bool.self, forKey: .practiceReminders) ?? true
+        // Absent before docs/migrations/2026-10-18-rank-change-alerts.sql has run.
+        rankChanges = try c.decodeIfPresent(Bool.self, forKey: .rankChanges) ?? true
     }
 }

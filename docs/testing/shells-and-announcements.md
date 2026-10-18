@@ -201,3 +201,21 @@ Before this section: run `docs/migrations/2026-10-18-boat-colours.sql` on stagin
 - [ ] No **Draw boats** any more. Owners, co-owners, admins and coaches who row still see **Water sessions in
       Calendar**; other rowers don't see a Boats group at all.
 - [ ] Light mode: coloured boats, riggers, blades and names all clear.
+
+## 15. Rank-change alerts (decision 89)
+Before this section: run `docs/migrations/2026-10-18-rank-change-alerts.sql` on staging (pg_cron on, as for practice
+reminders). The real alert comes on Mondays at 08:00; the steps below send it now.
+1. On your phone: Settings → **Notifications**.
+- [ ] A **Rank changes** switch, on, under Practice reminders: "Mondays, when your place in last week's metres moved".
+2. You need two or more rowers of the same gender and level in the club with erg metres **last week** (Monday–Sunday),
+   on the leaderboards. If last week's are already there, skip to 3.
+3. Supabase → **SQL Editor** → New query → paste `select queue_rank_change_alerts(true);` → **Run**.
+- [ ] Each rower whose place last week differs from the week before gets "Last week's metres": "You finished 2nd of
+      3 senior men last week with 12,000m, up 1 place." (or "down …"; no "up/down" if they didn't row the week before).
+- [ ] Tapping it opens **Rankings**.
+4. Run the same line again.
+- [ ] Nothing new arrives: it's once a week.
+5. Turn **Rank changes** off on one account. In the SQL Editor clear this week's alerts and send them again:
+   `delete from rank_changes where week_start = (current_date - extract(isodow from current_date)::int - 6);`
+   then `select queue_rank_change_alerts(true);`.
+- [ ] That account gets nothing; the others get theirs again.
