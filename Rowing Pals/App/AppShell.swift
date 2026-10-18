@@ -7,7 +7,8 @@ import SwiftUI
 
 /// The signed-in app: the rower version or the coach version (decision 67). A coach who doesn't
 /// row always gets the coach version; one who also rows gets the version they used last, and
-/// switches from the coach's Profile or Settings. Everyone else gets the rower version.
+/// switches from the coach's Profile or Settings. Everyone else gets the rower version. An account
+/// without a username chooses one first (decision 85).
 struct AppShell: View {
     @AppStorage(AppMode.storageKey) private var preferred: AppMode = .rowing
     /// Nil until the account is read, which is quick (the viewer context is shared and cached).
@@ -16,11 +17,18 @@ struct AppShell: View {
     private struct Account: Equatable {
         let isCoach: Bool
         let isRower: Bool
+        /// No username yet (decision 85): asked for before anything else.
+        var needsUsername = false
+        var displayName = ""
     }
 
     var body: some View {
         Group {
-            if let account {
+            if let account, account.needsUsername {
+                ChooseUsernameView(name: account.displayName) {
+                    Task { await loadAccount() }
+                }
+            } else if let account {
                 if AppMode.resolved(isCoach: account.isCoach, isRower: account.isRower, preferred: preferred) == .coaching {
                     CoachRootView()
                 } else {
@@ -43,7 +51,8 @@ struct AppShell: View {
     /// Offline, the rower version opens: it copes with no connection already.
     private func loadAccount() async {
         if let viewer = try? await ViewerContext.shared.current() {
-            account = Account(isCoach: viewer.isCoach, isRower: viewer.isRower)
+            account = Account(isCoach: viewer.isCoach, isRower: viewer.isRower,
+                              needsUsername: viewer.needsUsername, displayName: viewer.displayName)
         } else if account == nil {
             account = Account(isCoach: false, isRower: true)
         }

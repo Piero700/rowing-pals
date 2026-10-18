@@ -74,3 +74,19 @@ Do the **staging** project first; repeat for production before launch.
 - [ ] Signing in unconfirmed sends a fresh code automatically.
 - [ ] The password field offers iOS's strong-password suggestion on sign-up, and codes from Mail can
       be auto-filled above the keyboard.
+
+## E. Usernames (decision 85)
+0. Supabase → **staging** → **SQL Editor** → **+ New query** → paste all of `docs/migrations/2026-10-18-usernames.sql` →
+   **Run** → expect **Success. No rows returned**. (The username-auth function is already deployed to staging.)
+   Install the new build (**RP Dev**, your iPhone, **Cmd+R**).
+- [ ] Opening the app as Piero: **Choose a username** with **@piero.ciobanu** filled in and "@piero.ciobanu is free."
+      Change it to something taken (e.g. Coach_J's, once Coach_J has one): "That username is taken. Try another."
+      Back to a free one → **Continue** → into the app.
+- [ ] **Profile**: **@yourname** under your name. **Find rowers**: rows read "@username · Club"; searching part of a
+      username finds them.
+- [ ] **Settings → Edit profile → Username**: change it → "is free" → **Save**; sign out and in with the new one.
+- [ ] **Sign in** with the username and password: in. With a wrong password: "That username and password don’t match."
+- [ ] **Forgot password?** → type your username → **Send code** → "Enter the code we sent to the email on that
+      account…" → the code from your email + a new password → **Set new password**: signed in. Sign out and in again.
+- [ ] **Create an account** (a new email): **Username** under Display name, filled in from the name; after
+      confirming the email the account has that username (Profile shows it).

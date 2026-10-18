@@ -21,6 +21,8 @@ struct PersonSummary: Identifiable, Decodable, Equatable {
 
     let id: UUID
     let displayName: String
+    /// Their @username (decision 85); nil until chosen, or before usernames existed.
+    let username: String?
     let category: RowerCategory
     let isPrivate: Bool
     let avatarPath: String?
@@ -29,13 +31,15 @@ struct PersonSummary: Identifiable, Decodable, Equatable {
     enum CodingKeys: String, CodingKey {
         case id
         case displayName = "display_name"
+        case username
         case category
         case isPrivate = "is_private"
         case avatarPath = "avatar_path"
         case club = "clubs"
     }
 
-    static let selectColumns = "id, display_name, category, is_private, avatar_path, clubs(name)"
+    /// Every column, so one a migration hasn't added yet (username) is just absent.
+    static let selectColumns = "*, clubs(name)"
 }
 
 /// All follow, follow-request and people-list queries in one place, so every
@@ -233,23 +237,33 @@ enum FollowService {
 
     // MARK: - Find rowers
 
-    /// Name search for the Find rowers screen. Excludes the viewer and
+    /// Name or @username search for the Find rowers screen (decision 85). Excludes the viewer and
     /// anyone on either side of a block.
     static func search(_ query: String) async throws -> [PersonSummary] {
         let me = try await currentUserId()
         let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
-        var request = SupabaseService.shared
-            .from("profiles")
-            .select(PersonSummary.selectColumns)
-            .neq("id", value: me)
-        if !trimmed.isEmpty {
-            request = request.ilike("display_name", pattern: "%\(trimmed)%")
+        func request(byUsername: Bool) async throws -> [PersonSummary] {
+            var request = SupabaseService.shared
+                .from("profiles")
+                .select(PersonSummary.selectColumns)
+                .neq("id", value: me)
+            if !trimmed.isEmpty {
+                // Characters PostgREST's filter syntax uses would break the query; names don't need them.
+                let safe = trimmed.filter { !",()*%".contains($0) }
+                let handle = UsernameRules.normalised(safe)
+                request = byUsername
+                    ? request.or("display_name.ilike.%\(safe)%,username.ilike.%\(handle)%")
+                    : request.ilike("display_name", pattern: "%\(safe)%")
+            }
+            return try await request.order("display_name", ascending: true).limit(40).execute().value
         }
-        let found: [PersonSummary] = try await request
-            .order("display_name", ascending: true)
-            .limit(40)
-            .execute()
-            .value
+        // Before the usernames migration there's no username column: names only.
+        let found: [PersonSummary]
+        if let byBoth = try? await request(byUsername: true) {
+            found = byBoth
+        } else {
+            found = try await request(byUsername: false)
+        }
 
         struct BlockRow: Decodable {
             let blockerId: UUID

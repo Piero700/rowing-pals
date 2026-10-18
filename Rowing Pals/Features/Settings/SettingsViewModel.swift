@@ -12,6 +12,11 @@ import Supabase
 @Observable
 final class SettingsViewModel {
     var displayName = ""
+    /// Their @username (decision 85); saved with Save, checked as it's typed.
+    var username = ""
+    private var originalUsername = ""
+    private(set) var usernameNote: String?
+    private(set) var usernameIsFree = false
     var gender: RowerGender = .male
     var category: RowerCategory = .novice
     var weeklyTargetM = 20_000
@@ -53,6 +58,7 @@ final class SettingsViewModel {
     var hasUnsavedChanges: Bool {
         guard let original else { return false }
         return displayName != original.displayName
+            || UsernameRules.normalised(username) != originalUsername
             || gender != original.gender
             || category != original.category
             || (isRower && (parsedWeeklyTargetM ?? original.weeklyTargetM) != original.weeklyTargetM)
@@ -113,6 +119,8 @@ final class SettingsViewModel {
                 .execute()
                 .value
             displayName = profile.displayName
+            username = profile.username ?? ""
+            originalUsername = username
             gender = profile.gender ?? .male
             category = profile.category
             weeklyTargetM = profile.weeklyTargetM
@@ -215,6 +223,25 @@ final class SettingsViewModel {
     }
 
     @MainActor
+    /// Checks a changed username as it's typed (decision 85).
+    func checkUsername() async {
+        usernameIsFree = false
+        guard UsernameRules.normalised(username) != originalUsername else {
+            usernameNote = nil
+            return
+        }
+        if let problem = UsernameRules.problem(with: username) {
+            usernameNote = problem
+            return
+        }
+        guard let free = try? await UsernameService.isAvailable(username) else {
+            usernameNote = nil
+            return
+        }
+        usernameIsFree = free
+        usernameNote = free ? "@\(UsernameRules.normalised(username)) is free." : "That username is taken. Try another."
+    }
+
     func save() async {
         guard let userId, !displayName.trimmingCharacters(in: .whitespaces).isEmpty else { return }
         // A coach-only account isn't shown these, so they can't hold the save up.
@@ -222,10 +249,26 @@ final class SettingsViewModel {
             saveError = problem
             return
         }
+        let usernameChanged = UsernameRules.normalised(username) != originalUsername
+        if usernameChanged, let problem = UsernameRules.problem(with: username) {
+            saveError = problem
+            return
+        }
         if isRower { weeklyTargetM = parsedWeeklyTargetM ?? weeklyTargetM }
         isSaving = true
         saveError = nil
         defer { isSaving = false }
+        if usernameChanged {
+            do {
+                originalUsername = try await UsernameService.set(username)
+                username = originalUsername
+                usernameNote = nil
+            } catch {
+                // The database's own words: "That username is taken.", and so on.
+                saveError = (error as? PostgrestError)?.message ?? error.localizedDescription
+                return
+            }
+        }
         do {
             // .select() after .update() asks PostgREST to hand back the
             // rows it actually touched (Prefer: return=representation) —

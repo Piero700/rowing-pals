@@ -121,6 +121,8 @@ final class ProfileViewModel {
     /// The last attempt failed; the cards keep any earlier numbers and offer Try again.
     var predictionsFailed = false
     var displayName = ""
+    /// Shown as @username under the name (decision 85); nil until chosen.
+    var username: String?
     var categoryLabel = ""
     var clubName: String?
     /// Your role in your club, for the Profile club button (decision 25); nil with no club.
@@ -191,6 +193,8 @@ final class ProfileViewModel {
             nonisolated struct ProfileRow: Decodable {
                 struct Club: Decodable { let name: String }
                 let displayName: String
+                /// Absent before docs/migrations/2026-10-18-usernames.sql.
+                let username: String?
                 let category: RowerCategory
                 let club: Club?
                 let clubId: UUID?
@@ -203,6 +207,7 @@ final class ProfileViewModel {
                 let isRower: Bool?
                 enum CodingKeys: String, CodingKey {
                     case displayName = "display_name"
+                    case username
                     case category
                     case club = "clubs"
                     case clubId = "club_id"
@@ -235,6 +240,7 @@ final class ProfileViewModel {
 
             let (profile, ownExtras, follow) = try await (profileRequest, ownExtrasRequest, followRequest)
             displayName = profile.displayName
+            username = profile.username
             categoryLabel = profile.category.rawValue.uppercased()
             clubName = profile.club?.name
             clubRole = profile.club == nil ? nil : (profile.clubRole ?? .member)

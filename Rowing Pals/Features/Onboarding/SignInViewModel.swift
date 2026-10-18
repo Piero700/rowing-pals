@@ -28,6 +28,15 @@ final class SignInViewModel {
     var email = ""
     var password = ""
     var displayName = ""
+    /// The username chosen at sign-up (decision 85); suggested from the display name until edited.
+    var username = ""
+    /// Under the username field: what's wrong with it, or whether it's free.
+    private(set) var usernameNote: String?
+    private(set) var usernameIsFree = false
+    private var lastSuggestion = ""
+    /// Forgot password was started with a username, not an email: the code went to that account's
+    /// email, which the app doesn't know.
+    private(set) var resetIsByUsername = false
     var code = ""
     var newPassword = ""
     var errorMessage: String?
@@ -82,8 +91,12 @@ final class SignInViewModel {
         do {
             if isSigningUp {
                 try await signUp()
-            } else {
+            } else if UsernameRules.isEmail(email) {
                 try await SupabaseService.shared.auth.signIn(email: trimmedEmail, password: password)
+                try await ensureProfileExists()
+            } else {
+                // A username (decision 85): the server finds the account and signs in.
+                try await UsernameService.signIn(username: email, password: password)
                 try await ensureProfileExists()
             }
         } catch let error as AuthError where error.errorCode == .emailNotConfirmed {
@@ -107,6 +120,14 @@ final class SignInViewModel {
             errorMessage = "Please agree to the Terms of Service to continue."
             return
         }
+        if let problem = UsernameRules.problem(with: username) {
+            errorMessage = problem
+            return
+        }
+        guard try await UsernameService.isAvailable(username) else {
+            errorMessage = "That username is taken. Try another."
+            return
+        }
         // Both stored in the auth user's own metadata, so the name and the moment of agreement
         // survive until the email is confirmed and the profiles row (task 17) is written.
         let response = try await SupabaseService.shared.auth.signUp(
@@ -114,6 +135,7 @@ final class SignInViewModel {
             password: password,
             data: [
                 "display_name": .string(displayName.trimmingCharacters(in: .whitespacesAndNewlines)),
+                "username": .string(UsernameRules.normalised(username)),
                 "terms_accepted_at": .string(ISO8601DateFormatter().string(from: Date()))
             ]
         )
@@ -148,7 +170,9 @@ final class SignInViewModel {
         isLoading = true
         defer { isLoading = false }
         do {
-            if step == .forgotCode {
+            if step == .forgotCode && resetIsByUsername {
+                try await UsernameService.sendReset(username: email)
+            } else if step == .forgotCode {
                 try await SupabaseService.shared.auth.resetPasswordForEmail(trimmedEmail)
             } else {
                 try await SupabaseService.shared.auth.resend(email: trimmedEmail, type: .signup)
@@ -162,6 +186,36 @@ final class SignInViewModel {
     var cleanCode: String { code.filter(\.isWholeNumber) }
     var isCodeComplete: Bool { Self.codeLengths.contains(cleanCode.count) }
 
+    // MARK: - Username (decision 85)
+
+    /// Fills the username from the display name until it's been edited.
+    func displayNameChanged() {
+        guard username.isEmpty || username == lastSuggestion else { return }
+        let suggestion = UsernameRules.suggestion(from: displayName)
+        username = suggestion
+        lastSuggestion = suggestion
+    }
+
+    /// Checks the username as it's typed: what's wrong with it, or whether it's free.
+    @MainActor
+    func checkUsername() async {
+        usernameIsFree = false
+        guard !username.isEmpty else {
+            usernameNote = nil
+            return
+        }
+        if let problem = UsernameRules.problem(with: username) {
+            usernameNote = problem
+            return
+        }
+        guard let free = try? await UsernameService.isAvailable(username) else {
+            usernameNote = nil
+            return
+        }
+        usernameIsFree = free
+        usernameNote = free ? "@\(UsernameRules.normalised(username)) is free." : "That username is taken. Try another."
+    }
+
     // MARK: - Forgot password
 
     @MainActor
@@ -171,7 +225,12 @@ final class SignInViewModel {
         isLoading = true
         defer { isLoading = false }
         do {
-            try await SupabaseService.shared.auth.resetPasswordForEmail(trimmedEmail)
+            resetIsByUsername = !UsernameRules.isEmail(email)
+            if resetIsByUsername {
+                try await UsernameService.sendReset(username: email)
+            } else {
+                try await SupabaseService.shared.auth.resetPasswordForEmail(trimmedEmail)
+            }
             step = .forgotCode
             code = ""
             newPassword = ""
@@ -188,8 +247,13 @@ final class SignInViewModel {
         isLoading = true
         defer { isLoading = false }
         do {
-            _ = try await SupabaseService.shared.auth.verifyOTP(email: trimmedEmail, token: cleanCode, type: .recovery)
-            _ = try await SupabaseService.shared.auth.update(user: UserAttributes(password: newPassword))
+            if resetIsByUsername {
+                // The server checks the code against that account's email and sets the password.
+                try await UsernameService.reset(username: email, code: cleanCode, newPassword: newPassword)
+            } else {
+                _ = try await SupabaseService.shared.auth.verifyOTP(email: trimmedEmail, token: cleanCode, type: .recovery)
+                _ = try await SupabaseService.shared.auth.update(user: UserAttributes(password: newPassword))
+            }
             try await ensureProfileExists()
         } catch {
             errorMessage = Self.message(for: error)
@@ -297,12 +361,17 @@ final class SignInViewModel {
             .from("profiles")
             .insert(NewProfile(id: userId, displayName: String(name.prefix(40)), termsAcceptedAt: termsAcceptedAt))
             .execute()
+        // The username chosen at sign-up; if someone took it meanwhile, the app asks for another.
+        if let chosen = text("username") {
+            _ = try? await UsernameService.set(chosen)
+        }
     }
 
     // MARK: - Helpers
 
     /// Plain words for the errors people actually hit.
     static func message(for error: Error) -> String {
+        if let failure = error as? UsernameService.Failure { return failure.message }
         if let auth = error as? AuthError {
             switch auth.errorCode {
             case .invalidCredentials: return "That email and password don't match."

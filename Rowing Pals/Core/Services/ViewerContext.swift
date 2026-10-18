@@ -18,6 +18,10 @@ final class ViewerContext {
     struct Snapshot: Equatable {
         let userId: UUID
         let displayName: String
+        /// Their @username (decision 85); nil until they choose one.
+        let username: String?
+        /// The database has usernames and this account hasn't chosen one: the app asks for it.
+        let needsUsername: Bool
         let gender: RowerGender?
         let category: RowerCategory
         let clubId: UUID?
@@ -102,6 +106,8 @@ final class ViewerContext {
         nonisolated struct ProfileRow: Decodable {
             struct Club: Decodable { let name: String }
             let displayName: String
+            /// Absent before docs/migrations/2026-10-18-usernames.sql.
+            let username: String?
             let gender: RowerGender?
             let category: RowerCategory
             let clubId: UUID?
@@ -111,12 +117,29 @@ final class ViewerContext {
             let club: Club?
             enum CodingKeys: String, CodingKey {
                 case displayName = "display_name"
+                case username
                 case gender, category
                 case clubId = "club_id"
                 case clubRole = "club_role"
                 case isCoach = "is_coach"
                 case isRower = "is_rower"
                 case club = "clubs"
+            }
+            /// Whether the database has usernames yet (the column is there, even if empty).
+            let hasUsernameColumn: Bool
+
+            init(from decoder: Decoder) throws {
+                let c = try decoder.container(keyedBy: CodingKeys.self)
+                displayName = try c.decode(String.self, forKey: .displayName)
+                hasUsernameColumn = c.contains(.username)
+                username = try c.decodeIfPresent(String.self, forKey: .username)
+                gender = try c.decodeIfPresent(RowerGender.self, forKey: .gender)
+                category = try c.decode(RowerCategory.self, forKey: .category)
+                clubId = try c.decodeIfPresent(UUID.self, forKey: .clubId)
+                clubRole = try c.decodeIfPresent(ClubRole.self, forKey: .clubRole)
+                isCoach = try c.decodeIfPresent(Bool.self, forKey: .isCoach)
+                isRower = try c.decodeIfPresent(Bool.self, forKey: .isRower)
+                club = try c.decodeIfPresent(Club.self, forKey: .club)
             }
         }
         nonisolated struct FollowRow: Decodable {
@@ -125,7 +148,8 @@ final class ViewerContext {
         }
         async let profileRow: ProfileRow = SupabaseService.shared
             .from("profiles")
-            .select("display_name, gender, category, club_id, club_role, is_coach, is_rower, clubs(name)")
+            // Every column, so a column a migration hasn't added yet (username) is just absent.
+            .select("*, clubs(name)")
             .eq("id", value: userId)
             .single()
             .execute()
@@ -150,6 +174,8 @@ final class ViewerContext {
         return Snapshot(
             userId: userId,
             displayName: profile.displayName,
+            username: profile.username,
+            needsUsername: profile.hasUsernameColumn && profile.username == nil,
             gender: profile.gender,
             category: profile.category,
             clubId: profile.clubId,

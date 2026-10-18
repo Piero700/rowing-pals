@@ -280,6 +280,12 @@ struct ProfileView: View {
                 .textStyle(Typography.profileName)
                 .foregroundStyle(Tokens.Ink.primary)
                 .multilineTextAlignment(.center)
+            if let username = viewModel.username {
+                Text("@\(username)")
+                    .textStyle(Typography.meta)
+                    .foregroundStyle(Tokens.Ink.secondary)
+                    .padding(.top, 2)
+            }
             Text(identityMeta)
                 .textStyle(Typography.meta)
                 .foregroundStyle(Tokens.Ink.secondary)

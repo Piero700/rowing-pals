@@ -48,6 +48,35 @@ struct EditProfileView: View {
                     .background(field.fill(Tokens.Surface.card))
                     .overlay { field.strokeBorder(Tokens.Surface.line, lineWidth: 1) }
 
+                // Shown as @username; you can sign in with it (decision 85).
+                sectionTitle("Username")
+                    .padding(.top, Tokens.Spacing.screen)
+                HStack(spacing: 2) {
+                    Text("@")
+                        .textStyle(Typography.bodyV3)
+                        .foregroundStyle(Tokens.Ink.secondary)
+                    TextField("username", text: $viewModel.username)
+                        .textStyle(Typography.bodyV3)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                        .textContentType(.username)
+                }
+                .padding(.horizontal, Tokens.Spacing.card)
+                .frame(minHeight: Tokens.Size.input)
+                .background(field.fill(Tokens.Surface.card))
+                .overlay { field.strokeBorder(Tokens.Surface.line, lineWidth: 1) }
+                .task(id: viewModel.username) {
+                    try? await Task.sleep(for: .milliseconds(400))
+                    guard !Task.isCancelled else { return }
+                    await viewModel.checkUsername()
+                }
+                Text(viewModel.usernameNote ?? "People can find you by it, and you can sign in with it instead of your email.")
+                    .textStyle(Typography.meta)
+                    .foregroundStyle(viewModel.usernameNote == nil ? Tokens.Ink.secondary
+                                     : (viewModel.usernameIsFree ? Tokens.Accent.success : Tokens.System.error))
+                    .padding(.horizontal, 4)
+                    .padding(.top, 6)
+
                 SettingsGroup(title: "Account type") {
                     stackedRow(title: "How you use Rowing Pals", subtitle: nil) {
                         PillSegmentedControl(options: ["I row", "Coach only"], selection: Binding(

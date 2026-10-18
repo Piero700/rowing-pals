@@ -10,6 +10,8 @@ import Foundation
 struct Profile: Codable, Identifiable {
     let id: UUID
     var displayName: String
+    /// Their @username (decision 85); nil until chosen.
+    var username: String?
     var clubId: UUID?
     /// Their role in that club (decision 25).
     var clubRole: ClubRole
@@ -38,6 +40,7 @@ struct Profile: Codable, Identifiable {
     enum CodingKeys: String, CodingKey {
         case id
         case displayName = "display_name"
+        case username
         case clubId = "club_id"
         case clubRole = "club_role"
         case gender, category
@@ -56,6 +59,8 @@ struct Profile: Codable, Identifiable {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         id = try c.decode(UUID.self, forKey: .id)
         displayName = try c.decode(String.self, forKey: .displayName)
+        // Absent before docs/migrations/2026-10-18-usernames.sql.
+        username = try c.decodeIfPresent(String.self, forKey: .username)
         clubId = try c.decodeIfPresent(UUID.self, forKey: .clubId)
         // Absent before docs/migrations/2026-09-30-clubs.sql has run.
         clubRole = try c.decodeIfPresent(ClubRole.self, forKey: .clubRole) ?? .member

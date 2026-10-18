@@ -126,7 +126,7 @@ struct PeopleListView: View {
                                 .accessibilityLabel("Private account")
                         }
                     }
-                    Text(person.club?.name ?? "No club")
+                    Text([person.username.map { "@\($0)" }, person.club?.name ?? "No club"].compactMap { $0 }.joined(separator: " · "))
                         .textStyle(Typography.meta)
                         .foregroundStyle(Tokens.Ink.secondary)
                         .lineLimit(1)

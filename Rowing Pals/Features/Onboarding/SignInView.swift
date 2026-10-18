@@ -17,7 +17,7 @@ struct SignInView: View {
     @Environment(\.colorScheme) private var colorScheme
 
     private enum Field {
-        case email, password, displayName, code, newPassword
+        case email, password, displayName, username, code, newPassword
     }
 
     var body: some View {
@@ -96,8 +96,11 @@ struct SignInView: View {
         switch viewModel.step {
         case .signIn, .signUp: return "Your feed, leaderboards and squad live here."
         case .verifyEmail: return "We've sent a code to \(email). Enter it to confirm your email and start."
-        case .forgotEmail: return "Enter your account's email and we'll send you a code to reset your password."
-        case .forgotCode: return "Enter the code we sent to \(email), then your new password."
+        case .forgotEmail: return "Enter your email or username and we'll send a code to reset your password."
+        case .forgotCode:
+            return viewModel.resetIsByUsername
+                ? "Enter the code we sent to the email on that account, then your new password."
+                : "Enter the code we sent to \(email), then your new password."
         }
     }
 
@@ -120,8 +123,25 @@ struct SignInView: View {
             if viewModel.isSigningUp {
                 field("Display name", text: $viewModel.displayName, field: .displayName)
                     .textContentType(.name)
+                    .onChange(of: viewModel.displayName) { viewModel.displayNameChanged() }
+                field("Username", text: $viewModel.username, field: .username)
+                    .textInputAutocapitalization(.never)
+                    .autocorrectionDisabled()
+                    .task(id: viewModel.username) {
+                        // Checked once typing pauses.
+                        try? await Task.sleep(for: .milliseconds(400))
+                        guard !Task.isCancelled else { return }
+                        await viewModel.checkUsername()
+                    }
+                if let note = viewModel.usernameNote {
+                    Text(note)
+                        .textStyle(Typography.meta)
+                        .foregroundStyle(viewModel.usernameIsFree ? Tokens.Accent.success : Tokens.System.error)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, 4)
+                }
             }
-            field("Email", text: $viewModel.email, field: .email)
+            field(viewModel.isSigningUp ? "Email" : "Email or username", text: $viewModel.email, field: .email)
                 .textInputAutocapitalization(.never)
                 .keyboardType(.emailAddress)
                 .textContentType(.username)
@@ -247,6 +267,7 @@ struct SignInView: View {
         guard !viewModel.email.isEmpty, !viewModel.password.isEmpty else { return false }
         if viewModel.isSigningUp {
             if viewModel.displayName.trimmingCharacters(in: .whitespaces).isEmpty || !viewModel.hasAgreedToTerms { return false }
+            if UsernameRules.problem(with: viewModel.username) != nil { return false }
             if viewModel.password.count < SignInViewModel.minimumPasswordLength { return false }
         }
         return !viewModel.isLoading
@@ -270,11 +291,11 @@ struct SignInView: View {
 
     @ViewBuilder
     private var forgotEmail: some View {
-        field("Email", text: $viewModel.email, field: .email)
+        field("Email or username", text: $viewModel.email, field: .email)
             .textInputAutocapitalization(.never)
             .keyboardType(.emailAddress)
             .textContentType(.username)
-        primaryButton("Send code", isEnabled: viewModel.email.contains("@") && !viewModel.isLoading) {
+        primaryButton("Send code", isEnabled: !viewModel.email.trimmingCharacters(in: .whitespaces).isEmpty && !viewModel.isLoading) {
             await viewModel.sendResetCode()
         }
     }
