@@ -28,8 +28,6 @@ struct FeedView: View {
 
     @State private var viewModel = FeedViewModel()
     @State private var cover: Cover?
-    /// The rower's next practice, under today's workout (decision 68).
-    @State private var nextPractice = NextPracticeModel()
     /// The rower's boats for today's water sessions, or tomorrow's (decisions 67, 79).
     @State private var feedBoats = FeedBoatsModel()
     /// The club's announcements, folded to their headings until tapped (decision 75).
@@ -37,6 +35,19 @@ struct FeedView: View {
     @State private var openAnnouncements: Set<UUID> = []
     @Environment(\.navigate) private var navigate
     @Environment(\.scenePhase) private var scenePhase
+
+    /// Pull to refresh and tapping Feed again. Runs in its own task so the pull can't cancel it half
+    /// way (a cancelled load used to empty the boat cards, user 2026-10-18).
+    private func refreshAll() async {
+        await Task {
+            ViewerContext.shared.invalidate()
+            async let boat: Void = feedBoats.load()
+            async let notices: Void = announcements.load()
+            await viewModel.reload()
+            await boat
+            await notices
+        }.value
+    }
 
     private func toggle(_ id: UUID) {
         withAnimation(.easeOut(duration: 0.2)) {
@@ -84,17 +95,6 @@ struct FeedView: View {
                         .padding(.bottom, Tokens.Spacing.loose)
                 }
 
-                if let practice = nextPractice.practice {
-                    FeedPracticeCard(
-                        practice: practice,
-                        answer: nextPractice.answer,
-                        squadText: nextPractice.squadText,
-                        errorMessage: nextPractice.errorMessage,
-                        onOpen: { navigate(.practice(practice.id)) },
-                        onAnswer: { answer in Task { await nextPractice.setAnswer(answer) } }
-                    )
-                    .padding(.bottom, Tokens.Spacing.loose)
-                }
 
                 content
 
@@ -111,49 +111,26 @@ struct FeedView: View {
         }
         .scrollIndicators(.hidden)
         .scrollsToTopOnReselect(reselects) {
-            ViewerContext.shared.invalidate()
-            async let practice: Void = nextPractice.load()
-            async let boat: Void = feedBoats.load()
-            async let notices: Void = announcements.load()
-            await viewModel.reload()
-            await practice
-            await boat
-            await notices
+            await refreshAll()
         }
         .safeAreaInset(edge: .top, spacing: 0) { header }
         .background(Tokens.Base.ground)
         .tracksFloatingBar()
         .ignoresSafeArea(edges: .bottom)
         .task { await viewModel.loadInitial() }
-        .task { await nextPractice.load() }
         .task { await feedBoats.load() }
         .task { await announcements.load() }
         .onReceive(NotificationCenter.default.publisher(for: .announcementsChanged)) { _ in
             Task { await announcements.load() }
         }
         .refreshable {
-            ViewerContext.shared.invalidate()
-            async let practice: Void = nextPractice.load()
-            async let boat: Void = feedBoats.load()
-            async let notices: Void = announcements.load()
-            await viewModel.reload()
-            await practice
-            await boat
-            await notices
-        }
-        // An answer from the Calendar or the practice page, or a coach's change, shows here too.
-        .onReceive(NotificationCenter.default.publisher(for: .practiceAnswered)) { _ in
-            Task { await nextPractice.load() }
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .calendarChanged)) { _ in
-            Task { await nextPractice.load() }
+            await refreshAll()
         }
         .onReceive(NotificationCenter.default.publisher(for: .boatsChanged)) { _ in
             Task { await feedBoats.load() }
         }
         .onReceive(NotificationCenter.default.publisher(for: .rowerClubChanged)) { _ in
             Task { await viewModel.clubChanged() }
-            Task { await nextPractice.load() }
             Task { await feedBoats.load() }
         }
         // A new post shows, and a workout it was for leaves the Feed (decision 57).
@@ -169,7 +146,6 @@ struct FeedView: View {
         .onChange(of: scenePhase) { _, phase in
             if phase == .active {
                 Task { await viewModel.refreshWorkouts() }
-                Task { await nextPractice.load() }
                 Task { await feedBoats.load() }
                 Task { await announcements.load() }
             }

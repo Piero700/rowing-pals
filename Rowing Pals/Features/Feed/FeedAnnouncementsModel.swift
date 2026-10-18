@@ -25,8 +25,7 @@ final class FeedAnnouncementsModel {
             }
             announcements = live
         } catch {
-            // Before the announcements migration there are none; the Feed carries on.
-            announcements = []
+            // A failed or cancelled load keeps what's shown (as the boats, user 2026-10-18).
         }
     }
 

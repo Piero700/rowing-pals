@@ -51,8 +51,8 @@ final class FeedBoatsModel {
                      coachName: pair.session.createdBy.flatMap { coaches[$0] })
             }
         } catch {
-            // Before the boats migration there's nothing to show; the Feed carries on.
-            items = []
+            // A failed or cancelled load keeps the cards already shown; they only go when the
+            // database says there are none (user, 2026-10-18).
         }
     }
 }
