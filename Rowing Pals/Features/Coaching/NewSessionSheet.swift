@@ -5,9 +5,9 @@
 
 import SwiftUI
 
-/// The coach bar's + (CoachNew; decisions 67, 75): a land session — an erg workout — a water
-/// session, crewed seat by seat, or an announcement to every rower. Practices, races and events
-/// come from the Calendar.
+/// The coach bar's + (CoachNew; decisions 67, 75, 91): a land session — an erg workout — a water
+/// session, crewed seat by seat, an announcement to every rower, a challenge or an erg event.
+/// Practices, races and events come from the Calendar.
 struct NewSessionSheet: View {
     let onChoose: (AppRoute) -> Void
 
@@ -36,7 +36,13 @@ struct NewSessionSheet: View {
             option(.megaphone, "Announcement",
                    "A notice for every rower. Its heading sits at the top of their Feed; they tap it to read the rest.",
                    .newAnnouncement)
-            Text("Practices, races and other events are added from the Calendar. Announcements are kept in the Calendar too.")
+            option(.rankings, "Challenge",
+                   "A personal target, a club total or squad against squad, on erg metres between two days. It shows in Rankings and on rowers’ Feeds.",
+                   .newChallenge)
+            option(.flag, "Erg event",
+                   "A set piece rowed in a window, like a club 2k day. Everyone’s best goes on one board.",
+                   .newErgEvent)
+            Text("Practices, races and other events are added from the Calendar. Announcements, challenges and erg events are kept in the Calendar too.")
                 .textStyle(Typography.meta)
                 .foregroundStyle(Tokens.Ink.secondary)
                 .padding(.horizontal, 4)

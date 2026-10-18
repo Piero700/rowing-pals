@@ -33,6 +33,8 @@ struct FeedView: View {
     /// The club's announcements, folded to their headings until tapped (decision 75).
     @State private var announcements = FeedAnnouncementsModel()
     @State private var openAnnouncements: Set<UUID> = []
+    /// Challenges and erg events that are on (decision 91).
+    @State private var challenges = FeedChallengesModel()
     @Environment(\.navigate) private var navigate
     @Environment(\.scenePhase) private var scenePhase
 
@@ -43,9 +45,11 @@ struct FeedView: View {
             ViewerContext.shared.invalidate()
             async let boat: Void = feedBoats.load()
             async let notices: Void = announcements.load()
+            async let challengeCards: Void = challenges.load()
             await viewModel.reload()
             await boat
             await notices
+            await challengeCards
         }.value
     }
 
@@ -95,6 +99,18 @@ struct FeedView: View {
                         .padding(.bottom, Tokens.Spacing.loose)
                 }
 
+                // Erg events and challenges that are on (decision 91).
+                ForEach(challenges.items) { item in
+                    FeedChallengeCard(item: item) {
+                        switch item {
+                        case .challenge(let challenge, _): navigate(.challenge(challenge.id))
+                        case .event(let event): navigate(.ergEvent(event.id))
+                        }
+                    } onLog: {
+                        navigate(.log)
+                    }
+                    .padding(.bottom, Tokens.Spacing.loose)
+                }
 
                 content
 
@@ -120,6 +136,10 @@ struct FeedView: View {
         .task { await viewModel.loadInitial() }
         .task { await feedBoats.load() }
         .task { await announcements.load() }
+        .task { await challenges.load() }
+        .onReceive(NotificationCenter.default.publisher(for: .challengesChanged)) { _ in
+            Task { await challenges.load() }
+        }
         .onReceive(NotificationCenter.default.publisher(for: .announcementsChanged)) { _ in
             Task { await announcements.load() }
         }
@@ -141,6 +161,8 @@ struct FeedView: View {
         }
         .onReceive(NotificationCenter.default.publisher(for: .sessionPosted)) { _ in
             Task { await viewModel.reload() }
+            // New metres move challenge progress (decision 91).
+            Task { await challenges.load() }
         }
         .onReceive(NotificationCenter.default.publisher(for: .tagsChanged)) { note in
             guard let id = note.object as? UUID else { return }

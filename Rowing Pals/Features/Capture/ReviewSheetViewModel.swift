@@ -39,6 +39,23 @@ final class ReviewSheetViewModel {
     var segments: [DraftSegment] = []
     var galleryPhotos: [GalleryPhoto] = []
     var caption = ""
+    /// Erg events a post made now can count for (decision 91), and whether this one does: on unless
+    /// turned off, when the main piece is the event's piece.
+    private(set) var openEvents: [ErgEvent] = []
+    var countsForEvent = true
+
+    /// The open event the main piece matches; manual entries never count (the numbers can't be
+    /// checked against a monitor photo), as for tests.
+    var matchingEvent: ErgEvent? {
+        guard !isManual, let main = mainSegment else { return nil }
+        return openEvents.first { $0.accepts(distanceM: main.distanceM, timeMs: main.timeMs) }
+    }
+
+    @MainActor
+    func loadOpenEvents() async {
+        openEvents = await ErgEventService.openForPosting()
+    }
+
     /// The clubmates this session was rowed with (decision 90), in the order they were ticked.
     var taggedIds: [UUID] = []
     /// Who can be tagged: clubmates who row, loaded when the picker first opens.
@@ -334,6 +351,8 @@ final class ReviewSheetViewModel {
         let workoutId: UUID?
         /// Counted on the leaderboards, so deleting it takes the right metres off (decision 63).
         let isRanked: Bool
+        /// The erg event it counts for (decision 91); left out of the row when none.
+        let ergEventId: UUID?
 
         enum CodingKeys: String, CodingKey {
             case id
@@ -352,6 +371,7 @@ final class ReviewSheetViewModel {
             case sessionDate = "session_date"
             case workoutId = "workout_id"
             case isRanked = "is_ranked"
+            case ergEventId = "erg_event_id"
         }
     }
 
@@ -540,7 +560,8 @@ final class ReviewSheetViewModel {
                 sessionDate: sessionDate,
                 isNewPB: isNewPB,
                 workoutId: linkedWorkout?.id,
-                isRanked: !isManual && includeOnLeaderboards
+                isRanked: !isManual && includeOnLeaderboards,
+                ergEventId: countsForEvent ? matchingEvent?.id : nil
             )
             try await SupabaseService.shared.from("sessions").insert(newSession).execute()
 

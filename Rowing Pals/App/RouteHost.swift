@@ -70,7 +70,8 @@ struct RouteHost: View {
         case .post, .profile, .people, .findClub, .clubHub, .createClub, .editClub, .manageClub,
              .coachProfile, .editProfile, .coachRower, .squads, .squadEdit, .pbHistory, .newWorkout, .workoutResults,
              .newWorkoutOn, .practice, .newPractice, .editPractice, .register, .attendanceTotals, .availability,
-             .event, .newEvent, .editEvent, .waterSession, .newWaterSession, .sessionBoat, .savedBoat, .newAnnouncement, .editAnnouncement: true
+             .event, .newEvent, .editEvent, .waterSession, .newWaterSession, .sessionBoat, .savedBoat, .newAnnouncement, .editAnnouncement,
+             .challenge, .newChallenge, .editChallenge, .ergEvent, .newErgEvent, .editErgEvent: true
         default: false
         }
     }
@@ -147,6 +148,18 @@ struct RouteHost: View {
             AnnouncementEditorView(announcementId: nil)
         case .editAnnouncement(let id):
             AnnouncementEditorView(announcementId: id)
+        case .challenge(let id):
+            ChallengeDetailView(challengeId: id)
+        case .newChallenge:
+            ChallengeEditorView(challengeId: nil)
+        case .editChallenge(let id):
+            ChallengeEditorView(challengeId: id)
+        case .ergEvent(let id):
+            ErgEventDetailView(eventId: id)
+        case .newErgEvent:
+            ErgEventEditorView(eventId: nil)
+        case .editErgEvent(let id):
+            ErgEventEditorView(eventId: id)
         case .pbHistory(let test, let userId):
             PBHistoryView(test: test, userId: userId)
                 .toolbar(.hidden, for: .navigationBar)

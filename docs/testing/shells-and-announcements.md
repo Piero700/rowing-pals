@@ -235,3 +235,28 @@ Before this section: run `docs/migrations/2026-10-18-crew-tags.sql` on staging.
 - [ ] **Remove me from this post**; tap it: their name goes from the line (and from the Feed card).
 5. Someone who can't see the post (not following, not in the club, for a Following-only post).
 - [ ] They don't see the post or its tags anywhere.
+
+## 17. Challenges and erg events (decision 91)
+Before this section: run `docs/migrations/2026-10-18-challenges-and-erg-events.sql` on staging.
+1. Piero (owner): **Rankings** → the third option, **Challenges**.
+- [ ] **New challenge** and **New erg event** buttons; "No challenges yet…" under them.
+2. **New challenge** → Personal target, Name "100km this month", Metres each `100000`, Starts today, Ends in a month →
+   **Set challenge**.
+- [ ] It's under **On now** with "You · …m of 100,000m" and a blue bar. The **Feed** has a card for it too.
+- [ ] Open it: your card, then every rower with a bar, "N of M done". Log a session: your metres go up.
+3. New challenge → **Club total**, `500000` metres.
+- [ ] Its page: the club's bar, "Your share", and **Who's rowed it**, most first.
+4. New challenge → **Squad vs squad**, tick two squads (make them in Squads first if you have none).
+- [ ] Its page: squads ranked on metres per rower, each with its total; tap one: its rowers. Yours is in blue.
+5. **New erg event**: "Club 2k day", Distance `2000`, starting now, ending in three hours → **Set event**.
+- [ ] Rankings and the Feed show it ("Erg event · On until …", **Log your 2k**).
+6. Log a **photographed 2k** (or type 2000m on a monitor photo session) and go to the post screen.
+- [ ] **Count for Club 2k day** is there and on. Post. Open the event: you're on the board with your time and split.
+- [ ] A manual entry says it can't count; a 1,999m piece says to make a 2k your main piece.
+7. Coach_J (coach version): **+**.
+- [ ] **Challenge** and **Erg event** are there. The **Calendar** shows "Challenges and erg events" with the ones on now
+      and coming up; tapping one opens it, with **Edit**.
+8. A rower who isn't a coach, owner, co-owner or admin.
+- [ ] No New buttons and no Edit; they see everything else.
+9. **Edit** a challenge → **Delete challenge** → Delete.
+- [ ] It goes from Rankings, the Feed and the Calendar.

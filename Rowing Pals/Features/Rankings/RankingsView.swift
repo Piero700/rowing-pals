@@ -39,6 +39,9 @@ struct RankingsView: View {
             case .tests:
                 TestsView(showsOwnTitle: false, mode: $mode, reselects: reselects)
                     .transition(.identity)
+            case .challenges:
+                ChallengesView(mode: $mode, reselects: reselects)
+                    .transition(.identity)
             }
         }
         // The two boards swap at once rather than cross-fading under the control's spring.
@@ -61,12 +64,14 @@ struct RankingsView: View {
 }
 
 enum RankingsMode: Int, CaseIterable {
-    case volume, tests
+    /// Challenges and erg events (decision 91).
+    case volume, tests, challenges
 
     var label: String {
         switch self {
         case .volume: "Volume"
         case .tests: "Test results"
+        case .challenges: "Challenges"
         }
     }
 }

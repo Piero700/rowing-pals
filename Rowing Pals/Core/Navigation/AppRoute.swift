@@ -79,6 +79,14 @@ enum AppRoute: Hashable, Identifiable {
     /// A new announcement; one to edit or delete (decision 75).
     case newAnnouncement
     case editAnnouncement(UUID)
+    /// A challenge; a new one; one to edit (decision 91).
+    case challenge(UUID)
+    case newChallenge
+    case editChallenge(UUID)
+    /// An erg event and its board; a new one; one to edit (decision 91).
+    case ergEvent(UUID)
+    case newErgEvent
+    case editErgEvent(UUID)
 
     var id: Self { self }
 }

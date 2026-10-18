@@ -28,6 +28,9 @@ extension Notification.Name {
     static let announcementsChanged = Notification.Name("announcementsChanged")
     /// Who a post's author trained with changed (decision 90); `object` is the post's id.
     static let tagsChanged = Notification.Name("tagsChanged")
+    /// A challenge or an erg event was set, changed or deleted (decision 91): Rankings' Challenges,
+    /// the Feed's card and the coach's Calendar reload.
+    static let challengesChanged = Notification.Name("challengesChanged")
 }
 
 extension NotificationCenter {

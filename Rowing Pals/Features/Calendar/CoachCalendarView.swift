@@ -25,6 +25,8 @@ struct CoachCalendarView: View {
     }
 
     private static let cardShape = RoundedRectangle(cornerRadius: Tokens.Radius.card, style: .continuous)
+    /// Challenges and erg events on now and coming up (decision 91).
+    @State private var challenges = CoachChallengesModel()
 
     var body: some View {
         ScrollView {
@@ -50,6 +52,10 @@ struct CoachCalendarView: View {
 
                 if !viewModel.announcements.isEmpty {
                     announcementsSection
+                }
+
+                if !challenges.items.isEmpty {
+                    challengesSection
                 }
 
                 ForEach(viewModel.shownDays, id: \.self) { day in
@@ -94,6 +100,10 @@ struct CoachCalendarView: View {
         .tracksFloatingBar()
         .ignoresSafeArea(edges: .bottom)
         .task { await viewModel.load() }
+        .task { await challenges.load() }
+        .onReceive(NotificationCenter.default.publisher(for: .challengesChanged)) { _ in
+            Task { await challenges.load() }
+        }
         .onChange(of: refreshes) { Task { await viewModel.load() } }
         .refreshable { await viewModel.load() }
         .onReceive(NotificationCenter.default.publisher(for: .calendarChanged)) { _ in
@@ -312,6 +322,84 @@ struct CoachCalendarView: View {
             .contentShape(Self.cardShape)
         }
         .buttonStyle(IconPressStyle())
+    }
+
+    // MARK: - Challenges and erg events (decision 91)
+
+    @ViewBuilder
+    private var challengesSection: some View {
+        SectionTitle("Challenges and erg events")
+            .padding(.top, Tokens.Spacing.group)
+            .padding(.bottom, Tokens.Spacing.tight)
+        VStack(spacing: 0) {
+            ForEach(Array(challenges.items.enumerated()), id: \.element.id) { index, item in
+                if index > 0 {
+                    Rectangle().fill(Tokens.Surface.line).frame(height: 1)
+                }
+                challengeRow(item)
+            }
+        }
+        .background(Self.cardShape.fill(Tokens.Surface.card))
+        .clipShape(Self.cardShape)
+        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+        Text("Tap one to see how it’s going, change it or delete it. New ones come from +.")
+            .textStyle(Typography.meta)
+            .foregroundStyle(Tokens.Ink.secondary)
+            .padding(.horizontal, 4)
+            .padding(.top, Tokens.Spacing.tight)
+    }
+
+    private func challengeRow(_ item: CoachChallengesModel.Item) -> some View {
+        Button {
+            switch item {
+            case .challenge(let challenge): navigate(.challenge(challenge.id))
+            case .event(let event): navigate(.ergEvent(event.id))
+            }
+        } label: {
+            HStack(spacing: Tokens.Spacing.loose) {
+                RPIconView(icon: { if case .event = item { return RPIcon.flag } else { return RPIcon.rankings } }())
+                    .textStyle(Typography.rowTitle)
+                    .foregroundStyle(Tokens.Accent.brand)
+                    .frame(width: Tokens.Size.rowIcon, height: Tokens.Size.rowIcon)
+                    .background(RoundedRectangle(cornerRadius: Tokens.Schedule.iconTileRadius, style: .continuous).fill(Tokens.Accent.brandSoft))
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(challengeTitle(item))
+                        .textStyle(Typography.rowTitle)
+                        .foregroundStyle(Tokens.Ink.primary)
+                        .lineLimit(1)
+                    Text(challengeLine(item))
+                        .textStyle(Typography.statLabel)
+                        .tabularNumerals()
+                        .foregroundStyle(Tokens.Ink.secondary)
+                        .lineLimit(2)
+                        .multilineTextAlignment(.leading)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                RPIconView(icon: .chevronRight, size: Tokens.Icon.small)
+                    .textStyle(Typography.pill)
+                    .foregroundStyle(Tokens.Ink.secondary)
+            }
+            .padding(.horizontal, Tokens.Spacing.card)
+            .padding(.vertical, Tokens.Spacing.gap)
+            .frame(minHeight: Tokens.Size.row)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(IconPressStyle())
+    }
+
+    private func challengeTitle(_ item: CoachChallengesModel.Item) -> String {
+        switch item {
+        case .challenge(let challenge): challenge.title
+        case .event(let event): event.title
+        }
+    }
+
+    /// "Personal target · 1 – 30 Nov · 3 days left", "Erg event · 2k · On until 12:00".
+    private func challengeLine(_ item: CoachChallengesModel.Item) -> String {
+        switch item {
+        case .challenge(let challenge): "\(challenge.kind.label) · \(ChallengeText.days(challenge)) · \(ChallengeText.when(challenge))"
+        case .event(let event): "Erg event · \(event.pieceLabel) · \(ChallengeText.when(event))"
+        }
     }
 
     // MARK: - Announcements (decision 75)
