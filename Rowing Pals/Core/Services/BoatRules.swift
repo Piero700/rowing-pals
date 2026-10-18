@@ -15,13 +15,10 @@ nonisolated enum BoatRules {
         Array(1...type.rowers) + (type.isCoxed ? [0] : [])
     }
 
-    /// Every seat from the top of the drawing down: stern first (the cox, then stroke to bow), or
-    /// bow first (decision 74).
-    static func seatsTopToBottom(_ type: BoatType, orientation: BoatOrientation) -> [Int] {
-        switch orientation {
-        case .sternAtTop: (type.isCoxed ? [0] : []) + Array((1...type.rowers).reversed())
-        case .bowAtTop: seats(type)
-        }
+    /// Every seat from stern to bow, as a boat on its side reads left to right (decisions 82, 88):
+    /// the cox, then stroke down to bow.
+    static func seatsSternToBow(_ type: BoatType) -> [Int] {
+        (type.isCoxed ? [0] : []) + Array((1...type.rowers).reversed())
     }
 
     /// The sides of a standard rig, bow first: "BSBS" for a stroke-rigged four.
@@ -54,16 +51,6 @@ nonisolated enum BoatRules {
         return BoatSetup(type: setup.type, rigging: .custom, sides: String(letters))
     }
 
-    /// Whether the oar sits on the drawing's right. With the stern at the top the boat is turned
-    /// round, so stroke side is on the right (as the rowers see it, facing the stern); with the bow
-    /// at the top bow side is. A sculling boat's names alternate, bow on the right; the cox's name
-    /// goes on the right.
-    static func isOnRight(seat: Int, setup: BoatSetup, orientation: BoatOrientation) -> Bool {
-        if seat == 0 { return true }
-        guard let side = side(ofSeat: seat, setup: setup) else { return seat % 2 == 1 }
-        return orientation == .sternAtTop ? side == .stroke : side == .bow
-    }
-
     /// The line under a boat's name: "Stroke-rigged", "Custom", "Sculls".
     static func riggingLine(_ setup: BoatSetup) -> String {
         setup.type.isSculling ? "Sculls" : setup.rigging.label
@@ -85,6 +72,16 @@ nonisolated enum BoatRules {
         if seat == type.rowers { return "S" }
         if seat == 1 { return "B" }
         return "\(seat)"
+    }
+
+    /// "Cox", "Stroke", "Bow" under those seats of a boat on its side; nothing under the others
+    /// (their number is in the seat) or in a single.
+    static func role(_ seat: Int, type: BoatType) -> String? {
+        if seat == 0 { return "Cox" }
+        guard type.rowers > 1 else { return nil }
+        if seat == type.rowers { return "Stroke" }
+        if seat == 1 { return "Bow" }
+        return nil
     }
 
     /// "Seat 2", "Stroke seat", "Bow seat", "Cox".

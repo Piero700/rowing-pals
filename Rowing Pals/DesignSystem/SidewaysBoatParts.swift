@@ -11,8 +11,9 @@ import SwiftUI
 /// and for each oar a wing rigger, the shaft at the catch (swept towards the bow, the handle in
 /// across the gunwale) and a squared spoon blade with its face to the stern side.
 enum SidewaysBoatParts {
-    /// The hull from `left` to `right` about the centre line `y`, its faint keel line and the bow ball.
-    static func drawHull(in context: inout GraphicsContext, left: CGFloat, right: CGFloat, y: CGFloat) {
+    /// The hull from `left` to `right` about the centre line `y`, its faint keel line and the bow ball;
+    /// in the coach's colour for the boat when it has one (decision 87).
+    static func drawHull(in context: inout GraphicsContext, left: CGFloat, right: CGFloat, y: CGFloat, colour: Color? = nil) {
         let hh = Tokens.Boat.sidewaysHullHalfWidth
         let length = right - left
         var hull = Path()
@@ -30,8 +31,12 @@ enum SidewaysBoatParts {
                       control1: CGPoint(x: left + length * 0.28, y: y + hh),
                       control2: CGPoint(x: left + length * 0.07, y: y + hh * 0.4))
         hull.closeSubpath()
-        context.fill(hull, with: .color(Tokens.Surface.raised))
-        context.fill(hull, with: .color(Tokens.Ink.secondary.opacity(Tokens.Boat.sidewaysHullTint)))
+        if let colour {
+            context.fill(hull, with: .color(colour))
+        } else {
+            context.fill(hull, with: .color(Tokens.Surface.raised))
+            context.fill(hull, with: .color(Tokens.Ink.secondary.opacity(Tokens.Boat.sidewaysHullTint)))
+        }
         context.stroke(hull, with: .color(Tokens.Ink.secondary), lineWidth: Tokens.Boat.sidewaysHullLine)
 
         var keel = Path()
@@ -44,11 +49,15 @@ enum SidewaysBoatParts {
                      with: .color(Tokens.Ink.secondary))
     }
 
-    /// The open deck where the crew sit, from `low` to `high` along the hull.
-    static func drawDeck(in context: inout GraphicsContext, from low: CGFloat, to high: CGFloat, y: CGFloat) {
+    /// The open deck where the crew sit, from `low` to `high` along the hull: a deeper shade of the
+    /// boat's colour when it has one.
+    static func drawDeck(in context: inout GraphicsContext, from low: CGFloat, to high: CGFloat, y: CGFloat, colour: Color? = nil) {
         let hh = Tokens.Boat.sidewaysHullHalfWidth
-        let deck = CGRect(x: low, y: y - hh * 0.55, width: high - low, height: hh * 1.1)
-        context.fill(Path(roundedRect: deck, cornerRadius: hh * 0.55), with: .color(Tokens.Surface.raised))
+        let deck = Path(roundedRect: CGRect(x: low, y: y - hh * 0.55, width: high - low, height: hh * 1.1), cornerRadius: hh * 0.55)
+        context.fill(deck, with: .color(Tokens.Surface.raised))
+        if let colour {
+            context.fill(deck, with: .color(colour.opacity(Tokens.Boat.colouredDeckTint)))
+        }
     }
 
     /// The rigger, oar and blade for the seat at `x`: above the hull (`up`) or below it.

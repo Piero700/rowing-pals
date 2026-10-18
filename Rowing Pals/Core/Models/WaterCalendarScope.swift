@@ -5,7 +5,7 @@
 
 /// Which water sessions the rower's Calendar shows (decision 79): the ones they're seated in, or the
 /// whole club's. Only the owner, co-owners, admins and coaches who row can choose (Settings →
-/// Boats); everyone else sees their own. Kept on the phone, like `BoatOrientation`.
+/// Boats); everyone else sees their own. Kept on the phone.
 enum WaterCalendarScope: String, CaseIterable {
     case mine, club
 

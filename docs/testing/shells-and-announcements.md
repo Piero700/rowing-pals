@@ -175,3 +175,29 @@ In Xcode choose **RP Dev** and **your iPhone**, press **Cmd+R**.
 - [ ] Seats keep their numbers (S … B, the cox's square C); Piero's is blue. No blade covers a name.
 - [ ] The single is drawn the same way (one seat in blue, an oar each side), with nothing cut off at the top or bottom.
 - [ ] Light mode: the hull, riggers and blades are all clearly visible.
+
+## 14. Coach boats on their side, boat colours (decisions 87, 88)
+Before this section: run `docs/migrations/2026-10-18-boat-colours.sql` on staging.
+1. Coach_J: **Boats** tab → **Saved boats**.
+- [ ] Each saved boat is a full-width card: name, type chip, rigging, "Used n times", and the boat on its side with
+      first names under the seats. A four fits; an eight scrolls sideways.
+2. Open a saved **8+**.
+- [ ] Under Rigging there's **Colour**: a slashed circle (None, ringed in blue), colour dots, and at the end Apple's
+      colour picker. Swipe the row to see them all.
+- [ ] Tap **Red**: the boat below turns red straight away. Tap the picker, choose any colour: the boat takes it and the
+      picker gets the blue ring. Tap None: back to the plain boat.
+- [ ] **Crew**: the boat is on its side with a button under each seat (first name and side, or "Usually bow side").
+      An empty seat is dashed blue; the boat scrolls so the seat being chosen is in view.
+- [ ] Tap a seat's circle or its button, then a rower in the list: they go in, and the next empty seat is chosen and
+      scrolled to. Hold a name and drag it onto another seat: the two swap.
+- [ ] Rigging → **Custom**: a ⇄ appears beside each oar; tap one: that oar moves to the other side of the boat.
+3. Choose a colour, **Save boat**.
+- [ ] The Saved boats card shows the boat in that colour.
+4. Open a water session → **Add boat** → pick that saved boat.
+- [ ] It comes in with its colour. **Send**, then change only its colour and save: it still says **Sent**.
+5. Piero (in that boat): **Feed** and **Calendar** → the session.
+- [ ] The boat is in the coach's colour on the Feed card and on the session page.
+6. Settings → **Boats**.
+- [ ] No **Draw boats** any more. Owners, co-owners, admins and coaches who row still see **Water sessions in
+      Calendar**; other rowers don't see a Boats group at all.
+- [ ] Light mode: coloured boats, riggers, blades and names all clear.

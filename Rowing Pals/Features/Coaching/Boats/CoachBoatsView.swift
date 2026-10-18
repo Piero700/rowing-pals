@@ -6,8 +6,8 @@
 import SwiftUI
 
 /// The coach version's **Boats** tab (CoachBoats, CoachSavedBoats; decisions 67, 70): Sessions —
-/// today's and upcoming water sessions, each with its boats drawn upright and whether they've been
-/// sent, then who's going to the next one but isn't in a boat yet — and Saved boats, the crews
+/// today's and upcoming water sessions, each with its boats on their side (decision 88) and whether
+/// they've been sent, then who's going to the next one but isn't in a boat yet — and Saved boats, the crews
 /// the club puts out again and again. A water session is new from + → Water session.
 struct CoachBoatsView: View {
     var reselects = 0
@@ -15,11 +15,8 @@ struct CoachBoatsView: View {
 
     @State private var viewModel = CoachBoatsViewModel()
     @Environment(\.navigate) private var navigate
-    /// Stern or bow at the top (Settings → Boats → Draw boats, decision 74).
-    @AppStorage(BoatOrientation.storageKey) private var orientation: BoatOrientation = .sternAtTop
 
     private static let cardShape = RoundedRectangle(cornerRadius: Tokens.Radius.card, style: .continuous)
-    private static let columns = [GridItem(.adaptive(minimum: Tokens.Boat.cardWidth), spacing: 6, alignment: .top)]
 
     var body: some View {
         ScrollView {
@@ -166,13 +163,13 @@ struct CoachBoatsView: View {
                     .padding(.horizontal, 4)
                     .padding(.top, Tokens.Spacing.loose)
             } else {
-                LazyVGrid(columns: Self.columns, alignment: .center, spacing: 6) {
+                VStack(spacing: Tokens.Spacing.tight) {
                     ForEach(boats) { boat in
                         Button {
                             navigate(.sessionBoat(session: session.id, boat: boat.id))
                         } label: {
                             BoatTile(name: boat.name, setup: boat.setup, seats: boat.seats,
-                                     names: viewModel.names, footer: .sent(boat.isSent), orientation: orientation)
+                                     names: viewModel.names, footer: .sent(boat.isSent), colour: boat.colour)
                         }
                         .buttonStyle(IconPressStyle())
                     }
@@ -202,13 +199,13 @@ struct CoachBoatsView: View {
                 .foregroundStyle(Tokens.Ink.secondary)
                 .padding(.horizontal, 4)
         } else {
-            LazyVGrid(columns: Self.columns, alignment: .center, spacing: 6) {
+            VStack(spacing: Tokens.Spacing.tight) {
                 ForEach(viewModel.savedBoats) { boat in
                     Button {
                         navigate(.savedBoat(boat.id))
                     } label: {
                         BoatTile(name: boat.name, setup: boat.setup, seats: boat.seats,
-                                 names: viewModel.names, footer: .uses(boat.uses), orientation: orientation)
+                                 names: viewModel.names, footer: .uses(boat.uses), colour: boat.colour)
                     }
                     .buttonStyle(IconPressStyle())
                 }

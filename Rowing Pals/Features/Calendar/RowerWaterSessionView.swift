@@ -12,8 +12,6 @@ import SwiftUI
 struct RowerWaterSessionView: View {
     @State private var viewModel: RowerWaterSessionViewModel
     @Environment(\.dismiss) private var dismiss
-    /// Stern or bow at the top (Settings → Boats → Draw boats, decision 74).
-    @AppStorage(BoatOrientation.storageKey) private var orientation: BoatOrientation = .sternAtTop
 
     private static let cardShape = RoundedRectangle(cornerRadius: Tokens.Radius.card, style: .continuous)
 
@@ -112,8 +110,7 @@ struct RowerWaterSessionView: View {
         if !others.isEmpty {
             SectionTitle(mine.isEmpty ? "Boats" : "Other boats")
                 .padding(.top, Tokens.Spacing.group)
-            LazyVGrid(columns: [GridItem(.adaptive(minimum: Tokens.Boat.cardWidth), spacing: Tokens.Spacing.tight, alignment: .top)],
-                      spacing: Tokens.Spacing.tight) {
+            VStack(spacing: Tokens.Spacing.tight) {
                 ForEach(others) { boat in
                     tile(boat, highlightedSeat: nil)
                 }
@@ -123,6 +120,6 @@ struct RowerWaterSessionView: View {
 
     private func tile(_ boat: SessionBoat, highlightedSeat: Int?) -> some View {
         BoatTile(name: boat.name, setup: boat.setup, seats: boat.seats, names: viewModel.names, footer: .hidden,
-                 orientation: orientation, highlightedSeat: highlightedSeat)
+                 colour: boat.colour, highlightedSeat: highlightedSeat)
     }
 }

@@ -40,11 +40,11 @@ struct FeedBoatCard: View {
                 .padding(.bottom, Tokens.Spacing.tight)
             if boat.boatType == .single {
                 // A single is just you: the boat on its side, no names, ends or seat list.
-                SingleScullDrawing()
+                SingleScullDrawing(colour: boat.colour)
                     .padding(.vertical, Tokens.Spacing.tight)
             } else {
                 // Bigger boats on their side too, scrolling, opened on your seat (decision 82).
-                SidewaysBoatStrip(setup: boat.setup, names: firstNames, mySeat: mySeat)
+                SidewaysBoatStrip(setup: boat.setup, names: firstNames, mySeat: mySeat, colour: boat.colour)
                     .padding(.top, Tokens.Spacing.tight)
             }
             if let plan = session.plan {

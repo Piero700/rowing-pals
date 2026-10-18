@@ -18,10 +18,12 @@ nonisolated struct SessionBoat: Decodable, Identifiable, Equatable, Hashable {
     let sides: String?
     let savedBoatId: UUID?
     let sentAt: Date?
+    /// The coach's colour for the boat, "#RRGGBB" (decision 87); nil for none.
+    let colour: String?
     let seats: [BoatSeat]
 
     enum CodingKeys: String, CodingKey {
-        case id, position, name, rigging, sides
+        case id, position, name, rigging, sides, colour
         case sessionId = "session_id"
         case boatType = "boat_type"
         case savedBoatId = "saved_boat_id"
@@ -30,7 +32,7 @@ nonisolated struct SessionBoat: Decodable, Identifiable, Equatable, Hashable {
     }
 
     init(id: UUID, sessionId: UUID, position: Int = 0, name: String, boatType: BoatType, rigging: Rigging, sides: String? = nil,
-         savedBoatId: UUID? = nil, sentAt: Date? = nil, seats: [BoatSeat]) {
+         savedBoatId: UUID? = nil, sentAt: Date? = nil, colour: String? = nil, seats: [BoatSeat]) {
         self.id = id
         self.sessionId = sessionId
         self.position = position
@@ -40,6 +42,7 @@ nonisolated struct SessionBoat: Decodable, Identifiable, Equatable, Hashable {
         self.sides = sides
         self.savedBoatId = savedBoatId
         self.sentAt = sentAt
+        self.colour = colour
         self.seats = seats
     }
 
@@ -54,6 +57,7 @@ nonisolated struct SessionBoat: Decodable, Identifiable, Equatable, Hashable {
         sides = try c.decodeIfPresent(String.self, forKey: .sides)
         savedBoatId = try c.decodeIfPresent(UUID.self, forKey: .savedBoatId)
         sentAt = try c.decodeIfPresent(Date.self, forKey: .sentAt)
+        colour = try c.decodeIfPresent(String.self, forKey: .colour)
         seats = try c.decodeIfPresent([BoatSeat].self, forKey: .seats) ?? []
     }
 

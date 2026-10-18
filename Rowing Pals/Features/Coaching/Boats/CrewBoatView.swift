@@ -6,18 +6,17 @@
 import SwiftUI
 import UniformTypeIdentifiers
 
-/// Crew a boat (CoachBoatEdit; decisions 67, 70): Boat name, Boat type (1x 2x 2− 4− 4+ 4x 8+),
-/// Rigging (stroke-rigged, bow-rigged or custom with ⇄ on each oar; none for sculls), then the crew
-/// drawn as a shell — stern at the top unless the viewer chose otherwise — each rower's name beside
-/// their seat on their oar's side, "Usually stroke side" when they're on
-/// their other side. Tap a seat, then a rower; hold and drag a name onto another seat to swap.
+/// Crew a boat (CoachBoatEdit; decisions 67, 70, 87, 88): Boat name, Boat type (1x 2x 2− 4− 4+ 4x 4x+
+/// 8+), Rigging (stroke-rigged, bow-rigged or custom with ⇄ on each oar; none for sculls), Colour (none,
+/// a swatch or any colour), then the crew: the boat on its side as the rower's Feed draws it, stern on
+/// the left, scrolling when it's longer than the card, with a button under each seat — the rower's
+/// name, "Usually stroke side" when they're on their other side, or the empty seat dashed. Tap a seat
+/// (or its button), then a rower; hold and drag a name onto another seat to swap.
 /// In a session: Keep in Saved boats, Save boat, Delete boat. For a saved boat: Save, Delete.
 struct CrewBoatView: View {
     @State private var viewModel: CrewBoatViewModel
     @State private var isConfirmingDelete = false
     @Environment(\.dismiss) private var dismiss
-    /// Stern or bow at the top (Settings → Boats → Draw boats, decision 74).
-    @AppStorage(BoatOrientation.storageKey) private var orientation: BoatOrientation = .sternAtTop
 
     private static let cardShape = RoundedRectangle(cornerRadius: Tokens.Radius.card, style: .continuous)
     private static let buttonShape = RoundedRectangle(cornerRadius: Tokens.Boat.seatButtonRadius, style: .continuous)
@@ -94,14 +93,11 @@ struct CrewBoatView: View {
                 : "Stroke-rigged: the stroke’s oar is on stroke side, then the seats alternate. Bow-rigged is the other way round.")
         }
 
-        HStack(alignment: .firstTextBaseline) {
-            FormSectionTitle("Crew")
-            Spacer(minLength: 0)
-            Text("\(orientation.label) · change in Settings")
-                .textStyle(Typography.statLabel)
-                .foregroundStyle(Tokens.Ink.secondary)
-                .padding(.top, Tokens.Spacing.group)
-        }
+        FormLabel("Colour").padding(.top, Tokens.Spacing.card)
+        colourRow
+        FormFootnote("Colour a boat to pick it out at a glance. Its crew see it on their Feed too.")
+
+        FormSectionTitle("Crew")
         crewCard
         FormFootnote("Tap a seat, then a rower. Hold and drag a rower to swap seats. Rowers set their side in their profile.")
 
@@ -141,63 +137,124 @@ struct CrewBoatView: View {
         }
     }
 
+    // MARK: - Colour
+
+    /// None, the swatches, then Apple's colour picker for any other colour (decision 87).
+    private var colourRow: some View {
+        ScrollView(.horizontal) {
+            HStack(spacing: Tokens.Spacing.tight) {
+                Button {
+                    viewModel.colour = nil
+                } label: {
+                    // A slashed circle: no colour.
+                    Circle()
+                        .strokeBorder(Tokens.Ink.secondary, lineWidth: 1.5)
+                        .overlay {
+                            Rectangle()
+                                .fill(Tokens.Ink.secondary)
+                                .frame(width: 1.5, height: Tokens.Boat.swatch)
+                                .rotationEffect(.degrees(45))
+                        }
+                        .clipShape(Circle())
+                        .frame(width: Tokens.Boat.swatch, height: Tokens.Boat.swatch)
+                        .padding(Tokens.Boat.swatchRing * 1.6)
+                        .overlay { if viewModel.colour == nil { ring } }
+                        .frame(minWidth: Tokens.Size.minTap, minHeight: Tokens.Size.minTap)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(IconPressStyle())
+                .accessibilityLabel("No colour")
+                .accessibilityAddTraits(viewModel.colour == nil ? .isSelected : [])
+                ForEach(BoatPalette.swatches) { swatch in
+                    let isOn = viewModel.colour == swatch.hex
+                    Button {
+                        viewModel.colour = swatch.hex
+                    } label: {
+                        Circle()
+                            .fill(BoatPalette.color(swatch.hex) ?? Tokens.Surface.raised)
+                            .overlay { Circle().strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+                            .frame(width: Tokens.Boat.swatch, height: Tokens.Boat.swatch)
+                            .padding(Tokens.Boat.swatchRing * 1.6)
+                            .overlay { if isOn { ring } }
+                            .frame(minWidth: Tokens.Size.minTap, minHeight: Tokens.Size.minTap)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(IconPressStyle())
+                    .accessibilityLabel(swatch.name)
+                    .accessibilityAddTraits(isOn ? .isSelected : [])
+                }
+                // Any other colour: Apple's picker, showing the boat's colour when it isn't a swatch.
+                let isCustom = viewModel.colour != nil && !BoatPalette.swatches.contains { $0.hex == viewModel.colour }
+                ColorPicker("Any colour", selection: Binding(
+                    get: { BoatPalette.color(viewModel.colour) ?? Tokens.Ink.primary },
+                    set: { viewModel.colour = BoatPalette.hex($0) }
+                ), supportsOpacity: false)
+                .labelsHidden()
+                .frame(width: Tokens.Boat.swatch, height: Tokens.Boat.swatch)
+                .padding(Tokens.Boat.swatchRing * 1.6)
+                .overlay { if isCustom { ring } }
+                .frame(minWidth: Tokens.Size.minTap, minHeight: Tokens.Size.minTap)
+                .accessibilityLabel(isCustom ? "Custom colour, chosen" : "Any colour")
+            }
+        }
+        .scrollIndicators(.hidden)
+        .scrollClipDisabled()
+    }
+
+    /// The ring round the chosen colour.
+    private var ring: some View {
+        Circle().strokeBorder(Tokens.Accent.brand, lineWidth: Tokens.Boat.swatchRing)
+    }
+
     // MARK: - The crew drawing
 
+    /// The boat on its side (decision 88): a tap target on every seat, a name button under it, and ⇄
+    /// beside each oar for custom rigging. Longer boats scroll, as on the rower's Feed.
     private var crewCard: some View {
-        let metrics = Tokens.Boat.large
-        let layout = BoatDrawing.Layout(type: viewModel.type, metrics: metrics, orientation: orientation)
-        let sternAtTop = orientation == .sternAtTop
         let empty = Set(BoatRules.seats(viewModel.type).filter { viewModel.seats[$0] == nil })
-        return VStack(spacing: 0) {
-            if !viewModel.type.isSculling {
-                // Turned round with the stern at the top, stroke side is on the right.
-                HStack {
-                    Text(sternAtTop ? "Bow side" : "Stroke side")
-                    Spacer(minLength: 0)
-                    Text(sternAtTop ? "Stroke side" : "Bow side")
+        let isSweep = !viewModel.type.isSculling
+        return VStack(alignment: .leading, spacing: Tokens.Spacing.tight) {
+            SidewaysBoatStrip(setup: viewModel.setup, names: [:], colour: viewModel.colour, style: .crewing,
+                              selectedSeat: viewModel.selectedSeat, emptySeats: empty) { layout in
+                ForEach(BoatRules.seatsSternToBow(viewModel.type), id: \.self) { seat in
+                    let x = layout.xs[seat] ?? 0
+                    Button {
+                        viewModel.selectedSeat = seat
+                    } label: {
+                        Color.clear
+                            .frame(width: Tokens.Boat.seatTapTarget, height: Tokens.Boat.seatTapTarget)
+                            .contentShape(Circle())
+                    }
+                    .buttonStyle(IconPressStyle())
+                    .accessibilityHidden(true)
+                    .position(x: x, y: Tokens.Boat.sidewaysHullCentre)
+                    // Hung from the top, so a two-line note grows down, away from the blades.
+                    let room = Tokens.Boat.crewHeight - Tokens.Boat.crewButtonTop
+                    seatButton(seat)
+                        .frame(width: Tokens.Boat.crewSeatSpacing - 6, height: room, alignment: .top)
+                        .position(x: x, y: Tokens.Boat.crewButtonTop + room / 2)
                 }
-                .textStyle(Typography.tag)
-                .foregroundStyle(Tokens.Ink.secondary)
-                .padding(.horizontal, Tokens.Spacing.card)
-                .padding(.bottom, Tokens.Spacing.tight)
-            }
-            BoatEndLabel(text: sternAtTop ? "Stern" : "Bow")
-            ZStack(alignment: .topLeading) {
-                BoatDrawing(setup: viewModel.setup, orientation: orientation, metrics: metrics,
-                            selectedSeat: viewModel.selectedSeat, emptySeats: empty)
-                if viewModel.rigging == .custom && !viewModel.type.isSculling {
+                if viewModel.rigging == .custom && isSweep {
                     ForEach(1...viewModel.type.rowers, id: \.self) { seat in
+                        let up = viewModel.side(of: seat) == .stroke
+                        let pin = Tokens.Boat.sidewaysHullCentre
+                            + (up ? -1 : 1) * (Tokens.Boat.sidewaysHullHalfWidth + Tokens.Boat.sidewaysRiggerReach)
                         flipButton(seat)
-                            .position(x: flipButtonX(seat, layout: layout), y: layout.seatY(seat) - metrics.seatRadius - Tokens.Boat.flipButton / 3)
+                            .position(x: (layout.xs[seat] ?? 0) - Tokens.Boat.flipButtonOffset, y: pin)
                     }
                 }
-                ForEach(BoatRules.seats(viewModel.type), id: \.self) { seat in
-                    seatButton(seat)
-                        .frame(width: metrics.nameWidth)
-                        .position(x: seatButtonX(seat, layout: layout), y: layout.seatY(seat))
-                }
             }
-            .frame(width: metrics.width, height: layout.height)
-            BoatEndLabel(text: sternAtTop ? "Bow" : "Stern")
+            if isSweep {
+                Text("Stroke side’s oars are above the boat, bow side’s below.")
+                    .textStyle(Typography.statLabel)
+                    .foregroundStyle(Tokens.Ink.secondary)
+            }
         }
-        .frame(maxWidth: .infinity)
-        .padding(.top, Tokens.Spacing.loose)
-        .padding(.bottom, Tokens.Spacing.card)
+        .padding(.horizontal, Tokens.Spacing.loose)
+        .padding(.vertical, Tokens.Spacing.loose)
+        .frame(maxWidth: .infinity, alignment: .leading)
         .background(Self.cardShape.fill(Tokens.Surface.card))
         .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
-    }
-
-    /// Past the blade, on the oar's side.
-    private func seatButtonX(_ seat: Int, layout: BoatDrawing.Layout) -> CGFloat {
-        let right = BoatRules.isOnRight(seat: seat, setup: viewModel.setup, orientation: orientation)
-        let offset = layout.reach + layout.metrics.nameWidth / 2
-        return right ? layout.centreX + offset : layout.centreX - offset
-    }
-
-    /// Just above the oar's pin.
-    private func flipButtonX(_ seat: Int, layout: BoatDrawing.Layout) -> CGFloat {
-        let right = BoatRules.isOnRight(seat: seat, setup: viewModel.setup, orientation: orientation)
-        return layout.pinX(right: right) + (right ? 4 : -4)
     }
 
     /// ⇄: moves this seat's oar to the other side (custom rigging, decision 74).
@@ -209,65 +266,74 @@ struct CrewBoatView: View {
                 .textStyle(Typography.chip)
                 .foregroundStyle(Tokens.Accent.brand)
                 .frame(width: Tokens.Boat.flipButton, height: Tokens.Boat.flipButton)
+                .background(Circle().fill(Tokens.Surface.card))
                 .background(Circle().fill(Tokens.Accent.brandSoft))
                 .overlay { Circle().strokeBorder(Tokens.Accent.brand, lineWidth: 1) }
                 .frame(width: Tokens.Size.minTap, height: Tokens.Size.minTap)
-                .contentShape(Rectangle())
+                .contentShape(Circle())
         }
         .buttonStyle(IconPressStyle())
         .accessibilityLabel("Move \(BoatRules.seatName(seat, type: viewModel.type).lowercased())'s oar to \(viewModel.side(of: seat) == .stroke ? "bow" : "stroke") side")
     }
 
+    /// The button under a seat: the rower's first name and a note, or the empty seat, dashed.
     @ViewBuilder
     private func seatButton(_ seat: Int) -> some View {
         let person = viewModel.member(viewModel.seats[seat])
         let isSelected = viewModel.selectedSeat == seat
-        let right = BoatRules.isOnRight(seat: seat, setup: viewModel.setup, orientation: orientation)
         let seatSide = viewModel.side(of: seat)
         let button = Button {
             viewModel.selectedSeat = seat
         } label: {
             Group {
                 if let person {
-                    VStack(alignment: right ? .leading : .trailing, spacing: 2) {
-                        Text(person.displayName)
+                    VStack(spacing: 2) {
+                        Text(BoatRules.firstName(person.displayName))
                             .textStyle(Typography.rowTitle)
                             .foregroundStyle(Tokens.Ink.primary)
                             .lineLimit(1)
+                            .minimumScaleFactor(0.75)
                         if let note = BoatRules.seatNote(person.side, seat: seat, seatSide: seatSide) {
                             Text(note)
                                 .textStyle(Typography.statLabel)
                                 .fontWeight(.semibold)
                                 .foregroundStyle(Tokens.Ink.primary)
-                                .lineLimit(1)
+                                .multilineTextAlignment(.center)
+                                .lineLimit(2)
                                 .minimumScaleFactor(0.8)
                                 .padding(.horizontal, 6)
-                                .background(Capsule().fill(Tokens.Surface.raised))
-                        } else {
-                            Text(seat == 0 ? "Cox" : (person.side.map { $0 == .both ? "Both sides" : $0.label } ?? BoatRules.seatName(seat, type: viewModel.type)))
+                                .background(RoundedRectangle(cornerRadius: 6, style: .continuous).fill(Tokens.Surface.raised))
+                        } else if let caption = BoatRules.role(seat, type: viewModel.type)
+                                    ?? person.side.map({ $0 == .both ? "Both sides" : $0.label }) {
+                            Text(caption)
                                 .textStyle(Typography.statLabel)
                                 .foregroundStyle(Tokens.Ink.secondary)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.8)
                         }
                     }
-                    .frame(maxWidth: .infinity, alignment: right ? .leading : .trailing)
-                    .padding(.horizontal, Tokens.Spacing.gap)
+                    .padding(.horizontal, 4)
                     .padding(.vertical, 6)
                 } else {
                     VStack(spacing: 0) {
                         Text(BoatRules.seatTitle(seat, type: viewModel.type))
                             .textStyle(Typography.meta)
                             .fontWeight(.semibold)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.8)
                         if let seatSide {
                             Text(seatSide.label)
                                 .textStyle(Typography.statLabel)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.8)
                         }
                     }
                     .foregroundStyle(Tokens.Accent.brand)
-                    .frame(maxWidth: .infinity)
+                    .padding(.horizontal, 4)
                 }
             }
-            .frame(minHeight: Tokens.Boat.seatButtonHeight)
-            .background(Self.buttonShape.fill(person == nil ? Color.clear : Tokens.Surface.card))
+            .frame(maxWidth: .infinity, minHeight: Tokens.Boat.seatButtonHeight)
+            .background(Self.buttonShape.fill(person == nil ? Color.clear : Tokens.Base.ground))
             .overlay {
                 if person == nil || isSelected {
                     Self.buttonShape.strokeBorder(Tokens.Accent.brand,

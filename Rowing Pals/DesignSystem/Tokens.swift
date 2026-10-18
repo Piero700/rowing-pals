@@ -278,54 +278,17 @@ enum Tokens {
     }
 
     enum Boat {
-        struct Metrics: Sendable {
-            /// The drawing's width; the hull runs down its middle.
-            let width: CGFloat
-            /// Half the hull at its widest.
-            let hullHalfWidth: CGFloat
-            /// The first seat's centre from the top, a seat-length between seats, the cox's step,
-            /// and the hull beyond the last seat.
-            let firstSeat: CGFloat
-            let seatSpacing: CGFloat
-            let coxStep: CGFloat
-            let tail: CGFloat
-            let seatRadius: CGFloat
-            /// The wing rigger out to its pin and how far it spreads along the hull; the oar beyond
-            /// the pin and its spoon blade.
-            let riggerReach: CGFloat
-            let riggerSpread: CGFloat
-            let oarLength: CGFloat
-            let bladeLength: CGFloat
-            let bladeDepth: CGFloat
-            let bowBall: CGFloat
-            let lineWidth: CGFloat
-            let markFont: CGFloat
-            /// A name beside its seat, past the blade.
-            let nameGap: CGFloat
-            let nameWidth: CGFloat
-        }
-
-        static let small = Metrics(width: 166, hullHalfWidth: 5.5, firstSeat: 26, seatSpacing: 30, coxStep: 26, tail: 26,
-                                   seatRadius: 7.5, riggerReach: 12, riggerSpread: 6, oarLength: 9, bladeLength: 8.5,
-                                   bladeDepth: 3.6, bowBall: 2.2, lineWidth: 1.1, markFont: 7.5, nameGap: 4, nameWidth: 40)
-        static let large = Metrics(width: 345, hullHalfWidth: 9, firstSeat: 46, seatSpacing: 64, coxStep: 50, tail: 46,
-                                   seatRadius: 11, riggerReach: 22, riggerSpread: 9, oarLength: 20, bladeLength: 15,
-                                   bladeDepth: 5.4, bowBall: 3, lineWidth: 1.5, markFont: 10, nameGap: 6, nameWidth: 96)
         /// The ⇄ that moves an oar to the other side when crewing (custom rigging, decision 74).
         static let flipButton: CGFloat = 26
-        /// A boat card on the Boats tab: the small drawing in a rounded tile.
-        static let cardWidth: CGFloat = 166
+        /// A boat card on the Boats tab and a water session (decision 88).
         static let cardRadius: CGFloat = 22
-        /// A name button beside a seat when crewing, and its corners.
+        /// A name button under a seat when crewing, and its corners.
         static let seatButtonHeight: CGFloat = 48
         static let seatButtonRadius: CGFloat = 16
         static let lineWidth: CGFloat = 1.3
         static let selectedLineWidth: CGFloat = 2.2
         static let riggerLineWidth: CGFloat = 1.8
         static let dash: [CGFloat] = [4, 3]
-        /// The Feed card's seat list: the seat's name column.
-        static let seatColumn: CGFloat = 44
-        static let seatRow: CGFloat = 30
         /// "Stern" / "Bow" above and below a drawn boat.
         static let endLabelHeight: CGFloat = 13
         /// A single on the rower's Feed, drawn on its side across the card (user, 2026-10-17), with the
@@ -333,18 +296,36 @@ enum Tokens {
         /// much of the hull its cockpit takes.
         static let singleHeight: CGFloat = 144
         static let singleCockpitShare: CGFloat = 0.24
+        /// Where along the hull the sculler sits, from the stern.
+        static let singleSeatAt: CGFloat = 0.46
+        /// A single on its side on the coach's screens, where it sits with names in a strip.
+        static let sidewaysSingleLength: CGFloat = 260
         /// Bigger boats on the rower's Feed, on their side like the single and scrolling sideways
         /// (decision 82), drawn like a real boat with the oars at the catch (decision 86, draft A):
         /// a seat every 64 pt, the cox a shorter step, the stern and bow ends, the hull's centre line.
         static let sidewaysSeatSpacing: CGFloat = 64
         static let sidewaysCoxStep: CGFloat = 46
-        static let sidewaysEnd: CGFloat = 44
-        static let sidewaysBowEnd: CGFloat = 58
+        static let sidewaysEnd: CGFloat = 38
+        static let sidewaysBowEnd: CGFloat = 50
         static let sidewaysHullCentre: CGFloat = 74
         static let sidewaysHullHalfWidth: CGFloat = 9
         /// The hull's colour: the raised card with this much of the secondary ink in it.
         static let sidewaysHullTint: Double = 0.3
         static let sidewaysHullLine: CGFloat = 1.2
+        /// A coloured boat's deck: the raised card with this much of the boat's colour (decision 87).
+        static let colouredDeckTint: Double = 0.45
+        /// The colour swatches when crewing, and the ring round the chosen one.
+        static let swatch: CGFloat = 30
+        static let swatchRing: CGFloat = 2.5
+        /// The crewing screen's boat on its side: wider seats so each has its name button under it,
+        /// and the drawing's height with the buttons.
+        static let crewSeatSpacing: CGFloat = 84
+        static let crewHeight: CGFloat = 214
+        /// Where the seat buttons start, under the blades; the tap target on each seat; how far
+        /// towards the stern the ⇄ sits from its seat.
+        static let crewButtonTop: CGFloat = 148
+        static let seatTapTarget: CGFloat = 34
+        static let flipButtonOffset: CGFloat = 24
         static let sidewaysCentreLine: CGFloat = 0.6
         static let sidewaysBowBall: CGFloat = 2.8
         /// The wing rigger: the pin out from the hull's side, how far along the hull its arms

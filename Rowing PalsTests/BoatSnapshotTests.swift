@@ -24,17 +24,21 @@ struct BoatSnapshotTests {
         return seats
     }
 
+    /// Decision 88: the coach's boats on their side, full width, some coloured (decision 87).
     @Test func boatTilesRender() throws {
-        let columns = [GridItem(.adaptive(minimum: Tokens.Boat.cardWidth), spacing: 6, alignment: .top)]
-        let view = LazyVGrid(columns: columns, spacing: 6) {
-            BoatTile(name: "M1 four", setup: BoatSetup(type: .four, rigging: .stroke), seats: Self.seats(0..<4), names: Self.names, footer: .sent(true))
-            BoatTile(name: "W1 four", setup: BoatSetup(type: .coxedFour, rigging: .bow), seats: Self.seats(4..<8, cox: 8), names: Self.names, footer: .sent(true))
-            BoatTile(name: "Double", setup: BoatSetup(type: .double, rigging: .stroke), seats: Self.seats(9..<11), names: Self.names, footer: .sent(false))
-            BoatTile(name: "Bucket four", setup: BoatSetup(type: .four, rigging: .custom, sides: "SBBS"), seats: Self.seats(0..<4), names: Self.names, footer: .uses(6))
-            BoatTile(name: "Novice quad", setup: BoatSetup(type: .coxedQuad, rigging: .stroke), seats: Self.seats(0..<4, cox: 10), names: Self.names, footer: .sent(false))
+        let view = VStack(spacing: Tokens.Spacing.tight) {
+            BoatTile(name: "M1 eight", setup: BoatSetup(type: .eight, rigging: .stroke), seats: Self.seats(0..<8, cox: 8),
+                     names: Self.names, footer: .sent(true), colour: "#E5484D")
+            BoatTile(name: "W1 four", setup: BoatSetup(type: .coxedFour, rigging: .bow), seats: Self.seats(4..<8, cox: 8),
+                     names: Self.names, footer: .sent(false), colour: "#30A46C")
+            BoatTile(name: "Double", setup: BoatSetup(type: .double, rigging: .stroke), seats: Self.seats(9..<11),
+                     names: Self.names, footer: .sent(false))
+            BoatTile(name: "Bucket four", setup: BoatSetup(type: .four, rigging: .custom, sides: "SBBS"), seats: Self.seats(0..<4),
+                     names: Self.names, footer: .uses(6), colour: "#FFC53D")
+            BoatTile(name: "Loner", setup: BoatSetup(type: .single, rigging: .stroke), seats: Self.seats(9..<10),
+                     names: Self.names, footer: .uses(2), colour: "#3E63DD")
         }
-        .padding(Tokens.Spacing.screen)
-        try Self.render(view, name: "tiles")
+        try Self.renderInWindow(view, name: "tiles")
     }
 
     @Test func feedBoatCardRenders() throws {
@@ -56,22 +60,30 @@ struct BoatSnapshotTests {
                                    plan: nil, createdBy: nil)
         func boat(_ type: BoatType, _ range: Range<Int>, cox: Int? = nil) -> SessionBoat {
             SessionBoat(id: UUID(), sessionId: session.id, name: type == .eight ? "M1 eight" : (type == .double ? "Double" : (type == .single ? "Loner" : "W1 four")),
-                        boatType: type, rigging: .stroke, sentAt: Date(), seats: Self.seats(range, cox: cox))
+                        boatType: type, rigging: .stroke, sentAt: Date(), colour: type == .coxedFour ? "#F76B15" : nil,
+                        seats: Self.seats(range, cox: cox))
         }
-        for scheme in [ColorScheme.dark, .light] {
-            let cards = VStack(spacing: Tokens.Spacing.loose) {
-                FeedBoatCard(boat: boat(.eight, 0..<8, cox: 8), session: session, names: Self.names, coachName: "Sarah Lin", mySeat: 3)
-                FeedBoatCard(boat: boat(.coxedFour, 0..<4, cox: 10), session: session, names: Self.names, coachName: "Sarah Lin", mySeat: 2)
-                FeedBoatCard(boat: boat(.double, 9..<11), session: session, names: Self.names, coachName: "Sarah Lin", mySeat: 1)
-                FeedBoatCard(boat: boat(.single, 9..<10), session: session, names: Self.names, coachName: "Sarah Lin", mySeat: 1)
-            }
-            .padding(Tokens.Spacing.screen)
-            .frame(width: Self.width)
-            .background(Tokens.Base.ground)
-            .environment(\.colorScheme, scheme)
+        let cards = VStack(spacing: Tokens.Spacing.loose) {
+            FeedBoatCard(boat: boat(.eight, 0..<8, cox: 8), session: session, names: Self.names, coachName: "Sarah Lin", mySeat: 3)
+            FeedBoatCard(boat: boat(.coxedFour, 0..<4, cox: 10), session: session, names: Self.names, coachName: "Sarah Lin", mySeat: 2)
+            FeedBoatCard(boat: boat(.double, 9..<11), session: session, names: Self.names, coachName: "Sarah Lin", mySeat: 1)
+            FeedBoatCard(boat: boat(.single, 9..<10), session: session, names: Self.names, coachName: "Sarah Lin", mySeat: 1)
+        }
+        try Self.renderInWindow(cards, name: "sideways")
+    }
 
-            let host = UIHostingController(rootView: cards)
-            let size = host.sizeThatFits(in: CGSize(width: Self.width, height: 2600))
+    /// Hosts the view in a real window (ImageRenderer can't draw a ScrollView), so the boat strips
+    /// lay out, open on the rower's seat and draw as on a phone; dark and light, to
+    /// $TMPDIR/boats-<name>-<scheme>.png.
+    private static func renderInWindow(_ content: some View, name: String) throws {
+        for scheme in [ColorScheme.dark, .light] {
+            let view = content
+                .padding(Tokens.Spacing.screen)
+                .frame(width: width)
+                .background(Tokens.Base.ground)
+                .environment(\.colorScheme, scheme)
+            let host = UIHostingController(rootView: view)
+            let size = host.sizeThatFits(in: CGSize(width: width, height: 4000))
             let scene = try #require(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
             let window = UIWindow(windowScene: scene)
             window.frame = CGRect(origin: .zero, size: size)
@@ -82,7 +94,7 @@ struct BoatSnapshotTests {
             let image = UIGraphicsImageRenderer(size: size).image { _ in
                 window.drawHierarchy(in: window.bounds, afterScreenUpdates: true)
             }
-            let url = FileManager.default.temporaryDirectory.appendingPathComponent("boats-sideways-\(scheme == .dark ? "dark" : "light").png")
+            let url = FileManager.default.temporaryDirectory.appendingPathComponent("boats-\(name)-\(scheme == .dark ? "dark" : "light").png")
             try #require(image.pngData()).write(to: url)
             print("Boats snapshot: \(url.path)")
             window.isHidden = true

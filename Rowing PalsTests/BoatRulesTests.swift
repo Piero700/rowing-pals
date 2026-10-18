@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import SwiftUI
 import Testing
 @testable import Rowing_Pals
 
@@ -110,7 +111,7 @@ struct BoatRulesTests {
         #expect(BoatRules.seats(seats, fittingInto: .coxedFour).map(\.seat) == [1, 4, 0])
     }
 
-    // MARK: - Custom rigging and orientation (decision 74)
+    // MARK: - Custom rigging (decision 74) and boats on their side (decision 88)
 
     @Test func aBucketFourHasTheMiddlePairOnOneSide() {
         // Bow first: bow and stroke on stroke side, 2 and 3 on bow side.
@@ -134,18 +135,29 @@ struct BoatRulesTests {
         #expect(BoatSetup(type: .four, rigging: .custom, sides: "SBBS").sides == "SBBS")
     }
 
-    @Test func sternAtTheTopPutsStrokeSideOnTheRight() {
-        let four = BoatSetup(type: .four, rigging: .stroke)
-        // Stroke (seat 4) rows on stroke side.
-        #expect(BoatRules.isOnRight(seat: 4, setup: four, orientation: .sternAtTop))
-        #expect(!BoatRules.isOnRight(seat: 4, setup: four, orientation: .bowAtTop))
-        #expect(BoatRules.isOnRight(seat: 0, setup: BoatSetup(type: .coxedFour, rigging: .stroke), orientation: .sternAtTop))
-    }
-
-    @Test func theSternAtTheTopReadsCoxThenStrokeToBow() {
-        #expect(BoatRules.seatsTopToBottom(.coxedFour, orientation: .sternAtTop) == [0, 4, 3, 2, 1])
-        #expect(BoatRules.seatsTopToBottom(.coxedFour, orientation: .bowAtTop) == [1, 2, 3, 4, 0])
+    @Test func aBoatOnItsSideReadsCoxThenStrokeToBow() {
+        #expect(BoatRules.seatsSternToBow(.coxedFour) == [0, 4, 3, 2, 1])
+        #expect(BoatRules.seatsSternToBow(.double) == [2, 1])
+        #expect(BoatRules.role(0, type: .coxedFour) == "Cox")
+        #expect(BoatRules.role(4, type: .coxedFour) == "Stroke")
+        #expect(BoatRules.role(1, type: .coxedFour) == "Bow")
+        #expect(BoatRules.role(2, type: .coxedFour) == nil)
+        #expect(BoatRules.role(1, type: .single) == nil)
         #expect(BoatRules.riggingLine(BoatSetup(type: .quad, rigging: .stroke)) == "Sculls")
         #expect(BoatRules.riggingLine(BoatSetup(type: .four, rigging: .custom, sides: "SBBS")) == "Custom")
+    }
+
+    // MARK: - Boat colours (decision 87)
+
+    @Test func boatColoursAreKeptAsCapitalHex() {
+        #expect(BoatPalette.normalised("#e5484d") == "#E5484D")
+        #expect(BoatPalette.normalised("E5484D") == nil)
+        #expect(BoatPalette.normalised("#12345") == nil)
+        #expect(BoatPalette.normalised(nil) == nil)
+        #expect(BoatPalette.name("#e5484d") == "Red")
+        #expect(BoatPalette.name("#123456") == "Custom colour")
+        #expect(BoatPalette.color("#ZZZZZZ") == nil)
+        #expect(BoatPalette.hex(Color(hex: 0x30A46C)) == "#30A46C")
+        #expect(Set(BoatPalette.swatches.map(\.hex)).count == BoatPalette.swatches.count)
     }
 }

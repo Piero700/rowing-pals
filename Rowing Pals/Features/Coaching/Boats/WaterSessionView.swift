@@ -14,11 +14,8 @@ struct WaterSessionView: View {
     @State private var isConfirmingDelete = false
     @Environment(\.dismiss) private var dismiss
     @Environment(\.navigate) private var navigate
-    /// Stern or bow at the top (Settings → Boats → Draw boats, decision 74).
-    @AppStorage(BoatOrientation.storageKey) private var orientation: BoatOrientation = .sternAtTop
 
     private static let cardShape = RoundedRectangle(cornerRadius: Tokens.Radius.card, style: .continuous)
-    private static let columns = [GridItem(.adaptive(minimum: Tokens.Boat.cardWidth), spacing: 6, alignment: .top)]
 
     init(sessionId: UUID?, seed: WaterSessionSeed = WaterSessionSeed()) {
         _viewModel = State(initialValue: WaterSessionViewModel(sessionId: sessionId, seed: seed))
@@ -136,13 +133,13 @@ struct WaterSessionView: View {
                 .padding(.top, Tokens.Spacing.group)
         }
         if !viewModel.boats.isEmpty {
-            LazyVGrid(columns: Self.columns, alignment: .center, spacing: 6) {
+            VStack(spacing: Tokens.Spacing.tight) {
                 ForEach(viewModel.boats) { boat in
                     Button {
                         if let id = viewModel.sessionId { navigate(.sessionBoat(session: id, boat: boat.id)) }
                     } label: {
                         BoatTile(name: boat.name, setup: boat.setup, seats: boat.seats,
-                                 names: viewModel.names, footer: .sent(boat.isSent), orientation: orientation)
+                                 names: viewModel.names, footer: .sent(boat.isSent), colour: boat.colour)
                     }
                     .buttonStyle(IconPressStyle())
                 }

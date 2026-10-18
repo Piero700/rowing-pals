@@ -6,8 +6,8 @@
 import Foundation
 import PaceEngine
 
-/// Crew a boat (CoachBoatEdit; decisions 67, 70, 74): its name, type and rigging (custom too), and who
-/// sits where.
+/// Crew a boat (CoachBoatEdit; decisions 67, 70, 74, 87): its name, type, rigging (custom too) and
+/// colour, and who sits where.
 /// In a water session the picker offers the rowers who said they can make it (decision 68) — those
 /// who can't are shown greyed with their reason — and nobody already in another of its boats; a
 /// saved boat offers everyone. Saving a sent boat with changes makes it Not sent again.
@@ -63,6 +63,8 @@ final class CrewBoatViewModel {
     private(set) var sides: String?
 
     var setup: BoatSetup { BoatSetup(type: type, rigging: rigging, sides: sides) }
+    /// The boat's colour, "#RRGGBB", or nil for none (decision 87): a swatch or any colour.
+    var colour: String?
     /// Seat → rower.
     private(set) var seats: [Int: UUID] = [:]
     var selectedSeat: Int?
@@ -185,7 +187,7 @@ final class CrewBoatViewModel {
                     for seat in boat.seats { otherBoats[seat.userId] = boat.name }
                 }
                 if let boat = boats.first(where: { $0.id == boatId }) {
-                    fill(name: boat.name, setup: boat.setup, seats: boat.seats)
+                    fill(name: boat.name, setup: boat.setup, seats: boat.seats, colour: boat.colour)
                     keepSaved = boat.savedBoatId != nil
                 }
                 if let availability = try await BoatService.availability(of: session) {
@@ -195,7 +197,7 @@ final class CrewBoatViewModel {
             case .saved(let id):
                 if let id {
                     let boat = try await BoatService.savedBoat(id)
-                    fill(name: boat.name, setup: boat.setup, seats: boat.seats)
+                    fill(name: boat.name, setup: boat.setup, seats: boat.seats, colour: boat.colour)
                 }
             }
             if selectedSeat == nil { selectedSeat = BoatRules.seats(type).first { seats[$0] == nil } }
@@ -206,8 +208,9 @@ final class CrewBoatViewModel {
         hasLoaded = true
     }
 
-    private func fill(name: String, setup: BoatSetup, seats: [BoatSeat]) {
+    private func fill(name: String, setup: BoatSetup, seats: [BoatSeat], colour: String?) {
         self.name = name
+        self.colour = BoatPalette.normalised(colour)
         self.type = setup.type
         self.rigging = setup.rigging
         self.sides = setup.sides
@@ -245,7 +248,8 @@ final class CrewBoatViewModel {
         isSaving = true
         defer { isSaving = false }
         let draft = BoatService.BoatDraft(name: name, setup: setup,
-                                          seats: seats.map { BoatSeat(seat: $0.key, userId: $0.value) }.sorted { $0.seat < $1.seat })
+                                          seats: seats.map { BoatSeat(seat: $0.key, userId: $0.value) }.sorted { $0.seat < $1.seat },
+                                          colour: BoatPalette.normalised(colour))
         do {
             switch mode {
             case .session(let sessionId, let boatId):

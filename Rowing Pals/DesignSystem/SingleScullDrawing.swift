@@ -10,18 +10,22 @@ import SwiftUI
 /// (decision 86, `SidewaysBoatParts`): the bow ball on the right, the cockpit a little towards the
 /// stern, and the sculler's seat filled in. No names or labels: in a single it's just you.
 struct SingleScullDrawing: View {
+    /// "#RRGGBB" for the hull (decision 87), or nil for the plain boat.
+    var colour: String?
+
     var body: some View {
         Canvas { context, size in
             let y = size.height / 2
             let left: CGFloat = 3
             let right = size.width - 3
             let length = right - left
-            SidewaysBoatParts.drawHull(in: &context, left: left, right: right, y: y)
+            let hull = BoatPalette.color(colour)
+            SidewaysBoatParts.drawHull(in: &context, left: left, right: right, y: y, colour: hull)
 
             // The seat sits a little towards the stern (left), as in a real single.
-            let seatX = left + length * 0.46
+            let seatX = left + length * Tokens.Boat.singleSeatAt
             let cockpit = length * Tokens.Boat.singleCockpitShare
-            SidewaysBoatParts.drawDeck(in: &context, from: seatX - cockpit / 2, to: seatX + cockpit / 2, y: y)
+            SidewaysBoatParts.drawDeck(in: &context, from: seatX - cockpit / 2, to: seatX + cockpit / 2, y: y, colour: hull)
             SidewaysBoatParts.drawOar(in: &context, seatX: seatX, y: y, up: true)
             SidewaysBoatParts.drawOar(in: &context, seatX: seatX, y: y, up: false)
 
@@ -30,6 +34,6 @@ struct SingleScullDrawing: View {
         }
         .frame(height: Tokens.Boat.singleHeight)
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("A single scull")
+        .accessibilityLabel(BoatPalette.name(colour).map { "A \($0.lowercased()) single scull" } ?? "A single scull")
     }
 }

@@ -30,8 +30,6 @@ struct SettingsView: View {
     @AppStorage(Appearance.storageKey) private var appearance: Appearance = .dark
     /// The rower or coach version (decision 67); the switch row changes it.
     @AppStorage(AppMode.storageKey) private var appMode: AppMode = .rowing
-    /// How boats are drawn for this person (decision 74).
-    @AppStorage(BoatOrientation.storageKey) private var boatOrientation: BoatOrientation = .sternAtTop
     /// Which water sessions the Calendar shows (decision 79): theirs or the whole club's.
     @AppStorage(WaterCalendarScope.storageKey) private var waterScope: WaterCalendarScope = .club
     /// True for a rower who's a coach, owner, co-owner or admin: only they can see the whole club's.
@@ -45,7 +43,8 @@ struct SettingsView: View {
     private static let cardShape = RoundedRectangle(cornerRadius: Tokens.Radius.card, style: .continuous)
 
     /// v3 Settings (`docs/design/v3/RP Screen.dc.html` §07): grouped cards of 66 pt rows —
-    /// Appearance, Boats (Draw boats, decision 74), Club · coaches (coaches only: the week start,
+    /// Appearance, Boats (water sessions in Calendar, for those who can see the club's; Draw boats went with
+    /// decision 88), Club · coaches (coaches only: the week start,
     /// decision 69), Units and display,
     /// Notifications, Privacy, Account — then Delete account and
     /// the version. Left out by decision: the app-icon section (14) and CSV export (15). No
@@ -71,23 +70,8 @@ struct SettingsView: View {
                         } action: { appearance = .system }
                     }
 
-                    group("Boats") {
-                        stackedRow(title: "Draw boats", subtitle: "How boats are drawn upright: crewing, the Boats tab and Saved boats. Your Feed shows your boat on its side.") {
-                            VStack(spacing: Tokens.Spacing.tight) {
-                                PillSegmentedControl(options: BoatOrientation.allCases.map(\.label), selection: Binding(
-                                    get: { BoatOrientation.allCases.firstIndex(of: boatOrientation) ?? 0 },
-                                    set: { boatOrientation = BoatOrientation.allCases[$0] }
-                                ), compact: true)
-                                VStack(spacing: 0) {
-                                    BoatEndLabel(text: boatOrientation == .sternAtTop ? "Stern" : "Bow")
-                                    BoatDrawing(setup: BoatSetup(type: .four, rigging: .stroke), orientation: boatOrientation)
-                                    BoatEndLabel(text: boatOrientation == .sternAtTop ? "Bow" : "Stern")
-                                }
-                                .frame(maxWidth: .infinity)
-                            }
-                        }
-                        if canChooseWaterScope {
-                            divider
+                    if canChooseWaterScope {
+                        group("Boats") {
                             stackedRow(title: "Water sessions in Calendar",
                                        subtitle: "Just the ones you’re in, or every water session in the club.") {
                                 PillSegmentedControl(options: WaterCalendarScope.allCases.map(\.label), selection: Binding(
@@ -97,11 +81,6 @@ struct SettingsView: View {
                             }
                         }
                     }
-                    Text("Just for you: every rower and coach picks their own. With the stern at the top, stroke side is on the right, as the rowers see it facing the stern.")
-                        .textStyle(Typography.meta)
-                        .foregroundStyle(Tokens.Ink.secondary)
-                        .padding(.horizontal, 4)
-                        .padding(.top, Tokens.Spacing.tight)
 
                     if let clubWeek {
                         group("Club · coaches") {
