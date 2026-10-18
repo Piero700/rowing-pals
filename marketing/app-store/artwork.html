@@ -1,0 +1,156 @@
+<!doctype html>
+<!--
+  Rowing Pals — App Store screenshots and banners.
+  Open with no query to see the gallery. Each piece renders alone at its exact size with
+  ?id=<id> (see ART below); render.sh exports them all to export/ as PNG.
+-->
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <title>Rowing Pals — App Store artwork</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Inter+Tight:wght@700;800;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../website/assets/ui.css">
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #050506; color: var(--ink); font-family: "Inter", -apple-system, sans-serif; }
+    .art { position: relative; overflow: hidden; background: #0a0b0d; }
+
+    /* shared backdrop: glow + water lines */
+    .glow { position: absolute; border-radius: 50%; filter: blur(180px); opacity: .8; pointer-events: none; }
+    .waves { position: absolute; left: 0; right: 0; bottom: 0; width: 100%; pointer-events: none; }
+    .grain { position: absolute; inset: 0; opacity: .06; mix-blend-mode: overlay; pointer-events: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+
+    /* ---------- screenshot 1290 × 2796 ---------- */
+    .shot { width: 1290px; height: 2796px; }
+    .shot .cap { position: absolute; top: 190px; left: 90px; right: 90px; text-align: center; z-index: 3; }
+    .eyebrow { display: inline-flex; align-items: center; gap: 16px; font: 700 38px "Inter", sans-serif; letter-spacing: .14em; text-transform: uppercase; color: var(--c, var(--brand)); }
+    .eyebrow::before, .eyebrow::after { content: ""; width: 44px; height: 4px; border-radius: 2px; background: currentColor; opacity: .8; }
+    .shot h1 { margin: 36px 0 0; font: 900 132px/0.98 "Inter Tight", sans-serif; letter-spacing: -.045em; }
+    .hl { background: linear-gradient(100deg, var(--brand), var(--records)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .hl.amber { background: linear-gradient(100deg, #ffd99a, var(--rank)); -webkit-background-clip: text; background-clip: text; }
+    .hl.lilac { background: linear-gradient(100deg, #e4d6ff, var(--records)); -webkit-background-clip: text; background-clip: text; }
+    .shot .dev { position: absolute; left: 50%; top: 690px; transform: translateX(-50%); z-index: 2; }
+    .shot .dev .phone { zoom: 2.5; }
+    .shot.coach .cap { top: 130px; }
+    .shot.coach .dev { top: 720px; }
+    .shot .dev .phone { box-shadow: inset 0 0 0 1.5px rgba(255,255,255,.14), inset 0 0 0 5px #0b0c0e, 0 40px 80px -10px rgba(0,0,0,.8), 0 0 120px -30px var(--gc, rgba(110,150,255,.6)); }
+    .coach-pill { display: inline-block; margin-bottom: 30px; padding: 14px 30px; border-radius: 999px; font: 800 34px "Inter", sans-serif; letter-spacing: .12em; color: #0b1a35; background: linear-gradient(100deg, var(--brand), var(--records)); }
+
+    /* ---------- feature banner 1920 × 1080 ---------- */
+    .feature { width: 1920px; height: 1080px; }
+    .feature .copy { position: absolute; left: 130px; top: 50%; transform: translateY(-50%); width: 860px; z-index: 3; }
+    .brand-row { display: flex; align-items: center; gap: 22px; font: 800 44px "Inter Tight", sans-serif; letter-spacing: -.02em; margin-bottom: 50px; }
+    .brand-row img { width: 96px; height: 96px; border-radius: 24px; box-shadow: 0 16px 40px rgba(0,0,0,.5); }
+    .feature h1 { margin: 0 0 30px; font: 900 136px/.92 "Inter Tight", sans-serif; letter-spacing: -.05em; }
+    .feature p { margin: 0; font: 500 36px/1.4 "Inter", sans-serif; color: var(--ink2); max-width: 760px; }
+    .feature .devs { position: absolute; right: 90px; top: 90px; display: flex; gap: 40px; z-index: 2; }
+    .feature .devs .phone { zoom: 1.1; }
+    .feature .devs .phone:first-child { margin-top: 120px; }
+
+    /* ---------- social / OG 1200 × 630 ---------- */
+    .og { width: 1200px; height: 630px; }
+    .og .copy { position: absolute; left: 80px; top: 50%; transform: translateY(-50%); width: 620px; z-index: 3; }
+    .og .brand-row { font-size: 32px; margin-bottom: 34px; gap: 16px; }
+    .og .brand-row img { width: 68px; height: 68px; border-radius: 17px; }
+    .og h1 { margin: 0 0 22px; font: 900 92px/.92 "Inter Tight", sans-serif; letter-spacing: -.05em; }
+    .og p { margin: 0; font: 600 26px "Inter", sans-serif; color: var(--ink2); }
+    .og .dev { position: absolute; right: 70px; top: 60px; zoom: .95; z-index: 2; }
+
+    /* ---------- coach subscription promo 1024 × 1024 ---------- */
+    .promo { width: 1024px; height: 1024px; }
+    .promo .boat { position: absolute; left: 0; right: 0; top: 430px; height: 340px; display: flex; align-items: center; justify-content: center; z-index: 2; }
+    .promo .boat svg { flex: none; transform: rotate(90deg); zoom: 1.12; }
+    .promo .copy { position: absolute; left: 0; right: 0; top: 96px; text-align: center; z-index: 3; }
+    .promo h1 { margin: 22px 0 0; font: 900 104px/.95 "Inter Tight", sans-serif; letter-spacing: -.05em; }
+    .promo .foot { position: absolute; left: 0; right: 0; bottom: 92px; text-align: center; z-index: 3; font: 700 34px "Inter", sans-serif; color: var(--ink2); }
+    .promo .foot b { color: var(--ink); }
+    .promo .rp-seat-name, .promo .rp-seat-sub { display: none; }
+
+    /* ---------- gallery ---------- */
+    .gallery { padding: 40px; display: flex; flex-wrap: wrap; gap: 30px; align-items: flex-start; }
+    .gallery h2 { width: 100%; margin: 20px 0 0; font: 700 22px "Inter", sans-serif; color: var(--ink2); }
+    .tile { display: flex; flex-direction: column; gap: 8px; font: 500 13px "Inter", sans-serif; color: var(--ink3); }
+    .tile .frame { overflow: hidden; border-radius: 12px; box-shadow: 0 0 0 1px rgba(255,255,255,.1); }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script src="../website/assets/ui.js"></script>
+<script>
+  RPUI.base = '../website/assets/';
+  const ICON = '../website/assets/icon-256.png';
+
+  // Water lines, as on the website.
+  const waves = (w, h, c1 = '145,184,255', c2 = '198,173,255') => {
+    let s = `<svg class="waves" viewBox="0 0 ${w} ${h}" height="${h}" preserveAspectRatio="none">`;
+    const L = [[.25, 60, 900, c1, .55], [.42, 44, 640, c2, .4], [.6, 70, 1200, c1, .32], [.78, 36, 520, c2, .22]];
+    L.forEach(([y, a, len, c, op], k) => {
+      let d = '';
+      for (let x = 0; x <= w; x += 20) d += (x ? 'L' : 'M') + x + ' ' + (h * y + Math.sin(x / len * Math.PI * 2 + k) * a + Math.sin(x / (len * .37) + k * 2) * a * .3).toFixed(1);
+      s += `<path d="${d}" fill="none" stroke="rgba(${c},${op})" stroke-width="3"/><path d="${d} L${w} ${h} L0 ${h}Z" fill="rgba(${c},${op * .08})"/>`;
+    });
+    return s + '</svg>';
+  };
+  const glow = (x, y, size, color) => `<div class="glow" style="left:${x}px;top:${y}px;width:${size}px;height:${size}px;background:${color}"></div>`;
+  const phone = (screen) => `<div class="phone">${RPUI.render(screen)}</div>`;
+
+  const BLUE = 'rgba(110,150,255,.45)', LILAC = 'rgba(180,140,255,.4)', AMBER = 'rgba(239,180,90,.32)', GREEN = 'rgba(100,210,160,.3)';
+
+  const shot = (o) => ({
+    w: 1290, h: 2796, html: () => `<div class="art shot ${o.coach ? 'coach' : ''}" style="--c:${o.c || 'var(--brand)'};--gc:${o.gc || BLUE}">
+      ${glow(-300, 700, 1300, o.g1 || BLUE)}${glow(500, 1500, 1200, o.g2 || LILAC)}
+      ${waves(1290, 1100)}
+      <div class="cap">${o.coach ? '<div class="coach-pill">FOR COACHES</div><br>' : ''}<span class="eyebrow">${o.eyebrow}</span><h1>${o.title}</h1></div>
+      <div class="dev">${phone(o.screen)}</div><div class="grain"></div></div>`
+  });
+
+  const ART = {
+    // Rower screenshots
+    '01-proven': shot({ eyebrow: 'Snap · Post · Rank', title: 'Every metre.<br><span class="hl">Proven.</span>', screen: 'feed' }),
+    '02-capture': shot({ eyebrow: 'Dual camera', title: 'Two cameras.<br><span class="hl">One shot.</span>', screen: 'capture' }),
+    '03-numbers': shot({ eyebrow: 'Read for you', title: 'We read<br><span class="hl">the numbers.</span>', screen: 'review' }),
+    '04-rankings': shot({ eyebrow: 'Leaderboards', c: 'var(--rank)', title: 'Climb the<br><span class="hl amber">rankings.</span>', screen: 'rankings', g1: AMBER, gc: AMBER }),
+    '05-pbs': shot({ eyebrow: 'Personal bests', c: 'var(--records)', title: 'PBs worth<br><span class="hl lilac">celebrating.</span>', screen: 'pb', g1: LILAC, g2: BLUE, gc: LILAC }),
+    '06-streaks': shot({ eyebrow: 'Profile', title: 'Streaks with<br><span class="hl">rest days built in.</span>', screen: 'profile' }),
+    // Coach screenshots
+    '07-coach-rowers': shot({ coach: 1, eyebrow: 'Rowers', title: 'Know every<br><span class="hl">rower.</span>', screen: 'coachRowers' }),
+    '08-coach-workouts': shot({ coach: 1, eyebrow: 'Workouts', c: 'var(--success)', title: 'Set the work.<br><span class="hl">See the splits.</span>', screen: 'coachWorkout', g1: GREEN }),
+    '09-coach-boats': shot({ coach: 1, eyebrow: 'Boats', title: 'Crew boats<br><span class="hl">in seconds.</span>', screen: 'coachBoat' }),
+    '10-coach-calendar': shot({ coach: 1, eyebrow: 'Calendar', title: 'Plan the week.<br><span class="hl">Take the register.</span>', screen: 'coachCal' }),
+
+    // Banners
+    'banner-feature-1920x1080': { w: 1920, h: 1080, html: () => `<div class="art feature">
+      ${glow(900, -300, 1300, BLUE)}${glow(-200, 500, 900, LILAC)}${waves(1920, 700)}
+      <div class="copy"><div class="brand-row"><img src="${ICON}">Rowing Pals</div>
+        <h1>Every metre.<br><span class="hl">Proven.</span></h1>
+        <p>Snap the erg monitor and yourself in one shot. We read the numbers and put you on the leaderboard.</p></div>
+      <div class="devs">${phone('capture')}${phone('feed')}</div><div class="grain"></div></div>` },
+    'banner-social-1200x630': { w: 1200, h: 630, html: () => `<div class="art og">
+      ${glow(600, -300, 900, BLUE)}${glow(-200, 300, 700, LILAC)}${waves(1200, 380)}
+      <div class="copy"><div class="brand-row"><img src="${ICON}">Rowing Pals</div>
+        <h1>Every metre.<br><span class="hl">Proven.</span></h1>
+        <p>The social training app for rowers.</p></div>
+      <div class="dev">${phone('feed')}</div><div class="grain"></div></div>` },
+    'banner-coach-promo-1024': { w: 1024, h: 1024, html: () => `<div class="art promo">
+      ${glow(-200, -200, 900, BLUE)}${glow(300, 400, 900, LILAC)}${waves(1024, 520)}
+      <div class="boat">${RPUI.boat(RPUI.crew, { w: 300, h: 640 })}</div>
+      <div class="copy"><span class="eyebrow">Rowing Pals</span><h1>Coach<br><span class="hl">the squad.</span></h1></div>
+      <div class="foot"><b>Rowers · Workouts · Boats · Calendar</b><br>One subscription. Rowers stay free.</div>
+      <div class="grain"></div></div>` }
+  };
+
+  const id = new URLSearchParams(location.search).get('id');
+  const root = document.getElementById('root');
+  if (id && ART[id]) {
+    root.innerHTML = ART[id].html();
+  } else {
+    const groups = [['Screenshots · 1290 × 2796 (6.9" iPhone)', k => !k.startsWith('banner')], ['Banners', k => k.startsWith('banner')]];
+    root.innerHTML = '<div class="gallery">' + groups.map(([title, f]) => `<h2>${title}</h2>` + Object.keys(ART).filter(f).map(k => {
+      const a = ART[k], s = k.startsWith('banner') ? 520 / a.w : 300 / a.w;
+      return `<div class="tile"><div class="frame" style="width:${a.w * s}px;height:${a.h * s}px"><div style="zoom:${s}">${a.html()}</div></div><a href="?id=${k}" style="color:inherit">${k}</a></div>`;
+    }).join('')).join('') + '</div>';
+  }
+</script>
+</body>
+</html>

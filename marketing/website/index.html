@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rowing Pals — Every metre, proven</title>
+  <meta name="description" content="Snap the erg monitor and yourself at once. Rowing Pals reads the numbers, posts your piece and puts it on the leaderboard. Free for rowers. Coach tools for the whole squad.">
+  <meta name="theme-color" content="#0a0b0d">
+  <meta property="og:title" content="Rowing Pals — Every metre, proven">
+  <meta property="og:description" content="The social training app for rowers. Photo-proven erg sessions, honest leaderboards, and coach tools for the whole squad.">
+  <meta property="og:image" content="https://rowingpals.com/assets/og.png">
+  <meta property="og:url" content="https://rowingpals.com">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="assets/favicon.png">
+  <link rel="apple-touch-icon" href="assets/icon-256.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Inter+Tight:wght@700;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/ui.css">
+  <link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+
+<!-- Nav -->
+<header class="nav glass" id="nav">
+  <a href="#top" class="logo"><img src="assets/icon-256.png" alt=""><span>Rowing Pals</span></a>
+  <nav class="nav-links">
+    <a href="#how">How it works</a>
+    <a href="#rankings">Rankings</a>
+    <a href="#coaches">For coaches</a>
+    <a href="#pricing">Pricing</a>
+  </nav>
+  <a href="#download" class="btn btn-primary">Get the app</a>
+</header>
+
+<main id="top">
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-glow"></div>
+    <canvas data-water></canvas>
+    <div class="wrap hero-grid">
+      <div class="hero-copy">
+        <span class="eyebrow">The social app for rowers</span>
+        <h1><span class="line"><span>Every metre.</span></span><span class="line"><span class="grad">Proven.</span></span></h1>
+        <p class="lead">Snap the erg monitor and yourself in one shot. Rowing Pals reads the numbers, posts your piece and puts it on the leaderboard. No typing. No fudging.</p>
+        <div class="hero-ctas">
+          <a href="#download" class="btn btn-store" aria-label="Download on the App Store">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.4 12.6c0-2.6 2.1-3.8 2.2-3.9-1.2-1.8-3.1-2-3.7-2-1.6-.2-3.1.9-3.9.9-.8 0-2-.9-3.4-.9-1.7 0-3.3 1-4.2 2.6-1.8 3.1-.5 7.7 1.3 10.2.9 1.2 1.9 2.6 3.2 2.6 1.3-.1 1.8-.8 3.3-.8 1.6 0 2 .8 3.4.8 1.4 0 2.3-1.3 3.1-2.5 1-1.4 1.4-2.8 1.4-2.9 0 0-2.7-1-2.7-4.1zM13.9 5c.7-.9 1.2-2 1-3.2-1 0-2.2.7-3 1.6-.6.7-1.2 1.9-1 3.1 1.1.1 2.3-.6 3-1.5z"/></svg>
+            <span><small>Download on the</small><b>App Store</b></span>
+          </a>
+          <a href="#coaches" class="btn btn-ghost">I'm a coach <span class="arrow">→</span></a>
+        </div>
+        <p class="hero-note"><b>Free for rowers.</b> Coach tools from <b class="js-month">£9.99</b>/month.</p>
+      </div>
+
+      <div class="device-stage" id="heroStage">
+        <div class="device-tilt" id="heroTilt">
+          <div class="phone" data-screen="feed" id="heroPhone"></div>
+        </div>
+        <div class="float-chip glass fc1"><i>⌁</i><div>Read from the monitor<small>Time, metres, split, rate</small></div></div>
+        <div class="float-chip glass fc2"><i>★</i><div>New PB · 7:04.1<small>2k test · −3.2s</small></div></div>
+        <div class="float-chip glass fc3"><i>1</i><div>Top of the club<small>128,400m this week</small></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Marquee -->
+  <div class="marquee" aria-hidden="true">
+    <div class="marquee-track" id="marquee"></div>
+  </div>
+
+  <!-- How it works -->
+  <section class="how" id="how">
+    <div class="wrap">
+      <div class="how-head" data-reveal>
+        <span class="eyebrow">How it works</span>
+        <h2 class="h2">Finish the piece.<br>Post it in <span class="grad">seconds.</span></h2>
+        <p class="lead">One shot, both cameras. The numbers come straight off the monitor, so every post, PB and ranking is real.</p>
+      </div>
+      <div class="story">
+        <div class="story-steps">
+          <div class="step" data-step="0">
+            <div class="step-n">1</div>
+            <h3>Two cameras.<br>One shot.</h3>
+            <p>Point the back camera at the monitor. The front camera catches you, sweaty and proud. Both fire at once, live, straight after the piece.</p>
+            <ul><li>No uploads from your camera roll</li><li>Works with the Concept2 PM5</li></ul>
+            <div class="phone phone-m" data-screen="capture"></div>
+          </div>
+          <div class="step" data-step="1">
+            <div class="step-n">2</div>
+            <h3>We read<br>the numbers.</h3>
+            <p>Time, metres, split and rate are read off the photo right on your phone. Check them, tag warmup, main and cooldown, done.</p>
+            <ul><li>Read on-device, in a second</li><li>Spots a test piece and asks before ranking it</li></ul>
+            <div class="phone phone-m" data-screen="review"></div>
+          </div>
+          <div class="step" data-step="2">
+            <div class="step-n">3</div>
+            <h3>Straight to<br>the leaderboard.</h3>
+            <p>Your session lands in the feed for your crew to react to, and your metres and test times go up on the rankings.</p>
+            <ul><li>Week, month and year volume boards</li><li>Test boards for every standard distance</li></ul>
+            <div class="phone phone-m" data-screen="rankings"></div>
+          </div>
+        </div>
+        <div class="story-device">
+          <div class="ring"></div>
+          <div class="stack">
+            <div class="phone on" data-screen="capture"></div>
+            <div class="phone" data-screen="review"></div>
+            <div class="phone" data-screen="rankings"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Rankings -->
+  <section class="rank" id="rankings">
+    <div class="wrap rank-grid">
+      <div data-reveal>
+        <span class="eyebrow amber">Rankings</span>
+        <h2 class="h2">Leaderboards<br>you can <span class="grad">trust.</span></h2>
+        <p class="lead">Every number on the board came off a photo of a real monitor, taken live. So when someone's above you, they earned it.</p>
+        <div class="trust">
+          <div><i>◎</i><p><b>Photo-proven</b><span>Shot in the app, straight after the piece. No typed-in numbers.</span></p></div>
+          <div><i>⇅</i><p><b>Volume and tests</b><span>Metres by week, month and year. Best times from 500m to 60 minutes.</span></p></div>
+          <div><i>⚑</i><p><b>Fair groups</b><span>Novice and senior, men and women. Your club or everyone you follow.</span></p></div>
+        </div>
+      </div>
+      <div class="board glass" data-reveal style="--delay:.15s">
+        <div class="board-top">
+          <h3>Volume</h3>
+          <div class="seg" id="periodSeg"><span class="thumb"></span><button class="on" data-p="week">Week</button><button data-p="month">Month</button><button data-p="year">Year</button></div>
+        </div>
+        <div class="board-rows" id="boardRows"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section class="features">
+    <div class="wrap">
+      <div data-reveal>
+        <span class="eyebrow lilac">Built for the boathouse</span>
+        <h2 class="h2">Everything a rower<br>actually cares about.</h2>
+      </div>
+      <div class="bento">
+        <div class="tile t-a" data-reveal>
+          <h3>PBs that feel like an event.</h3>
+          <p>Set a new best and your post lights up for the whole club. Your history charts every test, so you can watch the season pay off.</p>
+          <div class="sparks" id="sparks"></div>
+          <div class="pb-demo"><span class="pb-flag">NEW PB</span><div class="pb-big" data-count-time="7:04.1" data-from="7:07.3">7:04.1</div><div class="pb-meta">2k test · Alice W. · Durham University BC</div></div>
+        </div>
+        <div class="tile t-b" data-reveal style="--delay:.1s">
+          <h3>Streaks with rest days built in.</h3>
+          <p>Two rest days a week hold your run automatically. Miss a day, keep the streak.</p>
+          <div class="streak-demo">
+            <div class="row"><div class="n" data-count="23">23</div><div><div class="pips"><i class="used"></i><i></i></div><small>1 rest day left</small></div></div>
+            <div class="streak-days"><b class="on" style="--i:0"></b><b class="on" style="--i:1"></b><b class="rest" style="--i:2"></b><b class="on" style="--i:3"></b><b class="on" style="--i:4"></b><b style="--i:5"></b><b style="--i:6"></b></div>
+          </div>
+        </div>
+        <div class="tile t-c" data-reveal>
+          <h3>Your predicted 2k.</h3>
+          <p>Worked out from your training. Watch it drop as the work goes in.</p>
+          <div class="pred-demo"><div class="n"><span data-count-time="6:17.0" data-from="6:29.0">6:17.0</span><small> ±3s</small></div><div class="band"><i></i><b></b></div></div>
+        </div>
+        <div class="tile t-d" data-reveal style="--delay:.1s">
+          <h3>Every test distance.</h3>
+          <p>One board per distance, one row per rower, best time only.</p>
+          <div class="dist-chips"><span>500m</span><span>1k</span><span>2k</span><span>5k</span><span>6k</span><span>10k</span><span>4 min</span><span>30 min</span><span>60 min</span></div>
+        </div>
+        <div class="tile t-e" data-reveal style="--delay:.2s">
+          <h3>Private where it matters.</h3>
+          <p>Bodyweight and age sharpen your predictions. They never appear on your profile or a leaderboard.</p>
+          <div class="lock"><div>Bodyweight<span>🔒 Not on your profile</span></div><div>Age<span>🔒 Not on your profile</span></div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Coaches -->
+  <section class="coach" id="coaches">
+    <div class="wrap">
+      <div class="coach-head" data-reveal>
+        <span class="eyebrow">Rowing Pals for coaches</span>
+        <h2 class="h2">Run the whole squad<br>from <span class="grad">one phone.</span></h2>
+        <p class="lead">See who's training, set the work, take the register and crew the boats. Your rowers already log every session, so you get the full picture without chasing a single spreadsheet.</p>
+      </div>
+      <div class="coach-grid" id="coachGrid">
+        <div class="ctabs" data-reveal>
+          <button class="ctab on" data-i="0"><b><em>👥</em>Know every rower</b><p>Weekly metres against their target, predicted 2k, latest tests, and a flag when someone goes quiet or overdoes it.</p><span class="prog"></span></button>
+          <button class="ctab" data-i="1"><b><em>📋</em>Set the work</b><p>Send a workout to the club, a squad or one rower. See who's done it and their actual splits against your targets.</p><span class="prog"></span></button>
+          <button class="ctab" data-i="2"><b><em>🚣</em>Crew the boats</b><p>Tap a seat, then a rower, alongside who's available. Hit send and every rower is told their boat and seat.</p><span class="prog"></span></button>
+          <button class="ctab" data-i="3"><b><em>📅</em>Plan the week</b><p>Practices, races and announcements in one calendar. Rowers say if they can make it, and the register suggests itself.</p><span class="prog"></span></button>
+        </div>
+        <div class="coach-stage" data-reveal style="--delay:.15s">
+          <div class="stack">
+            <div class="phone on" data-screen="coachRowers"></div>
+            <div class="phone" data-screen="coachWorkout"></div>
+            <div class="phone" data-screen="coachBoat"></div>
+            <div class="phone" data-screen="coachCal"></div>
+          </div>
+        </div>
+      </div>
+      <div class="coach-stats">
+        <div data-reveal><b>No more chasing</b><span>Availability, attendance and completed workouts arrive on their own.</span></div>
+        <div data-reveal style="--delay:.1s"><b>Real numbers</b><span>Splits come off the monitor photo, not a rower's memory.</span></div>
+        <div data-reveal style="--delay:.2s"><b>Rowers stay free</b><span>Your squad uses the app at no cost. Only the coach subscribes.</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pricing -->
+  <section class="pricing" id="pricing">
+    <div class="wrap">
+      <div class="pricing-head" data-reveal>
+        <span class="eyebrow">Pricing</span>
+        <h2 class="h2">Free to row.<br><span class="grad">Simple to coach.</span></h2>
+        <p class="lead">Rowers never pay. Coaches get every tool for one flat price.</p>
+        <div class="billing">
+          <div class="seg" id="billSeg"><span class="thumb"></span><button class="on" data-b="month">Monthly</button><button data-b="year">Yearly</button></div>
+          <span class="save" id="saveTag">Save 17% with yearly</span>
+        </div>
+      </div>
+      <div class="plans">
+        <div class="plan" data-reveal>
+          <h3>Rower</h3>
+          <p class="for">For everyone who pulls</p>
+          <div class="price"><span class="amt">£0</span><span class="per">forever</span></div>
+          <p class="price-sub">No card, no trial, no catch.</p>
+          <ul>
+            <li>Dual-camera posts, numbers read for you</li>
+            <li>Feed, reactions and comments with your crew</li>
+            <li>Volume and test leaderboards</li>
+            <li>PBs, streaks and your predicted 2k</li>
+            <li>Workouts, practices and your seat from your coach</li>
+          </ul>
+          <a href="#download" class="btn btn-ghost">Download free</a>
+        </div>
+        <div class="plan coach-plan" data-reveal style="--delay:.12s">
+          <span class="badge">Coach</span>
+          <h3>Coach</h3>
+          <p class="for">For coaches and captains</p>
+          <div class="price"><span class="amt" id="coachAmt">£9.99</span><span class="per" id="coachPer">/month</span></div>
+          <p class="price-sub" id="coachSub"></p>
+          <ul>
+            <li class="all">Everything in Rower, plus:</li>
+            <li>Rowers overview: metres vs target, predicted 2k, flags</li>
+            <li>Set workouts and see splits against targets</li>
+            <li>Squads for every group in your club</li>
+            <li>Calendar, practices and one-tap registers</li>
+            <li>Who's available, races and regattas</li>
+            <li>Crew boats seat by seat, sent to each rower</li>
+            <li>Announcements and attendance by term</li>
+          </ul>
+          <a href="#download" class="btn btn-primary">Start coaching <span class="arrow">→</span></a>
+        </div>
+      </div>
+      <p class="fine">Billed through the App Store. Cancel any time in your Apple account settings.</p>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="faq">
+    <div class="wrap">
+      <div style="text-align:center" data-reveal>
+        <span class="eyebrow">Questions</span>
+        <h2 class="h2">Good to know.</h2>
+      </div>
+      <div class="faq-list" data-reveal>
+        <details><summary>Do my rowers need to pay?<i></i></summary><p class="ans">No. Rowers use Rowing Pals free. Only the coach subscribes to unlock the coaching tools.</p></details>
+        <details><summary>Which ergs does it work with?<i></i></summary><p class="ans">Rowing Pals reads the Concept2 PM5 monitor. Frame the screen, take the shot, and the time, metres, split and rate fill themselves in. You can correct anything before you post.</p></details>
+        <details><summary>Why can't I upload a photo from my camera roll?<i></i></summary><p class="ans">That's the point. Every session is shot live in the app straight after the piece, which is why the leaderboards can be trusted.</p></details>
+        <details><summary>Where are my photos read?<i></i></summary><p class="ans">On your phone. The numbers are read on-device, so your photo doesn't have to be sent anywhere to be read.</p></details>
+        <details><summary>Who can see my bodyweight and age?<i></i></summary><p class="ans">They're never shown on your profile or used to group a leaderboard. They sharpen your predictions, and your club's coaches can see them to plan your training. The app tells you this when you join a club with coaches.</p></details>
+        <details><summary>Can I row and coach?<i></i></summary><p class="ans">Yes. Switch between rowing and coaching in one tap from your profile or settings.</p></details>
+        <details><summary>Can I cancel any time?<i></i></summary><p class="ans">Yes. Manage or cancel your Coach subscription in your Apple account settings. You keep coaching until the end of the period you've paid for.</p></details>
+      </div>
+    </div>
+  </section>
+
+  <!-- Final CTA -->
+  <section class="final" id="download">
+    <canvas data-water></canvas>
+    <div class="wrap">
+      <div class="otter" data-reveal><span></span><span></span><span></span><img src="assets/icon-256.png" alt="Rowing Pals otter"></div>
+      <h2 data-reveal>Get on the<br><span class="grad">leaderboard.</span></h2>
+      <p class="lead" data-reveal>Your next piece could be your first post. Bring the squad.</p>
+      <div class="hero-ctas" data-reveal>
+        <a href="#" class="btn btn-store" aria-label="Download on the App Store">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.4 12.6c0-2.6 2.1-3.8 2.2-3.9-1.2-1.8-3.1-2-3.7-2-1.6-.2-3.1.9-3.9.9-.8 0-2-.9-3.4-.9-1.7 0-3.3 1-4.2 2.6-1.8 3.1-.5 7.7 1.3 10.2.9 1.2 1.9 2.6 3.2 2.6 1.3-.1 1.8-.8 3.3-.8 1.6 0 2 .8 3.4.8 1.4 0 2.3-1.3 3.1-2.5 1-1.4 1.4-2.8 1.4-2.9 0 0-2.7-1-2.7-4.1zM13.9 5c.7-.9 1.2-2 1-3.2-1 0-2.2.7-3 1.6-.6.7-1.2 1.9-1 3.1 1.1.1 2.3-.6 3-1.5z"/></svg>
+          <span><small>Download on the</small><b>App Store</b></span>
+        </a>
+        <a href="#pricing" class="btn btn-ghost">See coach pricing <span class="arrow">→</span></a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <a href="#top" class="logo"><img src="assets/icon-256.png" alt=""><span>Rowing Pals</span></a>
+    <nav><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="mailto:hello@rowingpals.com">Contact</a><a href="mailto:support@rowingpals.com">Support</a></nav>
+    <span>© 2026 Rowing Pals</span>
+  </div>
+</footer>
+
+<script src="assets/ui.js"></script>
+<script src="assets/site.js"></script>
+</body>
+</html>
