@@ -74,7 +74,7 @@ struct CaptureView: View {
             Button {
                 isManualEntry = true
             } label: {
-                Label("Enter session manually", systemImage: "plus")
+                Label("Enter session manually", icon: .plus)
             }
             .buttonStyle(.rpGlass)
             .padding(.horizontal, Tokens.Spacing.screen)
@@ -212,7 +212,7 @@ struct CaptureView: View {
                             .foregroundStyle(Tokens.Ink.primary)
                             .lineLimit(1)
                         if todaysWorkouts.count > 1 {
-                            Image(systemName: "chevron.up.chevron.down")
+                            RPIconView(icon: .chevronUpDown, size: Tokens.Icon.small)
                                 .textStyle(Typography.pill)
                                 .foregroundStyle(Tokens.Ink.secondary)
                         }
@@ -282,7 +282,7 @@ struct CaptureView: View {
             Button {
                 withAnimation(.snappy) { isFrontPrimary.toggle() }
             } label: {
-                Image(systemName: "arrow.left.arrow.right")
+                RPIconView(icon: .flipCamera)
                     .textStyle(Typography.cardTitle)
                     .foregroundStyle(Tokens.Ink.primary)
                     .frame(width: 48, height: 48)
@@ -297,7 +297,7 @@ struct CaptureView: View {
                 .frame(maxWidth: .infinity)
 
             PhotosPicker(selection: $libraryItem, matching: .images) {
-                Image(systemName: "photo.on.rectangle")
+                RPIconView(icon: .photo)
                     .textStyle(Typography.cardTitle)
                     .foregroundStyle(Tokens.Ink.primary)
                     .frame(width: 48, height: 48)

@@ -353,14 +353,14 @@ struct PBHistoryView: View {
 
     private var scrubber: some View {
         HStack(spacing: Tokens.Spacing.gap) {
-            stepButton("chevron.left", label: "Previous", enabled: selectedIndex > 0) { move(by: -1) }
+            stepButton(.chevronLeft, label: "Previous", enabled: selectedIndex > 0) { move(by: -1) }
             track
-            stepButton("chevron.right", label: "Next", enabled: selectedIndex < viewModel.pbPoints.count - 1) { move(by: 1) }
+            stepButton(.chevronRight, label: "Next", enabled: selectedIndex < viewModel.pbPoints.count - 1) { move(by: 1) }
         }
     }
 
-    private func stepButton(_ systemImage: String, label: String, enabled: Bool, action: @escaping () -> Void) -> some View {
-        GlassIconButton(systemImage: systemImage, accessibilityLabel: label, action: action)
+    private func stepButton(_ icon: RPIcon, label: String, enabled: Bool, action: @escaping () -> Void) -> some View {
+        GlassIconButton(icon: icon, accessibilityLabel: label, action: action)
             .disabled(!enabled)
             .opacity(enabled ? 1 : 0.35)
     }

@@ -199,8 +199,8 @@ struct PostDetailView: View {
     /// the photo (back, more-options) — a darkened, specular-rimmed circle
     /// distinct from `glassSurface`'s flat card shape, since these sit
     /// directly on photo content rather than the sheet background.
-    private func floatingIconStyle(_ systemImage: String) -> some View {
-        Image(systemName: systemImage)
+    private func floatingIconStyle(_ icon: RPIcon) -> some View {
+        RPIconView(icon: icon)
             .textStyle(Typography.cardTitle)
             .foregroundStyle(.white)
             .frame(width: 36, height: 36)
@@ -218,7 +218,7 @@ struct PostDetailView: View {
         Button {
             dismiss()
         } label: {
-            floatingIconStyle("chevron.left")
+            floatingIconStyle(.chevronLeft)
         }
     }
 
@@ -230,15 +230,15 @@ struct PostDetailView: View {
                 commentBeingReported = nil
                 isShowingReportReasons = true
             } label: {
-                Label("Report post", systemImage: "flag")
+                Label("Report post", icon: .flag)
             }
             Button(role: .destructive) {
                 isShowingBlockConfirmation = true
             } label: {
-                Label("Block \(viewModel.author?.displayName ?? "this rower")", systemImage: "hand.raised")
+                Label("Block \(viewModel.author?.displayName ?? "this rower")", icon: .block)
             }
         } label: {
-            floatingIconStyle("ellipsis")
+            floatingIconStyle(.more)
         }
     }
 
@@ -247,7 +247,7 @@ struct PostDetailView: View {
         Button {
             isShowingDeleteBubble = true
         } label: {
-            floatingIconStyle("ellipsis")
+            floatingIconStyle(.more)
         }
         .buttonStyle(IconPressStyle())
         .accessibilityLabel("More options")
@@ -269,7 +269,7 @@ struct PostDetailView: View {
                     .textStyle(Typography.rowTitle)
                     .foregroundStyle(Tokens.Ink.primary)
                     .lineLimit(1)
-                Image(systemName: "chevron.right")
+                RPIconView(icon: .chevronRight, size: Tokens.Icon.small)
                     .textStyle(Typography.navLabel)
                     .foregroundStyle(Tokens.Ink.secondary)
             }
@@ -435,7 +435,7 @@ struct PostDetailView: View {
                         .tabularNumerals()
                         .foregroundStyle(Tokens.Ink.faint)
                     Spacer()
-                    Image(systemName: "chevron.down")
+                    RPIconView(icon: .chevronDown, size: Tokens.Icon.small)
                         .textStyle(Typography.fieldLabel)
                         .foregroundStyle(Tokens.Ink.secondary)
                         .rotationEffect(.degrees(isSplitBreakdownExpanded ? 180 : 0))
@@ -505,7 +505,7 @@ struct PostDetailView: View {
                 Button {
                     isShowingMoreReactions = true
                 } label: {
-                    Image(systemName: "plus")
+                    RPIconView(icon: .plus)
                         .textStyle(Typography.rowTitle)
                         .foregroundStyle(Tokens.Ink.secondary)
                         .frame(width: 34, height: 34)

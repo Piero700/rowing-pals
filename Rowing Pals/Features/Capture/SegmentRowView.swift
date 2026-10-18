@@ -139,7 +139,7 @@ struct SegmentRowView: View {
                 }
             }
             if isLead {
-                Label("Shown first on the feed", systemImage: "star")
+                Label("Shown first on the feed", icon: .star)
                     .textStyle(Typography.fieldLabel)
                     .foregroundStyle(Tokens.Ink.secondary)
             }
@@ -202,7 +202,7 @@ struct SegmentRowView: View {
                 Rectangle()
                     .fill(Tokens.Ink.primary.opacity(0.08))
                     .overlay {
-                        Image(systemName: "pencil")
+                        RPIconView(icon: .pencil, size: Tokens.Icon.small)
                             .textStyle(Typography.rowTitle)
                             .foregroundStyle(Tokens.Ink.secondary)
                     }

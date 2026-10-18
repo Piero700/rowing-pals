@@ -155,7 +155,7 @@ struct ClubSearchView: View {
                 ScreenHeader(title: "Your club") { dismiss() }
             } else {
                 HStack {
-                    GlassIconButton(systemImage: "chevron.left", accessibilityLabel: "Back to sign in") {
+                    GlassIconButton(icon: .chevronLeft, accessibilityLabel: "Back to sign in") {
                         isConfirmingSignOut = true
                     }
                     Spacer()
@@ -326,8 +326,7 @@ struct ClubSearchView: View {
     private var searchField: some View {
         let shape = RoundedRectangle(cornerRadius: Tokens.Radius.input, style: .continuous)
         return HStack(spacing: 8) {
-            Image(systemName: "magnifyingglass")
-                .font(.system(size: 17, weight: .medium))
+            RPIconView(icon: .search)
                 .frame(width: 20, height: 20)
                 .foregroundStyle(Tokens.Ink.secondary)
                 .accessibilityHidden(true)
@@ -392,8 +391,7 @@ struct ClubSearchView: View {
             ZStack {
                 if isSelected {
                     Circle().fill(Tokens.Accent.brand)
-                    Image(systemName: "checkmark")
-                        .font(.system(size: 11, weight: .bold))
+                    RPIconView(icon: .check, size: Tokens.Icon.small)
                         .foregroundStyle(Tokens.Ink.onBrand)
                 }
             }
@@ -421,7 +419,7 @@ struct ClubSearchView: View {
     private var aboutYouStep: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
-                GlassIconButton(systemImage: "chevron.left", accessibilityLabel: "Back to clubs") {
+                GlassIconButton(icon: .chevronLeft, accessibilityLabel: "Back to clubs") {
                     isAboutYou = false
                 }
                 .padding(.bottom, Tokens.Spacing.loose)
@@ -523,7 +521,7 @@ struct ClubSearchView: View {
     private var bestsStep: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
-                GlassIconButton(systemImage: "chevron.left", accessibilityLabel: "Back to About you") {
+                GlassIconButton(icon: .chevronLeft, accessibilityLabel: "Back to About you") {
                     isBests = false
                 }
                 .padding(.bottom, Tokens.Spacing.loose)
@@ -584,8 +582,7 @@ struct ClubSearchView: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            Image(systemName: "checkmark")
-                .font(.system(size: 17, weight: .bold))
+            RPIconView(icon: .check, size: Tokens.Icon.small)
                 .foregroundStyle(Tokens.Accent.brand)
                 .frame(width: Tokens.Size.checkmark)
                 .opacity(isSelected ? 1 : 0)
@@ -602,8 +599,7 @@ struct ClubSearchView: View {
     private var coachOnlyNote: some View {
         let shape = RoundedRectangle(cornerRadius: Tokens.Radius.card, style: .continuous)
         return HStack(alignment: .top, spacing: Tokens.Spacing.loose) {
-            Image(systemName: "list.clipboard")
-                .font(.system(size: 17, weight: .regular))
+            RPIconView(icon: .clipboard)
                 .foregroundStyle(Tokens.Ink.secondary)
                 .accessibilityHidden(true)
             Text("No gender or level needed. You won’t have a Log button, and you’ll reach the Coaching area from Your crew once a club makes you a coach.")
@@ -626,7 +622,7 @@ struct ClubSearchView: View {
                     ProgressView().tint(Tokens.Ink.onBrand)
                 } else {
                     Text(title)
-                    Image(systemName: "chevron.right")
+                    RPIconView(icon: .chevronRight, size: Tokens.Icon.small)
                         .textStyle(Typography.rowTitle)
                 }
             }

@@ -85,7 +85,7 @@ struct CoachCalendarView: View {
         .scrollsToTopOnReselect(reselects) { await viewModel.load() }
         .safeAreaInset(edge: .top, spacing: 0) {
             CoachTabHeader(title: "Calendar") {
-                GlassIconButton(systemImage: "person.crop.circle.badge.checkmark", accessibilityLabel: "Who’s available") {
+                GlassIconButton(icon: .peopleCheck, accessibilityLabel: "Who’s available") {
                     navigate(.availability)
                 }
             }
@@ -128,7 +128,7 @@ struct CoachCalendarView: View {
             Button {
                 addingTo = AddTarget(day: day)
             } label: {
-                Label("Add", systemImage: "plus")
+                Label("Add", icon: .plus)
             }
             .buttonStyle(.rpPill(isOn: false))
         }
@@ -181,7 +181,7 @@ struct CoachCalendarView: View {
                             .foregroundStyle(Tokens.Ink.secondary)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    Image(systemName: "chevron.right")
+                    RPIconView(icon: .chevronRight, size: Tokens.Icon.small)
                         .textStyle(Typography.pill)
                         .foregroundStyle(Tokens.Ink.secondary)
                 }
@@ -201,7 +201,7 @@ struct CoachCalendarView: View {
                 Button {
                     navigate(.register(practice.id))
                 } label: {
-                    Label("Take register", systemImage: "checkmark")
+                    Label("Take register", icon: .check, size: Tokens.Icon.small)
                 }
                 .buttonStyle(.rpPrimary)
             }
@@ -230,7 +230,7 @@ struct CoachCalendarView: View {
                         .foregroundStyle(Tokens.Ink.secondary)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-                Image(systemName: "chevron.right")
+                RPIconView(icon: .chevronRight, size: Tokens.Icon.small)
                     .textStyle(Typography.pill)
                     .foregroundStyle(Tokens.Ink.secondary)
             }
@@ -263,7 +263,7 @@ struct CoachCalendarView: View {
                         .foregroundStyle(Tokens.Ink.secondary)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-                Image(systemName: "chevron.right")
+                RPIconView(icon: .chevronRight, size: Tokens.Icon.small)
                     .textStyle(Typography.pill)
                     .foregroundStyle(Tokens.Ink.secondary)
             }
@@ -281,7 +281,7 @@ struct CoachCalendarView: View {
             navigate(.event(event.id))
         } label: {
             HStack(spacing: Tokens.Spacing.loose) {
-                Image(systemName: event.kind == .race ? "flag" : "calendar")
+                RPIconView(icon: event.kind == .race ? .flag : .calendar)
                     .textStyle(Typography.rowTitle)
                     .foregroundStyle(Tokens.Ink.primary)
                     .frame(width: Tokens.Schedule.iconTile, height: Tokens.Schedule.iconTile)
@@ -302,7 +302,7 @@ struct CoachCalendarView: View {
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-                Image(systemName: "chevron.right")
+                RPIconView(icon: .chevronRight, size: Tokens.Icon.small)
                     .textStyle(Typography.pill)
                     .foregroundStyle(Tokens.Ink.secondary)
             }
@@ -352,7 +352,7 @@ struct CoachCalendarView: View {
             navigate(.editAnnouncement(announcement.id))
         } label: {
             HStack(spacing: Tokens.Spacing.loose) {
-                Image(systemName: "megaphone")
+                RPIconView(icon: .megaphone)
                     .textStyle(Typography.rowTitle)
                     .foregroundStyle(Tokens.Accent.brand)
                     .frame(width: Tokens.Size.rowIcon, height: Tokens.Size.rowIcon)
@@ -370,7 +370,7 @@ struct CoachCalendarView: View {
                         .multilineTextAlignment(.leading)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-                Image(systemName: "chevron.right")
+                RPIconView(icon: .chevronRight, size: Tokens.Icon.small)
                     .textStyle(Typography.pill)
                     .foregroundStyle(Tokens.Ink.secondary)
             }
@@ -388,7 +388,7 @@ struct CoachCalendarView: View {
             navigate(.availability)
         } label: {
             HStack(spacing: Tokens.Spacing.loose) {
-                Image(systemName: "person.crop.circle.badge.checkmark")
+                RPIconView(icon: .peopleCheck)
                     .textStyle(Typography.cardTitle)
                     .foregroundStyle(Tokens.Accent.brand)
                     .frame(width: Tokens.Schedule.iconTile, height: Tokens.Schedule.iconTile)
@@ -404,7 +404,7 @@ struct CoachCalendarView: View {
                         .multilineTextAlignment(.leading)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-                Image(systemName: "chevron.right")
+                RPIconView(icon: .chevronRight, size: Tokens.Icon.small)
                     .textStyle(Typography.pill)
                     .foregroundStyle(Tokens.Ink.secondary)
             }

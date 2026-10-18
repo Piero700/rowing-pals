@@ -19,7 +19,7 @@ private struct DeleteBubble: ViewModifier {
                 isPresented = false
                 action()
             } label: {
-                Label(title, systemImage: "trash")
+                Label(title, icon: .trash)
                     .textStyle(Typography.cardTitle)
                     .foregroundStyle(Tokens.System.error)
                     .padding(.horizontal, Tokens.Spacing.card)

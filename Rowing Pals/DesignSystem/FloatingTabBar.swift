@@ -24,7 +24,7 @@ struct FloatingTabBar<Tab: Hashable>: View {
     struct Item {
         let tab: Tab
         let label: String
-        let systemImage: String
+        let icon: RPIcon
     }
 
     let items: [Item]
@@ -95,11 +95,8 @@ struct FloatingTabBar<Tab: Hashable>: View {
             }
         } label: {
             VStack(spacing: 2) {
-                // v3 icons sit in a 20 × 20 box drawn with a thin 1.9 stroke; SF Symbols at
-                // 17 pt regular fill that box at the same visual weight.
-                Image(systemName: item.systemImage)
-                    .textStyle(Typography.bodyV3)
-                    .frame(width: 20, height: 20)
+                // The canvas's own icon in its 20 × 20 box, 1.9 stroke (decision 80).
+                RPIconView(icon: item.icon)
                 Text(item.label)
                     .textStyle(Typography.navLabel)
             }
@@ -123,8 +120,8 @@ struct FloatingTabBar<Tab: Hashable>: View {
     /// beneath it — the one filled control in the bar, so Log reads as the main action.
     private var logButton: some View {
         Button(action: onTapLog) {
-            Image(systemName: "plus")
-                .font(.system(size: 22, weight: .semibold))
+            // 24 with a 2 stroke, as the canvas's Log and + buttons.
+            RPIconView(icon: .plus, size: Tokens.Icon.large, weight: 2)
                 .foregroundStyle(Tokens.Ink.onBrand)
                 .frame(width: Tokens.Size.tabBarHeight, height: Tokens.Size.tabBarHeight)
                 .background { Circle().fill(Tokens.Accent.brand) }

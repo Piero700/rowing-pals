@@ -10,7 +10,7 @@ import SwiftUI
 struct ReadOnlyPostNote: View {
     var body: some View {
         HStack(spacing: Tokens.Spacing.tight) {
-            Image(systemName: "eye")
+            RPIconView(icon: .eye)
                 .foregroundStyle(Tokens.Ink.secondary)
                 .accessibilityHidden(true)
             Text("You can see this as their coach. Only people they share it with can comment or react.")

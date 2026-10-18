@@ -119,8 +119,7 @@ struct CoachRowerView: View {
 
     private func flagCard(_ flag: CoachFlag) -> some View {
         HStack(alignment: .top, spacing: Tokens.Spacing.loose) {
-            Image(systemName: flag.isWarning ? "exclamationmark.triangle" : "tag")
-                .font(.system(size: 17, weight: .medium))
+            RPIconView(icon: flag.isWarning ? .warning : .tag)
                 .foregroundStyle(flag.isWarning ? Tokens.System.error : Tokens.Ink.secondary)
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 2) {

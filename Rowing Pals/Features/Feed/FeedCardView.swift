@@ -244,7 +244,7 @@ struct FeedCardView: View {
                         .foregroundStyle(Tokens.Ink.secondary)
                 }
                 Spacer(minLength: 0)
-                Image(systemName: "chevron.right")
+                RPIconView(icon: .chevronRight, size: Tokens.Icon.small)
                     .textStyle(Typography.rowTitle)
                     .foregroundStyle(Tokens.Ink.primary)
             }
@@ -334,7 +334,7 @@ struct FeedCardView: View {
     private var actionRow: some View {
         HStack(spacing: Tokens.Spacing.tight) {
             Button(action: onOpenComments) {
-                Label("\(post.commentCount)", systemImage: "bubble.left")
+                Label("\(post.commentCount)", icon: .comment)
                     .tabularNumerals()
             }
             .buttonStyle(.rpPill(isOn: false, minHeight: 40))
@@ -353,7 +353,7 @@ struct FeedCardView: View {
             Button {
                 isShowingShare = true
             } label: {
-                Image(systemName: "square.and.arrow.up")
+                RPIconView(icon: .share)
                     .textStyle(Typography.cardTitle)
                     .foregroundStyle(Tokens.Ink.primary)
                     .frame(width: Tokens.Size.minTap, height: Tokens.Size.minTap)

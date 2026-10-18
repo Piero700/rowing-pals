@@ -159,16 +159,16 @@ extension ButtonStyle where Self == GlassPillButtonStyle {
     }
 }
 
-/// A 44 pt glass circle holding one SF Symbol — header actions (search, settings, back).
+/// A 44 pt glass circle holding one icon (decision 80) — header actions (search, settings, back).
 struct GlassIconButton: View {
-    let systemImage: String
+    let icon: RPIcon
     let accessibilityLabel: String
     var tint: Color = Tokens.Ink.primary
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
-            Image(systemName: systemImage)
+            RPIconView(icon: icon)
                 .textStyle(Typography.cardTitle)
                 .foregroundStyle(tint)
                 .frame(width: Tokens.Size.iconButton, height: Tokens.Size.iconButton)
@@ -209,7 +209,7 @@ extension View {
         HStack {
             Button("🔥 3") {}.buttonStyle(.rpPill(isOn: true, minHeight: 40))
             Button("👏 1") {}.buttonStyle(.rpPill(isOn: false, minHeight: 40))
-            GlassIconButton(systemImage: "magnifyingglass", accessibilityLabel: "Search") {}
+            GlassIconButton(icon: .search, accessibilityLabel: "Search") {}
         }
     }
     .padding(16)

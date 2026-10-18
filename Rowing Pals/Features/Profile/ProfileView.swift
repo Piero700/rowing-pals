@@ -178,7 +178,7 @@ struct ProfileView: View {
                 .foregroundStyle(Tokens.Ink.primary)
                 .accessibilityAddTraits(.isHeader)
             Spacer(minLength: 0)
-            GlassIconButton(systemImage: "gearshape", accessibilityLabel: "Settings") {
+            GlassIconButton(icon: .settings, accessibilityLabel: "Settings") {
                 isShowingSettings = true
             }
         }
@@ -209,7 +209,7 @@ struct ProfileView: View {
                         }
                     }
                     .overlay(alignment: .bottomTrailing) {
-                        Image(systemName: "camera.fill")
+                        RPIconView(icon: .camera, size: Tokens.Icon.small)
                             .textStyle(Typography.fieldLabel)
                             .foregroundStyle(Tokens.Ink.onBrand)
                             .frame(width: Tokens.Size.avatarBadge, height: Tokens.Size.avatarBadge)
@@ -354,7 +354,7 @@ struct ProfileView: View {
                         Text("Follow requests · \(viewModel.pendingRequestCount)")
                             .tabularNumerals()
                         Spacer()
-                        Image(systemName: "chevron.right")
+                        RPIconView(icon: .chevronRight, size: Tokens.Icon.small)
                     }
                 }
                 .buttonStyle(.rpGlass)
@@ -386,8 +386,7 @@ struct ProfileView: View {
     /// Shown in place of every stat for a private account the viewer is not approved to see.
     private var privateCard: some View {
         VStack(spacing: Tokens.Spacing.gap) {
-            Image(systemName: "lock.fill")
-                .font(.system(size: 26, weight: .semibold))
+            RPIconView(icon: .lock, size: Tokens.Icon.feature)
                 .foregroundStyle(Tokens.Ink.secondary)
             Text("This profile is private")
                 .textStyle(Typography.cardTitle)
@@ -695,7 +694,7 @@ struct ProfileView: View {
                         .foregroundStyle(Tokens.Ink.secondary)
                 }
                 Spacer(minLength: 0)
-                Image(systemName: "chevron.right")
+                RPIconView(icon: .chevronRight, size: Tokens.Icon.small)
                     .textStyle(Typography.rowTitle)
                     .foregroundStyle(Tokens.Ink.primary)
             }

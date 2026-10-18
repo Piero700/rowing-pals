@@ -37,7 +37,7 @@ struct TermsEditorView: View {
                 Button {
                     drafts.append(newDraft())
                 } label: {
-                    Label("Add a term", systemImage: "plus")
+                    Label("Add a term", icon: .plus)
                 }
                 .buttonStyle(.rpGlass)
                 .padding(.top, Tokens.Spacing.loose)

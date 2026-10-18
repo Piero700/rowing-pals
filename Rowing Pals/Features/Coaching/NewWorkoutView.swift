@@ -61,7 +61,7 @@ struct NewWorkoutView: View {
                                 Button {
                                     viewModel.hasTime = false
                                 } label: {
-                                    Image(systemName: "xmark.circle.fill")
+                                    RPIconView(icon: .clear)
                                         .foregroundStyle(Tokens.Ink.secondary)
                                         .frame(width: Tokens.Size.minTap, height: Tokens.Size.minTap)
                                 }
@@ -160,7 +160,7 @@ struct NewWorkoutView: View {
     private var header: some View {
         ZStack {
             HStack(spacing: 0) {
-                GlassIconButton(systemImage: "xmark", accessibilityLabel: "Cancel") { dismiss() }
+                GlassIconButton(icon: .close, accessibilityLabel: "Cancel") { dismiss() }
                 Spacer(minLength: 0)
             }
             Text("New workout")
@@ -206,7 +206,7 @@ struct NewWorkoutView: View {
                                 .foregroundStyle(Tokens.Ink.secondary)
                         }
                         Spacer(minLength: 0)
-                        Image(systemName: "chevron.right")
+                        RPIconView(icon: .chevronRight, size: Tokens.Icon.small)
                             .textStyle(Typography.pill)
                             .foregroundStyle(Tokens.Ink.secondary)
                     }
@@ -266,7 +266,7 @@ struct NewWorkoutView: View {
                         Text(viewModel.test?.label ?? "Choose")
                             .textStyle(Typography.detail)
                             .foregroundStyle(viewModel.test == nil ? Tokens.Accent.brand : Tokens.Ink.secondary)
-                        Image(systemName: "chevron.up.chevron.down")
+                        RPIconView(icon: .chevronUpDown, size: Tokens.Icon.small)
                             .textStyle(Typography.pill)
                             .foregroundStyle(Tokens.Ink.secondary)
                     }

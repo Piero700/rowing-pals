@@ -299,7 +299,7 @@ struct ReviewSheetView: View {
                 .textStyle(Typography.detail)
                 .foregroundStyle(Tokens.Ink.primary)
             Spacer()
-            Image(systemName: "chevron.up.chevron.down")
+            RPIconView(icon: .chevronUpDown, size: Tokens.Icon.small)
                 .textStyle(Typography.fieldLabel)
                 .foregroundStyle(Tokens.Ink.secondary)
         }
@@ -329,7 +329,7 @@ struct ReviewSheetView: View {
         Button {
             viewModel.addManualSegment()
         } label: {
-            Label("Add another piece", systemImage: "plus")
+            Label("Add another piece", icon: .plus)
         }
         .buttonStyle(.rpGlass)
     }
@@ -379,19 +379,19 @@ struct ReviewSheetView: View {
                         Button {
                             viewModel.readGalleryPhotoAsMonitor(photo.id)
                         } label: {
-                            Label("Read as monitor photo", systemImage: "text.viewfinder")
+                            Label("Read as monitor photo", icon: .scan)
                         }
                         Button(role: .destructive) {
                             viewModel.removeGalleryPhoto(photo.id)
                         } label: {
-                            Label("Remove photo", systemImage: "trash")
+                            Label("Remove photo", icon: .trash)
                         }
                     }
             }
             Button {
                 viewModel.removeGalleryPhoto(photo.id)
             } label: {
-                Image(systemName: "xmark")
+                RPIconView(icon: .close, size: Tokens.Icon.small)
                     .textStyle(Typography.navLabel)
                     .foregroundStyle(.white)
                     .frame(width: 24, height: 24)

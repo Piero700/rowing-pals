@@ -62,10 +62,10 @@ struct RowerWaterSessionView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                 WaterChip(text: "Water")
             }
-            detail("clock", "\(CalendarRules.time(session.startsAt, calendar: calendar))–\(CalendarRules.time(session.endsAt, calendar: calendar))")
-            if let meetAt = session.meetAt { detail("mappin.and.ellipse", "Meet at \(meetAt)") }
-            if let setBy = viewModel.setByName { detail("person.2", "Set by \(setBy)") }
-            if let plan = session.plan { detail("list.bullet", plan) }
+            detail(.clock, "\(CalendarRules.time(session.startsAt, calendar: calendar))–\(CalendarRules.time(session.endsAt, calendar: calendar))")
+            if let meetAt = session.meetAt { detail(.pin, "Meet at \(meetAt)") }
+            if let setBy = viewModel.setByName { detail(.people, "Set by \(setBy)") }
+            if let plan = session.plan { detail(.list, plan) }
         }
         .padding(Tokens.Spacing.card)
         .background(Self.cardShape.fill(Tokens.Surface.card))
@@ -73,9 +73,9 @@ struct RowerWaterSessionView: View {
         .padding(.top, Tokens.Spacing.tight)
     }
 
-    private func detail(_ symbol: String, _ text: String) -> some View {
+    private func detail(_ symbol: RPIcon, _ text: String) -> some View {
         HStack(alignment: .firstTextBaseline, spacing: Tokens.Spacing.gap) {
-            Image(systemName: symbol)
+            RPIconView(icon: symbol, size: Tokens.Icon.detail)
                 .foregroundStyle(Tokens.Ink.secondary)
             Text(text)
                 .textStyle(Typography.bodySecondary)

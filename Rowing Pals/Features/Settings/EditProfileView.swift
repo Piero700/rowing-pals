@@ -217,7 +217,7 @@ struct EditProfileView: View {
                 Button {
                     viewModel.birthDate = nil
                 } label: {
-                    Image(systemName: "xmark.circle.fill")
+                    RPIconView(icon: .clear)
                         .foregroundStyle(Tokens.Ink.secondary)
                         .frame(width: Tokens.Size.minTap, height: Tokens.Size.minTap)
                 }

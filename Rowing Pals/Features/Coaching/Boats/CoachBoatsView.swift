@@ -221,7 +221,7 @@ struct CoachBoatsView: View {
         Button {
             navigate(.savedBoat(nil))
         } label: {
-            Label("New saved boat", systemImage: "plus")
+            Label("New saved boat", icon: .plus)
         }
         .buttonStyle(.rpGlass)
         .padding(.top, Tokens.Spacing.loose)

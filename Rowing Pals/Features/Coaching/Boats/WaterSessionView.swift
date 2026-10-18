@@ -141,7 +141,7 @@ struct WaterSessionView: View {
         Button {
             if viewModel.hasTitle { isAddingBoat = true } else { viewModel.errorMessage = "Give the session a title first." }
         } label: {
-            Label("Add boat", systemImage: "plus")
+            Label("Add boat", icon: .plus)
         }
         .buttonStyle(.rpGlass)
         .disabled(viewModel.isWorking)

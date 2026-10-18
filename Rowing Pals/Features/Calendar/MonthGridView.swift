@@ -24,13 +24,13 @@ struct MonthGridView: View {
     var body: some View {
         VStack(spacing: Tokens.Spacing.tight) {
             HStack {
-                GlassIconButton(systemImage: "chevron.left", accessibilityLabel: "Previous month") { onMove(-1) }
+                GlassIconButton(icon: .chevronLeft, accessibilityLabel: "Previous month") { onMove(-1) }
                 Spacer(minLength: 0)
                 Text(CalendarRules.monthTitle(month, calendar: calendar))
                     .textStyle(Typography.cardTitle)
                     .foregroundStyle(Tokens.Ink.primary)
                 Spacer(minLength: 0)
-                GlassIconButton(systemImage: "chevron.right", accessibilityLabel: "Next month") { onMove(1) }
+                GlassIconButton(icon: .chevronRight, accessibilityLabel: "Next month") { onMove(1) }
             }
             LazyVGrid(columns: columns, spacing: 2) {
                 ForEach(Array(CalendarRules.weekdayInitials(calendar: calendar).enumerated()), id: \.offset) { _, letter in
@@ -75,10 +75,8 @@ struct MonthGridView: View {
                     }
                 HStack(spacing: 3) {
                     if hasEvent(day) {
-                        Image(systemName: "flag.fill")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: Tokens.Schedule.flag, height: Tokens.Schedule.flag)
+                        // Small, with the canvas's heavier stroke at this size (decision 80).
+                        RPIconView(icon: .flag, size: Tokens.Schedule.flag, weight: 2.6)
                             .foregroundStyle(Tokens.Ink.primary)
                     } else {
                         ForEach(0..<dots(day), id: \.self) { _ in

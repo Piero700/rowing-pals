@@ -140,8 +140,7 @@ struct SquadEditView: View {
                         ZStack {
                             if isOn {
                                 Circle().fill(Tokens.Accent.brand)
-                                Image(systemName: "checkmark")
-                                    .font(.system(size: 13, weight: .bold))
+                                RPIconView(icon: .check, size: Tokens.Icon.small)
                                     .foregroundStyle(Tokens.Ink.onBrand)
                             } else {
                                 Circle().strokeBorder(Tokens.Surface.line, lineWidth: 1.5)

@@ -47,7 +47,7 @@ struct CoachRowersView: View {
         .scrollsToTopOnReselect(reselects) { ViewerContext.shared.invalidate(); await viewModel.load() }
         .safeAreaInset(edge: .top, spacing: 0) {
             CoachTabHeader(title: "Rowers") {
-                GlassIconButton(systemImage: "person.3", accessibilityLabel: "Squads") { navigate(.squads) }
+                GlassIconButton(icon: .people, accessibilityLabel: "Squads") { navigate(.squads) }
             }
         }
         .background(Tokens.Base.ground)
@@ -80,7 +80,7 @@ struct CoachRowersView: View {
         // One button for squad and order: both open the same sheet (decision 62).
         HStack(spacing: Tokens.Spacing.tight) {
             Button { isShowingFilters = true } label: {
-                Label("\(viewModel.squadName) · \(viewModel.sort.label)", systemImage: "line.3.horizontal.decrease")
+                Label("\(viewModel.squadName) · \(viewModel.sort.label)", icon: .filter, size: Tokens.Icon.small)
                     .lineLimit(1)
             }
             .buttonStyle(.rpPill(isOn: false))

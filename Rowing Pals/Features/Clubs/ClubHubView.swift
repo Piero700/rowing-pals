@@ -239,7 +239,7 @@ struct ClubHubView: View {
                             .foregroundStyle(Tokens.Ink.secondary)
                     }
                     Spacer(minLength: 0)
-                    Image(systemName: "chevron.right")
+                    RPIconView(icon: .chevronRight, size: Tokens.Icon.small)
                         .textStyle(Typography.pill)
                         .foregroundStyle(Tokens.Ink.secondary)
                 }

@@ -73,9 +73,9 @@ struct RowerPracticeView: View {
                         .foregroundStyle(Tokens.Ink.secondary)
                 }
             }
-            detail("clock", "\(CalendarRules.time(practice.startsAt, calendar: calendar))–\(CalendarRules.time(practice.endsAt, calendar: calendar))")
-            if let place = practice.place { detail("mappin.and.ellipse", place) }
-            if let setBy = viewModel.setByName { detail("person.2", "Set by \(setBy)") }
+            detail(.clock, "\(CalendarRules.time(practice.startsAt, calendar: calendar))–\(CalendarRules.time(practice.endsAt, calendar: calendar))")
+            if let place = practice.place { detail(.pin, place) }
+            if let setBy = viewModel.setByName { detail(.people, "Set by \(setBy)") }
         }
         .padding(Tokens.Spacing.card)
         .background(Self.cardShape.fill(Tokens.Surface.card))
@@ -83,9 +83,9 @@ struct RowerPracticeView: View {
         .padding(.top, Tokens.Spacing.tight)
     }
 
-    private func detail(_ symbol: String, _ text: String) -> some View {
+    private func detail(_ symbol: RPIcon, _ text: String) -> some View {
         HStack(spacing: Tokens.Spacing.gap) {
-            Image(systemName: symbol)
+            RPIconView(icon: symbol, size: Tokens.Icon.detail)
                 .foregroundStyle(Tokens.Ink.secondary)
             Text(text)
                 .textStyle(Typography.bodySecondary)
@@ -142,7 +142,7 @@ struct RowerPracticeView: View {
             .padding(.top, Tokens.Spacing.group)
             .padding(.bottom, Tokens.Spacing.tight)
         if let checkedIn = viewModel.checkedInAt {
-            Label("Checked in at \(CalendarRules.time(checkedIn, calendar: viewModel.calendar))", systemImage: "checkmark.circle.fill")
+            Label("Checked in at \(CalendarRules.time(checkedIn, calendar: viewModel.calendar))", icon: .checkCircle)
                 .textStyle(Typography.rowTitle)
                 .tabularNumerals()
                 .foregroundStyle(Tokens.Accent.success)
@@ -151,7 +151,7 @@ struct RowerPracticeView: View {
             Button {
                 Task { await viewModel.checkIn() }
             } label: {
-                Label("Check in", systemImage: "checkmark")
+                Label("Check in", icon: .check, size: Tokens.Icon.small)
             }
             .buttonStyle(.rpPrimary)
             .disabled(!viewModel.canCheckIn || viewModel.isSaving)

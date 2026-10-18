@@ -259,6 +259,24 @@ enum Tokens {
 
     /// A boat drawn as a racing shell from above (CoachBoats, CoachBoatEdit, RowerBoat; decisions 67,
     /// 74): the small one on cards, the large one to crew it. All values from the canvas design.
+    /// Icon sizes and line weight (decision 80), as the canvas draws its icons: 16 in pills and
+    /// list rows, 18 beside details, 20 in buttons, headers and the tab bar, 24 for the Log plus.
+    enum Icon {
+        /// A lock beside a name.
+        static let badge: CGFloat = 11
+        /// Inside a chip (Water, a rower's flags).
+        static let chip: CGFloat = 14
+        static let small: CGFloat = 16
+        static let detail: CGFloat = 18
+        static let regular: CGFloat = 20
+        static let large: CGFloat = 24
+        /// The one icon on a notice card (who can see it, a private account).
+        static let feature: CGFloat = 26
+        /// The canvas's stroke on its 24 grid: 1.9, a little heavier at 16 and below so small
+        /// icons don't look faint.
+        static func stroke(for size: CGFloat) -> CGFloat { size <= small ? 2.2 : 1.9 }
+    }
+
     enum Boat {
         struct Metrics: Sendable {
             /// The drawing's width; the hull runs down its middle.

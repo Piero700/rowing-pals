@@ -173,7 +173,7 @@ struct AvailabilityView: View {
         Button {
             Task { await planBoats(for: practice) }
         } label: {
-            Label("Plan boats for this session", systemImage: "water.waves")
+            Label("Plan boats for this session", icon: .boat)
         }
         .buttonStyle(.rpGlass)
         .padding(.top, Tokens.Spacing.group)
@@ -223,7 +223,7 @@ struct AvailabilityView: View {
                         .foregroundStyle(Tokens.Ink.secondary)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-                Image(systemName: "chevron.right")
+                RPIconView(icon: .chevronRight, size: Tokens.Icon.small)
                     .textStyle(Typography.pill)
                     .foregroundStyle(Tokens.Ink.secondary)
             }

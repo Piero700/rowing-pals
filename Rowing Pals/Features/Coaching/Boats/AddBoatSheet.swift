@@ -44,7 +44,7 @@ struct AddBoatSheet: View {
                 Button {
                     onNew()
                 } label: {
-                    Label("New boat", systemImage: "plus")
+                    Label("New boat", icon: .plus)
                 }
                 .buttonStyle(.rpGlass)
                 .padding(.top, Tokens.Spacing.tight)
@@ -87,7 +87,7 @@ struct AddBoatSheet: View {
                         .foregroundStyle(check.isProblem ? Tokens.Ink.primary : Tokens.Ink.secondary)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-                Image(systemName: "plus.circle")
+                RPIconView(icon: .plusCircle, size: Tokens.Icon.large)
                     .textStyle(Typography.cardTitle)
                     .foregroundStyle(Tokens.Accent.brand)
             }

@@ -34,7 +34,7 @@ struct RouteHost: View {
                         Button {
                             dismiss()
                         } label: {
-                            Image(systemName: "xmark")
+                            RPIconView(icon: .close)
                                 .textStyle(Typography.rowTitle)
                         }
                         .accessibilityLabel("Close")

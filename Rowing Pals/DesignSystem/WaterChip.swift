@@ -12,8 +12,7 @@ struct WaterChip: View {
 
     var body: some View {
         HStack(spacing: 4) {
-            Image(systemName: "water.waves")
-                .imageScale(.small)
+            RPIconView(icon: .water, size: Tokens.Icon.chip)
             Text(text)
                 .monospacedDigit()
         }

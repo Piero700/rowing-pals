@@ -31,7 +31,7 @@ struct EventView: View {
                             Button {
                                 Task { await crewBoats(for: event) }
                             } label: {
-                                Label("Crew boats for this race", systemImage: "water.waves")
+                                Label("Crew boats for this race", icon: .boat)
                             }
                             .buttonStyle(.rpGlass)
                             .padding(.top, Tokens.Spacing.group)

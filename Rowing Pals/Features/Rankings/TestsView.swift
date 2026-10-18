@@ -137,7 +137,7 @@ struct TestsView: View {
                     .textStyle(Typography.label)
                     .foregroundStyle(Tokens.Accent.rank)
                 Spacer()
-                Image(systemName: "chevron.right")
+                RPIconView(icon: .chevronRight, size: Tokens.Icon.small)
                     .textStyle(Typography.statLabel)
                     .foregroundStyle(Tokens.Accent.rank)
             }
@@ -190,8 +190,7 @@ struct TestsView: View {
     /// The trailing "+ Add test" tile, the same size as a test tile.
     private var addTestTile: some View {
         VStack(spacing: 6) {
-            Image(systemName: "plus")
-                .font(.system(size: 22, weight: .semibold))
+            RPIconView(icon: .plus, size: Tokens.Icon.large)
             Text("Add test")
                 .textStyle(Typography.pill)
         }

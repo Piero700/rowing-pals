@@ -79,8 +79,7 @@ struct PeopleListView: View {
     private var searchField: some View {
         let shape = RoundedRectangle(cornerRadius: Tokens.Radius.input, style: .continuous)
         return HStack(spacing: 8) {
-            Image(systemName: "magnifyingglass")
-                .font(.system(size: 17, weight: .medium))
+            RPIconView(icon: .search)
                 .frame(width: 20, height: 20)
                 .foregroundStyle(Tokens.Ink.secondary)
                 .accessibilityHidden(true)
@@ -122,8 +121,7 @@ struct PeopleListView: View {
                             .foregroundStyle(Tokens.Ink.primary)
                             .lineLimit(1)
                         if person.isPrivate {
-                            Image(systemName: "lock.fill")
-                                .font(.system(size: 10.5))
+                            RPIconView(icon: .lock, size: Tokens.Icon.badge)
                                 .foregroundStyle(Tokens.Ink.secondary)
                                 .accessibilityLabel("Private account")
                         }

@@ -64,7 +64,7 @@ struct ProfileVisibilityView: View {
                         .foregroundStyle(Tokens.Ink.secondary)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-                Image(systemName: "checkmark")
+                RPIconView(icon: .check, size: Tokens.Icon.small)
                     .textStyle(Typography.rowTitle)
                     .foregroundStyle(Tokens.Accent.brand)
                     .opacity(isSelected ? 1 : 0)

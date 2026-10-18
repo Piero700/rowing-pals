@@ -88,7 +88,7 @@ struct CoachProfileView: View {
                 appMode = .rowing
                 dismiss()
             } label: {
-                Label("Switch to rowing", systemImage: "arrow.left.arrow.right")
+                Label("Switch to rowing", icon: .switchMode)
             }
             .buttonStyle(.rpGlass)
             Text("In the rower version, Settings has Switch to coaching.")
@@ -141,7 +141,7 @@ struct CoachProfileView: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 if showsChevron {
-                    Image(systemName: "chevron.right")
+                    RPIconView(icon: .chevronRight, size: Tokens.Icon.small)
                         .textStyle(Typography.pill)
                         .foregroundStyle(Tokens.Ink.secondary)
                 }

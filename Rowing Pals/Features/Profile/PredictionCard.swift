@@ -28,7 +28,7 @@ struct PredictionCard: View {
                     .foregroundStyle(Tokens.Ink.secondary)
                 Spacer()
                 Button(action: onExplain) {
-                    Image(systemName: "info.circle")
+                    RPIconView(icon: .info)
                         .foregroundStyle(Tokens.Accent.records)
                         .frame(width: Tokens.Size.minTap, height: Tokens.Size.minTap)
                         .contentShape(Rectangle())

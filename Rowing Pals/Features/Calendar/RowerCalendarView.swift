@@ -138,7 +138,7 @@ struct RowerCalendarView: View {
                 Button {
                     Task { await viewModel.answerRestAvailable() }
                 } label: {
-                    Label("Available for the other \(rest)", systemImage: "checkmark")
+                    Label("Available for the other \(rest)", icon: .check, size: Tokens.Icon.small)
                 }
                 .buttonStyle(.rpGlass)
             }
@@ -339,7 +339,7 @@ struct RowerCalendarView: View {
         VStack(alignment: .leading, spacing: Tokens.Spacing.gap) {
             // The race's page takes a reason with Can't (only coaches see it).
             Button { navigate(.event(event.id)) } label: { HStack(spacing: Tokens.Spacing.loose) {
-                Image(systemName: event.kind == .race ? "flag" : "calendar")
+                RPIconView(icon: event.kind == .race ? .flag : .calendar)
                     .textStyle(Typography.rowTitle)
                     .foregroundStyle(Tokens.Ink.primary)
                     .frame(width: Tokens.Schedule.iconTile, height: Tokens.Schedule.iconTile)
@@ -360,7 +360,7 @@ struct RowerCalendarView: View {
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-                Image(systemName: "chevron.right")
+                RPIconView(icon: .chevronRight, size: Tokens.Icon.small)
                     .textStyle(Typography.pill)
                     .foregroundStyle(Tokens.Ink.secondary)
             }

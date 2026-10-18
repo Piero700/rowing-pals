@@ -59,7 +59,7 @@ private struct SwipeToDelete: ViewModifier {
         Button {
             deleteNow()
         } label: {
-            Label("Delete", systemImage: "trash")
+            Label("Delete", icon: .trash)
                 .labelStyle(.titleAndIcon)
                 .textStyle(Typography.pill)
                 .foregroundStyle(Tokens.Ink.onBrand)

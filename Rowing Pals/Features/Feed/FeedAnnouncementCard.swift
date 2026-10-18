@@ -22,7 +22,7 @@ struct FeedAnnouncementCard: View {
         VStack(alignment: .leading, spacing: 0) {
             Button(action: onToggle) {
                 HStack(spacing: Tokens.Spacing.loose) {
-                    Image(systemName: "megaphone")
+                    RPIconView(icon: .megaphone)
                         .textStyle(Typography.rowTitle)
                         .foregroundStyle(Tokens.Accent.brand)
                         .frame(width: Tokens.Size.rowIcon, height: Tokens.Size.rowIcon)
@@ -37,7 +37,7 @@ struct FeedAnnouncementCard: View {
                             .foregroundStyle(Tokens.Ink.secondary)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    Image(systemName: "chevron.down")
+                    RPIconView(icon: .chevronDown, size: Tokens.Icon.small)
                         .textStyle(Typography.pill)
                         .foregroundStyle(Tokens.Ink.secondary)
                         .rotationEffect(.degrees(isExpanded ? 180 : 0))

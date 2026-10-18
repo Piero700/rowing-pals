@@ -67,8 +67,7 @@ struct GlassPreview: View {
                         .rotationEffect(.degrees(-8))
                 }
             }
-            Image(systemName: "gauge.with.dots.needle.67percent")
-                .font(.system(size: 96))
+            RPIconView(icon: .stopwatch, size: 96)
                 .foregroundStyle(.white.opacity(0.4))
         }
     }

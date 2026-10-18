@@ -198,7 +198,7 @@ struct FeedView: View {
                 .foregroundStyle(Tokens.Ink.primary)
                 .accessibilityAddTraits(.isHeader)
             Spacer(minLength: 0)
-            GlassIconButton(systemImage: "magnifyingglass", accessibilityLabel: "Find rowers") {
+            GlassIconButton(icon: .search, accessibilityLabel: "Find rowers") {
                 navigate(.people(.find))
             }
         }

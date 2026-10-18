@@ -80,12 +80,12 @@ struct RankingsFiltersPill: View {
     var body: some View {
         Button(action: action) {
             HStack(spacing: 6) {
-                Image(systemName: "line.3.horizontal.decrease")
+                RPIconView(icon: .filter, size: Tokens.Icon.small)
                     .textStyle(Typography.pill)
                 Text(text)
                     .textStyle(Typography.pill)
                     .lineLimit(1)
-                Image(systemName: "chevron.down")
+                RPIconView(icon: .chevronDown, size: Tokens.Icon.small)
                     .textStyle(Typography.statLabel)
                     .foregroundStyle(Tokens.Ink.secondary)
             }

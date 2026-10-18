@@ -151,7 +151,7 @@ struct ClubFormView: View {
                 Text(current)
                     .foregroundStyle(Tokens.Ink.primary)
                 Spacer()
-                Image(systemName: "chevron.up.chevron.down")
+                RPIconView(icon: .chevronUpDown, size: Tokens.Icon.small)
                     .textStyle(Typography.pill)
                     .foregroundStyle(Tokens.Ink.secondary)
             }

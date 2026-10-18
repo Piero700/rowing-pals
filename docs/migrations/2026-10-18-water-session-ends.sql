@@ -111,3 +111,7 @@ grant execute on function can_see_club_water(uuid) to authenticated;
 revoke all on function water_session_default_end() from public, anon, authenticated;
 
 commit;
+
+-- Tell the API about the new save_water_session at once (otherwise the app can report "Could not
+-- find the function … in the schema cache" until it refreshes by itself).
+notify pgrst, 'reload schema';

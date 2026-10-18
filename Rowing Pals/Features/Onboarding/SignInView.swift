@@ -38,7 +38,7 @@ struct SignInView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
                 if viewModel.step != .signIn {
-                    GlassIconButton(systemImage: "chevron.left", accessibilityLabel: "Back") {
+                    GlassIconButton(icon: .chevronLeft, accessibilityLabel: "Back") {
                         focusedField = nil
                         back()
                     }
@@ -214,7 +214,7 @@ struct SignInView: View {
             Button {
                 viewModel.hasAgreedToTerms.toggle()
             } label: {
-                Image(systemName: viewModel.hasAgreedToTerms ? "checkmark.square.fill" : "square")
+                RPIconView(icon: viewModel.hasAgreedToTerms ? .checkboxOn : .checkbox)
                     .textStyle(Typography.cardTitle)
                     .foregroundStyle(viewModel.hasAgreedToTerms ? Tokens.Accent.brand : Tokens.Ink.secondary)
                     .frame(width: Tokens.Size.minTap, height: Tokens.Size.minTap)

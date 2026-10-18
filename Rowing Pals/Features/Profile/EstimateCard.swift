@@ -19,7 +19,7 @@ struct EstimateCard: View {
                     .textStyle(Typography.cardOverline)
                     .foregroundStyle(Tokens.Ink.secondary)
                 Spacer()
-                Image(systemName: "info.circle")
+                RPIconView(icon: .info)
                     .foregroundStyle(Tokens.Accent.records)
                     .frame(width: 36, height: 36)
                     .accessibilityHidden(true)

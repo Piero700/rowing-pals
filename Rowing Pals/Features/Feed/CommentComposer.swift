@@ -23,7 +23,7 @@ struct CommentComposer: View {
                 .submitLabel(.send)
                 .onSubmit(send)
             Button(action: send) {
-                Image(systemName: "arrow.up")
+                RPIconView(icon: .send)
                     .textStyle(Typography.buttonGlyph)
                     .foregroundStyle(Tokens.Base.dark)
                     .frame(width: Tokens.Size.sendButton, height: Tokens.Size.sendButton)

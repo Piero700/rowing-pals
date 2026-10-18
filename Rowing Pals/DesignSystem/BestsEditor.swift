@@ -29,7 +29,7 @@ struct BestsEditor: View {
             Button {
                 isChoosingKind = true
             } label: {
-                Label("Add another best", systemImage: "plus")
+                Label("Add another best", icon: .plus)
             }
             .buttonStyle(.rpGlass)
             .padding(.top, Tokens.Spacing.tight)
@@ -60,7 +60,7 @@ struct BestsEditor: View {
                     Button {
                         rows.removeAll { $0.id == value.id }
                     } label: {
-                        Image(systemName: "xmark")
+                        RPIconView(icon: .close, size: Tokens.Icon.small)
                             .textStyle(Typography.pill)
                             .foregroundStyle(Tokens.Ink.secondary)
                             .frame(width: Tokens.Size.minTap, height: Tokens.Size.minTap)

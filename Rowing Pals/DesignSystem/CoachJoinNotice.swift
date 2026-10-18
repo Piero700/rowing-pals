@@ -29,8 +29,7 @@ struct CoachJoinNotice: View {
         ScrollView {
             VStack(spacing: 0) {
                 VStack(spacing: 0) {
-                    Image(systemName: "eye")
-                        .font(.system(size: 22, weight: .medium))
+                    RPIconView(icon: .eye, size: Tokens.Icon.feature)
                         .foregroundStyle(Tokens.Accent.brand)
                         .frame(width: Tokens.Size.noticeIcon, height: Tokens.Size.noticeIcon)
                         .background(Circle().fill(Tokens.Accent.brandSoft))

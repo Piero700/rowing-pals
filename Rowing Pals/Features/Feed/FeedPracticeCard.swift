@@ -35,7 +35,7 @@ struct FeedPracticeCard: View {
                         }
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    Image(systemName: "chevron.right")
+                    RPIconView(icon: .chevronRight, size: Tokens.Icon.small)
                         .textStyle(Typography.pill)
                         .foregroundStyle(Tokens.Ink.secondary)
                 }

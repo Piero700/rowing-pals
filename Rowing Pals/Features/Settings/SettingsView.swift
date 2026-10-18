@@ -315,7 +315,7 @@ struct SettingsView: View {
             dismiss()
         } label: {
             HStack(spacing: Tokens.Spacing.loose) {
-                Image(systemName: "arrow.left.arrow.right")
+                RPIconView(icon: .switchMode)
                     .textStyle(Typography.rowTitle)
                     .foregroundStyle(Tokens.Accent.brand)
                     .frame(width: Tokens.Size.rowIcon, height: Tokens.Size.rowIcon)
@@ -407,7 +407,7 @@ struct SettingsView: View {
     }
 
     private func checkmark(_ isOn: Bool) -> some View {
-        Image(systemName: "checkmark")
+        RPIconView(icon: .check, size: Tokens.Icon.small)
             .textStyle(Typography.rowTitle)
             .foregroundStyle(Tokens.Accent.brand)
             .opacity(isOn ? 1 : 0)
@@ -415,7 +415,7 @@ struct SettingsView: View {
     }
 
     private var chevron: some View {
-        Image(systemName: "chevron.right")
+        RPIconView(icon: .chevronRight, size: Tokens.Icon.small)
             .textStyle(Typography.pill)
             .foregroundStyle(Tokens.Ink.secondary)
     }

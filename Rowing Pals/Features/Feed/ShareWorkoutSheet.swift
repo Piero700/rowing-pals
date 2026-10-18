@@ -23,7 +23,7 @@ struct ShareWorkoutSheet: View {
                     .foregroundStyle(Tokens.Ink.primary)
                     .accessibilityAddTraits(.isHeader)
                 Spacer(minLength: 0)
-                GlassIconButton(systemImage: "xmark", accessibilityLabel: "Close") { dismiss() }
+                GlassIconButton(icon: .close, accessibilityLabel: "Close") { dismiss() }
             }
 
             preview

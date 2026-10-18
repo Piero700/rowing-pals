@@ -29,13 +29,13 @@ struct CalendarAddSheet: View {
                     .buttonStyle(.rpText)
             }
             .padding(.bottom, 4)
-            option("calendar", "Practice", "A time and place for squads. Can repeat every week, and rowers say if they can come.",
+            option(.calendar, "Practice", "A time and place for squads. Can repeat every week, and rowers say if they can come.",
                    .newPractice(day))
-            option("stopwatch", "Land session", "An erg workout with pieces and target splits.", .newWorkoutOn(day))
-            option("water.waves", "Water session", "The plan, then crew the boats from who’s available.",
+            option(.stopwatch, "Land session", "An erg workout with pieces and target splits.", .newWorkoutOn(day))
+            option(.boat, "Water session", "The plan, then crew the boats from who’s available.",
                    .newWaterSession(WaterSessionSeed(day: day)))
-            option("flag", "Race or regatta", "Rowers say if they can race. Crew the boats when you know.", .newEvent(.race, day))
-            option("clock", "Other event", "A meeting, social or kit day. Shows in everyone’s calendar.", .newEvent(.event, day))
+            option(.flag, "Race or regatta", "Rowers say if they can race. Crew the boats when you know.", .newEvent(.race, day))
+            option(.clock, "Other event", "A meeting, social or kit day. Shows in everyone’s calendar.", .newEvent(.event, day))
         }
         .padding(.horizontal, Tokens.Spacing.screen)
         .padding(.top, Tokens.Spacing.group)
@@ -47,12 +47,12 @@ struct CalendarAddSheet: View {
         .presentationBackground(Tokens.Base.ground)
     }
 
-    private func option(_ symbol: String, _ title: String, _ detail: String, _ route: AppRoute) -> some View {
+    private func option(_ symbol: RPIcon, _ title: String, _ detail: String, _ route: AppRoute) -> some View {
         Button {
             onChoose(route)
         } label: {
             HStack(spacing: Tokens.Spacing.loose) {
-                Image(systemName: symbol)
+                RPIconView(icon: symbol, size: Tokens.Icon.large)
                     .textStyle(Typography.cardTitle)
                     .foregroundStyle(Tokens.Accent.brand)
                     .frame(width: Tokens.Schedule.iconTile, height: Tokens.Schedule.iconTile)
@@ -67,7 +67,7 @@ struct CalendarAddSheet: View {
                         .multilineTextAlignment(.leading)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-                Image(systemName: "chevron.right")
+                RPIconView(icon: .chevronRight, size: Tokens.Icon.small)
                     .textStyle(Typography.pill)
                     .foregroundStyle(Tokens.Ink.secondary)
             }

@@ -33,10 +33,10 @@ struct CoachRootView: View {
     @AppStorage(Appearance.storageKey) private var appearance: Appearance = .dark
 
     private static let items: [FloatingTabBar<CoachTab>.Item] = [
-        .init(tab: .rowers, label: "Rowers", systemImage: "person.2"),
-        .init(tab: .workouts, label: "Workouts", systemImage: "stopwatch"),
-        .init(tab: .boats, label: "Boats", systemImage: "water.waves"),
-        .init(tab: .calendar, label: "Calendar", systemImage: "calendar")
+        .init(tab: .rowers, label: "Rowers", icon: .people),
+        .init(tab: .workouts, label: "Workouts", icon: .stopwatch),
+        .init(tab: .boats, label: "Boats", icon: .boat),
+        .init(tab: .calendar, label: "Calendar", icon: .calendar)
     ]
 
     var body: some View {

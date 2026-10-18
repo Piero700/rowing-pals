@@ -61,7 +61,7 @@ struct TestLeaderboardView: View {
             // v4: the shared header, title centred; a club test's delete button on the right.
             ScreenHeader(title: viewModel.test.label, onBack: { dismiss() }) {
                 if onDelete != nil {
-                    GlassIconButton(systemImage: "trash", accessibilityLabel: "Delete test", tint: Tokens.System.error) {
+                    GlassIconButton(icon: .trash, accessibilityLabel: "Delete test", tint: Tokens.System.error) {
                         isConfirmingDelete = true
                     }
                 }

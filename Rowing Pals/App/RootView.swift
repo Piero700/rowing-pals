@@ -66,11 +66,11 @@ struct RootView: View {
     /// feed-like" — confirmed against the prototype file directly, not
     /// just the earlier design summary.
     private static let items: [FloatingTabBar<RootTab>.Item] = [
-        .init(tab: .feed, label: "Feed", systemImage: "house"),
-        .init(tab: .rankings, label: "Rankings", systemImage: "chart.bar"),
+        .init(tab: .feed, label: "Feed", icon: .home),
+        .init(tab: .rankings, label: "Rankings", icon: .rankings),
         // Practices, races and workouts for the week, and the rower's answers (decision 68).
-        .init(tab: .calendar, label: "Calendar", systemImage: "calendar"),
-        .init(tab: .profile, label: "Profile", systemImage: "person")
+        .init(tab: .calendar, label: "Calendar", icon: .calendar),
+        .init(tab: .profile, label: "Profile", icon: .profile)
     ]
 
     var body: some View {

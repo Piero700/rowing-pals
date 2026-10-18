@@ -19,7 +19,7 @@ struct ScreenHeader<Trailing: View>: View {
     var body: some View {
         ZStack {
             HStack(spacing: 0) {
-                GlassIconButton(systemImage: "chevron.left", accessibilityLabel: "Back", action: onBack)
+                GlassIconButton(icon: .chevronLeft, accessibilityLabel: "Back", action: onBack)
                 Spacer(minLength: 0)
                 trailing()
             }

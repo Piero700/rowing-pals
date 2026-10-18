@@ -40,7 +40,7 @@ struct CommentRow: View {
         .contextMenu {
             if canReport {
                 Button(action: onReport) {
-                    Label("Report comment", systemImage: "flag")
+                    Label("Report comment", icon: .flag)
                 }
             }
         }

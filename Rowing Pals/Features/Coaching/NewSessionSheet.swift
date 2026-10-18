@@ -27,13 +27,13 @@ struct NewSessionSheet: View {
                     .buttonStyle(.rpText)
             }
             .padding(.bottom, 4)
-            option("stopwatch", "Land session",
+            option(.stopwatch, "Land session",
                    "An erg workout: pieces, rates and target splits. It goes to your rowers’ Feeds and shows in Workouts.",
                    .newWorkout)
-            option("water.waves", "Water session",
+            option(.water, "Water session",
                    "On the river: the plan, then crew the boats seat by seat. Each rower is told their boat and seat; it shows in Boats.",
                    .newWaterSession(WaterSessionSeed()))
-            option("megaphone", "Announcement",
+            option(.megaphone, "Announcement",
                    "A notice for every rower. Its heading sits at the top of their Feed; they tap it to read the rest.",
                    .newAnnouncement)
             Text("Practices, races and other events are added from the Calendar. Announcements are kept in the Calendar too.")
@@ -52,12 +52,12 @@ struct NewSessionSheet: View {
         .presentationBackground(Tokens.Base.ground)
     }
 
-    private func option(_ symbol: String, _ title: String, _ detail: String, _ route: AppRoute) -> some View {
+    private func option(_ symbol: RPIcon, _ title: String, _ detail: String, _ route: AppRoute) -> some View {
         Button {
             onChoose(route)
         } label: {
             HStack(spacing: Tokens.Spacing.loose) {
-                Image(systemName: symbol)
+                RPIconView(icon: symbol, size: Tokens.Icon.large)
                     .textStyle(Typography.cardTitle)
                     .foregroundStyle(Tokens.Accent.brand)
                     .frame(width: Tokens.Schedule.iconTile, height: Tokens.Schedule.iconTile)
@@ -72,7 +72,7 @@ struct NewSessionSheet: View {
                         .multilineTextAlignment(.leading)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-                Image(systemName: "chevron.right")
+                RPIconView(icon: .chevronRight, size: Tokens.Icon.small)
                     .textStyle(Typography.pill)
                     .foregroundStyle(Tokens.Ink.secondary)
             }
