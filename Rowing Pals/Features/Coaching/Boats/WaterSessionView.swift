@@ -112,6 +112,20 @@ struct WaterSessionView: View {
             .padding(.vertical, Tokens.Spacing.loose)
             .formFieldBox()
 
+        // Save the details now and see that they're saved (user, 2026-10-18); leaving still saves.
+        Button {
+            Task { await viewModel.save() }
+        } label: {
+            if viewModel.hasUnsavedChanges {
+                Text(viewModel.isNew ? "Save session" : "Save changes")
+            } else {
+                Label("Saved", icon: .check, size: Tokens.Icon.small)
+            }
+        }
+        .buttonStyle(.rpGlass)
+        .disabled(!viewModel.hasUnsavedChanges || viewModel.isWorking)
+        .padding(.top, Tokens.Spacing.loose)
+
         HStack(alignment: .firstTextBaseline) {
             FormSectionTitle("Boats")
             Spacer(minLength: 0)

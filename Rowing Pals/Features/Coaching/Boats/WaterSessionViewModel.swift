@@ -211,6 +211,19 @@ final class WaterSessionViewModel {
         }
     }
 
+    /// Whether the details differ from what's saved, or a titled session isn't saved yet: Save
+    /// changes is enabled, otherwise it reads Saved (user, 2026-10-18).
+    var hasUnsavedChanges: Bool {
+        sessionId == nil ? hasTitle : savedDetails != details
+    }
+
+    /// Save changes: the details now, without leaving.
+    func save() async {
+        isWorking = true
+        defer { isWorking = false }
+        await ensureSaved()
+    }
+
     /// Leaving the screen keeps what was typed, as long as it has a title.
     func saveOnLeaving() async {
         guard hasTitle, !isDeleted else { return }

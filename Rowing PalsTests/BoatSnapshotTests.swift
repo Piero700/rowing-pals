@@ -48,6 +48,44 @@ struct BoatSnapshotTests {
         try Self.render(view, name: "feed-card")
     }
 
+    /// Decision 82: the Feed's boat on its side, scrolling. Hosted in a real window (ImageRenderer
+    /// can't draw a ScrollView), so the strip lays out, opens on the rower's seat and draws as on a phone.
+    @Test func feedCardsOnTheirSide() throws {
+        let session = WaterSession(id: UUID(), clubId: UUID(), practiceId: nil, eventId: nil, title: "3 × 2km at rate 28",
+                                   startsAt: Date().addingTimeInterval(3600), meetAt: "Boathouse, 06:45",
+                                   plan: nil, createdBy: nil)
+        func boat(_ type: BoatType, _ range: Range<Int>, cox: Int? = nil) -> SessionBoat {
+            SessionBoat(id: UUID(), sessionId: session.id, name: type == .eight ? "M1 eight" : (type == .double ? "Double" : "W1 four"),
+                        boatType: type, rigging: .stroke, sentAt: Date(), seats: Self.seats(range, cox: cox))
+        }
+        let cards = VStack(spacing: Tokens.Spacing.loose) {
+            FeedBoatCard(boat: boat(.eight, 0..<8, cox: 8), session: session, names: Self.names, coachName: "Sarah Lin", mySeat: 3)
+            FeedBoatCard(boat: boat(.coxedFour, 0..<4, cox: 10), session: session, names: Self.names, coachName: "Sarah Lin", mySeat: 2)
+            FeedBoatCard(boat: boat(.double, 9..<11), session: session, names: Self.names, coachName: "Sarah Lin", mySeat: 1)
+        }
+        .padding(Tokens.Spacing.screen)
+        .frame(width: Self.width)
+        .background(Tokens.Base.ground)
+        .environment(\.colorScheme, .dark)
+
+        let host = UIHostingController(rootView: cards)
+        let size = host.sizeThatFits(in: CGSize(width: Self.width, height: 2000))
+        let scene = try #require(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
+        let window = UIWindow(windowScene: scene)
+        window.frame = CGRect(origin: .zero, size: size)
+        window.overrideUserInterfaceStyle = .dark
+        window.rootViewController = host
+        window.makeKeyAndVisible()
+        for _ in 0..<6 { RunLoop.main.run(until: Date().addingTimeInterval(0.1)) }
+        let image = UIGraphicsImageRenderer(size: size).image { _ in
+            window.drawHierarchy(in: window.bounds, afterScreenUpdates: true)
+        }
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("boats-sideways-dark.png")
+        try #require(image.pngData()).write(to: url)
+        print("Boats snapshot: \(url.path)")
+        window.isHidden = true
+    }
+
     private static func render(_ content: some View, name: String) throws {
         for scheme in [ColorScheme.dark, .light] {
             let view = content

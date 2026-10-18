@@ -72,7 +72,7 @@ struct SettingsView: View {
                     }
 
                     group("Boats") {
-                        stackedRow(title: "Draw boats", subtitle: "How every boat is drawn: crewing, the Boats tab and your Feed.") {
+                        stackedRow(title: "Draw boats", subtitle: "How boats are drawn upright: crewing, the Boats tab and Saved boats. Your Feed shows your boat on its side.") {
                             VStack(spacing: Tokens.Spacing.tight) {
                                 PillSegmentedControl(options: BoatOrientation.allCases.map(\.label), selection: Binding(
                                     get: { BoatOrientation.allCases.firstIndex(of: boatOrientation) ?? 0 },

@@ -337,6 +337,25 @@ enum Tokens {
         static let singleBladeLength: CGFloat = 13
         static let singleBladeDepth: CGFloat = 5
         static let singleSeatRadius: CGFloat = 9
+        /// Bigger boats on the rower's Feed, on their side like the single and scrolling sideways
+        /// (decision 82): a seat every 60 pt, the cox a shorter step, the hull's centre line, its
+        /// riggers and oars, and the names in a row underneath.
+        static let sidewaysSeatSpacing: CGFloat = 60
+        static let sidewaysCoxStep: CGFloat = 44
+        static let sidewaysEnd: CGFloat = 40
+        static let sidewaysHullCentre: CGFloat = 50
+        static let sidewaysHullHalfWidth: CGFloat = 7
+        static let sidewaysRiggerReach: CGFloat = 12
+        static let sidewaysRiggerSpread: CGFloat = 7
+        static let sidewaysOarLength: CGFloat = 12
+        static let sidewaysBladeLength: CGFloat = 10
+        static let sidewaysBladeDepth: CGFloat = 3.8
+        static let sidewaysSeatRadius: CGFloat = 11
+        static let sidewaysNameTop: CGFloat = 94
+        static let sidewaysHeight: CGFloat = 128
+        /// How far the edges fade where there's more boat to scroll to.
+        static let sidewaysFade: CGFloat = 22
+        static let sidewaysBarHeight: CGFloat = 3
     }
 
     /// Coaching's own radii and the zone-mix shades (docs/design/v4/CoachRower.dc.html).

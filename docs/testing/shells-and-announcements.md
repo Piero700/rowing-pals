@@ -154,3 +154,13 @@ In Xcode choose **RP Dev** and **your iPhone**, press **Cmd+R**.
 - [ ] A rower who isn't a coach, owner, co-owner or admin doesn't see that setting and sees only their own.
 6. Piero: switch to **coaching**. Have Coach_J send a boat with Piero in it, then tap the **Your boat** alert.
 - [ ] No crash. The app switches to the rowing version and shows the **Feed** with the boat.
+
+## 12. Your boat on its side; Save on a water session (decisions 82, 83)
+1. Coach_J: put Piero in an **8+** (any seat in the middle) and a **4−** for today, and **Send**.
+2. Piero: **Feed**.
+- [ ] The eight lies on its side like the single: ‹ STERN left, BOW › right, names under the seats, Piero's
+      seat filled blue with his name in blue. It opens with his seat in view; swipe it to see the rest; the edge
+      fades where there's more and the thin bar moves as you swipe.
+- [ ] The four fits the card: nothing to scroll. A single still shows as before (no names).
+3. Coach_J: open a water session.
+- [ ] Under The plan: **✓ Saved** (greyed). Change Ends: it becomes **Save changes**; tap it: back to **✓ Saved**.
