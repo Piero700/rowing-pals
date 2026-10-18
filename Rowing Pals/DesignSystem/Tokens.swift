@@ -189,6 +189,9 @@ enum Tokens {
         /// The share-workout image card, in points; rendered at 3× for a 1080 px-wide image.
         static let shareCardWidth: CGFloat = 360
         static let shareCardHeight: CGFloat = 450
+        /// A Season Wrapped page (decision 92): story-shaped, 9:16, shared at 3× (1080 × 1920).
+        static let wrappedCardWidth: CGFloat = 360
+        static let wrappedCardHeight: CGFloat = 640
         /// A "Best in your group" card on Test results (decision 37).
         static let groupBestCard: CGFloat = 140
         /// A compact segmented control's segment (Settings' units), tappable across 44 pt.
@@ -436,6 +439,8 @@ enum Typography {
     static let bigResult = Style(size: 32, weight: .bold, trackingEm: 0, uppercase: false)
     static let reviewResult = Style(size: 32, weight: .bold, trackingEm: 0, uppercase: false)
     static let heroNumber = Style(size: 32, weight: .bold, trackingEm: 0, uppercase: false)
+    /// The one big number on a Season Wrapped page (decision 92).
+    static let wrappedNumber = Style(size: 56, weight: .bold, trackingEm: 0, uppercase: false)
     static let bodyV3 = Style(size: 17, weight: .regular, trackingEm: 0, uppercase: false)
     static let name = Style(size: 15, weight: .semibold, trackingEm: 0, uppercase: false)
     /// The title of a settings row or switch row.

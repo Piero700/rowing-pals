@@ -87,6 +87,8 @@ enum AppRoute: Hashable, Identifiable {
     case ergEvent(UUID)
     case newErgEvent
     case editErgEvent(UUID)
+    /// Season Wrapped, opened on a club term or (nil) the term going on now (decision 92).
+    case seasonWrapped(UUID?)
 
     var id: Self { self }
 }

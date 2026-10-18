@@ -587,6 +587,14 @@ struct ProfileView: View {
             }
 
             if viewModel.isOwnProfile {
+                // Season Wrapped (decision 92): any time, for this term so far or any before.
+                Button {
+                    navigate(.seasonWrapped(nil))
+                } label: {
+                    Label("Season Wrapped", icon: .star)
+                }
+                .buttonStyle(.rpGlass)
+                .padding(.top, Tokens.Spacing.group)
                 clubEntry
             }
         }

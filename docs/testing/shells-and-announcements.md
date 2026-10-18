@@ -260,3 +260,17 @@ Before this section: run `docs/migrations/2026-10-18-challenges-and-erg-events.s
 - [ ] No New buttons and no Edit; they see everything else.
 9. **Edit** a challenge → **Delete challenge** → Delete.
 - [ ] It goes from Rankings, the Feed and the Calendar.
+
+## 18. Season Wrapped (decision 92)
+Before this section: run `docs/migrations/2026-10-18-season-wrapped.sql` on staging. For terms: Coach_J → Calendar →
+the club's terms (as for attendance totals) — add one that started a few weeks ago.
+1. Piero: **Profile** → **Season Wrapped** (under Consistency / Recent activity).
+- [ ] It opens on the term going on now, "… so far", with the term's days. Swipe: six pages — Your season, Totals,
+      Streaks, Personal bests, Club and crew, Training mix — the numbers matching your sessions.
+- [ ] **Share this page** opens the share sheet with a tall image of that page; save it to Photos and look.
+2. Tap the season at the top.
+- [ ] The club's terms that have begun, latest first, and **Your dates…**; choose dates: the pages follow.
+3. A rower with no sessions in the dates.
+- [ ] One page: "Nothing logged in … yet".
+4. Make a term that ended yesterday (Coach_J), then open Piero's **Feed**.
+- [ ] "Your … Wrapped is ready" card; tapping opens that term's Wrapped.

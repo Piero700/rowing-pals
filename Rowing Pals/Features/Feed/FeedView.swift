@@ -35,6 +35,8 @@ struct FeedView: View {
     @State private var openAnnouncements: Set<UUID> = []
     /// Challenges and erg events that are on (decision 91).
     @State private var challenges = FeedChallengesModel()
+    /// A club term that's just ended: its Season Wrapped is ready (decision 92).
+    @State private var readyWrapped: WrappedPeriod?
     @Environment(\.navigate) private var navigate
     @Environment(\.scenePhase) private var scenePhase
 
@@ -99,6 +101,11 @@ struct FeedView: View {
                         .padding(.bottom, Tokens.Spacing.loose)
                 }
 
+                if let readyWrapped {
+                    FeedWrappedCard(period: readyWrapped) { navigate(.seasonWrapped(readyWrapped.termId)) }
+                        .padding(.bottom, Tokens.Spacing.loose)
+                }
+
                 // Erg events and challenges that are on (decision 91).
                 ForEach(challenges.items) { item in
                     FeedChallengeCard(item: item) {
@@ -137,6 +144,10 @@ struct FeedView: View {
         .task { await feedBoats.load() }
         .task { await announcements.load() }
         .task { await challenges.load() }
+        .task {
+            guard (try? await ViewerContext.shared.current().isRower) == true else { return }
+            readyWrapped = await WrappedService.readyTerm()
+        }
         .onReceive(NotificationCenter.default.publisher(for: .challengesChanged)) { _ in
             Task { await challenges.load() }
         }

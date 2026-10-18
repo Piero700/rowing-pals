@@ -71,7 +71,7 @@ struct RouteHost: View {
              .coachProfile, .editProfile, .coachRower, .squads, .squadEdit, .pbHistory, .newWorkout, .workoutResults,
              .newWorkoutOn, .practice, .newPractice, .editPractice, .register, .attendanceTotals, .availability,
              .event, .newEvent, .editEvent, .waterSession, .newWaterSession, .sessionBoat, .savedBoat, .newAnnouncement, .editAnnouncement,
-             .challenge, .newChallenge, .editChallenge, .ergEvent, .newErgEvent, .editErgEvent: true
+             .challenge, .newChallenge, .editChallenge, .ergEvent, .newErgEvent, .editErgEvent, .seasonWrapped: true
         default: false
         }
     }
@@ -160,6 +160,8 @@ struct RouteHost: View {
             ErgEventEditorView(eventId: nil)
         case .editErgEvent(let id):
             ErgEventEditorView(eventId: id)
+        case .seasonWrapped(let termId):
+            WrappedView(termId: termId)
         case .pbHistory(let test, let userId):
             PBHistoryView(test: test, userId: userId)
                 .toolbar(.hidden, for: .navigationBar)
