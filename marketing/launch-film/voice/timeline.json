@@ -1,0 +1,199 @@
+{
+ "source": "voice/takeB.mp3",
+ "fps": 30,
+ "duration": 90.0,
+ "lines": [
+  {
+   "id": 1,
+   "src": [
+    0.16,
+    1.84
+   ],
+   "at": 4.0,
+   "text": "Every rower knows the number.",
+   "clip": "voice/lines/line01.wav",
+   "clipDur": 2.15,
+   "startPad": 0.12
+  },
+  {
+   "id": 2,
+   "src": [
+    3.92,
+    9.76
+   ],
+   "at": 6.8,
+   "text": "The split you're chasing. The 2k you can't stop thinking about.",
+   "clip": "voice/lines/line02.wav",
+   "clipDur": 6.31,
+   "startPad": 0.12
+  },
+  {
+   "id": 3,
+   "src": [
+    12.8,
+    14.8
+   ],
+   "at": 14.3,
+   "text": "But most of the work happens alone.",
+   "clip": "voice/lines/line03.wav",
+   "clipDur": 2.47,
+   "startPad": 0.12
+  },
+  {
+   "id": 4,
+   "src": [
+    17.04,
+    25.72
+   ],
+   "at": 17.4,
+   "text": "Early starts. Long pieces. Results written in a notebook\u2026 and forgotten.",
+   "clip": "voice/lines/line04.wav",
+   "clipDur": 9.15,
+   "startPad": 0.12
+  },
+  {
+   "id": 5,
+   "src": [
+    29.36,
+    31.6
+   ],
+   "at": 29.0,
+   "text": "Rowing Pals is the social side of rowing.",
+   "clip": "voice/lines/line05.wav",
+   "clipDur": 2.71,
+   "startPad": 0.12
+  },
+  {
+   "id": 6,
+   "src": [
+    33.04,
+    36.4
+   ],
+   "at": 32.3,
+   "text": "Your training, your club and your progress, together.",
+   "clip": "voice/lines/line06.wav",
+   "clipDur": 3.83,
+   "startPad": 0.12
+  },
+  {
+   "id": 7,
+   "src": [
+    39.36,
+    42.08
+   ],
+   "at": 37.0,
+   "text": "Finish a piece, and take one photo.",
+   "clip": "voice/lines/line07.wav",
+   "clipDur": 3.19,
+   "startPad": 0.12
+  },
+  {
+   "id": 8,
+   "src": [
+    44.16,
+    48.56
+   ],
+   "at": 40.6,
+   "text": "The rear camera catches the monitor. The front camera catches you.",
+   "clip": "voice/lines/line08.wav",
+   "clipDur": 4.87,
+   "startPad": 0.12
+  },
+  {
+   "id": 9,
+   "src": [
+    50.96,
+    55.56
+   ],
+   "at": 46.0,
+   "text": "Rowing Pals reads the numbers off the screen. You just confirm the rate.",
+   "clip": "voice/lines/line09.wav",
+   "clipDur": 5.07,
+   "startPad": 0.12
+  },
+  {
+   "id": 10,
+   "src": [
+    58.32,
+    64.68
+   ],
+   "at": 52.0,
+   "text": "Then it's on your club's feed, where your crew can react, comment, and celebrate every new personal best.",
+   "clip": "voice/lines/line10.wav",
+   "clipDur": 6.83,
+   "startPad": 0.12
+  },
+  {
+   "id": 11,
+   "src": [
+    67.36,
+    75.28
+   ],
+   "at": 59.6,
+   "text": "Every test builds your history. Watch your 2k come down, and see an estimate of what you could pull today.",
+   "clip": "voice/lines/line11.wav",
+   "clipDur": 8.39,
+   "startPad": 0.12
+  },
+  {
+   "id": 12,
+   "src": [
+    77.6,
+    83.56
+   ],
+   "at": 68.8,
+   "text": "Weekly rankings show exactly where you stand in your own group, and how many metres it takes to move up.",
+   "clip": "voice/lines/line12.wav",
+   "clipDur": 6.43,
+   "startPad": 0.12
+  },
+  {
+   "id": 13,
+   "src": [
+    86.16,
+    91.48
+   ],
+   "at": 76.0,
+   "text": "Join your club, take on its own tests, and let your coach follow the squad's training.",
+   "clip": "voice/lines/line13.wav",
+   "clipDur": 6.03,
+   "startPad": 0.36
+  },
+  {
+   "id": 14,
+   "src": [
+    93.92,
+    94.8
+   ],
+   "at": 83.0,
+   "text": "Rowing Pals.",
+   "clip": "voice/lines/line14.wav",
+   "clipDur": 1.35,
+   "startPad": 0.12
+  },
+  {
+   "id": 15,
+   "src": [
+    96.56,
+    97.44
+   ],
+   "at": 84.8,
+   "text": "Train together.",
+   "clip": "voice/lines/line15.wav",
+   "clipDur": 1.35,
+   "startPad": 0.12
+  },
+  {
+   "id": 16,
+   "src": [
+    99.68,
+    101.12
+   ],
+   "at": 87.0,
+   "text": "Coming soon to iPhone.",
+   "clip": "voice/lines/line16.wav",
+   "clipDur": 1.56,
+   "startPad": 0.12
+  }
+ ]
+}

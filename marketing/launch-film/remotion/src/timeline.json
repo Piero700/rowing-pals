@@ -1,0 +1,40 @@
+{
+  "fps": 30,
+  "duration": 90,
+  "scenes": {
+    "open":     [0.0, 6.6],
+    "number":   [6.6, 14.0],
+    "alone":    [14.0, 27.0],
+    "reveal":   [27.0, 36.6],
+    "capture":  [36.6, 51.6],
+    "feed":     [51.6, 59.3],
+    "pbs":      [59.3, 68.4],
+    "rankings": [68.4, 75.6],
+    "club":     [75.6, 82.6],
+    "end":      [82.6, 90.0]
+  },
+  "cues": [
+    {"t": 29.0, "sfx": "light-aura", "db": -16},
+    {"t": 39.5, "sfx": "camera-lens-shutter", "db": -9},
+    {"t": 40.6, "sfx": "swoosh-slow", "db": -18},
+    {"t": 47.0, "sfx": "ui-select-click", "db": -14},
+    {"t": 47.45, "sfx": "ui-select-click", "db": -16},
+    {"t": 47.9, "sfx": "ui-select-click", "db": -18},
+    {"t": 49.6, "sfx": "switch-tap", "db": -12},
+    {"t": 49.75, "sfx": "ui-success-soft", "db": -20},
+    {"t": 51.6, "sfx": "transition-soft", "db": -20},
+    {"t": 54.9, "sfx": "ui-message-pop", "db": -15},
+    {"t": 56.0, "sfx": "swoosh-slow", "db": -20},
+    {"t": 59.3, "sfx": "air-woosh-deep", "db": -20},
+    {"t": 63.1, "sfx": "shimmer-sparkle-sweep", "db": -22},
+    {"t": 65.5, "sfx": "swoosh-slow", "db": -20},
+    {"t": 68.4, "sfx": "transition-soft", "db": -20},
+    {"t": 73.8, "sfx": "bass-hit-short", "db": -15},
+    {"t": 73.85, "sfx": "ui-success-soft", "db": -20},
+    {"t": 75.6, "sfx": "air-woosh-deep", "db": -20},
+    {"t": 77.3, "sfx": "swoosh-slow", "db": -21},
+    {"t": 79.0, "sfx": "swoosh-slow", "db": -22},
+    {"t": 82.6, "sfx": "impact-deep-whoosh", "db": -17},
+    {"t": 87.0, "sfx": "light-aura", "db": -22}
+  ]
+}
