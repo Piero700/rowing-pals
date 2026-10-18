@@ -39,6 +39,11 @@ final class ReviewSheetViewModel {
     var segments: [DraftSegment] = []
     var galleryPhotos: [GalleryPhoto] = []
     var caption = ""
+    /// The clubmates this session was rowed with (decision 90), in the order they were ticked.
+    var taggedIds: [UUID] = []
+    /// Who can be tagged: clubmates who row, loaded when the picker first opens.
+    private(set) var clubmates: [ClubMember] = []
+    private(set) var isLoadingClubmates = false
     /// Who can see this post — a new choice at post time. `.everyone`
     /// (club + followers, not an app-wide public option — see
     /// `PostVisibility`) is the widest of the three, so it's the default.
@@ -597,11 +602,40 @@ final class ReviewSheetViewModel {
                 }
             }
 
+            // Who they trained with. The post is already saved, so a failure here only leaves it
+            // untagged: the tags can be added from the post afterwards.
+            if !taggedIds.isEmpty {
+                do {
+                    try await TagService.set(taggedIds, on: sessionId)
+                } catch {
+                    print("Tagging the new post failed (\(sessionId)): \(error)")
+                }
+            }
+
             return true
         } catch {
             postError = error.localizedDescription
             return false
         }
+    }
+
+    /// The tagged clubmates, as the post page will name them.
+    var taggedPeople: [ClubMember] {
+        taggedIds.compactMap { id in clubmates.first { $0.id == id } }
+    }
+
+    /// Loads who can be tagged, once.
+    @MainActor
+    func loadClubmates() async {
+        guard clubmates.isEmpty, !isLoadingClubmates else { return }
+        isLoadingClubmates = true
+        defer { isLoadingClubmates = false }
+        clubmates = (try? await TagService.clubmates()) ?? []
+    }
+
+    /// The picker's choice, keeping the order people were first ticked in.
+    func setTagged(_ ids: Set<UUID>) {
+        taggedIds = taggedIds.filter { ids.contains($0) } + clubmates.map(\.id).filter { ids.contains($0) && !taggedIds.contains($0) }
     }
 
     /// Increments (never overwrites) the user's `daily_totals` row for this

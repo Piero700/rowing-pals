@@ -26,6 +26,8 @@ extension Notification.Name {
     static let boatsChanged = Notification.Name("boatsChanged")
     /// An announcement was posted, changed or deleted (decision 75): the Feed and Calendar reload.
     static let announcementsChanged = Notification.Name("announcementsChanged")
+    /// Who a post's author trained with changed (decision 90); `object` is the post's id.
+    static let tagsChanged = Notification.Name("tagsChanged")
 }
 
 extension NotificationCenter {

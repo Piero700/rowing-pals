@@ -100,6 +100,12 @@ final class PostDetailViewModel {
     /// False when the viewer sees this post only as its author's coach (decision 40).
     var canInteract = true
     var isBlocked = false
+    /// Who the author trained with (decision 90).
+    var tags: [SessionTag] = []
+    /// Who the author can tag, loaded when they open the picker.
+    private(set) var clubmates: [ClubMember] = []
+    private(set) var isLoadingClubmates = false
+    var tagError: String?
 
     var isLoading = false
     var errorMessage: String?
@@ -241,6 +247,8 @@ final class PostDetailViewModel {
             authorFollowsViewer = followsBackResult
             authorStreakDays = authorStreakResult
             canInteract = await readOnly.isEmpty
+            // Best-effort: without the tags table yet, the post simply has no "with …" line.
+            tags = ((try? await TagService.tags(of: [sessionId])) ?? [:])[sessionId] ?? []
 
             subscribeRealtime()
             errorMessage = nil
@@ -530,6 +538,52 @@ final class PostDetailViewModel {
             deleteError = error.localizedDescription
             return false
         }
+    }
+
+    // MARK: - Crew tags (decision 90)
+
+    /// The viewer is tagged on someone else's post: they can take themselves off.
+    var isTaggedHere: Bool { !isOwnPost && tags.contains { $0.userId == ownUserId } }
+
+    @MainActor
+    func loadClubmates() async {
+        guard isOwnPost, clubmates.isEmpty, !isLoadingClubmates else { return }
+        isLoadingClubmates = true
+        defer { isLoadingClubmates = false }
+        clubmates = (try? await TagService.clubmates()) ?? []
+    }
+
+    /// The author's new choice of who they trained with; anyone ticked before stays in order.
+    @MainActor
+    func saveTags(_ ids: Set<UUID>) async {
+        guard isOwnPost else { return }
+        let kept = tags.map(\.userId).filter { ids.contains($0) }
+        let added = clubmates.map(\.id).filter { ids.contains($0) && !kept.contains($0) }
+        do {
+            try await TagService.set(kept + added, on: sessionId)
+            await reloadTags()
+            tagError = nil
+        } catch {
+            tagError = "Couldn’t change who you trained with. \(error.localizedDescription)"
+        }
+    }
+
+    /// Takes the viewer off this post.
+    @MainActor
+    func removeMe() async {
+        do {
+            try await TagService.removeMe(from: sessionId)
+            await reloadTags()
+            tagError = nil
+        } catch {
+            tagError = "Couldn’t remove you. \(error.localizedDescription)"
+        }
+    }
+
+    @MainActor
+    private func reloadTags() async {
+        tags = ((try? await TagService.tags(of: [sessionId])) ?? [:])[sessionId] ?? []
+        NotificationCenter.default.post(name: .tagsChanged, object: sessionId)
     }
 
     @MainActor

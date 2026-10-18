@@ -42,6 +42,8 @@ final class FeedViewModel {
     var todaysWorkouts: [TodaysWorkout] = []
     /// Posts the viewer sees only as the author's coach: read-only (decision 40).
     var readOnlyPostIds: Set<UUID> = []
+    /// Who each post's author trained with (decision 90), by post.
+    var tags: [UUID: [SessionTag]] = [:]
     var isLoading = false
     var isLoadingMore = false
     var errorMessage: String?
@@ -254,10 +256,11 @@ final class FeedViewModel {
             pendingClubName = pendingName
             hasMorePages = page.count == Self.pageSize
             errorMessage = nil
-            // Photo links and streak badges don't depend on each other: fetch both at once.
+            // Photo links, streak badges and tags don't depend on each other: fetch them at once.
             async let urls: Void = fetchSignedURLs(for: page)
             async let streakBadges: Void = fetchStreaks(for: page)
-            _ = await (urls, streakBadges)
+            async let pageTags: Void = fetchTags(for: page, replacing: replacing)
+            _ = await (urls, streakBadges, pageTags)
         } catch {
             // Per task 12: "Feed blanks after a few pages -> pagination
             // cursor bug; print the query being sent." Printing the actual
@@ -266,6 +269,21 @@ final class FeedViewModel {
             print("Feed query failed (offset \(offset), scope \(scope)): \(error)")
             errorMessage = error.localizedDescription
         }
+    }
+
+    /// One post's tags again, after they changed on its page (decision 90).
+    @MainActor
+    func refreshTags(for sessionId: UUID) async {
+        guard let found = try? await TagService.tags(of: [sessionId]) else { return }
+        tags[sessionId] = found[sessionId] ?? []
+    }
+
+    /// The page's crew tags (decision 90). Best-effort: a failure (or the tags table not there yet)
+    /// leaves the posts without their "with …" line rather than failing the Feed.
+    @MainActor
+    private func fetchTags(for page: [FeedPost], replacing: Bool) async {
+        let found = (try? await TagService.tags(of: page.map(\.id))) ?? [:]
+        if replacing { tags = found } else { tags.merge(found) { _, new in new } }
     }
 
     /// Batches every photo path this page needs into one signed-URL request

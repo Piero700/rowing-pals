@@ -219,3 +219,19 @@ reminders). The real alert comes on Mondays at 08:00; the steps below send it no
    `delete from rank_changes where week_start = (current_date - extract(isodow from current_date)::int - 6);`
    then `select queue_rank_change_alerts(true);`.
 - [ ] That account gets nothing; the others get theirs again.
+
+## 16. Crew tagging (decision 90)
+Before this section: run `docs/migrations/2026-10-18-crew-tags.sql` on staging.
+1. Piero: **+** → log a session (manual is fine) → on Review session, under Caption, **Trained with**.
+- [ ] It reads "Tag the clubmates you trained with" with **Add**. Tap it: a sheet of your clubmates who row (no coach-only
+      accounts, not you), with a search box.
+- [ ] Tick two people, **Done**: the row shows their names and **Edit**. **Post session**.
+2. **Feed**.
+- [ ] Under the caption: "with Sam and Joe" (their first names). Tap a name: their profile opens.
+3. Open the post.
+- [ ] The same line, every name tapped opens a profile; **Change who you trained with** under it. Untick one, Done: the
+      line updates here and on the Feed.
+4. Sign in as one of the tagged rowers and open the post.
+- [ ] **Remove me from this post**; tap it: their name goes from the line (and from the Feed card).
+5. Someone who can't see the post (not following, not in the club, for a Following-only post).
+- [ ] They don't see the post or its tags anywhere.

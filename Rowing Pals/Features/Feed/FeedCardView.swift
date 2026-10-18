@@ -7,7 +7,8 @@ import SwiftUI
 
 /// One v3 feed post (docs/design/rowing-pals-v3-spec.md §Feed post card, exact values from
 /// `docs/design/v3/RP Screen.dc.html` §02): header, 4:3 photo carousel, the lead piece's
-/// numbers, caption, workout link, then one row: comments, the reactions and share. A new PB glows.
+/// numbers, caption, who they trained with (decision 90), workout link, then one row: comments, the
+/// reactions and share. A new PB glows.
 ///
 /// Only specific parts are tappable — never the whole card: the header opens the author's
 /// profile; the photo and workout link open the post; the comments pill opens the thread; the
@@ -19,6 +20,8 @@ struct FeedCardView: View {
     let selfieURL: URL?
     var streakDays: Int = 0
     var reactions: [FeedViewModel.ReactionSummary] = []
+    /// Who the author trained with (decision 90).
+    var tags: [SessionTag] = []
     var onOpen: () -> Void = {}
     var onOpenComments: () -> Void = {}
     var onToggleReaction: (String) -> Void = { _ in }
@@ -51,6 +54,11 @@ struct FeedCardView: View {
                     .foregroundStyle(Tokens.Ink.primary)
                     .fixedSize(horizontal: false, vertical: true)
                     .padding(.top, 1)
+                    .padding(.bottom, 8)
+            }
+            if !tags.isEmpty {
+                // "with Sam, Joe": each name opens their profile.
+                TrainedWithLine(tags: tags) { navigate(.profile($0)) }
                     .padding(.bottom, 8)
             }
             workoutLink

@@ -26,6 +26,8 @@ struct PostDetailView: View {
     @State private var isShowingAllComments = false
     @State private var isConfirmingDelete = false
     @State private var isShowingDeleteBubble = false
+    /// The "Trained with" picker, for the post's author (decision 90).
+    @State private var isTagging = false
     /// Called with the comment total whenever it changes, so the feed card underneath updates.
     private let onCommentCountChange: (Int) -> Void
     @Environment(\.dismiss) private var dismiss
@@ -317,6 +319,7 @@ struct PostDetailView: View {
                 reactionRow
             }
             captionText
+            trainedWith
             extraPhotoGallery
             commentThread
         }
@@ -558,6 +561,48 @@ struct PostDetailView: View {
             Text(caption)
                 .textStyle(Typography.body)
                 .foregroundStyle(Tokens.Ink.primary.opacity(0.9))
+        }
+    }
+
+    // MARK: - Trained with (decision 90)
+
+    /// "with Sam, Joe and Ella", every name opening their profile; the author can change who's
+    /// tagged, and someone tagged can take themselves off.
+    @ViewBuilder
+    private var trainedWith: some View {
+        if !viewModel.tags.isEmpty || viewModel.isOwnPost {
+            VStack(alignment: .leading, spacing: Tokens.Spacing.tight) {
+                if !viewModel.tags.isEmpty {
+                    TrainedWithLine(tags: viewModel.tags, onOpen: { navigate(.profile($0)) }, showsEveryone: true)
+                }
+                if viewModel.isOwnPost {
+                    Button {
+                        isTagging = true
+                        Task { await viewModel.loadClubmates() }
+                    } label: {
+                        Label(viewModel.tags.isEmpty ? "Tag who you trained with" : "Change who you trained with",
+                              icon: .people, size: Tokens.Icon.small)
+                    }
+                    .buttonStyle(.rpText)
+                }
+                if viewModel.isTaggedHere {
+                    Button("Remove me from this post") {
+                        Task { await viewModel.removeMe() }
+                    }
+                    .buttonStyle(.rpText)
+                }
+                if let error = viewModel.tagError {
+                    Text(error)
+                        .textStyle(Typography.meta)
+                        .foregroundStyle(Tokens.System.error)
+                }
+            }
+            .sheet(isPresented: $isTagging) {
+                CrewTagPicker(people: viewModel.clubmates, selected: Set(viewModel.tags.map(\.userId)),
+                              isLoading: viewModel.isLoadingClubmates) { chosen in
+                    Task { await viewModel.saveTags(chosen) }
+                }
+            }
         }
     }
 

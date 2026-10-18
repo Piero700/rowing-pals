@@ -142,6 +142,10 @@ struct FeedView: View {
         .onReceive(NotificationCenter.default.publisher(for: .sessionPosted)) { _ in
             Task { await viewModel.reload() }
         }
+        .onReceive(NotificationCenter.default.publisher(for: .tagsChanged)) { note in
+            guard let id = note.object as? UUID else { return }
+            Task { await viewModel.refreshTags(for: id) }
+        }
         // Back from the background, perhaps on a new day: yesterday's workouts go.
         .onChange(of: scenePhase) { _, phase in
             if phase == .active {
@@ -232,6 +236,7 @@ struct FeedView: View {
                     selfieURL: viewModel.signedURL(forPath: FeedViewModel.selfiePath(userId: post.userId, sessionId: post.id)),
                     streakDays: viewModel.streakDays(forAuthor: post.userId),
                     reactions: viewModel.reactionSummaries(for: post),
+                    tags: viewModel.tags[post.id] ?? [],
                     onOpen: { cover = .post(post.id) },
                     onOpenComments: {
                         cover = .comments(
