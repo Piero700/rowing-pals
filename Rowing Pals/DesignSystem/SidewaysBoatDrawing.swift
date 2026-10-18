@@ -5,9 +5,10 @@
 
 import SwiftUI
 
-/// A crew boat on its side, as the rower's Feed shows it (decision 82): like the single, the stern on
-/// the left and the bow with its ball on the right; stroke-side oars up and bow side down, as the
-/// crew sees it facing the stern (sculls have one each side); each seat's mark in its circle (the
+/// A crew boat on its side, as the rower's Feed shows it (decision 82), drawn like a real boat with
+/// the oars at the catch (decision 86, `SidewaysBoatParts`): like the single, the stern on the left
+/// and the bow with its ball on the right; stroke-side oars up and bow side down, as the crew sees
+/// it facing the stern (sculls have one each side); each seat's mark in its circle (the
 /// cox's square at the stern) and the rower's first name under it, with Cox, Stroke and Bow named.
 /// The viewer's seat is filled in brand blue and their name is blue. Its width grows with the boat;
 /// `SidewaysBoatStrip` scrolls it.
@@ -33,7 +34,7 @@ struct SidewaysBoatDrawing: View {
                 }
             }
             self.xs = xs
-            width = x + Tokens.Boat.sidewaysEnd
+            width = x + Tokens.Boat.sidewaysBowEnd
         }
     }
 
@@ -55,49 +56,24 @@ struct SidewaysBoatDrawing: View {
 
     private func draw(in context: inout GraphicsContext, layout: Layout) {
         let y = Tokens.Boat.sidewaysHullCentre
-        let hh = Tokens.Boat.sidewaysHullHalfWidth
-        let left: CGFloat = 3
-        let right = layout.width - 3
-        let length = right - left
-
-        var hull = Path()
-        hull.move(to: CGPoint(x: left, y: y))
-        hull.addCurve(to: CGPoint(x: left + length * 0.5, y: y - hh),
-                      control1: CGPoint(x: left + length * 0.07, y: y - hh * 0.4),
-                      control2: CGPoint(x: left + length * 0.28, y: y - hh))
-        hull.addCurve(to: CGPoint(x: right, y: y),
-                      control1: CGPoint(x: left + length * 0.72, y: y - hh),
-                      control2: CGPoint(x: right - length * 0.07, y: y - hh * 0.4))
-        hull.addCurve(to: CGPoint(x: left + length * 0.5, y: y + hh),
-                      control1: CGPoint(x: right - length * 0.07, y: y + hh * 0.4),
-                      control2: CGPoint(x: left + length * 0.72, y: y + hh))
-        hull.addCurve(to: CGPoint(x: left, y: y),
-                      control1: CGPoint(x: left + length * 0.28, y: y + hh),
-                      control2: CGPoint(x: left + length * 0.07, y: y + hh * 0.4))
-        hull.closeSubpath()
-        context.fill(hull, with: .color(Tokens.Surface.raised))
-        context.stroke(hull, with: .color(Tokens.Surface.line), lineWidth: Tokens.Boat.lineWidth)
+        SidewaysBoatParts.drawHull(in: &context, left: 3, right: layout.width - 3, y: y)
 
         // The open deck between the first and last seats.
         let seatXs = layout.xs.values
         if let first = seatXs.min(), let last = seatXs.max() {
-            let lo = first - Tokens.Boat.sidewaysSeatSpacing * 0.42
-            let hi = last + Tokens.Boat.sidewaysSeatSpacing * 0.42
-            let deck = CGRect(x: lo, y: y - hh * 0.62, width: hi - lo, height: hh * 1.24)
-            context.fill(Path(roundedRect: deck, cornerRadius: hh * 0.6), with: .color(Tokens.Base.ground))
+            SidewaysBoatParts.drawDeck(in: &context, from: first - Tokens.Boat.sidewaysSeatSpacing * 0.4,
+                                       to: last + Tokens.Boat.sidewaysSeatSpacing * 0.4, y: y)
         }
-        let ball = Tokens.Boat.large.bowBall
-        context.fill(Path(ellipseIn: CGRect(x: right - 1.5 - ball, y: y - ball, width: ball * 2, height: ball * 2)),
-                     with: .color(Tokens.Ink.secondary))
 
         for seat in 1...setup.type.rowers {
             guard let x = layout.xs[seat] else { continue }
             if setup.type.isSculling {
-                drawRigger(in: &context, x: x, up: true)
-                drawRigger(in: &context, x: x, up: false)
+                SidewaysBoatParts.drawOar(in: &context, seatX: x, y: y, up: true)
+                SidewaysBoatParts.drawOar(in: &context, seatX: x, y: y, up: false)
             } else {
                 // Stroke side up: the crew faces the stern (left), so their stroke side is above.
-                drawRigger(in: &context, x: x, up: BoatRules.side(ofSeat: seat, setup: setup) == .stroke)
+                SidewaysBoatParts.drawOar(in: &context, seatX: x, y: y,
+                                          up: BoatRules.side(ofSeat: seat, setup: setup) == .stroke)
             }
         }
         for (seat, x) in layout.xs {
@@ -105,38 +81,14 @@ struct SidewaysBoatDrawing: View {
         }
     }
 
-    private func drawRigger(in context: inout GraphicsContext, x: CGFloat, up: Bool) {
-        let y = Tokens.Boat.sidewaysHullCentre
-        let direction: CGFloat = up ? -1 : 1
-        let edge = y + direction * Tokens.Boat.sidewaysHullHalfWidth * 0.9
-        let pin = y + direction * (Tokens.Boat.sidewaysHullHalfWidth + Tokens.Boat.sidewaysRiggerReach)
-        let spread = Tokens.Boat.sidewaysRiggerSpread
-        var wing = Path()
-        wing.move(to: CGPoint(x: x - spread, y: edge))
-        wing.addLine(to: CGPoint(x: x, y: pin))
-        wing.addLine(to: CGPoint(x: x + spread, y: edge))
-        context.stroke(wing, with: .color(Tokens.Ink.secondary),
-                       style: StrokeStyle(lineWidth: Tokens.Boat.large.lineWidth, lineJoin: .round))
-        let oarEnd = pin + direction * Tokens.Boat.sidewaysOarLength
-        var oar = Path()
-        oar.move(to: CGPoint(x: x, y: pin))
-        oar.addLine(to: CGPoint(x: x, y: oarEnd))
-        context.stroke(oar, with: .color(Tokens.Ink.primary),
-                       style: StrokeStyle(lineWidth: Tokens.Boat.large.lineWidth + 0.3, lineCap: .round))
-        let length = Tokens.Boat.sidewaysBladeLength
-        let bladeCentre = oarEnd + direction * length / 2
-        let blade = CGRect(x: x - Tokens.Boat.sidewaysBladeDepth / 2, y: bladeCentre - length / 2,
-                           width: Tokens.Boat.sidewaysBladeDepth, height: length)
-        context.fill(Path(ellipseIn: blade), with: .color(Tokens.Ink.primary.opacity(0.85)))
-    }
-
     private func drawSeat(in context: inout GraphicsContext, seat: Int, centre: CGPoint) {
         let r = Tokens.Boat.sidewaysSeatRadius
         let isMine = seat == highlightedSeat
         let shape: Path
         if seat == 0 {
-            let size = r * 1.7
-            shape = Path(roundedRect: CGRect(x: centre.x - size / 2, y: centre.y - size / 2, width: size, height: size), cornerRadius: size / 3)
+            let size = Tokens.Boat.sidewaysCoxSeat
+            shape = Path(roundedRect: CGRect(x: centre.x - size / 2, y: centre.y - size / 2, width: size, height: size),
+                         cornerRadius: Tokens.Boat.sidewaysCoxSeatCorner)
         } else {
             shape = Path(ellipseIn: CGRect(x: centre.x - r, y: centre.y - r, width: r * 2, height: r * 2))
         }
@@ -144,10 +96,10 @@ struct SidewaysBoatDrawing: View {
             context.fill(shape, with: .color(Tokens.Accent.brand))
         } else {
             context.fill(shape, with: .color(Tokens.Surface.card))
-            context.stroke(shape, with: .color(Tokens.Ink.primary), lineWidth: Tokens.Boat.lineWidth)
+            context.stroke(shape, with: .color(Tokens.Ink.primary), lineWidth: Tokens.Boat.sidewaysSeatLine)
         }
         let mark = Text(BoatRules.seatMark(seat, type: setup.type))
-            .font(.system(size: Tokens.Boat.large.markFont, weight: .bold))
+            .font(.system(size: Tokens.Boat.sidewaysMarkFont, weight: .bold))
             .monospacedDigit()
             .foregroundStyle(isMine ? Tokens.Ink.onBrand : Tokens.Ink.primary)
         context.draw(mark, at: centre)

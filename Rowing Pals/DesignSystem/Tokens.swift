@@ -328,31 +328,50 @@ enum Tokens {
         static let seatRow: CGFloat = 30
         /// "Stern" / "Bow" above and below a drawn boat.
         static let endLabelHeight: CGFloat = 13
-        /// A single on the rower's Feed, drawn on its side across the card (user, 2026-10-17): its
-        /// height, half the hull's width, the rigger's reach, the oar and its blade.
-        static let singleHeight: CGFloat = 92
-        static let singleHullHalfWidth: CGFloat = 7
-        static let singleRiggerReach: CGFloat = 16
-        static let singleOarLength: CGFloat = 16
-        static let singleBladeLength: CGFloat = 13
-        static let singleBladeDepth: CGFloat = 5
-        static let singleSeatRadius: CGFloat = 9
+        /// A single on the rower's Feed, drawn on its side across the card (user, 2026-10-17), with the
+        /// same hull, riggers, oars and blades as the bigger boats (decision 86): its height, and how
+        /// much of the hull its cockpit takes.
+        static let singleHeight: CGFloat = 144
+        static let singleCockpitShare: CGFloat = 0.24
         /// Bigger boats on the rower's Feed, on their side like the single and scrolling sideways
-        /// (decision 82): a seat every 60 pt, the cox a shorter step, the hull's centre line, its
-        /// riggers and oars, and the names in a row underneath.
-        static let sidewaysSeatSpacing: CGFloat = 60
-        static let sidewaysCoxStep: CGFloat = 44
-        static let sidewaysEnd: CGFloat = 40
-        static let sidewaysHullCentre: CGFloat = 50
-        static let sidewaysHullHalfWidth: CGFloat = 7
-        static let sidewaysRiggerReach: CGFloat = 12
-        static let sidewaysRiggerSpread: CGFloat = 7
-        static let sidewaysOarLength: CGFloat = 12
-        static let sidewaysBladeLength: CGFloat = 10
-        static let sidewaysBladeDepth: CGFloat = 3.8
-        static let sidewaysSeatRadius: CGFloat = 11
-        static let sidewaysNameTop: CGFloat = 94
-        static let sidewaysHeight: CGFloat = 128
+        /// (decision 82), drawn like a real boat with the oars at the catch (decision 86, draft A):
+        /// a seat every 64 pt, the cox a shorter step, the stern and bow ends, the hull's centre line.
+        static let sidewaysSeatSpacing: CGFloat = 64
+        static let sidewaysCoxStep: CGFloat = 46
+        static let sidewaysEnd: CGFloat = 44
+        static let sidewaysBowEnd: CGFloat = 58
+        static let sidewaysHullCentre: CGFloat = 74
+        static let sidewaysHullHalfWidth: CGFloat = 9
+        /// The hull's colour: the raised card with this much of the secondary ink in it.
+        static let sidewaysHullTint: Double = 0.3
+        static let sidewaysHullLine: CGFloat = 1.2
+        static let sidewaysCentreLine: CGFloat = 0.6
+        static let sidewaysBowBall: CGFloat = 2.8
+        /// The wing rigger: the pin out from the hull's side, how far along the hull its arms
+        /// reach, and its line.
+        static let sidewaysRiggerReach: CGFloat = 13
+        static let sidewaysRiggerSpread: CGFloat = 11
+        static let sidewaysRiggerLine: CGFloat = 1.3
+        static let sidewaysPinRadius: CGFloat = 1.8
+        /// The pin sits a little bow-side of the seat.
+        static let sidewaysPinLead: CGFloat = 4
+        /// The oar at the catch: swept towards the bow by this angle (degrees), the shaft out from the
+        /// pin and in to the handle, and its line.
+        static let sidewaysOarAngle: Double = 38
+        static let sidewaysOarOutboard: CGFloat = 40
+        static let sidewaysOarInboard: CGFloat = 13
+        static let sidewaysOarLine: CGFloat = 1.9
+        /// The spoon blade, squared at the catch, its face to the stern side of the shaft.
+        static let sidewaysBladeLength: CGFloat = 17
+        static let sidewaysBladeWidth: CGFloat = 6.5
+        static let sidewaysBladeLine: CGFloat = 0.6
+        static let sidewaysSeatRadius: CGFloat = 10.5
+        static let sidewaysCoxSeat: CGFloat = 16
+        static let sidewaysCoxSeatCorner: CGFloat = 5
+        static let sidewaysSeatLine: CGFloat = 1.3
+        static let sidewaysMarkFont: CGFloat = 9.5
+        static let sidewaysNameTop: CGFloat = 140
+        static let sidewaysHeight: CGFloat = 174
         /// How far the edges fade where there's more boat to scroll to.
         static let sidewaysFade: CGFloat = 22
         static let sidewaysBarHeight: CGFloat = 3

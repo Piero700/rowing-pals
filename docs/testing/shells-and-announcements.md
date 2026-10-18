@@ -164,3 +164,14 @@ In Xcode choose **RP Dev** and **your iPhone**, press **Cmd+R**.
 - [ ] The four fits the card: nothing to scroll. A single still shows as before (no names).
 3. Coach_J: open a water session.
 - [ ] Under The plan: **✓ Saved** (greyed). Change Ends: it becomes **Save changes**; tap it: back to **✓ Saved**.
+
+## 13. Feed boats drawn like a real boat (decision 86)
+1. Coach_J: send a boat with Piero in it for today (an **8+** shows it best); also a **1x** if you have one.
+2. Piero: **Feed**.
+- [ ] Each oar leans **towards the bow** (right), with a squared **spoon blade** at the end, a **wing rigger**
+      from the hull to the pin, and the handle reaching in over the boat — as on the canvas board
+      *Feed boats, more realistic*, column **A**.
+- [ ] Stroke-side oars are above the boat, bow side below; in a double or quad every seat has one each side.
+- [ ] Seats keep their numbers (S … B, the cox's square C); Piero's is blue. No blade covers a name.
+- [ ] The single is drawn the same way (one seat in blue, an oar each side), with nothing cut off at the top or bottom.
+- [ ] Light mode: the hull, riggers and blades are all clearly visible.
