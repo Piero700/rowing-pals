@@ -145,6 +145,9 @@ enum Tokens {
         static let headerHorizontal: CGFloat = 16
         static let card: CGFloat = 16
         static let tight: CGFloat = 8
+        /// Room either side of a segment's label, so a long one ("Stroke side") shrinks a little
+        /// rather than touching the capsule.
+        static let segmentInset: CGFloat = 8
         static let gap: CGFloat = 10
         static let loose: CGFloat = 12
         static let sectionTop: CGFloat = 20
