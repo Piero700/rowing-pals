@@ -38,7 +38,7 @@ export const DualPhoto: React.FC<{w: number; insetK: number; split: number}> = (
     <div style={{position: 'relative', width: w, height: h}}>
       <div style={{position: 'absolute', inset: 0, borderRadius: w * 0.06, overflow: 'hidden',
         background: 'radial-gradient(90% 70% at 40% 45%, #23262d, #0c0d10)', boxShadow: '0 40px 100px rgba(0,0,0,.6)'}}>
-        <div style={{position: 'absolute', left: w * 0.1, top: h * 0.2}}><Monitor w={w * 0.8} rows={ROWS} glow={0.7} /></div>
+        <div style={{position: 'absolute', left: w * 0.08, top: h * 0.3}}><Monitor w={w * 0.72} rows={ROWS} glow={0.7} /></div>
       </div>
       <Selfie w={sw} h={sh} radius={w * 0.045 * (1 + split)} style={{position: 'absolute', left: sx, top: sy,
         border: `${Math.max(3, w * 0.008)}px solid #1b1c21`, boxSizing: 'border-box', boxShadow: '0 20px 60px rgba(0,0,0,.5)',
@@ -86,9 +86,9 @@ export const CaptureScene: React.FC = () => {
     {key: 'rate', val: '30 spm', at: 48.35, row: 3},
   ];
   const photoH = photoW * 4 / 3;
-  const monW = photoW * 0.8;
-  const monLeft = photoCx - photoW / 2 + photoW * 0.1;
-  const monTop = photoCy - photoH / 2 + photoH * 0.2;
+  const monW = photoW * 0.72;
+  const monLeft = photoCx - photoW / 2 + photoW * 0.08;
+  const monTop = photoCy - photoH / 2 + photoH * 0.3;
   const lcdPad = monW * 0.07;
   const lcdTop = monTop + lcdPad;
   const lcdH = monW * 1.08 - lcdPad * 3.2;
