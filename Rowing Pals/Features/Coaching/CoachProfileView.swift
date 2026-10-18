@@ -74,33 +74,12 @@ struct CoachProfileView: View {
     }
 
     /// Someone who rows and coaches goes back to the rower version from here; Settings there has
-    /// Switch to coaching. The app opens in whichever was used last.
+    /// Switch to coaching. The same row in both places (user, 2026-10-18).
     private var switchCard: some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Text("You coach and row")
-                .textStyle(Typography.rowTitle)
-                .foregroundStyle(Tokens.Ink.primary)
-            Text("Switch to the rower version for your own Feed, Rankings and Profile. The app opens in the one you used last.")
-                .textStyle(Typography.meta)
-                .foregroundStyle(Tokens.Ink.secondary)
-                .padding(.bottom, Tokens.Spacing.loose)
-            Button {
-                appMode = .rowing
-                dismiss()
-            } label: {
-                Label("Switch to rowing", icon: .switchMode)
-            }
-            .buttonStyle(.rpGlass)
-            Text("In the rower version, Settings has Switch to coaching.")
-                .textStyle(Typography.statLabel)
-                .foregroundStyle(Tokens.Ink.secondary)
-                .frame(maxWidth: .infinity)
-                .multilineTextAlignment(.center)
-                .padding(.top, Tokens.Spacing.tight)
+        SwitchVersionRow(toCoaching: false) {
+            appMode = .rowing
+            dismiss()
         }
-        .padding(Tokens.Spacing.card)
-        .background(Self.cardShape.fill(Tokens.Surface.card))
-        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
         .padding(.top, Tokens.Spacing.group)
     }
 

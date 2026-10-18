@@ -310,36 +310,10 @@ struct SettingsView: View {
 
     private var switchVersionRow: some View {
         let toCoaching = appMode == .rowing
-        return Button {
+        return SwitchVersionRow(toCoaching: toCoaching) {
             appMode = toCoaching ? .coaching : .rowing
             dismiss()
-        } label: {
-            HStack(spacing: Tokens.Spacing.loose) {
-                RPIconView(icon: .switchMode)
-                    .textStyle(Typography.rowTitle)
-                    .foregroundStyle(Tokens.Accent.brand)
-                    .frame(width: Tokens.Size.rowIcon, height: Tokens.Size.rowIcon)
-                    .background(Circle().fill(Tokens.Accent.brandSoft))
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(toCoaching ? "Switch to coaching" : "Switch to rowing")
-                        .textStyle(Typography.rowTitle)
-                        .foregroundStyle(Tokens.Accent.brand)
-                    Text("You row and coach. The app opens in the one you used last.")
-                        .textStyle(Typography.meta)
-                        .foregroundStyle(Tokens.Ink.secondary)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                chevron
-            }
-            .padding(.horizontal, Tokens.Spacing.card)
-            .padding(.vertical, Tokens.Spacing.loose)
-            .frame(minHeight: Tokens.Size.row)
-            .contentShape(Rectangle())
         }
-        .buttonStyle(IconPressStyle())
-        .background(Self.cardShape.fill(Tokens.Surface.card))
-        .clipShape(Self.cardShape)
-        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
         .padding(.top, Tokens.Spacing.tight)
     }
 
