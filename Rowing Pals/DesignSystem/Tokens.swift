@@ -306,8 +306,8 @@ enum Tokens {
         }
 
         static let small = Metrics(width: 166, hullHalfWidth: 5.5, firstSeat: 26, seatSpacing: 30, coxStep: 26, tail: 26,
-                                   seatRadius: 7.5, riggerReach: 12, riggerSpread: 6, oarLength: 11, bladeLength: 10,
-                                   bladeDepth: 3.6, bowBall: 2.2, lineWidth: 1.1, markFont: 7.5, nameGap: 4, nameWidth: 44)
+                                   seatRadius: 7.5, riggerReach: 12, riggerSpread: 6, oarLength: 9, bladeLength: 8.5,
+                                   bladeDepth: 3.6, bowBall: 2.2, lineWidth: 1.1, markFont: 7.5, nameGap: 4, nameWidth: 40)
         static let large = Metrics(width: 345, hullHalfWidth: 9, firstSeat: 46, seatSpacing: 64, coxStep: 50, tail: 46,
                                    seatRadius: 11, riggerReach: 22, riggerSpread: 9, oarLength: 20, bladeLength: 15,
                                    bladeDepth: 5.4, bowBall: 3, lineWidth: 1.5, markFont: 10, nameGap: 6, nameWidth: 96)

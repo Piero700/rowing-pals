@@ -194,6 +194,9 @@ struct BoatDrawing: View {
             .fontWeight(isMine ? .bold : .semibold)
             .foregroundStyle(isMine ? Tokens.Accent.brand : Tokens.Ink.primary)
             .lineLimit(1)
+            // A longer first name shrinks a little before it's cut short, and never leaves the
+            // drawing (it ran past the tile's edge, user 2026-10-17).
+            .minimumScaleFactor(0.85)
             .frame(width: metrics.nameWidth, alignment: right ? .leading : .trailing)
             .position(x: right ? layout.centreX + layout.reach + metrics.nameWidth / 2
                                : layout.centreX - layout.reach - metrics.nameWidth / 2,
