@@ -97,7 +97,7 @@ struct DraftSegment: Identifiable {
         return Int((Double(timeMs) / Double(splitMs) * 500).rounded())
     }
 
-    /// Average pace per 500 m, derived from distance and time — read-only in
+    /// Average split (per 500 m), derived from distance and time — read-only in
     /// the UI ("Average /500m now read-only, auto-computed as distance/time
     /// change"). Zero until both are known.
     mutating func recomputeSplit() {

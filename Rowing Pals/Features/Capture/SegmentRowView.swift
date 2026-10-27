@@ -60,7 +60,7 @@ struct SegmentRowView: View {
     /// The splits a rower can type: 1:00 to 9:59.9 per 500 m.
     private static let splitRange = 60_000...599_900
     /// Redesign phase B — per-device display preference. The average shown
-    /// here follows it, like every other read-only pace.
+    /// here follows it, like every other read-only split.
     @AppStorage(PaceDisplay.storageKey) private var paceDisplay: PaceDisplay = .split
 
     init(

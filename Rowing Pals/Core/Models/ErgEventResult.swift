@@ -17,7 +17,7 @@ nonisolated struct ErgEventResult: Decodable, Identifiable, Equatable, Sendable 
 
     var id: UUID { userId }
 
-    /// Pace per 500 m, in milliseconds.
+    /// Split (time per 500 m), in milliseconds.
     var splitMs: Int { distanceM > 0 ? Int((Double(timeMs) * 500 / Double(distanceM)).rounded()) : 0 }
 
     enum CodingKeys: String, CodingKey {

@@ -204,7 +204,7 @@ struct FeedCardView: View {
 
     // MARK: - Numbers
 
-    /// The lead piece's own distance, time and pace (decision 16) — the most intense piece, not
+    /// The lead piece's own distance, time and split (decision 16) — the most intense piece, not
     /// the whole session.
     private var metricTrio: some View {
         HStack(alignment: .top, spacing: Tokens.Spacing.tight) {

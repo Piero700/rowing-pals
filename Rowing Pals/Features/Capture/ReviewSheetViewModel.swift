@@ -96,7 +96,7 @@ final class ReviewSheetViewModel {
     var totalDistanceM: Int { segments.reduce(0) { $0 + $1.distanceM } }
     var totalTimeMs: Int { segments.reduce(0) { $0 + $1.timeMs } }
 
-    /// Pace per 500m over the whole session — recomputed from the segment
+    /// Split (per 500m) over the whole session — recomputed from the segment
     /// totals, not averaged from each segment's own split, so a long slow
     /// warmup and a fast main piece weight correctly.
     var avgSplitMs: Int? {

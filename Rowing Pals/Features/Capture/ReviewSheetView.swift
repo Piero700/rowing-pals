@@ -175,7 +175,7 @@ struct ReviewSheetView: View {
     }
 
     /// v3 split rows: a badge (the Main piece wears the workout label in brand), "distance ·
-    /// time", and the pace — one per piece, in order.
+    /// time", and the split — one per piece, in order.
     private var splitsSummary: some View {
         VStack(spacing: 8) {
             ForEach(viewModel.segments) { segment in
