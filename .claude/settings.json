@@ -1,4 +1,32 @@
 {
+  "permissions": {
+    "allow": [
+      "Bash(xcrun xcresulttool get *)",
+      "Bash(xcrun simctl bootstatus *)",
+      "Bash(xcrun simctl list)",
+      "Bash(xcrun simctl list *)",
+      "Bash(npm view *)",
+      "Bash(xcodebuild -list *)",
+      "Bash(xcodebuild -showBuildSettings *)",
+      "mcp__plugin_ecc_chrome-devtools__lighthouse_audit",
+      "mcp__Claude_Browser__find",
+      "mcp__Claude_Browser__read_page",
+      "mcp__Claude_Browser__get_page_text",
+      "mcp__Claude_Browser__read_console_messages",
+      "mcp__terminal__read_terminal",
+      "mcp__XcodeBuildMCP__session_show_defaults",
+      "mcp__XcodeBuildMCP__discover_projs",
+      "mcp__XcodeBuildMCP__list_schemes",
+      "mcp__XcodeBuildMCP__list_sims",
+      "mcp__XcodeBuildMCP__show_build_settings",
+      "mcp__XcodeBuildMCP__get_sim_app_path",
+      "mcp__XcodeBuildMCP__get_app_bundle_id",
+      "mcp__XcodeBuildMCP__get_coverage_report",
+      "mcp__XcodeBuildMCP__get_file_coverage",
+      "mcp__XcodeBuildMCP__screenshot",
+      "mcp__XcodeBuildMCP__snapshot_ui"
+    ]
+  },
   "hooks": {
     "PreToolUse": [
       {
