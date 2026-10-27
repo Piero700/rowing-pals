@@ -1,0 +1,1095 @@
+{
+  "about": "Expected readouts for the OCR regression test (Rowing PalsTests/OCRRegressionTests.swift). Read by eye from each photo on 2026-10-27 and cross-checked arithmetically. 'expected' is what MonitorParser should return (the summary row directly under the header, plus repDistanceM from the title). 'intervals' records the per-interval rows on screen for reference; the parser does not read them yet, so the test does not compare them. 'uncertain' lists values that need checking against the real workout. 'baselineFailures' lists fields the pipeline got wrong on 2026-10-27 (see docs/testing/ocr-regression-2026-10-27.md); they show as known issues rather than failures.",
+  "units": "timeMs/splitMs in milliseconds, distanceM in whole metres, rate in strokes per minute.",
+  "samples": [
+    {
+      "file": "IMG_0046.jpeg",
+      "monitor": "PM5",
+      "title": "100m",
+      "expected": {
+        "elapsedTimeMs": 15800,
+        "distanceM": 100,
+        "splitMs": 79000,
+        "rate": 57.0,
+        "repDistanceM": null
+      },
+      "shownAs": {
+        "time": ":15.8",
+        "distance": "100",
+        "split": "1:19.0",
+        "rate": "57"
+      },
+      "uncertain": [],
+      "baselineFailures": [],
+      "intervals": {
+        "firstRowNumber": 1,
+        "meterColumn": "cumulative",
+        "rows": [
+          {
+            "time": ":15.8",
+            "timeMs": 15800,
+            "distanceM": 100,
+            "split": "1:19.0",
+            "splitMs": 79000,
+            "rate": 57
+          }
+        ]
+      },
+      "notes": "Single 100m piece; one split row identical to the summary. Time has no leading minutes (':15.8')."
+    },
+    {
+      "file": "IMG_0593.jpeg",
+      "monitor": "PM5",
+      "title": "2000m",
+      "expected": {
+        "elapsedTimeMs": 438100,
+        "distanceM": 2000,
+        "splitMs": 109500,
+        "rate": 23.0,
+        "repDistanceM": null
+      },
+      "shownAs": {
+        "time": "7:18.1",
+        "distance": "2000",
+        "split": "1:49.5",
+        "rate": "23"
+      },
+      "uncertain": [],
+      "baselineFailures": [],
+      "intervals": {
+        "firstRowNumber": 1,
+        "meterColumn": "cumulative",
+        "rows": [
+          {
+            "time": "1:47.4",
+            "timeMs": 107400,
+            "distanceM": 500,
+            "split": "1:47.4",
+            "splitMs": 107400,
+            "rate": 23
+          },
+          {
+            "time": "1:51.9",
+            "timeMs": 111900,
+            "distanceM": 1000,
+            "split": "1:51.9",
+            "splitMs": 111900,
+            "rate": 23
+          },
+          {
+            "time": "1:51.7",
+            "timeMs": 111700,
+            "distanceM": 1500,
+            "split": "1:51.7",
+            "splitMs": 111700,
+            "rate": 23
+          },
+          {
+            "time": "1:47.1",
+            "timeMs": 107100,
+            "distanceM": 2000,
+            "split": "1:47.1",
+            "splitMs": 107100,
+            "rate": 24
+          }
+        ]
+      },
+      "notes": "Checked: split times sum to 7:18.1; 438.1 s / 4 = 1:49.5."
+    },
+    {
+      "file": "IMG_0625.jpeg",
+      "monitor": "PM5",
+      "title": "1100m",
+      "expected": {
+        "elapsedTimeMs": 226300,
+        "distanceM": 1100,
+        "splitMs": 102800,
+        "rate": 23.0,
+        "repDistanceM": null
+      },
+      "shownAs": {
+        "time": "3:46.3",
+        "distance": "1100",
+        "split": "1:42.8",
+        "rate": "23"
+      },
+      "uncertain": [],
+      "baselineFailures": [],
+      "intervals": {
+        "firstRowNumber": 1,
+        "meterColumn": "cumulative",
+        "rows": [
+          {
+            "time": "1:00.6",
+            "timeMs": 60600,
+            "distanceM": 300,
+            "split": "1:41.0",
+            "splitMs": 101000,
+            "rate": 25
+          },
+          {
+            "time": "1:02.4",
+            "timeMs": 62400,
+            "distanceM": 600,
+            "split": "1:44.0",
+            "splitMs": 104000,
+            "rate": 22
+          },
+          {
+            "time": "1:02.7",
+            "timeMs": 62700,
+            "distanceM": 900,
+            "split": "1:44.5",
+            "splitMs": 104500,
+            "rate": 24
+          },
+          {
+            "time": ":40.7",
+            "timeMs": 40700,
+            "distanceM": 1100,
+            "split": "1:41.7",
+            "splitMs": 101700,
+            "rate": 25
+          }
+        ]
+      },
+      "notes": "Last split row ':40.7' has no leading minutes. Split times sum to 3:46.4 (monitor rounding, 0.1 s)."
+    },
+    {
+      "file": "IMG_0630.jpeg",
+      "monitor": "PM5",
+      "title": "1x10:00/2:00r",
+      "expected": {
+        "elapsedTimeMs": 600000,
+        "distanceM": 2623,
+        "splitMs": 114300,
+        "rate": 19.0,
+        "repDistanceM": null
+      },
+      "shownAs": {
+        "time": "10:00.0",
+        "distance": "2623",
+        "split": "1:54.3",
+        "rate": "19"
+      },
+      "uncertain": [],
+      "baselineFailures": [],
+      "intervals": {
+        "firstRowNumber": 1,
+        "meterColumn": "per-rep",
+        "rows": [
+          {
+            "time": "10:00.0",
+            "timeMs": 600000,
+            "distanceM": 2623,
+            "split": "1:54.3",
+            "splitMs": 114300,
+            "rate": 19
+          }
+        ]
+      },
+      "notes": "Timed interval (1x10:00, 2:00 rest), so no rep distance. 'Total Time: 12:00.0' sits top-right above the header. 'r10' under the rep row = metres rowed during the rest (not compared)."
+    },
+    {
+      "file": "IMG_0647.jpeg",
+      "monitor": "PM5",
+      "title": "1500m",
+      "expected": {
+        "elapsedTimeMs": 321700,
+        "distanceM": 1500,
+        "splitMs": 107200,
+        "rate": 21.0,
+        "repDistanceM": null
+      },
+      "shownAs": {
+        "time": "5:21.7",
+        "distance": "1500",
+        "split": "1:47.2",
+        "rate": "21"
+      },
+      "uncertain": [],
+      "baselineFailures": [
+        "elapsedTimeMs",
+        "distanceM",
+        "splitMs",
+        "rate"
+      ],
+      "intervals": {
+        "firstRowNumber": 1,
+        "meterColumn": "cumulative",
+        "rows": [
+          {
+            "time": "1:07.5",
+            "timeMs": 67500,
+            "distanceM": 300,
+            "split": "1:52.5",
+            "splitMs": 112500,
+            "rate": 20
+          },
+          {
+            "time": "1:05.5",
+            "timeMs": 65500,
+            "distanceM": 600,
+            "split": "1:49.1",
+            "splitMs": 109100,
+            "rate": 21
+          },
+          {
+            "time": "1:03.9",
+            "timeMs": 63900,
+            "distanceM": 900,
+            "split": "1:46.5",
+            "splitMs": 106500,
+            "rate": 22
+          },
+          {
+            "time": "1:02.6",
+            "timeMs": 62600,
+            "distanceM": 1200,
+            "split": "1:44.3",
+            "splitMs": 104300,
+            "rate": 23
+          },
+          {
+            "time": "1:02.2",
+            "timeMs": 62200,
+            "distanceM": 1500,
+            "split": "1:43.6",
+            "splitMs": 103600,
+            "rate": 23
+          }
+        ]
+      },
+      "notes": "Small, dim screen in the photo, but split times sum exactly to 5:21.7 and 321.7 s / 3 = 1:47.2."
+    },
+    {
+      "file": "IMG_0648.jpeg",
+      "monitor": "PM5",
+      "title": "2x1000m/2:00r",
+      "expected": {
+        "elapsedTimeMs": 415700,
+        "distanceM": 2000,
+        "splitMs": 103900,
+        "rate": 24.0,
+        "repDistanceM": 1000
+      },
+      "shownAs": {
+        "time": "6:55.7",
+        "distance": "2000",
+        "split": "1:43.9",
+        "rate": "24"
+      },
+      "uncertain": [],
+      "baselineFailures": [],
+      "intervals": {
+        "firstRowNumber": 1,
+        "meterColumn": "per-rep",
+        "rows": [
+          {
+            "time": "3:26.8",
+            "timeMs": 206800,
+            "distanceM": 1000,
+            "split": "1:43.4",
+            "splitMs": 103400,
+            "rate": 24
+          },
+          {
+            "time": "3:28.9",
+            "timeMs": 208900,
+            "distanceM": 1000,
+            "split": "1:44.4",
+            "splitMs": 104400,
+            "rate": 24
+          }
+        ]
+      },
+      "notes": "Distance intervals. 'Total Time: 10:55.7' top-right. 'r50' = rest metres (not compared)."
+    },
+    {
+      "file": "IMG_0856.jpeg",
+      "monitor": "PM5",
+      "title": "5000m",
+      "expected": {
+        "elapsedTimeMs": 1158000,
+        "distanceM": 5000,
+        "splitMs": 115800,
+        "rate": 21.0,
+        "repDistanceM": null
+      },
+      "shownAs": {
+        "time": "19:18.0",
+        "distance": "5000",
+        "split": "1:55.8",
+        "rate": "21"
+      },
+      "uncertain": [],
+      "baselineFailures": [],
+      "intervals": {
+        "firstRowNumber": 1,
+        "meterColumn": "cumulative",
+        "rows": [
+          {
+            "time": "3:42.5",
+            "timeMs": 222500,
+            "distanceM": 1000,
+            "split": "1:51.2",
+            "splitMs": 111200,
+            "rate": 21
+          },
+          {
+            "time": "3:51.4",
+            "timeMs": 231400,
+            "distanceM": 2000,
+            "split": "1:55.7",
+            "splitMs": 115700,
+            "rate": 21
+          },
+          {
+            "time": "3:56.2",
+            "timeMs": 236200,
+            "distanceM": 3000,
+            "split": "1:58.1",
+            "splitMs": 118100,
+            "rate": 22
+          },
+          {
+            "time": "3:57.8",
+            "timeMs": 237800,
+            "distanceM": 4000,
+            "split": "1:58.9",
+            "splitMs": 118900,
+            "rate": 21
+          },
+          {
+            "time": "3:50.1",
+            "timeMs": 230100,
+            "distanceM": 5000,
+            "split": "1:55.0",
+            "splitMs": 115000,
+            "rate": 23
+          }
+        ]
+      },
+      "notes": "Checked: split times sum to 19:18.0."
+    },
+    {
+      "file": "IMG_0860.jpeg",
+      "monitor": "PM5",
+      "title": "v3000m/3:00r...4",
+      "expected": {
+        "elapsedTimeMs": 1462900,
+        "distanceM": 6500,
+        "splitMs": 112500,
+        "rate": 24.0,
+        "repDistanceM": null
+      },
+      "shownAs": {
+        "time": "24:22.9",
+        "distance": "6500",
+        "split": "1:52.5",
+        "rate": "24"
+      },
+      "uncertain": [],
+      "baselineFailures": [],
+      "intervals": {
+        "firstRowNumber": 1,
+        "meterColumn": "per-rep",
+        "rows": [
+          {
+            "time": "11:18.5",
+            "timeMs": 678500,
+            "distanceM": 3000,
+            "split": "1:53.0",
+            "splitMs": 113000,
+            "rate": 25
+          },
+          {
+            "time": "7:37.6",
+            "timeMs": 457600,
+            "distanceM": 2000,
+            "split": "1:54.4",
+            "splitMs": 114400,
+            "rate": 24
+          },
+          {
+            "time": "3:44.9",
+            "timeMs": 224900,
+            "distanceM": 1000,
+            "split": "1:52.4",
+            "splitMs": 112400,
+            "rate": 25
+          },
+          {
+            "time": "1:41.9",
+            "timeMs": 101900,
+            "distanceM": 500,
+            "split": "1:41.9",
+            "splitMs": 101900,
+            "rate": 28
+          }
+        ]
+      },
+      "notes": "Variable interval (3000/2000/1000/500m, 3:00 rest), so no single rep distance. Each rep is followed by a rest row 'r3:00  <metres>' (15, 26, 92, 21), not compared. Glare over 'View Detail'. Rep times sum to 24:22.9."
+    },
+    {
+      "file": "IMG_0866.jpeg",
+      "monitor": "PM5",
+      "title": "10x1000m/:20r",
+      "expected": {
+        "elapsedTimeMs": 2234600,
+        "distanceM": 10000,
+        "splitMs": 111700,
+        "rate": 26.0,
+        "repDistanceM": 1000
+      },
+      "shownAs": {
+        "time": "37:14.6",
+        "distance": "10000",
+        "split": "1:51.7",
+        "rate": "26"
+      },
+      "uncertain": [
+        "intervals.firstRowNumber"
+      ],
+      "baselineFailures": [],
+      "intervals": {
+        "firstRowNumber": 4,
+        "meterColumn": "per-rep",
+        "rows": [
+          {
+            "time": "3:52.4",
+            "timeMs": 232400,
+            "distanceM": 1000,
+            "split": "1:56.2",
+            "splitMs": 116200,
+            "rate": 27
+          },
+          {
+            "time": "3:35.6",
+            "timeMs": 215600,
+            "distanceM": 1000,
+            "split": "1:47.8",
+            "splitMs": 107800,
+            "rate": 25
+          },
+          {
+            "time": "3:59.4",
+            "timeMs": 239400,
+            "distanceM": 1000,
+            "split": "1:59.7",
+            "splitMs": 119700,
+            "rate": 26
+          },
+          {
+            "time": "3:35.9",
+            "timeMs": 215900,
+            "distanceM": 1000,
+            "split": "1:47.9",
+            "splitMs": 107900,
+            "rate": 27
+          },
+          {
+            "time": "3:59.7",
+            "timeMs": 239700,
+            "distanceM": 1000,
+            "split": "1:59.8",
+            "splitMs": 119800,
+            "rate": 29
+          },
+          {
+            "time": "3:38.8",
+            "timeMs": 218800,
+            "distanceM": 1000,
+            "split": "1:49.4",
+            "splitMs": 109400,
+            "rate": 27
+          },
+          {
+            "time": "3:52.1",
+            "timeMs": 232100,
+            "distanceM": 1000,
+            "split": "1:56.0",
+            "splitMs": 116000,
+            "rate": 31
+          }
+        ]
+      },
+      "notes": "Only 7 of the 10 reps are on screen, followed by 'r186' (rest metres). That suggests the list is scrolled to reps 4-10, but the photo can't prove which reps these are. Total Time 40:34.6 = 37:14.6 + 10 x 20 s rest."
+    },
+    {
+      "file": "IMG_0880.jpeg",
+      "monitor": "PM5",
+      "title": "1:00:03",
+      "expected": {
+        "elapsedTimeMs": 3603700,
+        "distanceM": 13050,
+        "splitMs": 138000,
+        "rate": 18.0,
+        "repDistanceM": null
+      },
+      "shownAs": {
+        "time": "1:00:03.7",
+        "distance": "13050",
+        "split": "2:18.0",
+        "rate": "18"
+      },
+      "uncertain": [],
+      "baselineFailures": [],
+      "intervals": {
+        "firstRowNumber": 1,
+        "meterColumn": "per-split",
+        "rows": [
+          {
+            "time": "5:00.0",
+            "timeMs": 300000,
+            "distanceM": 1137,
+            "split": "2:11.9",
+            "splitMs": 131900,
+            "rate": 18
+          },
+          {
+            "time": "10:00.0",
+            "timeMs": 600000,
+            "distanceM": 1104,
+            "split": "2:15.8",
+            "splitMs": 135800,
+            "rate": 17
+          },
+          {
+            "time": "15:00.0",
+            "timeMs": 900000,
+            "distanceM": 1064,
+            "split": "2:20.9",
+            "splitMs": 140900,
+            "rate": 17
+          },
+          {
+            "time": "20:00.0",
+            "timeMs": 1200000,
+            "distanceM": 1062,
+            "split": "2:21.2",
+            "splitMs": 141200,
+            "rate": 17
+          },
+          {
+            "time": "25:00.0",
+            "timeMs": 1500000,
+            "distanceM": 1030,
+            "split": "2:25.6",
+            "splitMs": 145600,
+            "rate": 17
+          },
+          {
+            "time": "30:00.0",
+            "timeMs": 1800000,
+            "distanceM": 1105,
+            "split": "2:15.7",
+            "splitMs": 135700,
+            "rate": 18
+          },
+          {
+            "time": "35:00.0",
+            "timeMs": 2100000,
+            "distanceM": 1076,
+            "split": "2:19.4",
+            "splitMs": 139400,
+            "rate": 19
+          },
+          {
+            "time": "40:00.0",
+            "timeMs": 2400000,
+            "distanceM": 1089,
+            "split": "2:17.7",
+            "splitMs": 137700,
+            "rate": 18
+          }
+        ]
+      },
+      "notes": "Over an hour: summary time is H:MM:SS.d. Time-based splits of 5:00; the time column is the elapsed time at the end of each split and the meter column is metres in that split. 8 of 13 splits visible (top of list)."
+    },
+    {
+      "file": "IMG_0888.jpeg",
+      "monitor": "PM5",
+      "title": "3x12:00/3:00r",
+      "expected": {
+        "elapsedTimeMs": 2160000,
+        "distanceM": 9426,
+        "splitMs": 114500,
+        "rate": 22.0,
+        "repDistanceM": null
+      },
+      "shownAs": {
+        "time": "36:00.0",
+        "distance": "9426",
+        "split": "1:54.5",
+        "rate": "22"
+      },
+      "uncertain": [],
+      "baselineFailures": [],
+      "intervals": {
+        "firstRowNumber": 1,
+        "meterColumn": "per-rep",
+        "rows": [
+          {
+            "time": "12:00.0",
+            "timeMs": 720000,
+            "distanceM": 3140,
+            "split": "1:54.6",
+            "splitMs": 114600,
+            "rate": 21
+          },
+          {
+            "time": "12:00.0",
+            "timeMs": 720000,
+            "distanceM": 3141,
+            "split": "1:54.6",
+            "splitMs": 114600,
+            "rate": 21
+          },
+          {
+            "time": "12:00.0",
+            "timeMs": 720000,
+            "distanceM": 3145,
+            "split": "1:54.4",
+            "splitMs": 114400,
+            "rate": 26
+          }
+        ]
+      },
+      "notes": "Timed intervals, so no rep distance. 'Total Time: 45:00.0' top-right; 'r49' = rest metres. Rep distances sum to 9426."
+    },
+    {
+      "file": "IMG_0895.jpeg",
+      "monitor": "PM5",
+      "title": "5000m",
+      "expected": {
+        "elapsedTimeMs": 1103300,
+        "distanceM": 5000,
+        "splitMs": 110300,
+        "rate": 26.0,
+        "repDistanceM": null
+      },
+      "shownAs": {
+        "time": "18:23.3",
+        "distance": "5000",
+        "split": "1:50.3",
+        "rate": "26"
+      },
+      "uncertain": [],
+      "baselineFailures": [],
+      "intervals": {
+        "firstRowNumber": 1,
+        "meterColumn": "cumulative",
+        "rows": [
+          {
+            "time": "3:37.3",
+            "timeMs": 217300,
+            "distanceM": 1000,
+            "split": "1:48.6",
+            "splitMs": 108600,
+            "rate": 27
+          },
+          {
+            "time": "3:41.1",
+            "timeMs": 221100,
+            "distanceM": 2000,
+            "split": "1:50.5",
+            "splitMs": 110500,
+            "rate": 26
+          },
+          {
+            "time": "3:43.2",
+            "timeMs": 223200,
+            "distanceM": 3000,
+            "split": "1:51.6",
+            "splitMs": 111600,
+            "rate": 26
+          },
+          {
+            "time": "3:43.3",
+            "timeMs": 223300,
+            "distanceM": 4000,
+            "split": "1:51.6",
+            "splitMs": 111600,
+            "rate": 27
+          },
+          {
+            "time": "3:38.4",
+            "timeMs": 218400,
+            "distanceM": 5000,
+            "split": "1:49.2",
+            "splitMs": 109200,
+            "rate": 29
+          }
+        ]
+      },
+      "notes": "Checked: split times sum to 18:23.3."
+    },
+    {
+      "file": "IMG_0897.jpeg",
+      "monitor": "PM3",
+      "title": "20x500m/:20r",
+      "expected": {
+        "elapsedTimeMs": 2080100,
+        "distanceM": 10000,
+        "splitMs": 104000,
+        "rate": 29.0,
+        "repDistanceM": 500
+      },
+      "shownAs": {
+        "time": "34:40.1",
+        "distance": "10000",
+        "split": "1:44.0",
+        "rate": "29"
+      },
+      "uncertain": [
+        "intervals.firstRowNumber"
+      ],
+      "baselineFailures": [
+        "repDistanceM"
+      ],
+      "intervals": {
+        "firstRowNumber": 1,
+        "meterColumn": "per-rep",
+        "rows": [
+          {
+            "time": "1:46.5",
+            "timeMs": 106500,
+            "distanceM": 500,
+            "split": "1:46.5",
+            "splitMs": 106500,
+            "rate": 29
+          },
+          {
+            "time": "1:38.9",
+            "timeMs": 98900,
+            "distanceM": 500,
+            "split": "1:38.9",
+            "splitMs": 98900,
+            "rate": 29
+          },
+          {
+            "time": "1:46.2",
+            "timeMs": 106200,
+            "distanceM": 500,
+            "split": "1:46.2",
+            "splitMs": 106200,
+            "rate": 29
+          },
+          {
+            "time": "1:38.1",
+            "timeMs": 98100,
+            "distanceM": 500,
+            "split": "1:38.1",
+            "splitMs": 98100,
+            "rate": 28
+          },
+          {
+            "time": "1:47.3",
+            "timeMs": 107300,
+            "distanceM": 500,
+            "split": "1:47.3",
+            "splitMs": 107300,
+            "rate": 30
+          },
+          {
+            "time": "1:37.9",
+            "timeMs": 97900,
+            "distanceM": 500,
+            "split": "1:37.9",
+            "splitMs": 97900,
+            "rate": 29
+          },
+          {
+            "time": "1:48.3",
+            "timeMs": 108300,
+            "distanceM": 500,
+            "split": "1:48.3",
+            "splitMs": 108300,
+            "rate": 29
+          },
+          {
+            "time": "1:38.7",
+            "timeMs": 98700,
+            "distanceM": 500,
+            "split": "1:38.7",
+            "splitMs": 98700,
+            "rate": 29
+          }
+        ]
+      },
+      "notes": "PM3 monitor (older, different buttons), photographed at an angle. Same workout as IMG_0898 and IMG_0899, scrolled to the top: reps 1-8. Rep numbers are inferred: these 8 + IMG_0898's 8 + IMG_0899's last 4 sum to 34:40.2 (summary 34:40.1)."
+    },
+    {
+      "file": "IMG_0898.jpeg",
+      "monitor": "PM3",
+      "title": "20x500m/:20r",
+      "expected": {
+        "elapsedTimeMs": 2080100,
+        "distanceM": 10000,
+        "splitMs": 104000,
+        "rate": 29.0,
+        "repDistanceM": 500
+      },
+      "shownAs": {
+        "time": "34:40.1",
+        "distance": "10000",
+        "split": "1:44.0",
+        "rate": "29"
+      },
+      "uncertain": [
+        "intervals.firstRowNumber"
+      ],
+      "baselineFailures": [
+        "repDistanceM"
+      ],
+      "intervals": {
+        "firstRowNumber": 9,
+        "meterColumn": "per-rep",
+        "rows": [
+          {
+            "time": "1:48.3",
+            "timeMs": 108300,
+            "distanceM": 500,
+            "split": "1:48.3",
+            "splitMs": 108300,
+            "rate": 29
+          },
+          {
+            "time": "1:39.3",
+            "timeMs": 99300,
+            "distanceM": 500,
+            "split": "1:39.3",
+            "splitMs": 99300,
+            "rate": 30
+          },
+          {
+            "time": "1:48.3",
+            "timeMs": 108300,
+            "distanceM": 500,
+            "split": "1:48.3",
+            "splitMs": 108300,
+            "rate": 29
+          },
+          {
+            "time": "1:40.7",
+            "timeMs": 100700,
+            "distanceM": 500,
+            "split": "1:40.7",
+            "splitMs": 100700,
+            "rate": 30
+          },
+          {
+            "time": "1:48.2",
+            "timeMs": 108200,
+            "distanceM": 500,
+            "split": "1:48.2",
+            "splitMs": 108200,
+            "rate": 29
+          },
+          {
+            "time": "1:42.7",
+            "timeMs": 102700,
+            "distanceM": 500,
+            "split": "1:42.7",
+            "splitMs": 102700,
+            "rate": 30
+          },
+          {
+            "time": "1:48.5",
+            "timeMs": 108500,
+            "distanceM": 500,
+            "split": "1:48.5",
+            "splitMs": 108500,
+            "rate": 29
+          },
+          {
+            "time": "1:43.7",
+            "timeMs": 103700,
+            "distanceM": 500,
+            "split": "1:43.7",
+            "splitMs": 103700,
+            "rate": 30
+          }
+        ]
+      },
+      "notes": "Same workout as IMG_0897, scrolled to reps 9-16 (inferred, see IMG_0897). Last row's time is blurred ('1:4?.7'), but for a 500m rep time equals split, and IMG_0899 shows the same row as 1:43.7."
+    },
+    {
+      "file": "IMG_0899.jpeg",
+      "monitor": "PM3",
+      "title": "20x500m/:20r",
+      "expected": {
+        "elapsedTimeMs": 2080100,
+        "distanceM": 10000,
+        "splitMs": 104000,
+        "rate": 29.0,
+        "repDistanceM": 500
+      },
+      "shownAs": {
+        "time": "34:40.1",
+        "distance": "10000",
+        "split": "1:44.0",
+        "rate": "29"
+      },
+      "uncertain": [
+        "intervals.firstRowNumber"
+      ],
+      "baselineFailures": [],
+      "intervals": {
+        "firstRowNumber": 14,
+        "meterColumn": "per-rep",
+        "rows": [
+          {
+            "time": "1:42.7",
+            "timeMs": 102700,
+            "distanceM": 500,
+            "split": "1:42.7",
+            "splitMs": 102700,
+            "rate": 30
+          },
+          {
+            "time": "1:48.5",
+            "timeMs": 108500,
+            "distanceM": 500,
+            "split": "1:48.5",
+            "splitMs": 108500,
+            "rate": 29
+          },
+          {
+            "time": "1:43.7",
+            "timeMs": 103700,
+            "distanceM": 500,
+            "split": "1:43.7",
+            "splitMs": 103700,
+            "rate": 30
+          },
+          {
+            "time": "1:48.3",
+            "timeMs": 108300,
+            "distanceM": 500,
+            "split": "1:48.3",
+            "splitMs": 108300,
+            "rate": 29
+          },
+          {
+            "time": "1:41.8",
+            "timeMs": 101800,
+            "distanceM": 500,
+            "split": "1:41.8",
+            "splitMs": 101800,
+            "rate": 29
+          },
+          {
+            "time": "1:47.5",
+            "timeMs": 107500,
+            "distanceM": 500,
+            "split": "1:47.5",
+            "splitMs": 107500,
+            "rate": 30
+          },
+          {
+            "time": "1:41.0",
+            "timeMs": 101000,
+            "distanceM": 500,
+            "split": "1:41.0",
+            "splitMs": 101000,
+            "rate": 31
+          }
+        ]
+      },
+      "notes": "Same workout as IMG_0897, scrolled to the bottom: reps 14-20 (inferred), then 'r621' (rest metres). Close-up, screen fills most of the frame."
+    },
+    {
+      "file": "IMG_1007.jpeg",
+      "monitor": "PM5",
+      "title": "1:01:28",
+      "expected": {
+        "elapsedTimeMs": 3688900,
+        "distanceM": 14017,
+        "splitMs": 131500,
+        "rate": 19.0,
+        "repDistanceM": null
+      },
+      "shownAs": {
+        "time": "1:01:28.9",
+        "distance": "14017",
+        "split": "2:11.5",
+        "rate": "19"
+      },
+      "uncertain": [],
+      "baselineFailures": [],
+      "intervals": {
+        "firstRowNumber": 1,
+        "meterColumn": "per-split",
+        "rows": [
+          {
+            "time": "5:00.0",
+            "timeMs": 300000,
+            "distanceM": 1092,
+            "split": "2:17.3",
+            "splitMs": 137300,
+            "rate": 18
+          },
+          {
+            "time": "10:00.0",
+            "timeMs": 600000,
+            "distanceM": 1122,
+            "split": "2:13.6",
+            "splitMs": 133600,
+            "rate": 19
+          },
+          {
+            "time": "15:00.0",
+            "timeMs": 900000,
+            "distanceM": 1131,
+            "split": "2:12.6",
+            "splitMs": 132600,
+            "rate": 19
+          },
+          {
+            "time": "20:00.0",
+            "timeMs": 1200000,
+            "distanceM": 1142,
+            "split": "2:11.3",
+            "splitMs": 131300,
+            "rate": 20
+          },
+          {
+            "time": "25:00.0",
+            "timeMs": 1500000,
+            "distanceM": 1113,
+            "split": "2:14.7",
+            "splitMs": 134700,
+            "rate": 19
+          },
+          {
+            "time": "30:00.0",
+            "timeMs": 1800000,
+            "distanceM": 1115,
+            "split": "2:14.5",
+            "splitMs": 134500,
+            "rate": 19
+          },
+          {
+            "time": "35:00.0",
+            "timeMs": 2100000,
+            "distanceM": 1096,
+            "split": "2:16.8",
+            "splitMs": 136800,
+            "rate": 19
+          },
+          {
+            "time": "40:00.0",
+            "timeMs": 2400000,
+            "distanceM": 1111,
+            "split": "2:15.0",
+            "splitMs": 135000,
+            "rate": 19
+          }
+        ]
+      },
+      "notes": "Over an hour (H:MM:SS.d). Time-based 5:00 splits; 8 of 13 visible (top of list). 3688.9 s / 28.034 = 2:11.5."
+    }
+  ]
+}

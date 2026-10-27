@@ -23,7 +23,18 @@ top of it.
 - A dozen or so is a reasonable starting set — enough to be a real
   percentage, not so many it's a chore to collect.
 
-## Running the test
+## Expected readouts (the regression test)
+
+`expected-readouts.json` holds, for every photo here, what the monitor actually shows: the
+summary row (time, distance, split, rate), the rep distance from the title, and the
+per-interval rows for reference. `Rowing PalsTests/OCRRegressionTests.swift` runs the real
+pipeline over each photo and fails with a per-photo, per-field message if a reading changes.
+Fields the pipeline already got wrong are listed under `baselineFailures` and show as known
+issues. **When you add a photo, add its entry to `expected-readouts.json` too**; the test
+fails if a photo has no entry. Results and how to run it:
+`docs/testing/ocr-regression-2026-10-27.md`.
+
+## Running the print-out test
 
 `Rowing PalsTests/MonitorParserTests.swift` reads every image in this
 folder directly (not bundled as test resources), runs it through
