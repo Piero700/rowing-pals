@@ -31,7 +31,7 @@ struct PeopleListView: View {
                         .textStyle(Typography.meta)
                         .foregroundStyle(Tokens.Ink.secondary)
                         .padding(.horizontal, 2)
-                        .padding(.bottom, 12)
+                        .padding(.bottom, Tokens.Spacing.loose)
                     searchField
                         .padding(.bottom, 14)
                 }
@@ -40,7 +40,7 @@ struct PeopleListView: View {
                     Text(message)
                         .textStyle(Typography.meta)
                         .foregroundStyle(Tokens.System.error)
-                        .padding(.bottom, 12)
+                        .padding(.bottom, Tokens.Spacing.loose)
                 }
 
                 if viewModel.people.isEmpty && !viewModel.isLoading {
@@ -78,7 +78,7 @@ struct PeopleListView: View {
     /// 52 pt, card fill, 1 pt line, radius 24; a 20 pt search icon inset 14.
     private var searchField: some View {
         let shape = RoundedRectangle(cornerRadius: Tokens.Radius.input, style: .continuous)
-        return HStack(spacing: 8) {
+        return HStack(spacing: Tokens.Spacing.tight) {
             RPIconView(icon: .search)
                 .frame(width: 20, height: 20)
                 .foregroundStyle(Tokens.Ink.secondary)
@@ -148,6 +148,6 @@ struct PeopleListView: View {
                 }
             }
         }
-        .padding(12)
+        .padding(Tokens.Spacing.loose)
     }
 }

@@ -24,7 +24,7 @@ struct ConsistencyCalendarView: View {
                 .foregroundStyle(Tokens.Ink.secondary)
                 .padding(.bottom, 14)
 
-            HStack(alignment: .top, spacing: 8) {
+            HStack(alignment: .top, spacing: Tokens.Spacing.tight) {
                 VStack(spacing: 4) {
                     ForEach(0..<7, id: \.self) { row in
                         Text(Self.dayLetters[row])

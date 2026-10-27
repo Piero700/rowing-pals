@@ -54,12 +54,12 @@ struct FeedCardView: View {
                     .foregroundStyle(Tokens.Ink.primary)
                     .fixedSize(horizontal: false, vertical: true)
                     .padding(.top, 1)
-                    .padding(.bottom, 8)
+                    .padding(.bottom, Tokens.Spacing.tight)
             }
             if !tags.isEmpty {
                 // "with Sam, Joe": each name opens their profile.
                 TrainedWithLine(tags: tags) { navigate(.profile($0)) }
-                    .padding(.bottom, 8)
+                    .padding(.bottom, Tokens.Spacing.tight)
             }
             workoutLink
             actionRow
@@ -82,7 +82,7 @@ struct FeedCardView: View {
         Button {
             navigate(.profile(post.userId))
         } label: {
-            HStack(spacing: 12) {
+            HStack(spacing: Tokens.Spacing.loose) {
                 AvatarPlaceholder(diameter: 41, streakDays: streakDays, name: post.author.displayName, userId: post.userId)
                 VStack(alignment: .leading, spacing: 0) {
                     Text(post.author.displayName)
@@ -128,7 +128,7 @@ struct FeedCardView: View {
 
                 if pages.count > 1 {
                     pageDots(count: pages.count)
-                        .padding(.bottom, 10)
+                        .padding(.bottom, Tokens.Spacing.gap)
                         .allowsHitTesting(false)
                 }
             }
@@ -174,7 +174,7 @@ struct FeedCardView: View {
                         .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
-                    .padding(10)
+                    .padding(Tokens.Spacing.gap)
                     .accessibilityLabel("Swap photos")
                 }
             }
@@ -196,7 +196,7 @@ struct FeedCardView: View {
                     .frame(width: 6, height: 6)
             }
         }
-        .padding(.horizontal, 8)
+        .padding(.horizontal, Tokens.Spacing.tight)
         .padding(.vertical, 4)
         .background { Capsule().fill(Color.black.opacity(0.35)) }
         .accessibilityHidden(true)
@@ -308,7 +308,7 @@ struct FeedCardView: View {
             Text("Choose a reaction")
                 .textStyle(Typography.navTitle)
                 .foregroundStyle(Tokens.Ink.primary)
-            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 6), spacing: 8) {
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: Tokens.Spacing.tight), count: 6), spacing: Tokens.Spacing.tight) {
                 ForEach(ReactionCatalog.picker) { kind in
                     let isMine = reactions.contains { $0.kind == kind.key && $0.isMine }
                     Button {
@@ -372,7 +372,7 @@ struct FeedCardView: View {
             .buttonStyle(IconPressStyle())
             .accessibilityLabel("Share workout")
         }
-        .padding(.top, 8)
+        .padding(.top, Tokens.Spacing.tight)
         .overlay(alignment: .top) {
             Rectangle().fill(Tokens.Surface.line).frame(height: 1)
         }

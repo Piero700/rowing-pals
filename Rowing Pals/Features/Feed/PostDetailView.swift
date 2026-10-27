@@ -179,7 +179,7 @@ struct PostDetailView: View {
 
             VStack {
                 Spacer()
-                HStack(alignment: .bottom, spacing: 8) {
+                HStack(alignment: .bottom, spacing: Tokens.Spacing.tight) {
                     personPill
                     Spacer(minLength: 8)
                     if !viewModel.isOwnPost {
@@ -265,7 +265,7 @@ struct PostDetailView: View {
     /// import another feature (see `AppRoute`).
     private var personPill: some View {
         Button(action: handlePersonPillTap) {
-            HStack(spacing: 8) {
+            HStack(spacing: Tokens.Spacing.tight) {
                 AvatarPlaceholder(diameter: 28, streakDays: viewModel.authorStreakDays, name: viewModel.author?.displayName, userId: viewModel.author?.id)
                 Text(viewModel.author?.displayName ?? "")
                     .textStyle(Typography.rowTitle)
@@ -276,7 +276,7 @@ struct PostDetailView: View {
                     .foregroundStyle(Tokens.Ink.secondary)
             }
             .padding(.leading, 6)
-            .padding(.trailing, 12)
+            .padding(.trailing, Tokens.Spacing.loose)
             .padding(.vertical, 6)
             .glassSurface(cornerRadius: 999)
         }
@@ -339,12 +339,12 @@ struct PostDetailView: View {
     /// no "Personal best" clause if it wasn't, no rank clause for a rank
     /// that couldn't be computed.
     private func pbBanner(_ banner: PostDetailViewModel.TestBanner) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: Tokens.Spacing.tight) {
             Text("\(banner.distanceLabel) test")
                 .textStyle(Typography.overline)
                 .tabularNumerals()
                 .foregroundStyle(Tokens.Accent.records)
-            HStack(alignment: .lastTextBaseline, spacing: 10) {
+            HStack(alignment: .lastTextBaseline, spacing: Tokens.Spacing.gap) {
                 Text(banner.valueLabel)
                     .textStyle(Typography.bigResult)
                     .tabularNumerals()
@@ -362,9 +362,9 @@ struct PostDetailView: View {
             }
         }
         .padding(14)
-        .glassSurface(cornerRadius: 24)
+        .glassSurface(cornerRadius: Tokens.Radius.input)
         .overlay {
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
+            RoundedRectangle(cornerRadius: Tokens.Radius.input, style: .continuous)
                 .strokeBorder(Tokens.Accent.records.opacity(0.32), lineWidth: 1)
         }
     }
@@ -381,7 +381,7 @@ struct PostDetailView: View {
     // MARK: - Totals
 
     private var totalsCard: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: Tokens.Spacing.gap) {
             HStack {
                 Text("SESSION TOTAL")
                     .textStyle(Typography.label)
@@ -395,7 +395,7 @@ struct PostDetailView: View {
                         .foregroundStyle(Tokens.Ink.primary.opacity(0.8))
                 }
             }
-            HStack(alignment: .lastTextBaseline, spacing: 10) {
+            HStack(alignment: .lastTextBaseline, spacing: Tokens.Spacing.gap) {
                 Text(viewModel.totalDistanceM.formattedMetres)
                     .font(.system(size: 22, weight: .semibold))
                     .tabularNumerals()
@@ -426,7 +426,7 @@ struct PostDetailView: View {
     /// visible without an extra tap — "collapsible" is about giving people
     /// a way to declutter, not hiding the data by default.
     private var splitBreakdownCard: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: Tokens.Spacing.gap) {
             Button {
                 withAnimation(.snappy) { isSplitBreakdownExpanded.toggle() }
             } label: {
@@ -449,7 +449,7 @@ struct PostDetailView: View {
             .buttonStyle(.plain)
 
             if isSplitBreakdownExpanded {
-                VStack(spacing: 8) {
+                VStack(spacing: Tokens.Spacing.tight) {
                     ForEach(viewModel.segments) { segment in
                         detailSegmentRow(segment)
                     }
@@ -462,7 +462,7 @@ struct PostDetailView: View {
     }
 
     private func detailSegmentRow(_ segment: PostDetailViewModel.DetailSegment) -> some View {
-        HStack(spacing: 10) {
+        HStack(spacing: Tokens.Spacing.gap) {
             CachedAsyncImage(url: segment.monitorPhotoPath.flatMap { viewModel.monitorURLs[$0] }) {
                 Rectangle().fill(Tokens.Ink.primary.opacity(0.08))
             }
@@ -500,7 +500,7 @@ struct PostDetailView: View {
     // MARK: - Reactions
 
     private var reactionRow: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: Tokens.Spacing.tight) {
             ForEach(viewModel.reactions) { reaction in
                 reactionChip(reaction)
             }
@@ -544,8 +544,8 @@ struct PostDetailView: View {
                     .foregroundStyle(reaction.reactedByMe ? Tokens.Accent.records : Tokens.Ink.secondary)
             }
             .textStyle(Typography.detail)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
+            .padding(.horizontal, Tokens.Spacing.loose)
+            .padding(.vertical, Tokens.Spacing.tight)
             .background {
                 Capsule().fill((reaction.reactedByMe ? Tokens.Accent.records : Tokens.Ink.primary).opacity(reaction.reactedByMe ? 0.16 : 0.08))
             }
@@ -623,12 +623,12 @@ struct PostDetailView: View {
     @ViewBuilder
     private var extraPhotoGallery: some View {
         if !extraPhotoSegments.isEmpty || !viewModel.galleryPaths.isEmpty {
-            VStack(alignment: .leading, spacing: 10) {
+            VStack(alignment: .leading, spacing: Tokens.Spacing.gap) {
                 Text("MORE PHOTOS")
                     .textStyle(Typography.label)
                     .foregroundStyle(Tokens.Ink.secondary)
                 ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 10) {
+                    HStack(spacing: Tokens.Spacing.gap) {
                         // Photos the rower added in the review screen's photo
                         // strip come first, then other pieces' monitor photos.
                         ForEach(viewModel.galleryPaths, id: \.self) { path in

@@ -20,7 +20,7 @@ struct PhotoPlaceholder: View {
                         .font(.system(size: 9, weight: .medium, design: .monospaced))
                         .tracking(0.8)
                         .foregroundStyle(Tokens.Ink.secondary)
-                        .padding(.bottom, 8)
+                        .padding(.bottom, Tokens.Spacing.tight)
                 }
             }
     }

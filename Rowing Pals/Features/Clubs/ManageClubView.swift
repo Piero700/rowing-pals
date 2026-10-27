@@ -157,7 +157,7 @@ struct ManageClubView: View {
         Text(text)
             .textStyle(Typography.statLabel)
             .foregroundStyle(Tokens.Ink.secondary)
-            .padding(.horizontal, 8)
+            .padding(.horizontal, Tokens.Spacing.tight)
             .padding(.vertical, 4)
             .background(Capsule().fill(Tokens.Surface.raised))
             .lineLimit(1)
@@ -256,7 +256,7 @@ struct ManageClubView: View {
                             .buttonStyle(.rpText)
                     }
                 }
-                .padding(12)
+                .padding(Tokens.Spacing.loose)
                 if index < viewModel.invitations.count - 1 {
                     Rectangle().fill(Tokens.Surface.line).frame(height: 1)
                 }
@@ -282,7 +282,7 @@ struct ManageClubView: View {
                     Text("You")
                         .textStyle(Typography.statLabel)
                         .foregroundStyle(Tokens.Ink.secondary)
-                        .padding(.horizontal, 8)
+                        .padding(.horizontal, Tokens.Spacing.tight)
                         .padding(.vertical, 4)
                         .background(Capsule().fill(Tokens.Surface.raised))
                 } else if viewModel.myRole.canRemove(person.role) || !viewModel.myRole.assignableRoles(for: person.role).isEmpty {
@@ -355,7 +355,7 @@ struct ManageClubView: View {
             VStack(spacing: 0) {
                 ForEach(Array(people.enumerated()), id: \.element.id) { index, person in
                     HStack(spacing: Tokens.Spacing.gap) { row(person) }
-                        .padding(12)
+                        .padding(Tokens.Spacing.loose)
                     if index < people.count - 1 {
                         Rectangle().fill(Tokens.Surface.line).frame(height: 1)
                     }

@@ -127,7 +127,7 @@ struct ClubSearchView: View {
                 Button("Have an invite code?") { isEnteringCode = true }
                     .buttonStyle(.rpText)
                     .frame(maxWidth: .infinity)
-                    .padding(.top, 8)
+                    .padding(.top, Tokens.Spacing.tight)
 
                 if mode == .onboarding {
                     Button("I’m not in a club") {
@@ -160,7 +160,7 @@ struct ClubSearchView: View {
                     }
                     Spacer()
                 }
-                .padding(.top, 8)
+                .padding(.top, Tokens.Spacing.tight)
                 .padding(.horizontal, Tokens.Spacing.headerHorizontal)
                 .padding(.bottom, 6)
                 .background(Tokens.Base.ground)
@@ -309,7 +309,7 @@ struct ClubSearchView: View {
             Text(title)
                 .textStyle(Typography.onboardingTitle)
                 .foregroundStyle(Tokens.Ink.primary)
-                .padding(.vertical, 8)
+                .padding(.vertical, Tokens.Spacing.tight)
                 .accessibilityAddTraits(.isHeader)
             if let body {
                 Text(body)
@@ -325,7 +325,7 @@ struct ClubSearchView: View {
     /// 52 pt, card fill, 1 pt line, radius 24; a 20 pt search icon inset 14.
     private var searchField: some View {
         let shape = RoundedRectangle(cornerRadius: Tokens.Radius.input, style: .continuous)
-        return HStack(spacing: 8) {
+        return HStack(spacing: Tokens.Spacing.tight) {
             RPIconView(icon: .search)
                 .frame(width: 20, height: 20)
                 .foregroundStyle(Tokens.Ink.secondary)
@@ -357,9 +357,9 @@ struct ClubSearchView: View {
             Text("No clubs match that name.")
                 .textStyle(Typography.meta)
                 .foregroundStyle(Tokens.Ink.secondary)
-                .padding(.vertical, 8)
+                .padding(.vertical, Tokens.Spacing.tight)
         } else {
-            VStack(spacing: 8) {
+            VStack(spacing: Tokens.Spacing.tight) {
                 ForEach(viewModel.results) { club in
                     clubRow(club)
                 }
@@ -371,7 +371,7 @@ struct ClubSearchView: View {
     private func clubRow(_ club: ClubSearchViewModel.ClubResult) -> some View {
         let isSelected = viewModel.selectedClub?.id == club.id
         let shape = RoundedRectangle(cornerRadius: Tokens.Radius.input, style: .continuous)
-        return HStack(spacing: 12) {
+        return HStack(spacing: Tokens.Spacing.loose) {
             Text(club.crest)
                 .font(.system(size: 12, weight: .bold))
                 .foregroundStyle(Tokens.Accent.brand)
@@ -397,7 +397,7 @@ struct ClubSearchView: View {
             }
             .frame(width: 24, height: 24)
         }
-        .padding(10)
+        .padding(Tokens.Spacing.gap)
         .frame(minHeight: 76)
         .background(shape.fill(isSelected ? Tokens.Accent.brandSoft : Tokens.Surface.card))
         .overlay { shape.strokeBorder(isSelected ? Tokens.Accent.brand : Tokens.Surface.line, lineWidth: 1) }
@@ -472,7 +472,7 @@ struct ClubSearchView: View {
                     Text("Novice means you’re in your first season.")
                         .textStyle(Typography.meta)
                         .foregroundStyle(Tokens.Ink.secondary)
-                        .padding(.top, 8)
+                        .padding(.top, Tokens.Spacing.tight)
 
                     Text("Side")
                         .textStyle(Typography.fieldLabel)
@@ -483,7 +483,7 @@ struct ClubSearchView: View {
                     Text("The side you row on in a pair, four or eight, or Cox if you cox. Your coach sees it when they seat you.")
                         .textStyle(Typography.meta)
                         .foregroundStyle(Tokens.Ink.secondary)
-                        .padding(.top, 8)
+                        .padding(.top, Tokens.Spacing.tight)
                 }
 
                 Text("You can change this later in Edit profile.")
@@ -617,7 +617,7 @@ struct ClubSearchView: View {
     /// v3's bottom bar: the primary button over a fade into the screen ground.
     private func stickyButton(_ title: String, isEnabled: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            HStack(spacing: 8) {
+            HStack(spacing: Tokens.Spacing.tight) {
                 if isSaving {
                     ProgressView().tint(Tokens.Ink.onBrand)
                 } else {

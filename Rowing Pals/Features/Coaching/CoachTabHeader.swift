@@ -33,7 +33,7 @@ struct CoachTabHeader<Trailing: View>: View {
             .buttonStyle(IconPressStyle())
             .accessibilityLabel("Your profile and settings")
         }
-        .padding(.top, 8)
+        .padding(.top, Tokens.Spacing.tight)
         .padding(.horizontal, Tokens.Spacing.headerHorizontal)
         .padding(.bottom, 14)
         .frame(minHeight: Tokens.Size.headerMinHeight)

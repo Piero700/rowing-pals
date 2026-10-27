@@ -33,7 +33,7 @@ struct TestsView: View {
                             .textStyle(Typography.bodySecondary)
                             .foregroundStyle(Tokens.Ink.secondary)
                     }
-                    .padding(.top, 8)
+                    .padding(.top, Tokens.Spacing.tight)
                 } else if let mode {
                     RankingsHeader(mode: mode)
                 }
@@ -50,7 +50,7 @@ struct TestsView: View {
                         .padding(.bottom, -8)
                 }
 
-                LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 3), spacing: 10) {
+                LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: Tokens.Spacing.gap), count: 3), spacing: Tokens.Spacing.gap) {
                     ForEach(viewModel.tiles) { tile in
                         distanceTile(tile)
                             .asButton { selectedTile = tile }

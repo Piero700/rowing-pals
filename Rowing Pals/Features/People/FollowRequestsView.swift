@@ -14,7 +14,7 @@ struct FollowRequestsView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: Tokens.Spacing.loose) {
                 if let message = viewModel.errorMessage {
                     Text(message)
                         .textStyle(Typography.bodySecondary)
@@ -28,7 +28,7 @@ struct FollowRequestsView: View {
                         .frame(maxWidth: .infinity)
                         .padding(.top, 40)
                 } else {
-                    LazyVStack(spacing: 8) {
+                    LazyVStack(spacing: Tokens.Spacing.tight) {
                         ForEach(viewModel.requests) { person in
                             row(person)
                         }
@@ -36,7 +36,7 @@ struct FollowRequestsView: View {
                 }
             }
             .padding(.horizontal, 14)
-            .padding(.top, 8)
+            .padding(.top, Tokens.Spacing.tight)
             .padding(.bottom, 40)
         }
         .background(Tokens.Base.ground)
@@ -47,11 +47,11 @@ struct FollowRequestsView: View {
     }
 
     private func row(_ person: PersonSummary) -> some View {
-        HStack(spacing: 12) {
+        HStack(spacing: Tokens.Spacing.loose) {
             Button {
                 navigate(.profile(person.id))
             } label: {
-                HStack(spacing: 12) {
+                HStack(spacing: Tokens.Spacing.loose) {
                     AvatarPlaceholder(diameter: 42, name: person.displayName, userId: person.id)
                     VStack(alignment: .leading, spacing: 2) {
                         Text(person.displayName)
@@ -76,8 +76,8 @@ struct FollowRequestsView: View {
                 Text("Decline")
                     .textStyle(Typography.fieldLabel)
                     .foregroundStyle(Tokens.Ink.primary)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 8)
+                    .padding(.horizontal, Tokens.Spacing.loose)
+                    .padding(.vertical, Tokens.Spacing.tight)
                     .background {
                         Capsule().fill(.ultraThinMaterial)
                         Capsule().fill(Tokens.Ink.primary.opacity(0.16))
@@ -92,14 +92,14 @@ struct FollowRequestsView: View {
                 Text("Accept")
                     .textStyle(Typography.fieldLabel)
                     .foregroundStyle(Tokens.Base.dark)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 8)
+                    .padding(.horizontal, Tokens.Spacing.loose)
+                    .padding(.vertical, Tokens.Spacing.tight)
                     .background { Capsule().fill(Tokens.Accent.brand) }
             }
             .buttonStyle(.plain)
             .disabled(isBusy)
         }
-        .padding(12)
+        .padding(Tokens.Spacing.loose)
         .opacity(viewModel.busyIds.contains(person.id) ? 0.6 : 1)
         .background {
             RoundedRectangle(cornerRadius: 20, style: .continuous)

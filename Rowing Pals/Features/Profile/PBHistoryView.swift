@@ -132,7 +132,7 @@ struct PBHistoryView: View {
                     .textStyle(Typography.pbValue)
                     .tabularNumerals()
                     .foregroundStyle(Tokens.Accent.records)
-                    .padding(.vertical, 8)
+                    .padding(.vertical, Tokens.Spacing.tight)
                 Text(Self.dateFormatter.string(from: current.date))
                     .textStyle(Typography.meta)
                     .tabularNumerals()
@@ -144,8 +144,8 @@ struct PBHistoryView: View {
                     .textStyle(Typography.pill)
                     .tabularNumerals()
                     .foregroundStyle(Tokens.Accent.records)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 8)
+                    .padding(.horizontal, Tokens.Spacing.loose)
+                    .padding(.vertical, Tokens.Spacing.tight)
                     .background(Capsule().fill(Tokens.Accent.recordsSoft))
             }
         }
@@ -179,17 +179,17 @@ struct PBHistoryView: View {
                     .textStyle(Typography.statLabel)
                     .foregroundStyle(Tokens.Ink.secondary)
             }
-            .padding(.horizontal, 8)
+            .padding(.horizontal, Tokens.Spacing.tight)
             Text(test.isDurationBased ? "Distance · metres" : "Time · min:sec")
                 .textStyle(Typography.meta)
                 .foregroundStyle(Tokens.Ink.secondary)
-                .padding(.horizontal, 8)
+                .padding(.horizontal, Tokens.Spacing.tight)
                 .padding(.top, Tokens.Spacing.loose)
 
             chart
                 .frame(height: 230)
                 .padding(.top, 16)
-                .padding(.horizontal, 8)
+                .padding(.horizontal, Tokens.Spacing.tight)
 
             if let selectedPoint {
                 selectedPanel(selectedPoint)
@@ -203,7 +203,7 @@ struct PBHistoryView: View {
                 .textStyle(Typography.statLabel)
                 .foregroundStyle(Tokens.Ink.secondary)
                 .frame(maxWidth: .infinity)
-                .padding(.top, 8)
+                .padding(.top, Tokens.Spacing.tight)
                 .padding(.bottom, 3)
         }
         .padding(.top, 16)

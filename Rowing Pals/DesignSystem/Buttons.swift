@@ -124,7 +124,7 @@ struct GlassPillButtonStyle: ButtonStyle {
         configuration.label
             .textStyle(Typography.pill)
             .foregroundStyle(isPressedState ? Tokens.Accent.brand : Tokens.Ink.primary)
-            .padding(.horizontal, 12)
+            .padding(.horizontal, Tokens.Spacing.loose)
             .frame(minWidth: Tokens.Size.minTap, minHeight: minHeight)
             .background {
                 if isPressedState { Capsule().fill(Tokens.Accent.brandSoft) }

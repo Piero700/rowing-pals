@@ -134,7 +134,7 @@ struct ClubFormView: View {
             content()
                 .foregroundStyle(Tokens.Ink.primary)
                 .padding(.horizontal, 14)
-                .padding(.vertical, 12)
+                .padding(.vertical, Tokens.Spacing.loose)
                 .frame(maxWidth: .infinity, minHeight: Tokens.Size.input, alignment: .leading)
                 .background(shape.fill(Tokens.Surface.card))
                 .overlay { shape.strokeBorder(Tokens.Surface.line, lineWidth: 1) }

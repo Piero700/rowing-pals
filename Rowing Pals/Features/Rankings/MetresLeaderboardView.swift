@@ -35,7 +35,7 @@ struct MetresLeaderboardView: View {
 
                 if viewModel.viewerIsRower {
                     rankHeroCard
-                        .padding(.top, 12)
+                        .padding(.top, Tokens.Spacing.loose)
                 }
 
                 HStack(spacing: Tokens.Spacing.gap) {
@@ -194,7 +194,7 @@ struct MetresLeaderboardView: View {
     private func leaderboardRow(_ row: MetresLeaderboardViewModel.Row) -> some View {
         let isWinner = row.rank == 1
         let score = row.metres.distanceParts(unit: distanceUnit)
-        return HStack(spacing: 8) {
+        return HStack(spacing: Tokens.Spacing.tight) {
             Text(isWinner ? "♛" : "\(row.rank)")
                 .font(.system(size: 17, weight: .bold))
                 .tabularNumerals()
@@ -222,8 +222,8 @@ struct MetresLeaderboardView: View {
                     .foregroundStyle(Tokens.Ink.secondary)
             }
         }
-        .padding(.vertical, 8)
-        .padding(.horizontal, 12)
+        .padding(.vertical, Tokens.Spacing.tight)
+        .padding(.horizontal, Tokens.Spacing.loose)
         .frame(minHeight: 72)
         .background {
             if isWinner {
@@ -312,7 +312,7 @@ struct MetresPinnedRow: View {
     @AppStorage(DistanceUnit.storageKey) private var distanceUnit: DistanceUnit = .metres
 
     var body: some View {
-        HStack(spacing: 10) {
+        HStack(spacing: Tokens.Spacing.gap) {
             Text("\(row.rank)")
                 .font(.system(size: 17, weight: .bold))
                 .tabularNumerals()
@@ -337,7 +337,7 @@ struct MetresPinnedRow: View {
                 .fixedSize(horizontal: true, vertical: false)
         }
         .padding(.horizontal, 14)
-        .padding(.vertical, 10)
+        .padding(.vertical, Tokens.Spacing.gap)
         .glassSurface(in: Capsule())
         .padding(.horizontal, Tokens.Size.navSideInset)
     }

@@ -27,14 +27,14 @@ struct InviteRowerView: View {
                     .textStyle(Typography.meta)
                     .foregroundStyle(Tokens.Ink.secondary)
                     .padding(.horizontal, 2)
-                    .padding(.bottom, 12)
+                    .padding(.bottom, Tokens.Spacing.loose)
                 searchField
                     .padding(.bottom, 14)
                 if let errorMessage {
                     Text(errorMessage)
                         .textStyle(Typography.meta)
                         .foregroundStyle(Tokens.System.error)
-                        .padding(.bottom, 12)
+                        .padding(.bottom, Tokens.Spacing.loose)
                 }
                 let candidates = people.filter { !memberIds.contains($0.id) }
                 if candidates.isEmpty {
@@ -76,7 +76,7 @@ struct InviteRowerView: View {
 
     private var searchField: some View {
         let shape = RoundedRectangle(cornerRadius: Tokens.Radius.input, style: .continuous)
-        return HStack(spacing: 8) {
+        return HStack(spacing: Tokens.Spacing.tight) {
             RPIconView(icon: .search)
                 .frame(width: 20, height: 20)
                 .foregroundStyle(Tokens.Ink.secondary)
@@ -114,7 +114,7 @@ struct InviteRowerView: View {
             .buttonStyle(.rpPill(isOn: isInvited))
             .disabled(busyIds.contains(person.id))
         }
-        .padding(12)
+        .padding(Tokens.Spacing.loose)
     }
 
     private func invite(_ person: PersonSummary) async {

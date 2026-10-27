@@ -34,16 +34,16 @@ struct PBTileView: View {
                 .textStyle(Typography.statLabel)
                 .foregroundStyle(Tokens.Ink.faint)
         }
-        .padding(.vertical, 12)
-        .padding(.leading, 12)
+        .padding(.vertical, Tokens.Spacing.loose)
+        .padding(.leading, Tokens.Spacing.loose)
         .padding(.trailing, 24)
         .frame(maxWidth: .infinity, minHeight: 90, alignment: .topLeading)
         .overlay(alignment: .topTrailing) {
             if tile.hasResult {
                 Text("›")
                     .foregroundStyle(Tokens.Ink.secondary)
-                    .padding(.top, 12)
-                    .padding(.trailing, 12)
+                    .padding(.top, Tokens.Spacing.loose)
+                    .padding(.trailing, Tokens.Spacing.loose)
             }
         }
         .background(shape.fill(Tokens.Surface.card))

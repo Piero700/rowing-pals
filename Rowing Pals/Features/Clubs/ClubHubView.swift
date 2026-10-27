@@ -170,7 +170,7 @@ struct ClubHubView: View {
             .textStyle(Typography.statLabel)
             .tabularNumerals()
             .foregroundStyle(Tokens.Ink.secondary)
-            .padding(.horizontal, 8)
+            .padding(.horizontal, Tokens.Spacing.tight)
             .padding(.vertical, 4)
             .background(Capsule().fill(Tokens.Surface.raised))
             .lineLimit(1)
@@ -243,7 +243,7 @@ struct ClubHubView: View {
                         .textStyle(Typography.pill)
                         .foregroundStyle(Tokens.Ink.secondary)
                 }
-                .padding(12)
+                .padding(Tokens.Spacing.loose)
                 // A coach who doesn't row has no rower profile: their own row opens the coach's Profile.
                 .asButton { navigate(person.id == viewModel.myId && !person.isRower ? .coachProfile : .profile(person.id)) }
                 .accessibilityElement(children: .combine)
@@ -366,7 +366,7 @@ struct ClubHubView: View {
                         Button("Join") { Task { await acceptInvitation(club) } }
                             .buttonStyle(.rpPill(isOn: true))
                     }
-                    .padding(12)
+                    .padding(Tokens.Spacing.loose)
                     if index < clubs.count - 1 {
                         Rectangle().fill(Tokens.Surface.line).frame(height: 1)
                     }

@@ -25,7 +25,7 @@ struct InsetCornerPickerView: View {
     @Environment(\.dismiss) private var dismiss
     @Binding var selection: InsetCorner
 
-    private let columns = [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)]
+    private let columns = [GridItem(.flexible(), spacing: Tokens.Spacing.loose), GridItem(.flexible(), spacing: Tokens.Spacing.loose)]
 
     var body: some View {
         NavigationStack {
@@ -36,7 +36,7 @@ struct InsetCornerPickerView: View {
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
 
-                LazyVGrid(columns: columns, spacing: 12) {
+                LazyVGrid(columns: columns, spacing: Tokens.Spacing.loose) {
                     ForEach(InsetCorner.allCases) { corner in
                         option(for: corner)
                     }
@@ -62,7 +62,7 @@ struct InsetCornerPickerView: View {
             withAnimation(.snappy) { selection = corner }
             dismiss()
         } label: {
-            VStack(spacing: 10) {
+            VStack(spacing: Tokens.Spacing.gap) {
                 InsetCornerGlyph(corner: corner, tint: isSelected ? Tokens.Accent.brand : Tokens.Ink.secondary)
                     .frame(width: 44, height: 34)
                 Text(corner.label)

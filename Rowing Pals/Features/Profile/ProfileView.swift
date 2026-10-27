@@ -97,7 +97,7 @@ struct ProfileView: View {
                         options: Tab.allCases.map(\.label),
                         selection: Binding(get: { tab.rawValue }, set: { tab = Tab(rawValue: $0) ?? .overview })
                     )
-                    .padding(.top, 12)
+                    .padding(.top, Tokens.Spacing.loose)
 
                     switch tab {
                     case .overview: overview
@@ -182,7 +182,7 @@ struct ProfileView: View {
                 isShowingSettings = true
             }
         }
-        .padding(.top, 8)
+        .padding(.top, Tokens.Spacing.tight)
         .padding(.horizontal, Tokens.Spacing.headerHorizontal)
         .padding(.bottom, 14)
         .frame(minHeight: Tokens.Size.headerMinHeight)
@@ -242,7 +242,7 @@ struct ProfileView: View {
                     .textStyle(Typography.meta)
                     .foregroundStyle(Tokens.System.error)
                     .multilineTextAlignment(.center)
-                    .padding(.top, 8)
+                    .padding(.top, Tokens.Spacing.tight)
             }
         } else {
             picture
@@ -275,7 +275,7 @@ struct ProfileView: View {
     private var identity: some View {
         VStack(spacing: 0) {
             avatar
-                .padding(.bottom, 10)
+                .padding(.bottom, Tokens.Spacing.gap)
             Text(viewModel.displayName)
                 .textStyle(Typography.profileName)
                 .foregroundStyle(Tokens.Ink.primary)
@@ -297,11 +297,11 @@ struct ProfileView: View {
                     .textStyle(Typography.meta)
                     .foregroundStyle(Tokens.Ink.secondary)
                     .padding(.top, 4)
-                    .padding(.bottom, 8)
+                    .padding(.bottom, Tokens.Spacing.tight)
             }
         }
         .frame(maxWidth: .infinity)
-        .padding(.top, 12)
+        .padding(.top, Tokens.Spacing.loose)
         .padding(.bottom, 14)
     }
 
@@ -684,7 +684,7 @@ struct ProfileView: View {
             .textStyle(Typography.fieldLabel)
             .tabularNumerals()
             .foregroundStyle(Tokens.Ink.secondary)
-            .padding(.horizontal, 8)
+            .padding(.horizontal, Tokens.Spacing.tight)
             .frame(minHeight: 27)
             .background(Capsule().fill(Tokens.Surface.raised))
     }

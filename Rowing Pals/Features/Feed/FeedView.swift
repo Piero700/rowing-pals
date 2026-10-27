@@ -215,7 +215,7 @@ struct FeedView: View {
                 navigate(.people(.find))
             }
         }
-        .padding(.top, 8)
+        .padding(.top, Tokens.Spacing.tight)
         .padding(.horizontal, Tokens.Spacing.headerHorizontal)
         .padding(.bottom, 14)
         .frame(minHeight: Tokens.Size.headerMinHeight)

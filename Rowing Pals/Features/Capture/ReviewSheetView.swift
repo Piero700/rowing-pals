@@ -72,7 +72,7 @@ struct ReviewSheetView: View {
                 }
 
                 if viewModel.isProcessingPhoto {
-                    HStack(spacing: 10) {
+                    HStack(spacing: Tokens.Spacing.gap) {
                         ProgressView()
                         Text("Reading photo…")
                             .textStyle(Typography.meta)
@@ -177,18 +177,18 @@ struct ReviewSheetView: View {
     /// v3 split rows: a badge (the Main piece wears the workout label in brand), "distance ·
     /// time", and the split — one per piece, in order.
     private var splitsSummary: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: Tokens.Spacing.tight) {
             ForEach(viewModel.segments) { segment in
                 let isMain = segment.label == .main
                 let shape = RoundedRectangle(cornerRadius: Tokens.Radius.input, style: .continuous)
-                HStack(spacing: 8) {
+                HStack(spacing: Tokens.Spacing.tight) {
                     Text(isMain ? (viewModel.sessionKind.testLabel ?? viewModel.zone.rawValue) : segment.label.rawValue.capitalized)
                         .textStyle(Typography.fieldLabel)
                         .tabularNumerals()
                         .foregroundStyle(isMain ? Tokens.Accent.brand : Tokens.Ink.secondary)
                         .lineLimit(1)
                         .minimumScaleFactor(0.8)
-                        .padding(.horizontal, 8)
+                        .padding(.horizontal, Tokens.Spacing.tight)
                         .frame(minWidth: 72, minHeight: 27)
                         .background(Capsule().fill(isMain ? Tokens.Accent.brandSoft : Tokens.Surface.raised))
                     Text("\(segment.distanceM.formattedMetres) · \(segment.timeMs.formattedDurationMs)")
@@ -201,8 +201,8 @@ struct ReviewSheetView: View {
                         .tabularNumerals()
                         .foregroundStyle(Tokens.Ink.primary)
                 }
-                .padding(.horizontal, 10)
-                .padding(.vertical, 8)
+                .padding(.horizontal, Tokens.Spacing.gap)
+                .padding(.vertical, Tokens.Spacing.tight)
                 .frame(minHeight: 62)
                 .background(shape.fill(Tokens.Surface.card))
                 .overlay { shape.strokeBorder(Tokens.Surface.line, lineWidth: 1) }
@@ -299,8 +299,8 @@ struct ReviewSheetView: View {
             postButton
         }
         .padding(.horizontal, Tokens.Spacing.screen)
-        .padding(.top, 10)
-        .padding(.bottom, 8)
+        .padding(.top, Tokens.Spacing.gap)
+        .padding(.bottom, Tokens.Spacing.tight)
         .background(Tokens.Base.ground.ignoresSafeArea())
         // Content fades out just above the bar rather than stopping at a hard edge.
         .overlay(alignment: .top) {
@@ -419,9 +419,9 @@ struct ReviewSheetView: View {
     @ViewBuilder
     private var environmentPhotoStrip: some View {
         if !viewModel.galleryPhotos.isEmpty {
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: Tokens.Spacing.tight) {
                 ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 8) {
+                    HStack(spacing: Tokens.Spacing.tight) {
                         ForEach(viewModel.galleryPhotos) { photo in
                             galleryThumbnail(photo)
                         }
@@ -509,7 +509,7 @@ struct ReviewSheetView: View {
     /// test is what records a test result — nothing enters the test rankings
     /// without this choice. The distance must match the test exactly.
     private var sessionTypeSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: Tokens.Spacing.tight) {
             if viewModel.showsTestPrompt, let test = viewModel.detectedTest {
                 testDetectedBanner(test)
             }
@@ -553,7 +553,7 @@ struct ReviewSheetView: View {
         }
         .tint(Tokens.Accent.brand)
         .padding(.horizontal, Tokens.Spacing.loose)
-        .padding(.vertical, 8)
+        .padding(.vertical, Tokens.Spacing.tight)
         .frame(minHeight: 66)
         .background(shape.fill(Tokens.Surface.card))
         .overlay { shape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
@@ -603,7 +603,7 @@ struct ReviewSheetView: View {
     /// `test_results` row is written in `post()`, since it needs the session
     /// and segment rows to exist first.
     private func testDetectedBanner(_ test: StandardTest) -> some View {
-        HStack(spacing: 12) {
+        HStack(spacing: Tokens.Spacing.loose) {
             VStack(alignment: .leading, spacing: 2) {
                 Text("This looks like a \(test.label) test.")
                     .textStyle(Typography.rowTitle)
@@ -622,7 +622,7 @@ struct ReviewSheetView: View {
                     .textStyle(Typography.rowTitle)
                     .foregroundStyle(Tokens.Base.dark)
                     .padding(.horizontal, 16)
-                    .padding(.vertical, 8)
+                    .padding(.vertical, Tokens.Spacing.tight)
                     .background {
                         RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Tokens.Accent.brand)
                     }
@@ -634,7 +634,7 @@ struct ReviewSheetView: View {
                     .textStyle(Typography.rowTitle)
                     .foregroundStyle(Tokens.Ink.primary.opacity(0.8))
                     .padding(.horizontal, 16)
-                    .padding(.vertical, 8)
+                    .padding(.vertical, Tokens.Spacing.tight)
                     .background {
                         RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Tokens.Ink.primary.opacity(0.1))
                     }

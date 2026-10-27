@@ -86,7 +86,7 @@ struct FollowButton: View {
 }
 
 #Preview {
-    VStack(spacing: 12) {
+    VStack(spacing: Tokens.Spacing.loose) {
         FollowButton(state: .notFollowing) {}
         FollowButton(state: .notFollowing, followsYou: true) {}
         FollowButton(state: .requested, variant: .compactPill) {}

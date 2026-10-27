@@ -85,7 +85,7 @@ struct SegmentRowView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: Tokens.Spacing.tight) {
             thumbnail
             VStack(spacing: 0) {
                 LazyVGrid(columns: [GridItem(.flexible(), spacing: Tokens.Spacing.gap), GridItem(.flexible())], alignment: .leading, spacing: 14) {

@@ -31,14 +31,14 @@ struct WeeklyVolumeChart: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             header
-            HStack(alignment: .bottom, spacing: 8) {
+            HStack(alignment: .bottom, spacing: Tokens.Spacing.tight) {
                 yAxis
                 bars
             }
             .frame(height: Self.chartHeight)
             .padding(.top, 22)
             xAxis
-                .padding(.top, 8)
+                .padding(.top, Tokens.Spacing.tight)
                 .padding(.leading, 41)
             Text("Monday–Sunday · Tap a bar for the total")
                 .font(.system(size: 11))
@@ -50,7 +50,7 @@ struct WeeklyVolumeChart: View {
     private var header: some View {
         let week = shownWeek
         return HStack(alignment: .top) {
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: Tokens.Spacing.tight) {
                 Text(week.map { $0.isCurrentWeek ? "This week · In progress" : "Week of \(Self.dayMonth($0.weekStart))" } ?? "This week")
                     .textStyle(Typography.overline)
                     .tabularNumerals()

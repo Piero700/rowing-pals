@@ -12,7 +12,7 @@ extension View {
     /// An interactive glass surface tinted with one of the three accent
     /// tokens — for a control the user taps, not a static card. `.interactive()`
     /// gives it the scale/bounce/shimmer response Liquid Glass controls have.
-    func interactiveGlassSurface(cornerRadius: CGFloat = 24, tint: Color) -> some View {
+    func interactiveGlassSurface(cornerRadius: CGFloat = Tokens.Radius.input, tint: Color) -> some View {
         glassEffect(
             .regular.tint(tint).interactive(),
             in: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)

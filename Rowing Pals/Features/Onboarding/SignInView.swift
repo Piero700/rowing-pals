@@ -105,7 +105,7 @@ struct SignInView: View {
     }
 
     private var header: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: Tokens.Spacing.tight) {
             Text(title)
                 .textStyle(Typography.bigResult)
                 .foregroundStyle(Tokens.Ink.primary)
@@ -119,7 +119,7 @@ struct SignInView: View {
 
     @ViewBuilder
     private var credentials: some View {
-        VStack(spacing: 10) {
+        VStack(spacing: Tokens.Spacing.gap) {
             if viewModel.isSigningUp {
                 field("Display name", text: $viewModel.displayName, field: .displayName)
                     .textContentType(.name)
@@ -195,7 +195,7 @@ struct SignInView: View {
 
     /// Apple's own button (its required look), then Google; and what continuing agrees to.
     private var socialButtons: some View {
-        VStack(spacing: 10) {
+        VStack(spacing: Tokens.Spacing.gap) {
             SignInWithAppleButton(viewModel.isSigningUp ? .signUp : .signIn) { request in
                 viewModel.prepareAppleRequest(request)
             } onCompletion: { result in
@@ -230,7 +230,7 @@ struct SignInView: View {
     }
 
     private var termsAgreementRow: some View {
-        HStack(alignment: .top, spacing: 10) {
+        HStack(alignment: .top, spacing: Tokens.Spacing.gap) {
             Button {
                 viewModel.hasAgreedToTerms.toggle()
             } label: {

@@ -81,7 +81,7 @@ struct CaptureView: View {
             .padding(.top, Tokens.Spacing.gap)
 
             controls
-                .padding(.top, 12)
+                .padding(.top, Tokens.Spacing.loose)
                 .padding(.horizontal, Tokens.Spacing.screen)
                 .padding(.bottom, 16)
         }
@@ -149,7 +149,7 @@ struct CaptureView: View {
                             .strokeBorder(Tokens.Surface.card, lineWidth: 2)
                     }
                     .shadow(color: .black.opacity(0.33), radius: 7, y: 5)
-                    .padding(10)
+                    .padding(Tokens.Spacing.gap)
                     .onLongPressGesture { isShowingCornerPicker = true }
                     .accessibilityLabel("Front camera preview")
                     .accessibilityHint("Press and hold to move it to another corner")
@@ -157,7 +157,7 @@ struct CaptureView: View {
 
                 if todaysWorkouts.indices.contains(chosenWorkout) {
                     workoutPanel(todaysWorkouts[chosenWorkout])
-                        .padding(10)
+                        .padding(Tokens.Spacing.gap)
                         .frame(width: geometry.size.width, height: geometry.size.height,
                                alignment: insetCorner.isBottom ? .top : .bottom)
                 }

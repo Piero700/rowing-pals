@@ -33,7 +33,7 @@ struct TestLeaderboardView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 10) {
+            VStack(alignment: .leading, spacing: Tokens.Spacing.gap) {
 
                 if let deleteError {
                     Text(deleteError)
@@ -46,7 +46,7 @@ struct TestLeaderboardView: View {
                 if viewModel.rows.isEmpty {
                     emptyState
                 } else {
-                    VStack(spacing: 8) {
+                    VStack(spacing: Tokens.Spacing.tight) {
                         ForEach(viewModel.rows) { row in
                             rowView(row)
                         }
@@ -125,7 +125,7 @@ struct TestLeaderboardView: View {
 
     private func rowView(_ row: TestLeaderboardViewModel.Row) -> some View {
         let isPodium = row.rank <= 3
-        return HStack(spacing: 12) {
+        return HStack(spacing: Tokens.Spacing.loose) {
             Text("\(row.rank)")
                 .font(.system(size: 20, weight: .semibold))
                 .tabularNumerals()
@@ -179,7 +179,7 @@ struct TestLeaderboardView: View {
                     .foregroundStyle(Tokens.Ink.secondary)
             }
         }
-        .padding(12)
+        .padding(Tokens.Spacing.loose)
         .background {
             RoundedRectangle(cornerRadius: 22, style: .continuous)
                 .fill(isPodium ? Tokens.Accent.records.opacity(0.07) : Tokens.Ink.primary.opacity(0.05))

@@ -54,7 +54,7 @@ struct MonitorPhotoCaptureView: View {
         case .capturingRear, .done:
             ProgressView().tint(Tokens.Ink.primary)
         case .failed(let message):
-            VStack(spacing: 10) {
+            VStack(spacing: Tokens.Spacing.gap) {
                 Text(message)
                     .textStyle(Typography.bodySecondary)
                     .foregroundStyle(Tokens.System.error)

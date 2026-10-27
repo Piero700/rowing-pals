@@ -203,7 +203,7 @@ struct PredictionDetailView: View {
                         .foregroundStyle(Tokens.Ink.primary)
                 }
                 .padding(.horizontal, Tokens.Spacing.card)
-                .padding(.vertical, 12)
+                .padding(.vertical, Tokens.Spacing.loose)
                 if index < lines.count - 1 {
                     Rectangle().fill(Tokens.Surface.line).frame(height: 1)
                 }
