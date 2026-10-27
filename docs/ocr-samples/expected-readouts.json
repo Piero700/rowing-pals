@@ -208,12 +208,7 @@
         "rate": "21"
       },
       "uncertain": [],
-      "baselineFailures": [
-        "elapsedTimeMs",
-        "distanceM",
-        "splitMs",
-        "rate"
-      ],
+      "baselineFailures": [],
       "intervals": {
         "firstRowNumber": 1,
         "meterColumn": "cumulative",
@@ -745,9 +740,7 @@
       "uncertain": [
         "intervals.firstRowNumber"
       ],
-      "baselineFailures": [
-        "repDistanceM"
-      ],
+      "baselineFailures": [],
       "intervals": {
         "firstRowNumber": 1,
         "meterColumn": "per-rep",
@@ -840,9 +833,7 @@
       "uncertain": [
         "intervals.firstRowNumber"
       ],
-      "baselineFailures": [
-        "repDistanceM"
-      ],
+      "baselineFailures": [],
       "intervals": {
         "firstRowNumber": 9,
         "meterColumn": "per-rep",

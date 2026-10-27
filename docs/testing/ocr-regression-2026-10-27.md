@@ -9,7 +9,8 @@ against what the monitor actually shows.
 - No Xcode project change: like the existing `MonitorParserTests`, the test reads the photos and the
   JSON straight from `docs/ocr-samples/` on disk (the simulator can read the Mac's files), and the
   new Swift files sit in the synchronised `Rowing PalsTests/` folder.
-- No OCR code was changed. The results below are the pipeline as it is today.
+- The baseline below was taken with no OCR code changed. The two parser weaknesses it found were
+  then fixed the same day; see **Fix: all 16 photos now read correctly** further down.
 
 ## What is compared
 
@@ -27,7 +28,7 @@ For each photo, five fields:
 there is nothing to compare them with. They are in the JSON (`intervals.rows`), ready for when the
 parser learns to read them.
 
-## Results (iPhone 17 Pro simulator, iOS 26.5)
+## Baseline results, before the fix (iPhone 17 Pro simulator, iOS 26.5)
 
 **13 of 16 photos read every field correctly. 3 photos have wrong fields (6 wrong fields in total).**
 
@@ -89,6 +90,54 @@ slightly from the simulator's):
 - On the same photos the raw text also shows some interval-row misreads (for example IMG_0897's first
   rep time read as `1:45.5`, not `1:46.5`), which will matter once interval rows are parsed.
 
+## Fix: all 16 photos now read correctly (2026-10-27)
+
+`MonitorParser` was changed for the two weaknesses above, and the baseline is now empty: no photo
+has a known failure. Simulator raw text was dumped first. It differs slightly from the macOS dump
+above: the simulator reads IMG_0647's time as `5217`, not `5213`.
+
+**Before → after (iPhone 17 Pro simulator, iOS 26.5):**
+
+| Photo | time | distance | split | rate | rep distance |
+|---|---|---|---|---|---|
+| IMG_0647 | ❌ nothing → ✅ 5:21.7 (confidence 0.40, flagged on Review) | ❌ → ✅ 1500 | ❌ → ✅ 1:47.2 | ❌ → ✅ 21 | ✅ none → ✅ none |
+| IMG_0897 | ✅ → ✅ | ✅ → ✅ | ✅ → ✅ | ✅ → ✅ | ❌ none → ✅ 500 m |
+| IMG_0898 | ✅ → ✅ | ✅ → ✅ | ✅ → ✅ | ✅ → ✅ | ❌ none → ✅ 500 m |
+| the other 13 | ✅ → ✅ | ✅ → ✅ | ✅ → ✅ | ✅ → ✅ | ✅ → ✅ |
+
+By field: time 16/16, distance 16/16, split 16/16, rate 16/16, rep distance 16/16. `OCRRegressionTests`
+passes with every `baselineFailures` list empty, and `MonitorParserTests`, `PhotoClassificationTests`
+and `ReviewSessionTests` pass too (42 test cases).
+
+What changed in the parser:
+
+1. **A damaged summary row degrades field by field.** When the summary row doesn't read as exactly
+   two colon values and two plain numbers, the parser now takes the four column positions from the
+   first clean interval row below it. It then places each summary value in its nearest column, keeping
+   a value only if it has that column's shape. A row that reads cleanly still goes through the old path
+   unchanged. If there's no clean interval row to take positions from (a one-row table), the result is
+   empty, as before.
+2. **Merged values get their own position.** Parts of one observation (`1:47.2 21`) are now placed by
+   where their characters sit in the box, not both at its middle. A split and rate glued with no space
+   (`1:47.221`) are split apart, which is safe because a real time or split never has more than one
+   digit after the decimal point.
+3. **A time that lost its colon is rebuilt only if it checks out.** `5217` is read as 5:21.7 and kept
+   only if it fits split × distance ÷ 500. All 16 sample rows show the monitor truncates the split: the
+   real time is never below that product, and at most 0.1 s per 500 m (plus 0.1 s) above it. For
+   IMG_0647 the window is 5:21.5–5:22.0, so `5217` (5:21.7) is kept and the macOS misread `5213`
+   (5:21.3) would be left empty. A rebuilt time gets confidence 0.4, under the Review sheet's 0.5 line,
+   so it is always highlighted for the rower to check.
+4. **A rep distance whose "x" was read as 0 is recovered only when the table backs it.** `200500m` is
+   split as count + `0` + distance (20, 500) and kept only if count × distance equals the summary's total
+   (20 × 500 = 10,000) or the distance appears in at least two interval rows. Exactly one reading must
+   pass. Single pieces such as `10000m` or `21097m` never split into a valid count and distance.
+
+Added beyond the brief, for you to check: the 0.4 confidence on a rebuilt time (so Review flags it), and
+the no-space split+rate case (`1:47.221`). Neither occurs in the 16 photos except the flag on IMG_0647.
+
+Still not handled: if Vision drops a summary value entirely, the row has fewer than four values. The
+parser then takes the first interval row as the summary, as it did before.
+
 ## Expected values that need your check
 
 Every summary-row value was read from the photo and then checked by arithmetic: interval times add up
@@ -129,8 +178,8 @@ Two small notes, no action needed:
 5. Hover over **OCRRegressionTests** and click the small ▶︎ (play) button that appears on the right
    of its row. The build and the test take about 2–3 minutes. The simulator doesn't need to be open.
 6. When it finishes, a green tick means nothing regressed. Expand **readsTheSummaryRow(of:)** to see
-   one row per photo. IMG_0647, IMG_0897 and IMG_0898 show a grey "expected failure" icon; those are
-   the baseline.
+   one row per photo. Since the fix, every photo is a green tick (the baseline is empty; before the fix,
+   IMG_0647, IMG_0897 and IMG_0898 showed a grey "expected failure" icon).
 7. If something goes red, click the red row. The message names the photo, the field, the expected
    value and what was read, e.g. `IMG_0593.jpeg — split: expected 1:49.5 (109500 ms), read 1:49.0 (109000 ms)`.
    To see every message at once, press **⌘9** (Report navigator) and click the latest **Test** entry.
