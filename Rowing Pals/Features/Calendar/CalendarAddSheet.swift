@@ -23,6 +23,7 @@ struct CalendarAddSheet: View {
             HStack {
                 Text("Add to \(CalendarRules.dayLabel(day, calendar: calendar))")
                     .textStyle(Typography.selectedValue)
+                    .tabularNumerals()
                     .foregroundStyle(Tokens.Ink.primary)
                 Spacer(minLength: 0)
                 Button("Cancel") { dismiss() }

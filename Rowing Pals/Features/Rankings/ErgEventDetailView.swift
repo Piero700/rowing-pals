@@ -87,9 +87,11 @@ struct ErgEventDetailView: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text("Row your \(event.pieceLabel) and post it")
                     .textStyle(Typography.rowTitle)
+                    .tabularNumerals()
                     .foregroundStyle(Tokens.Ink.primary)
                 Text("Log it with the + as usual. With a \(event.pieceLabel) as the main piece, the post screen offers “Count for \(event.title)”, on already.")
                     .textStyle(Typography.meta)
+                    .tabularNumerals()
                     .foregroundStyle(Tokens.Ink.secondary)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -114,6 +116,7 @@ struct ErgEventDetailView: View {
                  ? "Results show here once rowers post their \(event.pieceLabel)."
                  : "No results yet.")
                 .textStyle(Typography.meta)
+                .tabularNumerals()
                 .foregroundStyle(Tokens.Ink.secondary)
                 .padding(.horizontal, 4)
         } else {

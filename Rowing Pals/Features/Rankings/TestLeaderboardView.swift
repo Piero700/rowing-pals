@@ -114,6 +114,7 @@ struct TestLeaderboardView: View {
                     .foregroundStyle(Tokens.Ink.primary)
                 Text("Post a \(viewModel.test.label) main piece to be the first.")
                     .textStyle(Typography.bodySecondary)
+                    .tabularNumerals()
                     .foregroundStyle(Tokens.Ink.secondary)
             }
         }
@@ -162,6 +163,7 @@ struct TestLeaderboardView: View {
                 }
                 Text("\(row.club ?? "No club") · \(row.dateLabel)")
                     .textStyle(Typography.statLabel)
+                    .tabularNumerals()
                     .foregroundStyle(Tokens.Ink.secondary)
                     .lineLimit(1)
             }

@@ -135,6 +135,7 @@ struct TestsView: View {
             HStack {
                 Text("\(best.test.label) · Best")
                     .textStyle(Typography.label)
+                    .tabularNumerals()
                     .foregroundStyle(Tokens.Accent.rank)
                 Spacer()
                 RPIconView(icon: .chevronRight, size: Tokens.Icon.small)

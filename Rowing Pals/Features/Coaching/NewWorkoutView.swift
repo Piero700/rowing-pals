@@ -265,6 +265,7 @@ struct NewWorkoutView: View {
                         Spacer()
                         Text(viewModel.test?.label ?? "Choose")
                             .textStyle(Typography.detail)
+                            .tabularNumerals()
                             .foregroundStyle(viewModel.test == nil ? Tokens.Accent.brand : Tokens.Ink.secondary)
                         RPIconView(icon: .chevronUpDown, size: Tokens.Icon.small)
                             .textStyle(Typography.pill)

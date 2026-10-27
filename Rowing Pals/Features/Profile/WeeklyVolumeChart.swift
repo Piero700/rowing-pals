@@ -53,6 +53,7 @@ struct WeeklyVolumeChart: View {
             VStack(alignment: .leading, spacing: 8) {
                 Text(week.map { $0.isCurrentWeek ? "This week · In progress" : "Week of \(Self.dayMonth($0.weekStart))" } ?? "This week")
                     .textStyle(Typography.overline)
+                    .tabularNumerals()
                     .foregroundStyle(Tokens.Ink.secondary)
                 (Text((week?.distanceM ?? 0).formattedWithGrouping)
                     + Text(" m").font(.system(size: 15, weight: .medium)).foregroundColor(Tokens.Ink.secondary))
@@ -129,6 +130,7 @@ struct WeeklyVolumeChart: View {
             if let last = weeks.last { Text(Self.dayMonth(last.weekStart)) }
         }
         .font(.system(size: 10))
+        .tabularNumerals()
         .foregroundStyle(Tokens.Ink.secondary)
         .accessibilityHidden(true)
     }

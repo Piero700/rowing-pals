@@ -21,6 +21,7 @@ struct PBTileView: View {
         VStack(alignment: .leading, spacing: 0) {
             Text(label ?? tile.test.shortTitle)
                 .textStyle(Typography.statLabel)
+                .tabularNumerals()
                 .fontWeight(.bold)
                 .foregroundStyle(Tokens.Ink.secondary)
             Text(tile.displayValue ?? "—")

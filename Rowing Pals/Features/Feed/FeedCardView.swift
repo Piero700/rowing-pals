@@ -245,6 +245,7 @@ struct FeedCardView: View {
                 VStack(alignment: .leading, spacing: 6) {
                     Text("\(post.workoutLabel ?? "Training") · Main workout")
                         .textStyle(Typography.rowTitle)
+                        .tabularNumerals()
                         .foregroundStyle(Tokens.Ink.primary)
                     Text(meta)
                         .textStyle(Typography.statLabel)

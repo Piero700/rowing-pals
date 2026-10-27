@@ -184,6 +184,7 @@ struct ReviewSheetView: View {
                 HStack(spacing: 8) {
                     Text(isMain ? (viewModel.sessionKind.testLabel ?? viewModel.zone.rawValue) : segment.label.rawValue.capitalized)
                         .textStyle(Typography.fieldLabel)
+                        .tabularNumerals()
                         .foregroundStyle(isMain ? Tokens.Accent.brand : Tokens.Ink.secondary)
                         .lineLimit(1)
                         .minimumScaleFactor(0.8)
@@ -606,9 +607,11 @@ struct ReviewSheetView: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text("This looks like a \(test.label) test.")
                     .textStyle(Typography.rowTitle)
+                    .tabularNumerals()
                     .foregroundStyle(Tokens.Ink.primary)
                 Text("Post it as a \(test.label) test and add it to the leaderboard?")
                     .textStyle(Typography.bodySecondary)
+                    .tabularNumerals()
                     .foregroundStyle(Tokens.Ink.secondary)
             }
             Spacer()

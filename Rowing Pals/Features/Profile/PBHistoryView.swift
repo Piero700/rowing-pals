@@ -135,6 +135,7 @@ struct PBHistoryView: View {
                     .padding(.vertical, 8)
                 Text(Self.dateFormatter.string(from: current.date))
                     .textStyle(Typography.meta)
+                    .tabularNumerals()
                     .foregroundStyle(Tokens.Ink.secondary)
             }
             Spacer(minLength: 0)
@@ -290,6 +291,7 @@ struct PBHistoryView: View {
                     if let date = value.as(Date.self) {
                         Text(date, format: .dateTime.month(.abbreviated).year(.twoDigits))
                             .textStyle(Typography.meta)
+                            .tabularNumerals()
                             .foregroundStyle(Tokens.Ink.secondary)
                     }
                 }
@@ -331,6 +333,7 @@ struct PBHistoryView: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(Self.dateFormatter.string(from: point.date))
                     .textStyle(Typography.detail)
+                    .tabularNumerals()
                     .foregroundStyle(Tokens.Ink.primary)
                 Text(isLatest ? "Latest personal best" : "Personal best")
                     .textStyle(Typography.statLabel)
@@ -438,6 +441,7 @@ struct PBHistoryView: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(Self.dateFormatter.string(from: point.date))
                     .textStyle(Typography.detail)
+                    .tabularNumerals()
                     .foregroundStyle(isCurrent ? Tokens.Accent.brand : Tokens.Ink.primary)
                 Text(isCurrent ? "Current PB" : "Personal best")
                     .textStyle(Typography.statLabel)

@@ -342,6 +342,7 @@ struct PostDetailView: View {
         VStack(alignment: .leading, spacing: 8) {
             Text("\(banner.distanceLabel) test")
                 .textStyle(Typography.overline)
+                .tabularNumerals()
                 .foregroundStyle(Tokens.Accent.records)
             HStack(alignment: .lastTextBaseline, spacing: 10) {
                 Text(banner.valueLabel)

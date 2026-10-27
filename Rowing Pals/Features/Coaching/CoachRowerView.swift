@@ -236,6 +236,7 @@ struct CoachRowerView: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(test.label)
                     .textStyle(Typography.rowTitle)
+                    .tabularNumerals()
                     .foregroundStyle(Tokens.Ink.primary)
                 Text(testDetail(test, weightKg: weightKg))
                     .textStyle(Typography.meta)
