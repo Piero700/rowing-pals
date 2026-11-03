@@ -139,9 +139,6 @@ final class ReviewSheetViewModel {
         return sessionKind.problem(distanceM: main.distanceM, timeMs: main.timeMs)
     }
 
-    /// Photographed segments whose stroke rate hasn't been checked yet.
-    var hasUnconfirmedRate: Bool { segments.contains { !$0.isRateConfirmed } }
-
     /// The first reason Post is unavailable, shown next to the button. Nil
     /// when the session can be posted.
     var postBlocker: String? {
@@ -152,7 +149,6 @@ final class ReviewSheetViewModel {
         if segments.contains(where: { $0.rate <= 0 }) {
             return "Enter the stroke rate for every piece."
         }
-        if hasUnconfirmedRate { return "Confirm the stroke rate before posting." }
         return sessionKindProblem
     }
 

@@ -76,6 +76,9 @@ enum Tokens {
         static let dark = Color(hex: 0x101114)
         static let light = Color(hex: 0xEDF0F5)
         static let ground = Color(light: light, dark: dark)
+        /// The ground laid over a photo so text on it stays readable in both modes (Season Wrapped's
+        /// pages, user 2026-11-03).
+        static let photoScrim = Color(light: Color(hex: 0xEDF0F5, opacity: 0.66), dark: Color(hex: 0x101114, opacity: 0.6))
         /// v3 `bg` — the outer background behind full-screen covers and sheets.
         static let outer = Color(light: Color(hex: 0xDFE3EB), dark: Color(hex: 0x09090B))
     }

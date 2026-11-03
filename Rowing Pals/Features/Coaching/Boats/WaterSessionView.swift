@@ -6,8 +6,9 @@
 import SwiftUI
 
 /// A water session, new or to edit (CoachWaterSessionNew; decision 67): Title, Date and Time, Meet
-/// at, The plan; its Boats, each opening the crewing screen; Add boat (saved or new); and Send,
-/// which tells each rower their boat and seat. Editing adds Delete session.
+/// at, The plan; its Boats, each opening the crewing screen and swiped left to delete (user,
+/// 2026-11-03); Add boat (saved or new); and Send, which tells each rower their boat and seat.
+/// Editing adds Delete session.
 struct WaterSessionView: View {
     @State private var viewModel: WaterSessionViewModel
     @State private var isAddingBoat = false
@@ -142,8 +143,11 @@ struct WaterSessionView: View {
                                  names: viewModel.names, footer: .sent(boat.isSent), colour: boat.colour)
                     }
                     .buttonStyle(IconPressStyle())
+                    .swipeToDelete(cornerRadius: Tokens.Boat.cardRadius) { await viewModel.deleteBoat(boat.id) }
                 }
             }
+            // A swiped boat slides under the card's edge, not out over it.
+            .clipped()
             .padding(.vertical, Tokens.Spacing.loose)
             .padding(.horizontal, Tokens.Spacing.gap)
             .background(Self.cardShape.fill(Tokens.Surface.card))

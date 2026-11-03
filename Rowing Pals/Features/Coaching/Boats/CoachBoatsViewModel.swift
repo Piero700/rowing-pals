@@ -60,6 +60,32 @@ final class CoachBoatsViewModel {
         hasLoaded = true
     }
 
+    /// Swipe left on a session's boat: it comes out of the session. True when gone.
+    func deleteBoat(_ boat: SessionBoat) async -> Bool {
+        do {
+            try await BoatService.deleteBoat(boat.id)
+            boats[boat.sessionId]?.removeAll { $0.id == boat.id }
+            NotificationCenter.default.post(name: .boatsChanged, object: nil)
+            return true
+        } catch {
+            errorMessage = "Couldn’t delete the boat. \(error.localizedDescription)"
+            return false
+        }
+    }
+
+    /// Swipe left on a saved boat: it comes out of Saved boats; sessions keep their boats.
+    func deleteSavedBoat(_ id: UUID) async -> Bool {
+        do {
+            try await BoatService.deleteSavedBoat(id)
+            savedBoats.removeAll { $0.id == id }
+            NotificationCenter.default.post(name: .boatsChanged, object: nil)
+            return true
+        } catch {
+            errorMessage = "Couldn’t delete the boat. \(error.localizedDescription)"
+            return false
+        }
+    }
+
     private func unseatedPeople(next: WaterSession?, members: [ClubMember]) async throws -> (WaterSession, [ClubMember])? {
         guard let next, let availability = try await BoatService.availability(of: next) else { return nil }
         let seated = Set((boats[next.id] ?? []).flatMap { $0.seats.map(\.userId) })

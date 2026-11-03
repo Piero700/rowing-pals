@@ -7,14 +7,17 @@ import SwiftUI
 
 /// One Season Wrapped page (decision 92), story-shaped (9:16), drawn the same on screen and in the
 /// shared image: the season's name and days at the top, one big number, what's behind it, and the
-/// rower's name at the foot. The PBs page wears the records lilac; a first place in the club, the
-/// rank amber.
+/// rower's name at the foot. Behind it, a photo the rower picked for the page, shaded so the text
+/// reads, or the plain card (user, 2026-11-03: photos, not a gradient). Your own dates show just the
+/// days, with no "Your dates" title. The PBs page wears the records lilac; a first place in the
+/// club, the rank amber.
 struct WrappedPageView: View {
     let page: WrappedPage
     let wrapped: SeasonWrapped
     let period: WrappedPeriod
     let name: String
     let isSoFar: Bool
+    var photo: UIImage?
 
     private static let shape = RoundedRectangle(cornerRadius: Tokens.Radius.card, style: .continuous)
 
@@ -23,10 +26,12 @@ struct WrappedPageView: View {
             Text("Season Wrapped")
                 .textStyle(Typography.kicker)
                 .foregroundStyle(tint)
-            Text(period.title + (isSoFar ? " so far" : ""))
-                .textStyle(Typography.profileName)
-                .foregroundStyle(Tokens.Ink.primary)
-                .padding(.top, 4)
+            if period.termId != nil {
+                Text(period.title + (isSoFar ? " so far" : ""))
+                    .textStyle(Typography.profileName)
+                    .foregroundStyle(Tokens.Ink.primary)
+                    .padding(.top, 4)
+            }
             Text(Self.days(period))
                 .textStyle(Typography.meta)
                 .tabularNumerals()
@@ -50,7 +55,14 @@ struct WrappedPageView: View {
         .frame(width: Tokens.Size.wrappedCardWidth, height: Tokens.Size.wrappedCardHeight, alignment: .topLeading)
         .background {
             Self.shape.fill(Tokens.Surface.card)
-            Self.shape.fill(LinearGradient(colors: [softTint, .clear], startPoint: .top, endPoint: .center))
+            if let photo {
+                Image(uiImage: photo)
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: Tokens.Size.wrappedCardWidth, height: Tokens.Size.wrappedCardHeight)
+                    .clipShape(Self.shape)
+                Self.shape.fill(Tokens.Base.photoScrim)
+            }
         }
         .overlay { Self.shape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
         .accessibilityElement(children: .combine)
@@ -63,14 +75,6 @@ struct WrappedPageView: View {
         case .pbs: Tokens.Accent.records
         case .crew where isFirstInClub: Tokens.Accent.rank
         default: Tokens.Ink.secondary
-        }
-    }
-
-    private var softTint: Color {
-        switch page {
-        case .pbs: Tokens.Accent.recordsSoft
-        case .crew where isFirstInClub: Tokens.Accent.rankSoft
-        default: Tokens.Surface.raised
         }
     }
 

@@ -87,15 +87,11 @@ struct ReviewSessionTests {
         #expect(segment.splitMs == 0)
     }
 
-    // MARK: Stroke-rate confirmation
+    // MARK: Stroke rate
 
-    @Test func photographedPieceMustBeConfirmedBeforePosting() {
+    @Test func photographedPieceNeedsNoRateConfirmation() {
         let vm = ReviewSheetViewModel(selfieJPEG: Data([0]))
         vm.segments = [Self.photographedSegment(distanceM: 2000, timeMs: 420_000, rate: 24)]
-        #expect(vm.postBlocker == "Confirm the stroke rate before posting.")
-        #expect(!vm.canPost)
-
-        vm.segments[0].isRateConfirmed = true
         #expect(vm.postBlocker == nil)
         #expect(vm.canPost)
     }
@@ -105,7 +101,6 @@ struct ReviewSessionTests {
     @Test func choosingATestBlocksPostingWhenTheDistanceDoesNotMatch() {
         let vm = ReviewSheetViewModel(selfieJPEG: Data([0]))
         vm.segments = [Self.photographedSegment(distanceM: 1800, timeMs: 420_000, rate: 24)]
-        vm.segments[0].isRateConfirmed = true
         vm.sessionKind = .test(Self.twoK)
         #expect(vm.sessionKindProblem != nil)
         #expect(!vm.canPost)
@@ -117,7 +112,6 @@ struct ReviewSessionTests {
     @Test func aTestNeedsAMainPiece() {
         let vm = ReviewSheetViewModel(selfieJPEG: Data([0]))
         vm.segments = [Self.photographedSegment(distanceM: 2000, timeMs: 420_000, rate: 24, label: .extra)]
-        vm.segments[0].isRateConfirmed = true
         vm.sessionKind = .test(Self.twoK)
         #expect(vm.sessionKindProblem != nil)
     }
@@ -145,12 +139,11 @@ struct ReviewSessionTests {
 
     // MARK: Manual entry
 
-    @Test func manualEntryStartsWithOneBlankConfirmedPiece() {
+    @Test func manualEntryStartsWithOneBlankPiece() {
         let vm = ReviewSheetViewModel(selfieJPEG: nil)
         #expect(vm.isManual)
         #expect(vm.segments.count == 1)
         #expect(vm.segments[0].isManual)
-        #expect(!vm.hasUnconfirmedRate)
     }
 
     @Test func manualEntryCannotBePostedBlank() {

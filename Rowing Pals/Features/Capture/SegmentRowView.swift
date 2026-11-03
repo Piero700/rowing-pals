@@ -13,17 +13,14 @@ enum ReviewField: Hashable {
 }
 
 /// One editable segment row in the review sheet — thumbnail, distance, time,
-/// the average, the stroke rate with its inline Confirm button, and the
-/// Warmup/Main/Cooldown/Extra tag picker.
+/// the average, the stroke rate, and the Warmup/Main/Cooldown/Extra tag picker.
 ///
 /// Decision 58 (2026-10-14): any two of distance, time and the average give the
 /// third. Type the time and the average follows; type the average (a split, or
 /// watts when that's the display preference) and the time follows — or, with
 /// no distance yet, the distance. Whichever of time and average was typed last
-/// is the one kept when the distance changes. The stroke rate has a
-/// Confirm button embedded in the field, always required for a photographed
-/// piece and cleared whenever the rate is edited. A manual piece has no
-/// monitor to check against, so it has no Confirm.
+/// is the one kept when the distance changes. The stroke rate has no Confirm
+/// button (user, 2026-11-03): a rower who cares checks it and edits it.
 ///
 /// Owns its own text buffers (`distanceText` etc.) rather than formatting
 /// straight from the bound segment on every render: a `Binding<String>`
@@ -100,9 +97,7 @@ struct SegmentRowView: View {
                     averageField
                     rateField
                 }
-                // Use the row's full width: left to size itself the grid
-                // shrinks, and the rate column is too narrow for its value
-                // plus the Confirm button.
+                // Use the row's full width: left to size itself the grid shrinks.
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
             if timeIsUnreadable {
@@ -123,9 +118,11 @@ struct SegmentRowView: View {
                     .textStyle(Typography.statLabel)
                     .foregroundStyle(Tokens.Accent.brand)
             }
-            Text(rateHelp)
-                .textStyle(Typography.statLabel)
-                .foregroundStyle(Tokens.Ink.secondary)
+            if segment.isManual {
+                Text("Enter the stroke rate from your session.")
+                    .textStyle(Typography.statLabel)
+                    .foregroundStyle(Tokens.Ink.secondary)
+            }
             HStack(spacing: 6) {
                 ForEach(SegmentLabel.allCases, id: \.self) { tag in
                     Button {
@@ -181,12 +178,6 @@ struct SegmentRowView: View {
     private var lowConfidenceCaption: String {
         let count = segment.lowConfidenceFields.count
         return "\(count) value\(count == 1 ? "" : "s") read with low confidence — worth a check."
-    }
-
-    private var rateHelp: String {
-        segment.isManual
-            ? "Enter the stroke rate from your session."
-            : "Check the stroke rate against your monitor, then tap Confirm."
     }
 
     @ViewBuilder
@@ -377,61 +368,22 @@ struct SegmentRowView: View {
         segment.wasEdited = true
     }
 
-    /// The stroke rate field, with Confirm inside it for a photographed
-    /// piece. Tapping Confirm commits any pending edit first, so what is
-    /// confirmed is what is shown.
+    /// The stroke rate field.
     private var rateField: some View {
         VStack(alignment: .leading, spacing: 6) {
             fieldLabel("Stroke rate")
-            HStack(spacing: 6) {
-                TextField("spm", text: $rateText, onEditingChanged: { isEditing in
-                    if !isEditing { commitRate() }
-                })
-                    .textStyle(Typography.bodyV3)
-                    .tabularNumerals()
-                    .foregroundStyle(Tokens.Ink.primary)
-                    .keyboardType(.decimalPad)
-                    .frame(minWidth: 30)
-                    .focused(focusedField, equals: .field(segmentId: segment.id, field: .rate))
-                    .onSubmit(commitRate)
-                    // Any real edit un-confirms. Compared to the stored rate, so the reformat
-                    // that follows a commit ("19" → "19.0") doesn't cancel a confirmation.
-                    .onChange(of: rateText) { _, newValue in
-                        guard !segment.isManual else { return }
-                        if Double(newValue) != segment.rate { segment.isRateConfirmed = false }
-                    }
-                if !segment.isManual {
-                    confirmButton
-                }
-            }
-            .padding(.trailing, segment.isManual ? 0 : -7)
-            .fieldBox(highlighted: segment.lowConfidenceFields.contains(.rate))
+            TextField("spm", text: $rateText, onEditingChanged: { isEditing in
+                if !isEditing { commitRate() }
+            })
+                .textStyle(Typography.bodyV3)
+                .tabularNumerals()
+                .foregroundStyle(Tokens.Ink.primary)
+                .keyboardType(.decimalPad)
+                .frame(minWidth: 30)
+                .focused(focusedField, equals: .field(segmentId: segment.id, field: .rate))
+                .onSubmit(commitRate)
+                .fieldBox(highlighted: segment.lowConfidenceFields.contains(.rate))
         }
-    }
-
-    /// v3: a 40 pt glass pill inside the field, brand "Confirm" → "Checked" in the success colour.
-    private var confirmButton: some View {
-        Button {
-            commitRate()
-            guard segment.rate > 0 else { return }
-            segment.isRateConfirmed = true
-        } label: {
-            Text(segment.isRateConfirmed ? "Checked" : "Confirm")
-                .textStyle(Typography.pill)
-                .lineLimit(1)
-                .fixedSize()
-                .foregroundStyle(segment.isRateConfirmed ? Tokens.Accent.success : Tokens.Accent.brand)
-                .padding(.horizontal, 12)
-                .frame(minWidth: 80, minHeight: 40)
-                .background {
-                    if segment.isRateConfirmed { Capsule().fill(Tokens.Accent.successSoft) }
-                }
-                .glassSurface(in: Capsule())
-                .contentShape(Capsule())
-        }
-        .buttonStyle(IconPressStyle())
-        .layoutPriority(1)
-        .accessibilityLabel(segment.isRateConfirmed ? "Stroke rate checked" : "Confirm stroke rate")
     }
 
     /// v3 field label: 12.5 pt, bold, muted.
@@ -496,7 +448,6 @@ struct SegmentRowView: View {
         guard parsed != segment.rate else { return }
         segment.rate = parsed
         segment.wasEdited = true
-        if !segment.isManual { segment.isRateConfirmed = false }
     }
 }
 

@@ -6,8 +6,8 @@
 import SwiftUI
 
 /// The club's term dates (decision 39), from Attendance totals' Edit dates: each term's name, first
-/// and last day; add a term, change one, or delete one. "This term" counts from the start of the
-/// term holding today.
+/// and last day; add a term, change one, or swipe one left to delete it (user, 2026-11-03). "This
+/// term" counts from the start of the term holding today.
 struct TermsEditorView: View {
     struct Draft: Identifiable, Equatable {
         let id: UUID
@@ -31,7 +31,13 @@ struct TermsEditorView: View {
             VStack(alignment: .leading, spacing: 0) {
                 FormFootnote("Attendance’s This term counts from the first day of the term holding today.")
                 ForEach($drafts) { $draft in
+                    let id = draft.id
                     termCard($draft)
+                        // Gone from the list now; Save terms deletes it from the club.
+                        .swipeToDelete {
+                            withAnimation(.snappy) { drafts.removeAll { $0.id == id } }
+                            return true
+                        }
                         .padding(.top, Tokens.Spacing.loose)
                 }
                 Button {
@@ -85,16 +91,9 @@ struct TermsEditorView: View {
 
     private func termCard(_ draft: Binding<Draft>) -> some View {
         VStack(alignment: .leading, spacing: 0) {
-            HStack {
-                TextField("Autumn", text: draft.name)
-                    .textStyle(Typography.rowTitle)
-                    .foregroundStyle(Tokens.Ink.primary)
-                Button("Delete", role: .destructive) {
-                    drafts.removeAll { $0.id == draft.wrappedValue.id }
-                }
-                .textStyle(Typography.meta)
-                .foregroundStyle(Tokens.System.error)
-            }
+            TextField("Autumn", text: draft.name)
+                .textStyle(Typography.rowTitle)
+                .foregroundStyle(Tokens.Ink.primary)
             HStack(spacing: Tokens.Spacing.loose) {
                 VStack(alignment: .leading, spacing: 0) {
                     FormLabel("First day")

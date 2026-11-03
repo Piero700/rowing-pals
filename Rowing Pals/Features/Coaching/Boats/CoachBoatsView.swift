@@ -8,7 +8,8 @@ import SwiftUI
 /// The coach version's **Boats** tab (CoachBoats, CoachSavedBoats; decisions 67, 70): Sessions —
 /// today's and upcoming water sessions, each with its boats on their side (decision 88) and whether
 /// they've been sent, then who's going to the next one but isn't in a boat yet — and Saved boats, the crews
-/// the club puts out again and again. A water session is new from + → Water session.
+/// the club puts out again and again. Swipe a boat left to delete it (user, 2026-11-03). A water
+/// session is new from + → Water session.
 struct CoachBoatsView: View {
     var reselects = 0
     var refreshes = 0
@@ -172,8 +173,11 @@ struct CoachBoatsView: View {
                                      names: viewModel.names, footer: .sent(boat.isSent), colour: boat.colour)
                         }
                         .buttonStyle(IconPressStyle())
+                        .swipeToDelete(cornerRadius: Tokens.Boat.cardRadius) { await viewModel.deleteBoat(boat) }
                     }
                 }
+                // A swiped boat slides under the card's edge, not out over it.
+                .clipped()
                 .padding(.top, Tokens.Spacing.loose)
             }
         }
@@ -208,8 +212,11 @@ struct CoachBoatsView: View {
                                  names: viewModel.names, footer: .uses(boat.uses), colour: boat.colour)
                     }
                     .buttonStyle(IconPressStyle())
+                    .swipeToDelete(cornerRadius: Tokens.Boat.cardRadius) { await viewModel.deleteSavedBoat(boat.id) }
                 }
             }
+            // A swiped boat slides under the card's edge, not out over it.
+            .clipped()
             .padding(.vertical, Tokens.Spacing.loose)
             .padding(.horizontal, Tokens.Spacing.gap)
             .background(Self.cardShape.fill(Tokens.Surface.card))

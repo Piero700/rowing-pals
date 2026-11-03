@@ -15,6 +15,8 @@ import UIKit
 /// views, so this uses a UIKit pan that only starts on a sideways swipe — the page still scrolls
 /// up and down over the card, and a swipe the other way is left for going back.
 private struct SwipeToDelete: ViewModifier {
+    /// The card's corner radius, which the Delete button behind it matches.
+    let cornerRadius: CGFloat
     /// Deletes the item; true when it's gone.
     let onDelete: () async -> Bool
 
@@ -65,7 +67,7 @@ private struct SwipeToDelete: ViewModifier {
                 .foregroundStyle(Tokens.Ink.onBrand)
                 .lineLimit(1)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(RoundedRectangle(cornerRadius: Tokens.Radius.card, style: .continuous).fill(Tokens.System.error))
+                .background(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous).fill(Tokens.System.error))
         }
         .buttonStyle(.plain)
         .frame(width: max(revealed - Tokens.Spacing.tight, 0))
@@ -149,7 +151,7 @@ private struct HorizontalPan: UIGestureRecognizerRepresentable {
 
 extension View {
     /// Swipe right to left to delete, as iOS does for an alarm (decision 60).
-    func swipeToDelete(_ onDelete: @escaping () async -> Bool) -> some View {
-        modifier(SwipeToDelete(onDelete: onDelete))
+    func swipeToDelete(cornerRadius: CGFloat = Tokens.Radius.card, _ onDelete: @escaping () async -> Bool) -> some View {
+        modifier(SwipeToDelete(cornerRadius: cornerRadius, onDelete: onDelete))
     }
 }

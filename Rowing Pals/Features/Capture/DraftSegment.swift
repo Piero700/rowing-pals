@@ -30,12 +30,6 @@ struct DraftSegment: Identifiable {
     /// review sheet, never red (CLAUDE.md: this is expected, not an error).
     var lowConfidenceFields: Set<Field>
     var wasEdited = false
-    /// The rower has checked this segment's stroke rate against the monitor.
-    /// Required before posting a photographed segment, and cleared whenever
-    /// the rate is edited (prototype: "Check the stroke rate against your
-    /// monitor, then tap Confirm."). A manual segment has no monitor to
-    /// check against, so it starts confirmed.
-    var isRateConfirmed = false
     /// An interval session's rep distance, read off the monitor's workout title
     /// ("8x500m/1:00r" → 500). Nil for a continuous piece, a timed-rep workout or a manual entry.
     var repDistanceM: Int?
@@ -76,8 +70,7 @@ struct DraftSegment: Identifiable {
         recomputeSplit()
     }
 
-    /// A blank segment for "Enter session manually": no photo, nothing read,
-    /// nothing to confirm.
+    /// A blank segment for "Enter session manually": no photo, nothing read.
     init(manualLabel label: SegmentLabel) {
         self.label = label
         photoJPEG = nil
@@ -87,7 +80,6 @@ struct DraftSegment: Identifiable {
         rate = 0
         ocrConfidence = 0
         lowConfidenceFields = []
-        isRateConfirmed = true
     }
 
     // MARK: - Any two of distance, time and split give the third (decision 58)

@@ -98,6 +98,12 @@ final class WaterSessionViewModel {
         return "“\(weekday) \(CalendarRules.time(startsAt, calendar: calendar)) · you’re at stroke in \(name)”"
     }
 
+    /// The saved boats not in this session yet: Add a boat offers only these (user, 2026-11-03).
+    var addableSavedBoats: [SavedBoat] {
+        let added = Set(boats.compactMap(\.savedBoatId))
+        return savedBoats.filter { !added.contains($0.id) }
+    }
+
     /// Who's in which boat already, for Add a boat.
     var seatedIn: [UUID: String] {
         var result: [UUID: String] = [:]
@@ -241,6 +247,19 @@ final class WaterSessionViewModel {
             NotificationCenter.default.post(name: .boatsChanged, object: nil)
         } catch {
             errorMessage = "Couldn’t add the boat. \(error.localizedDescription)"
+        }
+    }
+
+    /// Swipe left on a boat: it comes out of the session, and off its crew's Feed. True when gone.
+    func deleteBoat(_ id: UUID) async -> Bool {
+        do {
+            try await BoatService.deleteBoat(id)
+            boats.removeAll { $0.id == id }
+            NotificationCenter.default.post(name: .boatsChanged, object: nil)
+            return true
+        } catch {
+            errorMessage = "Couldn’t delete the boat. \(error.localizedDescription)"
+            return false
         }
     }
 

@@ -129,7 +129,8 @@ final class CrewBoatViewModel {
     }
 
     /// Who the picker offers for the chosen seat: fitting their side first (coxes first for the cox
-    /// seat), then by name; those who can't be chosen last.
+    /// seat), then by name; those who can't be chosen next, and those already in this boat at the
+    /// bottom (user, 2026-11-03).
     var candidates: [Candidate] {
         guard let seat = selectedSeat else { return [] }
         let seatSide = side(of: seat)
@@ -149,6 +150,7 @@ final class CrewBoatViewModel {
                              blockedReason: blocked, currentSeat: seatOf[member.id])
         }
         return list.sorted { a, b in
+            if (a.currentSeat == nil) != (b.currentSeat == nil) { return a.currentSeat == nil }
             if (a.blockedReason == nil) != (b.blockedReason == nil) { return a.blockedReason == nil }
             if a.fits != b.fits { return a.fits }
             return a.member.displayName.localizedCaseInsensitiveCompare(b.member.displayName) == .orderedAscending

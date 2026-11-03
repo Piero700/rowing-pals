@@ -64,12 +64,9 @@ struct SidewaysBoatStrip<Overlay: View>: View {
                 geometry = new
                 centreOnMySeat(layout: layout)
             }
+            // Crewing doesn't scroll the boat when the next seat is chosen: it stays where the coach
+            // left it (user, 2026-11-03).
             .mask { fade }
-            // Crewing: the seat being chosen for comes into view (decision 88).
-            .onChange(of: selectedSeat) { _, seat in
-                guard let seat else { return }
-                withAnimation(.snappy) { scroll(to: seat, layout: layout) }
-            }
             if geometry.overflows {
                 bar
             }

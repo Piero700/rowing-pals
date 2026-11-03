@@ -7,7 +7,8 @@ import SwiftUI
 
 /// Add a boat to a water session (CoachAddBoat; decision 70): the saved boats, each checked against
 /// who's available ("All 4 available", "Lucy can't make it: swap them after adding", "Joe is
-/// already in M1 four"), or New boat.
+/// already in M1 four"), or New boat. A saved boat already in the session isn't offered again
+/// (user, 2026-11-03).
 struct AddBoatSheet: View {
     let viewModel: WaterSessionViewModel
     let onAdd: (SavedBoat) -> Void
@@ -37,8 +38,12 @@ struct AddBoatSheet: View {
                     Text("No saved boats yet. Make a new one, and turn on Keep in Saved boats to add it in a tap next time.")
                         .textStyle(Typography.meta)
                         .foregroundStyle(Tokens.Ink.secondary)
+                } else if viewModel.addableSavedBoats.isEmpty {
+                    Text("Every saved boat is in this session already.")
+                        .textStyle(Typography.meta)
+                        .foregroundStyle(Tokens.Ink.secondary)
                 }
-                ForEach(viewModel.savedBoats) { boat in
+                ForEach(viewModel.addableSavedBoats) { boat in
                     row(boat)
                 }
                 Button {

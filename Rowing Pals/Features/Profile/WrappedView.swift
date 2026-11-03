@@ -3,15 +3,20 @@
 //  Rowing Pals
 //
 
+import PhotosUI
 import SwiftUI
 
 /// Season Wrapped (decision 92): choose one of the club's terms or your own dates, swipe through the
-/// season's pages, and share any page as a story-sized image (1080 × 1920).
+/// season's pages, put a photo of your own behind any page (user, 2026-11-03), and share any page as
+/// a story-sized image (1080 × 1920). The photos stay while the screen is open.
 struct WrappedView: View {
     @State private var viewModel: WrappedViewModel
     @State private var page = 0
     @State private var images: [WrappedPage: UIImage] = [:]
     @State private var isChoosingDates = false
+    /// The photo picked for each page.
+    @State private var photos: [WrappedPage: UIImage] = [:]
+    @State private var photoItem: PhotosPickerItem?
     @Environment(\.dismiss) private var dismiss
 
     init(termId: UUID?) {
@@ -28,7 +33,8 @@ struct WrappedView: View {
                         GeometryReader { geometry in
                             let scale = min(geometry.size.width / Tokens.Size.wrappedCardWidth,
                                             geometry.size.height / Tokens.Size.wrappedCardHeight, 1)
-                            WrappedPageView(page: item, wrapped: wrapped, period: period, name: viewModel.name, isSoFar: viewModel.isSoFar)
+                            WrappedPageView(page: item, wrapped: wrapped, period: period, name: viewModel.name,
+                                            isSoFar: viewModel.isSoFar, photo: photos[item])
                                 .scaleEffect(scale)
                                 .frame(width: geometry.size.width, height: geometry.size.height)
                         }
@@ -37,6 +43,8 @@ struct WrappedView: View {
                 }
                 .tabViewStyle(.page(indexDisplayMode: .always))
                 .task(id: viewModel.period) { render(pages, wrapped: wrapped, period: period) }
+                .onChange(of: photos) { render(pages, wrapped: wrapped, period: period) }
+                photoButtons(pages)
                 shareButton(pages)
             } else if viewModel.isLoading {
                 ProgressView()
@@ -125,6 +133,45 @@ struct WrappedView: View {
         .presentationBackground(Tokens.Base.ground)
     }
 
+    // MARK: - Photos
+
+    /// Add a photo (or Change photo) for the page showing, and Remove photo once it has one.
+    @ViewBuilder
+    private func photoButtons(_ pages: [WrappedPage]) -> some View {
+        let current = pages.indices.contains(page) ? pages[page] : pages.first
+        if let current {
+            HStack(spacing: Tokens.Spacing.tight) {
+                PhotosPicker(selection: $photoItem, matching: .images) {
+                    Label(photos[current] == nil ? "Add a photo" : "Change photo", icon: .photo)
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.rpGlass)
+                if photos[current] != nil {
+                    Button("Remove photo") { photos[current] = nil }
+                        .buttonStyle(.rpText)
+                }
+            }
+            .onChange(of: photoItem) { _, item in
+                guard let item else { return }
+                Task { await usePhoto(item, for: current) }
+            }
+        }
+    }
+
+    /// The picked photo, scaled down to what a 1080 × 1920 page needs.
+    private func usePhoto(_ item: PhotosPickerItem, for page: WrappedPage) async {
+        defer { photoItem = nil }
+        guard let data = try? await item.loadTransferable(type: Data.self), let image = UIImage(data: data) else { return }
+        let longest = max(image.size.width, image.size.height)
+        let scale = min(1, 1920 / max(longest, 1))
+        let size = CGSize(width: image.size.width * scale, height: image.size.height * scale)
+        let format = UIGraphicsImageRendererFormat.default()
+        format.scale = 1
+        photos[page] = UIGraphicsImageRenderer(size: size, format: format).image { _ in
+            image.draw(in: CGRect(origin: .zero, size: size))
+        }
+    }
+
     // MARK: - Sharing
 
     @ViewBuilder
@@ -153,7 +200,8 @@ struct WrappedView: View {
         var rendered: [WrappedPage: UIImage] = [:]
         for item in pages {
             let renderer = ImageRenderer(content: WrappedPageView(page: item, wrapped: wrapped, period: period,
-                                                                  name: viewModel.name, isSoFar: viewModel.isSoFar))
+                                                                  name: viewModel.name, isSoFar: viewModel.isSoFar,
+                                                                  photo: photos[item]))
             renderer.scale = 3
             if let image = renderer.uiImage { rendered[item] = image }
         }

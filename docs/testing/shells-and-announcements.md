@@ -273,3 +273,16 @@ the club's terms (as for attendance totals) — add one that started a few weeks
 - [ ] One page: "Nothing logged in … yet".
 4. Make a term that ended yesterday (Coach_J), then open Piero's **Feed**.
 - [ ] "Your … Wrapped is ready" card; tapping opens that term's Wrapped.
+
+## 19. Boats, crewing, stroke rate, Wrapped photos, term dates (decision 93)
+
+No migration. Coach steps as **Coach_J**, rower steps as **Piero**.
+
+- [ ] Coach_J: open a water session that has a boat added from **Saved boats**, tap **Add boat**. That saved boat is **not** in the list. Add another one: close and reopen Add boat, and it has gone from the list too.
+- [ ] On the water session, **swipe a boat right to left**. A red **Delete** appears behind it and the boat stays inside its card. Tap the boat: it closes. Swipe again and tap **Delete**: the boat goes, and it's back in Add boat's list.
+- [ ] The same swipe works on the **Boats** tab → Sessions, and on **Saved boats** (deleting a saved boat leaves sessions' boats alone).
+- [ ] Open an **8+**, scroll the boat to the stern, tap the cox seat and pick a rower. The boat **doesn't scroll** to the next seat. In the list, that rower is now at the **bottom** with their seat tag; people not picked yet are at the top.
+- [ ] Piero: post an erg photo. The stroke rate field has **no Confirm button**, and Post works without it.
+- [ ] Piero: Profile → **Season Wrapped**. No gradient behind the pages. Tap **Add a photo**, pick one: it's behind the page, the text still readable. **Change photo** and **Remove photo** work. **Share this page** includes the photo.
+- [ ] Choose **Your dates…** → Show my season: the pages show just the dates, with no "Your dates so far".
+- [ ] Coach_J: Profile → Attendance totals → **Edit dates**. No red Delete on a term. Swipe a term left, tap **Delete**, then **Save terms**: it's gone when you open Edit dates again.
