@@ -11,6 +11,10 @@
 /// isn't that: it's the union of the other two (clubmates OR followers),
 /// not every user of the app, added right after the cancellation because
 /// there was no way to post to both circles in one go.
+///
+/// `.following` is shown as **Friends** (decision 95, 2026-11-03): people who
+/// follow each other. A one-way follower doesn't see it. The stored value stays
+/// `following`, so posts already made keep their setting.
 enum PostVisibility: String, Codable, CaseIterable {
     case following
     case club
@@ -18,7 +22,7 @@ enum PostVisibility: String, Codable, CaseIterable {
 
     var label: String {
         switch self {
-        case .following: "Following"
+        case .following: "Friends"
         case .club: "My Club"
         case .everyone: "Everyone"
         }

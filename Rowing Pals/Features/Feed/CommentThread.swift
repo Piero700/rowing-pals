@@ -28,7 +28,7 @@ final class CommentThread {
 
     /// Postgres's "insufficient privilege": a row-level security rule refused the write.
     private static let notAllowedCode = "42501"
-    static let notAllowedMessage = "Only people who follow this rower or share their club can comment."
+    static let notAllowedMessage = "Only this rower’s friends (you follow each other) and clubmates can comment."
 
     private var ownUserId: UUID?
     private var ownDisplayName = ""

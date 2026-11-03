@@ -561,7 +561,7 @@ struct ReviewSheetView: View {
 
     /// Who can see this post — a new choice at post time, added after
     /// task 18. Defaults to Everyone (`PostVisibility`) — club and
-    /// followers combined, the widest of the three.
+    /// friends combined, the widest of the three.
     private var visibilityPicker: some View {
         let selection = Binding<Int>(
             get: { PostVisibility.allCases.firstIndex(of: viewModel.visibility) ?? 0 },
@@ -569,6 +569,11 @@ struct ReviewSheetView: View {
         )
         return VStack(alignment: .leading, spacing: 6) {
             PillSegmentedControl(options: PostVisibility.allCases.map(\.label), selection: selection)
+            // Friends means both ways now (decision 95), which the word alone doesn't say.
+            Text("Friends: people you follow who follow you back.")
+                .textStyle(Typography.statLabel)
+                .foregroundStyle(Tokens.Ink.secondary)
+                .padding(.horizontal, 4)
         }
     }
 
