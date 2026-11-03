@@ -16,41 +16,40 @@ Accounts: **Coach_J** (coach only), **Piero** (rows; owner of UEA Boat Club).
 ## 1. Install the build
 In Xcode choose **RP Dev** and **your iPhone**, press **Cmd+R**.
 
+> **Updated 2026-11-03 to match the current build.** Boats are now drawn on their side everywhere
+> (decisions 86–88), so sections 2–4 and one line of section 8 were rewritten; **Draw boats** was removed.
+> Section 14 covers the coach's boats in full.
+
 ## 2. Boats as rowing shells (Coach_J)
 1. **Boats** → **Saved boats** (or a session's boats).
-- [ ] Each boat is a long, narrow shell pointed at both ends, with a small bow ball, wing riggers and oars
-      with spoon blades. **STERN** is written above it and **BOW** below; the stroke seat (S) is at the top.
-- [ ] In a stroke-rigged four the stroke's oar is on the **right** (stroke side), then they alternate.
+- [ ] Each boat is a full-width card with the boat **lying on its side**: **‹ Stern** at the left, **Bow ›**
+      at the right, wing riggers and oars with spoon blades, first names under the seats.
+- [ ] In a stroke-rigged four the stroke's oar is **above** the boat (stroke side), then they alternate.
 2. Open a boat.
-- [ ] The crew card reads **BOW SIDE** on the left and **STROKE SIDE** on the right, Stern at the top,
-      Bow at the bottom; the header says "Stern at the top · change in Settings".
+- [ ] The crew card shows the boat on its side with a button under each seat, and the line "Stroke side’s
+      oars are above the boat, bow side’s below."
 
 ## 3. Custom rigging (Coach_J)
 1. In a four, tap **Rigging → Custom**.
-- [ ] The line under it reads "Custom: tap ⇄ beside an oar…", and a small round **⇄** appears above
+- [ ] The line under it reads "Custom: tap ⇄ beside an oar…", and a small round **⇄** appears beside
       each oar.
 2. Tap ⇄ on seat 3, then on seat 2 (of a stroke-rigged four), so stroke and bow are on stroke side and
    3 and 2 on bow side (a bucket rig).
-- [ ] Each oar, and the rower's name with it, moves to the other side as you tap.
+- [ ] Each oar moves to the other side of the boat (above ↔ below) as you tap.
 3. **Save boat**, then open it again.
-- [ ] Still **Custom**, with the same sides. On the Boats tab its tile says **Custom** and shows the
+- [ ] Still **Custom**, with the same sides. On the Boats tab its card says **Custom** and shows the
       bucket rig.
 4. (A sent boat) change its rigging and save.
 - [ ] It goes back to **Not sent**.
 5. Switch Custom → **Stroke-rigged**: the ⇄ buttons go and the oars alternate again.
 
-## 4. Draw boats (any account)
-1. **Settings** → **BOATS → Draw boats**.
-- [ ] **Stern at the top · Bow at the top** with a small four under it, and the line "Just for you…".
-2. Tap **Bow at the top**.
-- [ ] The preview turns round (BOW at the top) and stroke side moves to the left.
-- [ ] Boats tab, crewing and (Piero) the Feed's **Your boat** card are all drawn bow at the top.
-3. Set it back to **Stern at the top**.
-- [ ] (Piero) The Feed card lists the crew in the drawing's order: Stroke first with the stern at the top.
+## 4. Draw boats — removed
+Nothing to test. **Draw boats** was taken out of Settings (decision 88); section 14 step 6 checks it's gone.
 
 ## 5. Announcements (Coach_J, then Piero)
 1. Coach_J: tap **+**.
-- [ ] The sheet is titled **New** with **Land session**, **Water session** and **Announcement**.
+- [ ] The sheet is titled **New** with **Land session**, **Water session**, **Announcement**, **Challenge**
+      and **Erg event**.
 2. **Announcement**.
 - [ ] **New announcement**: Heading, Message, **On the Feed for: 24 hours · 3 days · 1 week · Until…**
       (24 hours chosen), "Comes off the Feed <day>, <time>.", **Send an alert** (on), **Post announcement**
@@ -95,7 +94,7 @@ In Xcode choose **RP Dev** and **your iPhone**, press **Cmd+R**.
    coach Calendar).
 2. Ended announcements stay in the coach's Calendar for two weeks, dimmed.
 3. The Feed's announcements start folded; the design showed the first one open as an example.
-4. **Draw boats** is kept on each phone, like Appearance.
+4. ~~**Draw boats** is kept on each phone, like Appearance.~~ (Draw boats was removed, decision 88.)
 5. The alert's text is "New announcement" with the heading as the message.
 
 ## 8. A tidier Feed (decision 76)
@@ -104,7 +103,7 @@ In Xcode choose **RP Dev** and **your iPhone**, press **Cmd+R**.
 2. Piero: **Feed**.
 - [ ] **Your boat** shows the single **lying on its side**, bow to the right, Piero's seat in blue — with
       no name beside it, no Bow / Stern labels and no seat list.
-- [ ] Coach_J opening the same boat still sees it upright with STERN / BOW and Piero's name.
+- [ ] Coach_J opening the same boat sees it on its side too, with Piero's name under the seat.
 3. Piero: scroll to any post.
 - [ ] One row under the caption: the comments button (just the number), then the reactions, then
       share at the far right. No separate reactions row.
