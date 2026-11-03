@@ -7,7 +7,7 @@ import Foundation
 
 /// The pages of a Season Wrapped (decision 92), in order: the season, totals, streaks, PBs, club and
 /// crew, and the training mix. A season with nothing rowed is one quiet page.
-enum WrappedPage: Int, CaseIterable, Identifiable {
+nonisolated enum WrappedPage: Int, CaseIterable, Identifiable {
     case season, totals, streaks, pbs, crew, mix
 
     var id: Int { rawValue }

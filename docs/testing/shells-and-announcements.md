@@ -284,5 +284,6 @@ No migration. Coach steps as **Coach_J**, rower steps as **Piero**.
 - [ ] Open an **8+**, scroll the boat to the stern, tap the cox seat and pick a rower. The boat **doesn't scroll** to the next seat. In the list, that rower is now at the **bottom** with their seat tag; people not picked yet are at the top.
 - [ ] Piero: post an erg photo. The stroke rate field has **no Confirm button**, and Post works without it.
 - [ ] Piero: Profile → **Season Wrapped**. No gradient behind the pages. Tap **Add a photo**, pick one: it's behind the page, the text still readable. **Change photo** and **Remove photo** work. **Share this page** includes the photo.
+- [ ] Leave Season Wrapped and open it again: the photos are still there. Switch to another season: it has its own photos (none until you add some), and switching back brings the first ones back.
 - [ ] Choose **Your dates…** → Show my season: the pages show just the dates, with no "Your dates so far".
 - [ ] Coach_J: Profile → Attendance totals → **Edit dates**. No red Delete on a term. Swipe a term left, tap **Delete**, then **Save terms**: it's gone when you open Edit dates again.

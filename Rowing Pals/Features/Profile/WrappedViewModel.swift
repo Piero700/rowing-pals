@@ -3,10 +3,11 @@
 //  Rowing Pals
 //
 
-import Foundation
+import UIKit
 
 /// Season Wrapped (decision 92): the club's terms to choose from (or the rower's own dates), the
-/// chosen season worked out, and the rower's name for the pages.
+/// chosen season worked out, the rower's name for the pages, and the photo they picked for each page
+/// of it, kept on the phone (`WrappedPhotoStore`).
 @MainActor
 @Observable
 final class WrappedViewModel {
@@ -16,6 +17,9 @@ final class WrappedViewModel {
     private(set) var period: WrappedPeriod?
     private(set) var wrapped: SeasonWrapped?
     private(set) var name = ""
+    /// The chosen season's photos, by page.
+    private(set) var photos: [WrappedPage: UIImage] = [:]
+    private var userId: UUID?
     private(set) var isLoading = false
     var errorMessage: String?
 
@@ -32,7 +36,9 @@ final class WrappedViewModel {
     var isSoFar: Bool { period.map { WrappedRules.isSoFar($0, today: today) } ?? false }
 
     func load() async {
-        name = (try? await ViewerContext.shared.current().displayName) ?? ""
+        let viewer = try? await ViewerContext.shared.current()
+        name = viewer?.displayName ?? ""
+        userId = viewer?.userId
         periods = await WrappedService.periods()
         await choose(startingPeriod())
     }
@@ -46,6 +52,7 @@ final class WrappedViewModel {
 
     func choose(_ chosen: WrappedPeriod) async {
         period = chosen
+        await loadPhotos(for: chosen)
         isLoading = true
         defer { isLoading = false }
         do {
@@ -55,6 +62,27 @@ final class WrappedViewModel {
             wrapped = nil
             errorMessage = "Couldn’t work out this season. \(error.localizedDescription)"
         }
+    }
+
+    /// Puts `image` behind the page (nil takes it away) and keeps it for next time.
+    func setPhoto(_ image: UIImage?, for page: WrappedPage) {
+        photos[page] = image
+        guard let userId, let period = period?.id else { return }
+        Task.detached(priority: .utility) {
+            WrappedPhotoStore.save(image, user: userId, period: period, page: page)
+        }
+    }
+
+    private func loadPhotos(for chosen: WrappedPeriod) async {
+        guard let userId else {
+            photos = [:]
+            return
+        }
+        let period = chosen.id
+        let loaded = await Task.detached(priority: .userInitiated) {
+            WrappedPhotoStore.photos(user: userId, period: period)
+        }.value
+        if self.period?.id == period { photos = loaded }
     }
 
     func useCustomDates() async {

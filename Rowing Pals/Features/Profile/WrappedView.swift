@@ -8,14 +8,12 @@ import SwiftUI
 
 /// Season Wrapped (decision 92): choose one of the club's terms or your own dates, swipe through the
 /// season's pages, put a photo of your own behind any page (user, 2026-11-03), and share any page as
-/// a story-sized image (1080 × 1920). The photos stay while the screen is open.
+/// a story-sized image (1080 × 1920). The photos are kept on the phone for next time.
 struct WrappedView: View {
     @State private var viewModel: WrappedViewModel
     @State private var page = 0
     @State private var images: [WrappedPage: UIImage] = [:]
     @State private var isChoosingDates = false
-    /// The photo picked for each page.
-    @State private var photos: [WrappedPage: UIImage] = [:]
     @State private var photoItem: PhotosPickerItem?
     @Environment(\.dismiss) private var dismiss
 
@@ -34,7 +32,7 @@ struct WrappedView: View {
                             let scale = min(geometry.size.width / Tokens.Size.wrappedCardWidth,
                                             geometry.size.height / Tokens.Size.wrappedCardHeight, 1)
                             WrappedPageView(page: item, wrapped: wrapped, period: period, name: viewModel.name,
-                                            isSoFar: viewModel.isSoFar, photo: photos[item])
+                                            isSoFar: viewModel.isSoFar, photo: viewModel.photos[item])
                                 .scaleEffect(scale)
                                 .frame(width: geometry.size.width, height: geometry.size.height)
                         }
@@ -43,7 +41,7 @@ struct WrappedView: View {
                 }
                 .tabViewStyle(.page(indexDisplayMode: .always))
                 .task(id: viewModel.period) { render(pages, wrapped: wrapped, period: period) }
-                .onChange(of: photos) { render(pages, wrapped: wrapped, period: period) }
+                .onChange(of: viewModel.photos) { render(pages, wrapped: wrapped, period: period) }
                 photoButtons(pages)
                 shareButton(pages)
             } else if viewModel.isLoading {
@@ -142,12 +140,12 @@ struct WrappedView: View {
         if let current {
             HStack(spacing: Tokens.Spacing.tight) {
                 PhotosPicker(selection: $photoItem, matching: .images) {
-                    Label(photos[current] == nil ? "Add a photo" : "Change photo", icon: .photo)
+                    Label(viewModel.photos[current] == nil ? "Add a photo" : "Change photo", icon: .photo)
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.rpGlass)
-                if photos[current] != nil {
-                    Button("Remove photo") { photos[current] = nil }
+                if viewModel.photos[current] != nil {
+                    Button("Remove photo") { viewModel.setPhoto(nil, for: current) }
                         .buttonStyle(.rpText)
                 }
             }
@@ -167,9 +165,9 @@ struct WrappedView: View {
         let size = CGSize(width: image.size.width * scale, height: image.size.height * scale)
         let format = UIGraphicsImageRendererFormat.default()
         format.scale = 1
-        photos[page] = UIGraphicsImageRenderer(size: size, format: format).image { _ in
+        viewModel.setPhoto(UIGraphicsImageRenderer(size: size, format: format).image { _ in
             image.draw(in: CGRect(origin: .zero, size: size))
-        }
+        }, for: page)
     }
 
     // MARK: - Sharing
@@ -201,7 +199,7 @@ struct WrappedView: View {
         for item in pages {
             let renderer = ImageRenderer(content: WrappedPageView(page: item, wrapped: wrapped, period: period,
                                                                   name: viewModel.name, isSoFar: viewModel.isSoFar,
-                                                                  photo: photos[item]))
+                                                                  photo: viewModel.photos[item]))
             renderer.scale = 3
             if let image = renderer.uiImage { rendered[item] = image }
         }
