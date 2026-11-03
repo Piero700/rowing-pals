@@ -26,7 +26,7 @@ No migration. Compare each screen on your phone with the canvas
 
 ## 4. Settings
 - [ ] Section headers have more space above them.
-- [ ] **Leaderboard distance** and **Pace shown as**: the label and description sit above a
+- [ ] **Leaderboard distance** and **Average shown as**: the label and description sit above a
       full-width Metres|km / Split|Watts control.
 - [ ] Notification switches are **blue** when on.
 - [ ] **Log out** is blue; **Contact us** has no address under it; **Delete account** is its own

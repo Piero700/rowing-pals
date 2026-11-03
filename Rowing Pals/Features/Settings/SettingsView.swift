@@ -107,7 +107,7 @@ struct SettingsView: View {
                             ), compact: true)
                         }
                         divider
-                        stackedRow(title: "Pace shown as", subtitle: paceExample) {
+                        stackedRow(title: "Average shown as", subtitle: paceExample) {
                             PillSegmentedControl(options: ["Split", "Watts"], selection: Binding(
                                 get: { paceDisplay == .watts ? 1 : 0 },
                                 set: { paceDisplay = $0 == 1 ? .watts : .split }

@@ -7,7 +7,7 @@ import PaceEngine
 import SwiftUI
 
 /// "How we got this" (decision 31): a prediction's arithmetic top to bottom — anchor, the
-/// corrections that turn it into a 2k pace, then the projection and volume that turn that into
+/// corrections that turn it into a 2k split, then the projection and volume that turn that into
 /// the predicted split — followed by why the confidence is what it is and how to raise it.
 /// Weight-adjusted and age-graded scores are never shown (decision 30). With no prediction yet
 /// it explains how one is worked out and what unlocks it (ⓘ always opens this, 2026-10-15).
@@ -102,7 +102,7 @@ struct PredictionDetailView: View {
     }
 
     /// What the engine does, for the sheet with no prediction to explain yet.
-    static let howItWorks = "Your predicted times come from your erg sessions in the last 30 days, worked out on your phone. Every all-out piece counts, closer distances and newer pieces most; without one, your steady rows' typical pace is used. That 2k pace is taken out to the distance with Paul's Law and adjusted for how much you've trained. A prediction is never slower than a split you've already held for longer."
+    static let howItWorks = "Your predicted times come from your erg sessions in the last 30 days, worked out on your phone. Every all-out piece counts, closer distances and newer pieces most; without one, your steady rows' typical split is used. That 2k split is taken out to the distance with Paul's Law and adjusted for how much you've trained. A prediction is never slower than a split you've already held for longer."
 
     private func headline(_ prediction: Prediction) -> some View {
         VStack(alignment: .leading, spacing: 2) {
@@ -136,7 +136,7 @@ struct PredictionDetailView: View {
             lines.append(.init(label: "How hard it felt", value: Self.signed(value)))
         }
         if let value = parts.twoKEquivalent {
-            lines.append(.init(label: "Your 2k pace", value: Self.split(value), isResult: true))
+            lines.append(.init(label: "Your 2k split", value: Self.split(value), isResult: true))
         }
         if let value = parts.projectionToTarget, value != 0 {
             lines.append(.init(label: "Paul's Law out to \(title)", value: Self.signed(value)))
@@ -183,7 +183,7 @@ struct PredictionDetailView: View {
         let zone = anchor.tier.rawValue
         if anchor.method == "duration_weighted_median" {
             let count = anchor.sessionIds.count
-            return "Your \(zone) rows (\(count) session\(count == 1 ? "" : "s")), typical pace"
+            return "Your \(zone) rows (\(count) session\(count == 1 ? "" : "s")), typical split"
         }
         let distance = Int(anchor.effectiveDistanceM).formattedWithGrouping
         return "Your \(zone) \(distance)m, \(Self.shortDate(anchor.date))"

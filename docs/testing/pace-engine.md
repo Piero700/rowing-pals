@@ -26,7 +26,7 @@ biggest difference):
 - [ ] The cards show a predicted time, its split and **High / Medium / Low confidence**, plus a
       line of advice when there is one.
 - [ ] Tap **ⓘ** on a card. Expect **"2k prediction"** with the arithmetic top to bottom (your
-      anchor session, distance and zone corrections, **Your 2k pace**, projection, training
+      anchor session, distance and zone corrections, **Your 2k split**, projection, training
       volume, **Predicted split**, **Predicted time**), then **Confidence** and **How to improve
       it**. No weight-adjusted or age-graded numbers anywhere.
 - [ ] **Rankings → Test results**: each distance tile (500m, 1k, 2k, 5k, 6k, 10k, and distance
