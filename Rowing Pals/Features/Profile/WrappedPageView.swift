@@ -19,6 +19,8 @@ struct WrappedPageView: View {
     let isSoFar: Bool
     var photo: UIImage?
 
+    @Environment(\.colorScheme) private var colorScheme
+
     private static let shape = RoundedRectangle(cornerRadius: Tokens.Radius.card, style: .continuous)
 
     var body: some View {
@@ -59,6 +61,7 @@ struct WrappedPageView: View {
                 Image(uiImage: photo)
                     .resizable()
                     .scaledToFill()
+                    .contrast(colorScheme == .light ? Tokens.Base.photoContrastLight : 1)
                     .frame(width: Tokens.Size.wrappedCardWidth, height: Tokens.Size.wrappedCardHeight)
                     .clipShape(Self.shape)
                 Self.shape.fill(Tokens.Base.photoScrim)
