@@ -81,7 +81,7 @@ enum Tokens {
         static let photoScrim = Color(light: Color(hex: 0xEDF0F5, opacity: 0.66), dark: Color(hex: 0x101114, opacity: 0.55))
         /// How much more contrast a photo under the light-mode scrim gets, so the pale ground doesn't
         /// wash it out (user, 2026-11-03). Dark mode leaves the photo as it is.
-        static let photoContrastLight: Double = 1.25
+        static let photoContrastLight: Double = 1.35
         /// v3 `bg` — the outer background behind full-screen covers and sheets.
         static let outer = Color(light: Color(hex: 0xDFE3EB), dark: Color(hex: 0x09090B))
     }
