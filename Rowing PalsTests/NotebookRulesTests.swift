@@ -164,7 +164,7 @@ struct NotebookRulesTests {
     }
 
     @Test func aCardsPiecesComeFromItsWorkout() {
-        #expect(NotepadRules.reps(NotepadRules.pieces(set: [], title: "4 x 500m", testKey: nil)).count == 4)
+        #expect(NotepadRules.reps(NotepadRules.pieces(set: [], title: "4 x 500m", testKey: nil)).count == 1)
         #expect(NotepadRules.pieces(set: [], title: "2k test", testKey: "2k").first?.value == 2000)
         #expect(NotepadRules.reps(NotepadRules.pieces(set: Self.threeByTwoK, title: "anything", testKey: nil)).count == 3)
     }

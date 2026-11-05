@@ -210,43 +210,16 @@ struct NotepadRulesTests {
     }
 }
 
-// MARK: - Reps from the title (no pieces set)
+// MARK: - Reps come from the pieces, never the title
 
 extension NotepadRulesTests {
-    private static func read(_ title: String) -> [String] {
-        NotepadRules.pieces(fromTitle: title).map { piece in
-            piece.kind == .distance ? "\(piece.reps)×\(piece.value)m" : "\(piece.reps)×\(piece.value / 1000)s"
-        }
-    }
-
-    @Test func aTitleNamesDistanceReps() {
-        #expect(Self.read("4 x 500m") == ["4×500m"])
-        #expect(Self.read("4x500m") == ["4×500m"])
-        #expect(Self.read("4×500") == ["4×500m"])
-        #expect(Self.read("3 x 2,000m") == ["3×2000m"])
-        #expect(Self.read("2 x 6k") == ["2×6000m"])
-        #expect(Self.read("2x2.5km") == ["2×2500m"])
-        #expect(Self.read("20x250m/:20r") == ["20×250m"])
-    }
-
-    @Test func aTitleNamesTimedReps() {
-        #expect(Self.read("8 x 2:00") == ["8×120s"])
-        #expect(Self.read("8x2:00/1:00r") == ["8×120s"])
-        #expect(Self.read("4 x 10'") == ["4×600s"])
-        #expect(Self.read("3 x 12 min") == ["3×720s"])
-    }
-
-    @Test func aTitleCanNameSeveralPieces() {
-        #expect(Self.read("2 x 2k + 4 x 500m") == ["2×2000m", "4×500m"])
-    }
-
-    @Test func aTitleWithoutRepsNamesNone() {
-        #expect(Self.read("2k").isEmpty)
-        #expect(Self.read("5000m").isEmpty)
-        #expect(Self.read("work out buddy").isEmpty)
-        #expect(Self.read("Steady state").isEmpty)
-        #expect(Self.read("4 x 2").isEmpty)
-        #expect(Self.read("1:00:03").isEmpty)
+    @Test func theTitleNeverDecidesTheReps() {
+        // A title like "4 x 500m" with no pieces added is one column (user, 2026-11-05).
+        #expect(NotepadRules.pieces(set: [], title: "4 x 500m", testKey: nil).isEmpty)
+        #expect(NotepadRules.reps(NotepadRules.pieces(set: [], title: "4 x 500m", testKey: nil)).count == 1)
+        // The pieces added with Pieces decide them.
+        let fourBy500 = [WorkoutPiece(kind: .distance, value: 500, reps: 4)]
+        #expect(NotepadRules.reps(NotepadRules.pieces(set: fourBy500, title: "Steady state", testKey: nil)).count == 4)
     }
 }
 

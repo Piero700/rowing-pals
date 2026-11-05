@@ -396,6 +396,24 @@ enum Tokens {
     }
 
     /// The coach notepad (decision 96; docs/design/v4/CoachNotepad.dc.html).
+    /// The compact grouped-rows style (user, 2026-11-05; on setting a land session first, to spread
+    /// through the app if liked): one card per group, rows divided by hairlines, labels left and
+    /// values right, small corners instead of pills.
+    enum Grouped {
+        static let radius: CGFloat = 12
+        static let rowHeight: CGFloat = 44
+        static let rowPadding: CGFloat = 16
+        /// Hairlines start where a row's text does.
+        static let dividerInset: CGFloat = 16
+        static let hairline: CGFloat = 0.5
+        static let groupGap: CGFloat = 20
+        static let headerGap: CGFloat = 6
+        /// A typed value on the right of a row ("2000", "5:00").
+        static let valueWidth: CGFloat = 88
+        /// A short typed value ("28"), as in a rate range.
+        static let shortValueWidth: CGFloat = 36
+    }
+
     enum Notepad {
         /// The Scores table: the erg-number column, the names column, one rep's box.
         static let ergColumn: CGFloat = 22

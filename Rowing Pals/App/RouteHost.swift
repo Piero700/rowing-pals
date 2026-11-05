@@ -68,7 +68,7 @@ struct RouteHost: View {
     private static func drawsOwnChrome(_ route: AppRoute) -> Bool {
         switch route {
         case .post, .profile, .people, .findClub, .clubHub, .createClub, .editClub, .manageClub,
-             .coachProfile, .editProfile, .coachRower, .squads, .squadEdit, .pbHistory, .newWorkout, .workoutResults, .notepad, .scanMonitor, .notebook, .notebookRower,
+             .coachProfile, .editProfile, .coachRower, .squads, .squadEdit, .pbHistory, .newWorkout, .workoutResults, .editWorkout, .notepad, .scanMonitor, .notebook, .notebookRower,
              .newWorkoutOn, .practice, .newPractice, .editPractice, .register, .attendanceTotals, .availability,
              .event, .newEvent, .editEvent, .waterSession, .newWaterSession, .sessionBoat, .savedBoat, .newAnnouncement, .editAnnouncement,
              .challenge, .newChallenge, .editChallenge, .ergEvent, .newErgEvent, .editErgEvent, .seasonWrapped: true
@@ -114,6 +114,8 @@ struct RouteHost: View {
             NewWorkoutView()
         case .workoutResults(let workoutId):
             WorkoutResultsView(workoutId: workoutId)
+        case .editWorkout(let workoutId):
+            NewWorkoutView(editing: workoutId)
         case .notepad(let workoutId):
             NotepadView(workoutId: workoutId)
         case .scanMonitor(let workoutId, let rowerId):

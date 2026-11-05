@@ -31,9 +31,10 @@ nonisolated enum NotepadRules {
         return all.isEmpty ? [nil] : all
     }
 
-    /// The pieces the notepad goes by: the ones set in New workout, or, when none were set, the
-    /// ones its title names ("4 x 500m" → 4 × 500 m), so the page has a column per rep without the
-    /// coach doing anything more (user, 2026-11-05).
+    /// The pieces the notepad goes by: the ones added with **Pieces** in New workout (user,
+    /// 2026-11-05: the pieces decide the reps, never the title). A test set without pieces is still
+    /// its one piece: a 2k test is 2,000 m, a 30min is 30:00. Anything else without pieces is one
+    /// column with no piece behind it.
     static func pieces(of workout: CoachWorkout) -> [WorkoutPiece] {
         pieces(set: workout.pieces, title: workout.title, testKey: workout.testKey)
     }
@@ -41,9 +42,6 @@ nonisolated enum NotepadRules {
     /// The same, from a workout's parts (the rower's Feed card has no whole `CoachWorkout`).
     static func pieces(set: [WorkoutPiece], title: String, testKey: String?) -> [WorkoutPiece] {
         guard set.isEmpty else { return set }
-        let fromTitle = pieces(fromTitle: title)
-        if !fromTitle.isEmpty { return fromTitle }
-        // A test set with no pieces is still its one piece: a 2k test is 2,000 m, a 30min is 30:00.
         switch testKey.flatMap({ key in StandardTest.all.first { $0.key == key } })?.target {
         case .distance(let m): return [WorkoutPiece(kind: .distance, value: m)]
         case .duration(let ms): return [WorkoutPiece(kind: .time, value: ms)]
@@ -156,36 +154,6 @@ nonisolated enum NotepadRules {
             end = start
         }
         return (value < 0 ? "-" : "") + groups.joined(separator: ",")
-    }
-
-    /// The pieces a title names, each "count × what": a distance ("4 x 500m", "4×500", "3 x 2,000m",
-    /// "2 x 6k") or a time ("8 x 2:00", "4 x 10'", "3 x 12 min"). Several can be joined ("2 x 2k +
-    /// 4 x 500m"). Anything else — a single piece ("2k", "5000m"), a word — names none.
-    static func pieces(fromTitle title: String) -> [WorkoutPiece] {
-        let pattern = #"(?<![\d:])(\d{1,2})\s*[xX×]\s*(?:(\d{1,2}):(\d{2})(?![\d.])|(\d{1,3})\s*(?:'|′|’|min\b|mins\b|minutes\b)|(\d{1,2}(?:,\d{3})+|\d{3,5}|\d{1,2}(?:\.\d)?)\s*(km|k|m)?(?![\d:]))"#
-        guard let regex = try? NSRegularExpression(pattern: pattern) else { return [] }
-        let text = title as NSString
-        return regex.matches(in: title, range: NSRange(location: 0, length: text.length)).compactMap { match in
-            func group(_ index: Int) -> String? {
-                let range = match.range(at: index)
-                return range.location == NSNotFound ? nil : text.substring(with: range)
-            }
-            guard let count = group(1).flatMap(Int.init), (1...50).contains(count) else { return nil }
-            if let minutes = group(2).flatMap(Int.init), let seconds = group(3).flatMap(Int.init), seconds < 60 {
-                let ms = (minutes * 60 + seconds) * 1000
-                return (60_000...7_200_000).contains(ms) ? WorkoutPiece(kind: .time, value: ms, reps: count) : nil
-            }
-            if let minutes = group(4).flatMap(Int.init) {
-                let ms = minutes * 60_000
-                return (60_000...7_200_000).contains(ms) ? WorkoutPiece(kind: .time, value: ms, reps: count) : nil
-            }
-            guard let number = group(5).flatMap({ Double($0.replacingOccurrences(of: ",", with: "")) }) else { return nil }
-            let unit = group(6)?.lowercased()
-            // "6k" and "2.5km" are kilometres; a bare small number ("4 x 2") is too ambiguous.
-            let metres = unit == "k" || unit == "km" ? Int((number * 1000).rounded()) : Int(number)
-            guard unit != nil || metres >= 100, (100...42_195).contains(metres) else { return nil }
-            return WorkoutPiece(kind: .distance, value: metres, reps: count)
-        }
     }
 
     // MARK: - Boxes

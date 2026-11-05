@@ -17,22 +17,25 @@ struct DurationTextField<Field: Hashable>: View {
     let allowsTenths: Bool
     let focus: FocusState<Field?>.Binding
     let field: Field
+    /// Where the time sits in the field: on the left, or on the right of a grouped row.
+    let alignment: Alignment
 
     @State private var entry = ""
 
     init(placeholder: String, text: Binding<String>, allowsTenths: Bool = false,
-         focus: FocusState<Field?>.Binding, field: Field) {
+         focus: FocusState<Field?>.Binding, field: Field, alignment: Alignment = .leading) {
         self.placeholder = placeholder
         _text = text
         self.allowsTenths = allowsTenths
         self.focus = focus
         self.field = field
+        self.alignment = alignment
     }
 
     private var isFocused: Bool { focus.wrappedValue == field }
 
     var body: some View {
-        ZStack(alignment: .leading) {
+        ZStack(alignment: alignment) {
             TextField("", text: $entry)
                 .keyboardType(allowsTenths ? .decimalPad : .numberPad)
                 .focused(focus, equals: field)
