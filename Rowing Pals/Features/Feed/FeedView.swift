@@ -94,6 +94,13 @@ struct FeedView: View {
                         .padding(.bottom, Tokens.Spacing.loose)
                 }
 
+                // The scores a coach noted for the rower, for a few days after (decision 96, NP4).
+                // Log your session opens the normal Log flow for that workout, nothing copied.
+                ForEach(viewModel.coachScores) { card in
+                    CoachScoresCard(card: card) { navigate(.logWorkout(card.workoutId)) }
+                        .padding(.bottom, Tokens.Spacing.loose)
+                }
+
                 // Today's boats, then tomorrow's once today's are over (decision 79).
                 ForEach(feedBoats.items) { item in
                     FeedBoatCard(boat: item.boat, session: item.session, names: feedBoats.names,

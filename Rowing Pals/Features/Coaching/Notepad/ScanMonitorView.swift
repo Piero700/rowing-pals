@@ -12,7 +12,7 @@ import SwiftUI
 /// name on the notepad. Only the numbers are kept: each photo is released once it's read.
 struct ScanMonitorView: View {
     @State private var viewModel: ScanMonitorViewModel
-    @State private var camera = CaptureViewModel(rearOnly: true)
+    @State private var camera: CaptureViewModel
     @Environment(\.dismiss) private var dismiss
     #if targetEnvironment(simulator)
     /// The simulator has no camera: a photo from its library stands in for one, to test reading.
@@ -21,6 +21,7 @@ struct ScanMonitorView: View {
 
     init(workoutId: UUID, rowerId: UUID) {
         _viewModel = State(initialValue: ScanMonitorViewModel(workoutId: workoutId, rowerId: rowerId))
+        _camera = State(initialValue: CaptureViewModel(rearOnly: true))
     }
 
     var body: some View {
@@ -38,7 +39,7 @@ struct ScanMonitorView: View {
         .background(Tokens.Base.ground)
         .toolbar(.hidden, for: .navigationBar)
         .task { await viewModel.load() }
-        .onAppear { if viewModel.isCapturing { camera.start() } }
+        .onAppear { camera.start() }
         .onDisappear { camera.stop() }
         .onChange(of: viewModel.isCapturing) { _, capturing in
             if capturing { camera.start() } else { camera.stop() }
@@ -78,10 +79,29 @@ struct ScanMonitorView: View {
     private var capture: some View {
         VStack(spacing: Tokens.Spacing.loose) {
             finder
-            Text(viewModel.errorMessage ?? viewModel.finderHelp)
-                .textStyle(Typography.meta)
-                .foregroundStyle(viewModel.errorMessage == nil ? Tokens.Ink.secondary : Tokens.System.error)
-                .multilineTextAlignment(.center)
+            if case .failed(let message) = camera.phase {
+                // The camera's own reason (user, 2026-11-05: "I get an error and it doesn't show a preview").
+                VStack(spacing: Tokens.Spacing.tight) {
+                    Text(message)
+                        .textStyle(Typography.meta)
+                        .foregroundStyle(Tokens.System.error)
+                        .multilineTextAlignment(.center)
+                    HStack(spacing: Tokens.Spacing.group) {
+                        Button("Try again") { camera.retry() }
+                            .buttonStyle(.rpText)
+                        if camera.isPermissionDenied, let settings = URL(string: UIApplication.openSettingsURLString) {
+                            Link("Open Settings", destination: settings)
+                                .textStyle(Typography.detail)
+                                .foregroundStyle(Tokens.Accent.brand)
+                        }
+                    }
+                }
+            } else {
+                Text(viewModel.errorMessage ?? viewModel.finderHelp)
+                    .textStyle(Typography.meta)
+                    .foregroundStyle(viewModel.errorMessage == nil ? Tokens.Ink.secondary : Tokens.System.error)
+                    .multilineTextAlignment(.center)
+            }
             HStack(spacing: 28) {
                 if viewModel.screens > 0 {
                     Button("Back to list") { viewModel.isCapturing = false }
@@ -124,7 +144,7 @@ struct ScanMonitorView: View {
             if viewModel.isReading {
                 ProgressView().tint(Tokens.Ink.primary)
             } else if camera.rearPreviewLayer == nil {
-                Text(viewModel.finderLabel)
+                Text(camera.phase == .configuring ? "STARTING CAMERA…" : viewModel.finderLabel)
                     .textStyle(Typography.meta)
                     .monospaced()
                     .foregroundStyle(Tokens.Ink.secondary)

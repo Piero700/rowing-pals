@@ -28,46 +28,48 @@ enum WorkoutService {
 
     private static let columns = "*, coach_workout_targets(squad_id, user_id)"
 
-    /// Sets the workout; returns its id.
-    @discardableResult
-    static func create(_ draft: Draft, calendar: Calendar = .current) async throws -> UUID {
-        struct Params: Encodable {
-            let p_title: String
-            let p_date: String
-            let p_start_time: String?
-            let p_description: String?
-            let p_zone: String?
-            let p_test_key: String?
-            let p_pieces: [WorkoutPiece]
-            let p_audience: WorkoutAudience
-            let p_squads: [UUID]
-            let p_rowers: [UUID]
+    /// What `create_workout` and `update_workout` take; `p_workout` only for an update.
+    private struct Params: Encodable {
+        var p_workout: UUID?
+        let p_title: String
+        let p_date: String
+        let p_start_time: String?
+        let p_description: String?
+        let p_zone: String?
+        let p_test_key: String?
+        let p_pieces: [WorkoutPiece]
+        let p_audience: WorkoutAudience
+        let p_squads: [UUID]
+        let p_rowers: [UUID]
 
-            // Every key is sent, so an empty choice is null rather than missing.
-            func encode(to encoder: Encoder) throws {
-                var c = encoder.container(keyedBy: Keys.self)
-                try c.encode(p_title, forKey: .p_title)
-                try c.encode(p_date, forKey: .p_date)
-                try c.encode(p_start_time, forKey: .p_start_time)
-                try c.encode(p_description, forKey: .p_description)
-                try c.encode(p_zone, forKey: .p_zone)
-                try c.encode(p_test_key, forKey: .p_test_key)
-                try c.encode(p_pieces, forKey: .p_pieces)
-                try c.encode(p_audience, forKey: .p_audience)
-                try c.encode(p_squads, forKey: .p_squads)
-                try c.encode(p_rowers, forKey: .p_rowers)
-            }
-            enum Keys: String, CodingKey {
-                case p_title, p_date, p_start_time, p_description, p_zone, p_test_key, p_pieces,
-                     p_audience, p_squads, p_rowers
-            }
+        // Every key is sent, so an empty choice is null rather than missing.
+        func encode(to encoder: Encoder) throws {
+            var c = encoder.container(keyedBy: Keys.self)
+            try c.encodeIfPresent(p_workout, forKey: .p_workout)
+            try c.encode(p_title, forKey: .p_title)
+            try c.encode(p_date, forKey: .p_date)
+            try c.encode(p_start_time, forKey: .p_start_time)
+            try c.encode(p_description, forKey: .p_description)
+            try c.encode(p_zone, forKey: .p_zone)
+            try c.encode(p_test_key, forKey: .p_test_key)
+            try c.encode(p_pieces, forKey: .p_pieces)
+            try c.encode(p_audience, forKey: .p_audience)
+            try c.encode(p_squads, forKey: .p_squads)
+            try c.encode(p_rowers, forKey: .p_rowers)
         }
+        enum Keys: String, CodingKey {
+            case p_workout, p_title, p_date, p_start_time, p_description, p_zone, p_test_key, p_pieces,
+                 p_audience, p_squads, p_rowers
+        }
+    }
+
+    private static func params(_ draft: Draft, calendar: Calendar) -> Params {
         let time = draft.startTime.map { date -> String in
             let parts = calendar.dateComponents([.hour, .minute], from: date)
             return String(format: "%02d:%02d", parts.hour ?? 0, parts.minute ?? 0)
         }
         let description = draft.description.trimmingCharacters(in: .whitespacesAndNewlines)
-        let params = Params(
+        return Params(
             p_title: draft.title.trimmingCharacters(in: .whitespacesAndNewlines),
             p_date: WorkoutRules.dayText(draft.date, calendar: calendar),
             p_start_time: time,
@@ -79,7 +81,20 @@ enum WorkoutService {
             p_squads: draft.audience == .squads ? Array(draft.squadIds) : [],
             p_rowers: draft.audience == .rowers ? Array(draft.rowerIds) : []
         )
-        return try await SupabaseService.shared.rpc("create_workout", params: params).execute().value
+    }
+
+    /// Sets the workout; returns its id.
+    @discardableResult
+    static func create(_ draft: Draft, calendar: Calendar = .current) async throws -> UUID {
+        try await SupabaseService.shared.rpc("create_workout", params: params(draft, calendar: calendar)).execute().value
+    }
+
+    /// Saves changes to a workout already set (docs/migrations/2026-11-05-edit-workout.sql). Rowers
+    /// aren't alerted again.
+    static func update(_ workoutId: UUID, _ draft: Draft, calendar: Calendar = .current) async throws {
+        var values = params(draft, calendar: calendar)
+        values.p_workout = workoutId
+        try await SupabaseService.shared.rpc("update_workout", params: values).execute()
     }
 
     static func delete(_ workoutId: UUID) async throws {

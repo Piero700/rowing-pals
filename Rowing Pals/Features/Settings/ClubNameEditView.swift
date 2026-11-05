@@ -28,36 +28,35 @@ struct ClubNameEditView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: Tokens.Spacing.tight) {
-                Text("Club name")
-                    .textStyle(Typography.fieldLabel)
-                    .foregroundStyle(Tokens.Ink.secondary)
-                TextField("Your club name", text: $name)
-                    .textInputAutocapitalization(.words)
-                    .textStyle(Typography.body)
-                    .foregroundStyle(Tokens.Ink.primary)
-                    .padding(.horizontal, 14)
-                    .frame(minHeight: Tokens.Size.input)
-                    .background(RoundedRectangle(cornerRadius: Tokens.Radius.input, style: .continuous).fill(Tokens.Surface.card))
-                    .overlay {
-                        RoundedRectangle(cornerRadius: Tokens.Radius.input, style: .continuous)
-                            .strokeBorder(Tokens.Surface.line, lineWidth: 1)
+                // The compact grouped-rows style (decision 97): one row, the name typed on the right.
+                GroupedSection {
+                    GroupedRow(label: "Name") {
+                        TextField("Your club name", text: $name)
+                            .textInputAutocapitalization(.words)
+                            .multilineTextAlignment(.trailing)
+                            .textStyle(Typography.detail)
+                            .foregroundStyle(Tokens.Ink.primary)
+                            .onChange(of: name) { name = String(name.prefix(ClubNameRules.maxLength)) }
+                            .task(id: name) { await checkName() }
                     }
-                    .onChange(of: name) { name = String(name.prefix(ClubNameRules.maxLength)) }
-                    .task(id: name) { await checkName() }
+                }
 
                 if isNameTaken {
                     Text(ClubNameRules.takenMessage(for: name))
                         .textStyle(Typography.meta)
                         .foregroundStyle(Tokens.System.error)
+                        .padding(.horizontal, Tokens.Grouped.rowPadding)
                 }
                 if let errorMessage {
                     Text(errorMessage)
                         .textStyle(Typography.meta)
                         .foregroundStyle(Tokens.System.error)
+                        .padding(.horizontal, Tokens.Grouped.rowPadding)
                 }
                 Text("Everyone sees the new name straight away: on the club, in search and beside every member.")
-                    .textStyle(Typography.meta)
+                    .textStyle(Typography.statLabel)
                     .foregroundStyle(Tokens.Ink.secondary)
+                    .padding(.horizontal, Tokens.Grouped.rowPadding)
                     .guidance()
             }
             .padding(.horizontal, Tokens.Spacing.screen)

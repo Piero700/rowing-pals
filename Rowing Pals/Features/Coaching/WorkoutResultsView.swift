@@ -8,10 +8,12 @@ import SwiftUI
 /// One set workout's results, to the v4 CoachWorkoutResults artboard (decisions 49, 51): the
 /// workout with how many have done it, partly or not yet; a filter; and each rower's reps
 /// against their target split (− faster, + slower). Sessions count when a rower posts with
-/// "Link this session" on. Delete workout sits at the bottom; the notepad (decision 96) is top right.
+/// "Link this session" on. Edit (user, 2026-11-05) and the notepad (decision 96) are top right; Delete
+/// workout sits at the bottom.
 struct WorkoutResultsView: View {
     @State private var viewModel: WorkoutResultsViewModel
     @State private var isConfirmingDelete = false
+    @State private var hasAppeared = false
     @Environment(\.dismiss) private var dismiss
     @Environment(\.navigate) private var navigate
 
@@ -82,12 +84,20 @@ struct WorkoutResultsView: View {
         .scrollIndicators(.hidden)
         .safeAreaInset(edge: .top, spacing: 0) {
             ScreenHeader(title: "Workout", onBack: { dismiss() }) {
-                GlassIconButton(icon: .pencil, accessibilityLabel: "Notepad") { navigate(.notepad(viewModel.workoutId)) }
+                HStack(spacing: Tokens.Spacing.tight) {
+                    Button("Edit") { navigate(.editWorkout(viewModel.workoutId)) }
+                        .buttonStyle(.rpText)
+                        .disabled(viewModel.workout == nil)
+                        .accessibilityLabel("Edit workout")
+                    GlassIconButton(icon: .pencil, accessibilityLabel: "Notepad") { navigate(.notepad(viewModel.workoutId)) }
+                }
             }
         }
         .background(Tokens.Base.ground)
         .toolbar(.hidden, for: .navigationBar)
         .task { await viewModel.load() }
+        // Back from Edit workout: show the saved changes.
+        .onAppear { if hasAppeared { Task { await viewModel.load() } }; hasAppeared = true }
         .refreshable { await viewModel.load() }
         .alert("Delete \(viewModel.workout?.title ?? "this workout")?", isPresented: $isConfirmingDelete) {
             Button("Delete", role: .destructive) {

@@ -404,6 +404,24 @@ enum Tokens {
     }
 
     /// The coach notepad (decision 96; docs/design/v4/CoachNotepad.dc.html).
+    /// The compact grouped-rows style (user, 2026-11-05; on setting a land session first, to spread
+    /// through the app if liked): one card per group, rows divided by hairlines, labels left and
+    /// values right, small corners instead of pills.
+    enum Grouped {
+        static let radius: CGFloat = 12
+        static let rowHeight: CGFloat = 44
+        static let rowPadding: CGFloat = 16
+        /// Hairlines start where a row's text does.
+        static let dividerInset: CGFloat = 16
+        static let hairline: CGFloat = 0.5
+        static let groupGap: CGFloat = 20
+        static let headerGap: CGFloat = 6
+        /// A typed value on the right of a row ("2000", "5:00").
+        static let valueWidth: CGFloat = 88
+        /// A short typed value ("28"), as in a rate range.
+        static let shortValueWidth: CGFloat = 36
+    }
+
     enum Notepad {
         /// The Scores table: the erg-number column, the names column, one rep's box.
         static let ergColumn: CGFloat = 22
@@ -442,12 +460,38 @@ enum Tokens {
         static let shutter: CGFloat = 74
         static let shutterDot: CGFloat = 58
         static let shutterRing: CGFloat = 4
+        /// Summary | Every piece (CoachNotepadPieces): the Done, Avg/Best and Fade columns, and the
+        /// tiles a name opens to, five to a row.
+        static let summaryDoneColumn: CGFloat = 44
+        static let summaryValueColumn: CGFloat = 58
+        static let summaryFadeColumn: CGFloat = 44
+        static let tileHeight: CGFloat = 44
+        static let tilesPerRow = 5
+        static let tileGap: CGFloat = 4
+        /// A test (CoachNotepadTest): the Time, Split and Rate columns.
+        static let testTimeColumn: CGFloat = 66
+        static let testSplitColumn: CGFloat = 58
+        static let testRateColumn: CGFloat = 34
         /// The pieces read so far: # · Time · Split · Metres · Rate.
         static let scanRowHeight: CGFloat = 40
         static let scanNumberColumn: CGFloat = 30
         static let scanValueColumn: CGFloat = 70
         static let scanRateColumn: CGFloat = 40
         static let bannerRadius: CGFloat = 20
+        /// The Notebook (CoachNotebook, NP4): a value column (narrower when there are more than
+        /// four), the names' least width, the page arrows and dots.
+        static let notebookColumn: CGFloat = 62
+        static let notebookColumnTight: CGFloat = 50
+        static let notebookNameMin: CGFloat = 80
+        static let pageArrow: CGFloat = 40
+        static let pageDot: CGFloat = 7
+        static let pageDotGap: CGFloat = 6
+        /// A swipe this far sideways turns the page.
+        static let pageSwipe: CGFloat = 60
+        /// The rower's Feed card (RowerCoachScores): its icon and score tiles.
+        static let scoresIcon: CGFloat = 40
+        static let scoreTileRadius: CGFloat = 18
+        static let scoreTilesPerRow = 3
     }
 
     /// The new-PB celebration (docs/design/v2-decisions.md #12): an RGB-LED style glow that

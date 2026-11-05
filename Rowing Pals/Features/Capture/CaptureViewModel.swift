@@ -73,8 +73,8 @@ final class CaptureViewModel: NSObject {
 
         var errorDescription: String? {
             switch self {
-            case .permissionDenied: "Camera access is off. Enable it in Settings to shoot a session."
-            case .deviceUnavailable: "Both cameras aren't available on this device."
+            case .permissionDenied: "Camera access is off. Turn it on in Settings to take a photo."
+            case .deviceUnavailable: "The camera isn’t available right now. Close any other app using it, then try again."
             case .noPhotoData: "The camera didn't return a usable photo. Try again."
             case .downscaleFailed: "Couldn't process that photo. Try again."
             case .runtimeError(let reason): "Camera session stopped: \(reason)"
@@ -124,6 +124,30 @@ final class CaptureViewModel: NSObject {
                 configureSequentialRear()
             }
         }
+    }
+
+    /// After a failure: sets the camera up again from the start (removing anything a half-finished
+    /// setup left on the session), or, once it's live, just gets it ready for the next photo.
+    func retry() {
+        guard rearPreviewLayer == nil else {
+            resumeSession()
+            phase = .ready
+            return
+        }
+        phase = .configuring
+        hasStarted = false
+        sessionQueue.async { [session] in
+            session.beginConfiguration()
+            session.inputs.forEach { session.removeInput($0) }
+            session.outputs.forEach { session.removeOutput($0) }
+            session.commitConfiguration()
+            DispatchQueue.main.async { self.start() }
+        }
+    }
+
+    /// Whether the last failure was camera access being off, so the screen can offer Settings.
+    var isPermissionDenied: Bool {
+        phase == .failed(CaptureError.permissionDenied.localizedDescription)
     }
 
     /// Restarts an already-configured session that `stop()` paused.

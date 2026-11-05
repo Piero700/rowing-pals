@@ -60,13 +60,32 @@ struct CoachWorkoutsView: View {
     @ViewBuilder
     private func section(_ title: String, _ items: [WorkoutsViewModel.Item], isToday: Bool, isFirst: Bool) -> some View {
         if !items.isEmpty {
-            Text(title)
-                .textStyle(Typography.sectionTitle)
-                .foregroundStyle(Tokens.Ink.secondary)
-                .padding(.horizontal, 4)
-                .padding(.top, isFirst ? 0 : Tokens.Spacing.group)
-                .padding(.bottom, Tokens.Spacing.tight)
-                .accessibilityAddTraits(.isHeader)
+            HStack {
+                Text(title)
+                    .textStyle(Typography.sectionTitle)
+                    .foregroundStyle(Tokens.Ink.secondary)
+                    .accessibilityAddTraits(.isHeader)
+                Spacer(minLength: Tokens.Spacing.tight)
+                // Past → Notebook: a page per past workout's notepad (CoachNotepadWorkouts, NP4).
+                if title == "Past" {
+                    Button {
+                        navigate(.notebook)
+                    } label: {
+                        HStack(spacing: 4) {
+                            Text("Notebook")
+                            RPIconView(icon: .chevronRight, size: Tokens.Icon.small)
+                        }
+                        .textStyle(Typography.rowTitle)
+                        .foregroundStyle(Tokens.Accent.brand)
+                        .frame(minHeight: Tokens.Size.minTap)
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(IconPressStyle())
+                }
+            }
+            .padding(.horizontal, 4)
+            .padding(.top, isFirst ? 0 : Tokens.Spacing.group)
+            .padding(.bottom, title == "Past" ? 0 : Tokens.Spacing.tight)
             LazyVStack(spacing: Tokens.Spacing.tight) {
                 ForEach(items) { item in
                     if isToday {

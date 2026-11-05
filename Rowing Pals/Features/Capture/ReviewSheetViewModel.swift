@@ -322,7 +322,13 @@ final class ReviewSheetViewModel {
         guard let image = UIImage(data: jpeg) else { return empty }
         do {
             let observations = try await OCRService.recognizeText(in: image)
-            return MonitorParser.parse(observations)
+            var fields = MonitorParser.parse(observations)
+            // A continuous piece's 500m rows, for the coach's test notepad (NP3); not an interval
+            // workout's reps.
+            if fields.repDistanceM == nil, !fields.isIntervalWorkout {
+                fields.splitRowsMs = MonitorParser.splitRows(MonitorParser.intervalRows(observations))
+            }
+            return fields
         } catch {
             return empty
         }
@@ -399,11 +405,15 @@ final class ReviewSheetViewModel {
         let isLead: Bool
         /// Interval rep distance read off the monitor (decision 31); omitted when nil.
         let repDistanceM: Int?
+        /// A continuous piece's 500m split rows, for the coach's test notepad (NP3); omitted when
+        /// nil, so posting works on a project the NP3 migration hasn't reached for every other piece.
+        let splits500Ms: [Int]?
 
         enum CodingKeys: String, CodingKey {
             case id
             case isLead = "is_lead"
             case repDistanceM = "rep_distance_m"
+            case splits500Ms = "splits_500_ms"
             case sessionId = "session_id"
             case label, position
             case distanceM = "distance_m"
@@ -583,7 +593,8 @@ final class ReviewSheetViewModel {
                     ocrConfidence: segment.isManual ? nil : segment.ocrConfidence,
                     wasEdited: segment.wasEdited,
                     isLead: segment.id == leadID,
-                    repDistanceM: segment.repDistanceM
+                    repDistanceM: segment.repDistanceM,
+                    splits500Ms: segment.postedSplitRowsMs
                 )
             }
             try await SupabaseService.shared.from("segments").insert(newSegments).execute()

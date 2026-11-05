@@ -25,6 +25,13 @@ nonisolated struct ParsedMonitorFields {
     /// An interval workout's rep distance, from the screen's title ("8x500m/1:00r" → 500).
     /// Nil for a continuous piece or a timed-rep workout ("8x2:00/1:00r"). Decision 31.
     var repDistanceM: Int? = nil
+    /// A continuous piece's split rows under the summary (a 2k's four 500m splits), each /500m;
+    /// nil for an interval workout or when any row's split didn't read. Kept on the posted segment
+    /// for the coach's test notepad (NP3).
+    var splitRowsMs: [Int]? = nil
+    /// The title names an interval workout: a rep count ("3x12:00", "8x500m") or a rest
+    /// ("/3:00r", as on "v3000m/3:00r"). Its rows are reps, not one piece's splits.
+    var isIntervalWorkout = false
 
     /// Whether all four fields extracted successfully — the task 09
     /// pass/fail bar is "all four fields correctly", not partial credit.
@@ -126,7 +133,8 @@ nonisolated enum MonitorParser {
             splitMs: split,
             rate: rate,
             repDistanceM: repDistance(fromTitle: title)
-                ?? repDistance(fromAmbiguousTitle: title, totalDistanceM: distance.value, rowNumbers: rowNumbers)
+                ?? repDistance(fromAmbiguousTitle: title, totalDistanceM: distance.value, rowNumbers: rowNumbers),
+            isIntervalWorkout: isIntervalTitle(title)
         )
     }
 
@@ -159,6 +167,16 @@ nonisolated enum MonitorParser {
             }
         }
         return result
+    }
+
+    /// A continuous piece's split rows, from `intervalRows`: every row under the summary, in order,
+    /// as /500m splits. Nil unless there are 2 to 100 of them and every one has a split, since a
+    /// list with a gap would put a split against the wrong distance.
+    static func splitRows(_ rows: [MonitorRow]) -> [Int]? {
+        let splits = rows.filter { !$0.isSummary }.map(\.splitMs)
+        guard (2...100).contains(splits.count), splits.allSatisfy({ $0 != nil }) else { return nil }
+        let values = splits.compactMap { $0 }
+        return values.allSatisfy { (30_000...600_000).contains($0) } ? values : nil
     }
 
     /// One interval row, or nil when it isn't one (a rest row, a word, too little to read).
@@ -306,6 +324,12 @@ nonisolated enum MonitorParser {
         let allowance = 100 * distanceM / 500 + 100
         guard (predictedMs - 100...predictedMs + allowance).contains(timeMs) else { return nil }
         return timeMs
+    }
+
+    /// Whether a title names an interval workout: "3x12:00/3:00r", "8x500m/1:00r", "v3000m/3:00r".
+    /// A single piece's title is a distance or a time ("2000m", "1:00:03").
+    static func isIntervalTitle(_ title: String) -> Bool {
+        title.range(of: #"\d\s*[xX×]\s*:?\d|/\s*\d*:\d{2}\s*r"#, options: .regularExpression) != nil
     }
 
     /// The rep distance when the title's "x" was misread as a zero — the PM3's small "x" in

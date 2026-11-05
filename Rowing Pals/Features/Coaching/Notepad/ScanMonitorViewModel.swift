@@ -23,6 +23,8 @@ final class ScanMonitorViewModel {
     var screens = 0
     /// Every interval read so far, each kept once; for a one-piece workout, the summary row.
     var rows: [MonitorRow] = []
+    /// A one-piece workout's split rows under its summary (a test's 500m splits, NP3).
+    var splitRowsMs: [Int]?
     /// Which of `rows` came from the last photo.
     var newIndices: Set<Int> = []
     /// The pieces the last photo shared with the one before (counting from 1).
@@ -68,6 +70,7 @@ final class ScanMonitorViewModel {
             }
             if repCount == 1 {
                 rows = [summary]
+                splitRowsMs = MonitorParser.splitRows(table)
                 newIndices = [0]
                 overlap = nil
             } else {
@@ -118,9 +121,12 @@ final class ScanMonitorViewModel {
             parts.append("\(pieces) on both screens, so \(overlap.count == 1 ? "it’s" : "they’re") kept once.")
         }
         if isDone {
-            parts.append(repCount == 1
-                ? "That’s the piece. Tap a number on the page to fix it."
-                : "All \(repCount) pieces are in. Tap a number on the page to fix it.")
+            if repCount == 1 {
+                let splits = splitRowsMs.map { "With its \($0.count) splits: \($0.map(WorkoutRules.splitTenthsText).joined(separator: " · ")). " } ?? ""
+                parts.append("\(splits)That’s the piece. Tap a number on the page to fix it.")
+            } else {
+                parts.append("All \(repCount) pieces are in. Tap a number on the page to fix it.")
+            }
             if rows.count > repCount {
                 parts.append("The workout has \(repCount), so only the first \(repCount) are kept.")
             }
@@ -146,7 +152,7 @@ final class ScanMonitorViewModel {
         defer { isFilling = false }
         let scores = NotepadRules.scannedScores(
             rows: repCount == 1 ? [] : rows, summary: repCount == 1 ? rows.first : nil,
-            repCount: repCount, workoutId: workoutId, rowerId: rowerId
+            repCount: repCount, workoutId: workoutId, rowerId: rowerId, splitRowsMs: splitRowsMs
         )
         do {
             for score in scores {

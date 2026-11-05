@@ -18,36 +18,50 @@ struct ClubVerificationView: View {
     @State private var isSending = false
     @State private var errorMessage: String?
 
-    private static let cardShape = RoundedRectangle(cornerRadius: Tokens.Radius.card, style: .continuous)
-
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: Tokens.Spacing.loose) {
-                statusCard
+            VStack(alignment: .leading, spacing: Tokens.Grouped.groupGap) {
+                // The compact grouped-rows style (decision 97).
+                GroupedSection(footer: statusDetail) {
+                    GroupedRow(label: "Club") {
+                        ClubNameLabel(name: clubName, isVerified: status == .verified)
+                            .textStyle(Typography.detail)
+                            .foregroundStyle(Tokens.Ink.secondary)
+                            .lineLimit(1)
+                    }
+                    GroupedDivider()
+                    GroupedRow(label: "Status") {
+                        Text(statusTitle)
+                            .textStyle(Typography.detail)
+                            .foregroundStyle(status == .verified ? Tokens.Accent.success : Tokens.Ink.secondary)
+                    }
+                }
 
                 if status == .none || status == .declined {
-                    Text("A note for us (optional)")
-                        .textStyle(Typography.fieldLabel)
-                        .foregroundStyle(Tokens.Ink.secondary)
-                        .padding(.top, Tokens.Spacing.tight)
-                    TextField("Your club’s website, British Rowing code, or your role", text: $message, axis: .vertical)
-                        .lineLimit(3...6)
-                        .textStyle(Typography.body)
-                        .foregroundStyle(Tokens.Ink.primary)
-                        .padding(14)
-                        .background(Self.cardShape.fill(Tokens.Surface.card))
-                        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.line, lineWidth: 1) }
-                        .onChange(of: message) { message = String(message.prefix(500)) }
-                    Text("We check that the club is real and that you run it, then add the tag. It usually takes a few days.")
-                        .textStyle(Typography.meta)
-                        .foregroundStyle(Tokens.Ink.secondary)
-                        .guidance()
+                    VStack(alignment: .leading, spacing: Tokens.Grouped.headerGap) {
+                        GroupedSection(header: "A note for us · optional") {
+                            TextField("Your club’s website, British Rowing code, or your role", text: $message, axis: .vertical)
+                                .lineLimit(3...6)
+                                .textStyle(Typography.detail)
+                                .foregroundStyle(Tokens.Ink.primary)
+                                .padding(.horizontal, Tokens.Grouped.rowPadding)
+                                .padding(.vertical, Tokens.Spacing.loose)
+                                .frame(maxWidth: .infinity, minHeight: Tokens.Grouped.rowHeight, alignment: .leading)
+                                .onChange(of: message) { message = String(message.prefix(500)) }
+                        }
+                        Text("We check that the club is real and that you run it, then add the tag. It usually takes a few days.")
+                            .textStyle(Typography.statLabel)
+                            .foregroundStyle(Tokens.Ink.secondary)
+                            .padding(.horizontal, Tokens.Grouped.rowPadding)
+                            .guidance()
+                    }
                 }
 
                 if let errorMessage {
                     Text(errorMessage)
                         .textStyle(Typography.meta)
                         .foregroundStyle(Tokens.System.error)
+                        .padding(.horizontal, Tokens.Grouped.rowPadding)
                 }
             }
             .padding(.horizontal, Tokens.Spacing.screen)
@@ -70,25 +84,6 @@ struct ClubVerificationView: View {
         .toolbar(.hidden, for: .navigationBar)
         .background(Tokens.Base.ground)
         .dismissesKeyboardOnTap()
-    }
-
-    /// The club's name with its tag (or not) and where the application stands.
-    private var statusCard: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            ClubNameLabel(name: clubName, isVerified: status == .verified, badgeSize: Tokens.Icon.regular)
-                .textStyle(Typography.profileName)
-                .foregroundStyle(Tokens.Ink.primary)
-            Text(statusTitle)
-                .textStyle(Typography.rowTitle)
-                .foregroundStyle(status == .verified ? Tokens.Accent.success : Tokens.Ink.primary)
-            Text(statusDetail)
-                .textStyle(Typography.meta)
-                .foregroundStyle(Tokens.Ink.secondary)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(Tokens.Spacing.card)
-        .background(Self.cardShape.fill(Tokens.Surface.card))
-        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
     }
 
     private var statusTitle: String {

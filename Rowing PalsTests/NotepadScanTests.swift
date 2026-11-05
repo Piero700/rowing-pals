@@ -203,3 +203,49 @@ struct NotepadScanTests {
         #expect(joined.map(\.rate) == expected.map { Optional($0.rate) })
     }
 }
+
+// MARK: - A test's splits (NP3)
+
+extension NotepadScanTests {
+    @Test func aContinuousPiecesRowsAreItsSplits() {
+        let rows = [
+            MonitorRow(timeMs: 439_000, distanceM: 2000, splitMs: 109_700, rate: 24, isSummary: true),
+            MonitorRow(timeMs: 107_400, distanceM: 500, splitMs: 107_400, rate: 24),
+            MonitorRow(timeMs: 111_900, distanceM: 1000, splitMs: 111_900, rate: 24),
+        ]
+        #expect(MonitorParser.splitRows(rows) == [107_400, 111_900])
+        // A row whose split didn't read: no list, rather than one off by a row.
+        var gap = rows
+        gap[2].splitMs = nil
+        #expect(MonitorParser.splitRows(gap) == nil)
+        // One row isn't a list of splits.
+        #expect(MonitorParser.splitRows(Array(rows.prefix(2))) == nil)
+    }
+
+    @Test func intervalTitlesAreTold() {
+        #expect(MonitorParser.isIntervalTitle("3x12:00/3:00r"))
+        #expect(MonitorParser.isIntervalTitle("20x500m/:20r"))
+        #expect(MonitorParser.isIntervalTitle("v3000m/3:00r...4"))
+        #expect(!MonitorParser.isIntervalTitle("2000m"))
+        #expect(!MonitorParser.isIntervalTitle("1:00:03"))
+        #expect(!MonitorParser.isIntervalTitle("5000m"))
+    }
+
+    @Test func aScannedTestKeepsItsSplits() {
+        let summary = MonitorRow(timeMs: 439_000, distanceM: 2000, splitMs: 109_700, rate: 24, isSummary: true)
+        let scores = NotepadRules.scannedScores(rows: [summary], summary: summary, repCount: 1, workoutId: UUID(),
+                                                rowerId: UUID(), splitRowsMs: [107_400, 111_900, 111_700, 107_100])
+        #expect(scores.count == 1)
+        #expect(scores.first?.splits500Ms == [107_400, 111_900, 111_700, 107_100])
+        // Interval workouts never carry them.
+        let reps = NotepadRules.scannedScores(rows: Self.screen2, summary: nil, repCount: 4, workoutId: UUID(),
+                                              rowerId: UUID(), splitRowsMs: [107_400])
+        #expect(reps.allSatisfy { $0.splits500Ms == nil })
+    }
+
+    /// The real 2k photo: its four 500m splits read off the monitor.
+    @Test func readsTheFiveHundredMetreSplitsOffThe2kPhoto() async throws {
+        let rows = try await Self.intervals(in: "IMG_0593.jpeg")
+        #expect(MonitorParser.splitRows(rows) == [107_400, 111_900, 111_700, 107_100])
+    }
+}
