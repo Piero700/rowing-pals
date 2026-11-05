@@ -195,8 +195,9 @@ struct AvailabilityView: View {
     private var races: some View {
         if !viewModel.events.isEmpty {
             FormSectionTitle("Races")
-            VStack(spacing: Tokens.Spacing.tight) {
-                ForEach(viewModel.events) { event in
+            GroupedSection {
+                ForEach(Array(viewModel.events.enumerated()), id: \.element.id) { index, event in
+                    if index > 0 { GroupedDivider() }
                     raceRow(event)
                 }
             }
@@ -227,10 +228,9 @@ struct AvailabilityView: View {
                     .textStyle(Typography.pill)
                     .foregroundStyle(Tokens.Ink.secondary)
             }
-            .padding(Tokens.Spacing.card)
-            .background(Self.cardShape.fill(Tokens.Surface.card))
-            .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
-            .contentShape(Self.cardShape)
+            .padding(.horizontal, Tokens.Grouped.rowPadding)
+            .padding(.vertical, Tokens.Spacing.tight)
+            .contentShape(Rectangle())
         }
         .buttonStyle(IconPressStyle())
     }

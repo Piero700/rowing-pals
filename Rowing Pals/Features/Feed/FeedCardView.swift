@@ -44,7 +44,7 @@ struct FeedCardView: View {
         VStack(alignment: .leading, spacing: 0) {
             header
             carousel
-                .padding(.top, 14)
+                .padding(.top, Tokens.Spacing.loose)
             metricTrio
                 .padding(.vertical, Tokens.Spacing.loose)
             if let caption = post.caption, !caption.isEmpty {
@@ -63,7 +63,7 @@ struct FeedCardView: View {
             }
             workoutLink
             actionRow
-                .padding(.top, 14)
+                .padding(.top, Tokens.Spacing.loose)
         }
         .padding(Tokens.Spacing.card)
         .background { Self.cardShape.fill(Tokens.Surface.card) }

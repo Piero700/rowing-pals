@@ -209,6 +209,8 @@ struct CoachCalendarView: View {
             }
             if canRegister {
                 CardLinkRow(icon: .check, title: "Take register") { navigate(.register(practice.id)) }
+                    // The row's own height is the room under it.
+                    .padding(.bottom, -Tokens.Spacing.card)
             }
         }
         .padding(Tokens.Spacing.card)
