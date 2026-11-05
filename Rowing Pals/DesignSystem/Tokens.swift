@@ -170,6 +170,9 @@ enum Tokens {
         static let minTap: CGFloat = 44
         /// The red Delete revealed by a short swipe on a card (decision 60), as wide as iOS's.
         static let swipeAction: CGFloat = 88
+        /// How far in from the left edge a swipe back may start (decision 61), the same on every
+        /// screen: a full-screen area's root (`edgeSwipeToDismiss()`) and every pushed screen.
+        static let swipeBackEdge: CGFloat = 24
         static let primaryButton: CGFloat = 51
         static let secondaryButton: CGFloat = 50
         static let input: CGFloat = 50

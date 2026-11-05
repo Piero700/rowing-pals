@@ -22,7 +22,7 @@ private struct EdgeSwipeToDismiss: ViewModifier {
     @Environment(\.swipeBackHandled) private var isHandled
     @State private var dragOffset: CGFloat = 0
 
-    private let edgeWidth: CGFloat = 24
+    private let edgeWidth = Tokens.Size.swipeBackEdge
     private let dismissThreshold: CGFloat = 100
     /// Comfortably wider than any device — the offset needed to carry the
     /// view fully off-screen to the right regardless of actual width.
