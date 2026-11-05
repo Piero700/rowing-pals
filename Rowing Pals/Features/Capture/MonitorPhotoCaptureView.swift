@@ -60,13 +60,7 @@ struct MonitorPhotoCaptureView: View {
                     .foregroundStyle(Tokens.System.error)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 24)
-                Button("Try again") {
-                    if viewModel.rearPreviewLayer == nil {
-                        viewModel.start()
-                    } else {
-                        viewModel.phase = .ready
-                    }
-                }
+                Button("Try again") { viewModel.retry() }
                 .textStyle(Typography.rowTitle)
                 .foregroundStyle(Tokens.Ink.primary)
             }
