@@ -410,6 +410,26 @@ enum Tokens {
         /// The entry bar over the keyboard.
         static let entryRadius: CGFloat = 28
         static let rateFieldWidth: CGFloat = 88
+        /// The camera button by each name in the Scores table (NP2), and the column it sits in.
+        static let scanButton: CGFloat = 34
+        static let scanColumn: CGFloat = 40
+        /// Scan a monitor (CoachNotepadScan): the camera's finder, the frame drawn inside it (inset
+        /// as a share of the finder's width and height), and the shutter.
+        static let finderRadius: CGFloat = 28
+        static let finderFrameRadius: CGFloat = 18
+        static let finderFrameInsetX: CGFloat = 0.12
+        static let finderFrameInsetY: CGFloat = 0.18
+        static let finderFrameLine: CGFloat = 2
+        static let finderFrameOpacity: Double = 0.75
+        static let shutter: CGFloat = 74
+        static let shutterDot: CGFloat = 58
+        static let shutterRing: CGFloat = 4
+        /// The pieces read so far: # · Time · Split · Metres · Rate.
+        static let scanRowHeight: CGFloat = 40
+        static let scanNumberColumn: CGFloat = 30
+        static let scanValueColumn: CGFloat = 70
+        static let scanRateColumn: CGFloat = 40
+        static let bannerRadius: CGFloat = 20
     }
 
     /// The new-PB celebration (docs/design/v2-decisions.md #12): an RGB-LED style glow that

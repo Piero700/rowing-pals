@@ -130,6 +130,93 @@ nonisolated enum MonitorParser {
         )
     }
 
+    /// Every row of the results table, for the coach notepad's scan (decision 96, phase NP2): the
+    /// summary row first (`isSummary`, read exactly as `parse` reads it), then each interval below
+    /// it, top to bottom. A row counts when it reads as two durations and two numbers, or, on a dim
+    /// screen, field by field against the columns of a clean row; anything else under the table —
+    /// a rest row such as "r50", a stray word — is left out. A small whole number left of the time
+    /// is the row's number. Empty when there's no table header on the photo.
+    static func intervalRows(_ observations: [RecognizedTextObservation]) -> [MonitorRow] {
+        let rows = clusterRows(observations)
+        guard let headerIndex = rows.firstIndex(where: isHeaderRow) else { return [] }
+        let tableRows = Array(rows[(headerIndex + 1)...])
+        guard let summaryIndex = tableRows.firstIndex(where: { candidates(in: $0).count >= 4 }) else { return [] }
+
+        let summary = parse(observations)
+        var result = [MonitorRow(
+            timeMs: summary.elapsedTimeMs.value,
+            distanceM: summary.distanceM.value,
+            splitMs: summary.splitMs.value,
+            rate: summary.rate.value.map { Int($0) },
+            isSummary: true
+        )]
+
+        let rowsBelow = tableRows[(summaryIndex + 1)...]
+        let columns = columnCentres(from: rowsBelow)
+        for row in rowsBelow {
+            if let interval = intervalRow(candidates(in: row), columns: columns) {
+                result.append(interval)
+            }
+        }
+        return result
+    }
+
+    /// One interval row, or nil when it isn't one (a rest row, a word, too little to read).
+    private static func intervalRow(_ all: [Candidate], columns: [CGFloat]?) -> MonitorRow? {
+        var (durations, numbers) = byShape(all)
+        // A row number sits left of the time; take it off before reading the four columns.
+        var number: Int?
+        var numberCandidate: Candidate?
+        if numbers.count == 3, let first = numbers.first, let time = durations.first, first.x < time.x,
+           first.text.allSatisfy(\.isNumber), let value = Int(first.text), (1...99).contains(value) {
+            number = value
+            numberCandidate = first
+            numbers.removeFirst()
+        }
+        if durations.count == 2, numbers.count == 2 {
+            let time = field(durations[0], parse: parseDurationMs)
+            let split = field(durations[1], parse: parseDurationMs)
+            let row = MonitorRow(
+                timeMs: time.value,
+                distanceM: parseDistanceM(numbers[0].text),
+                splitMs: split.value,
+                rate: parseRate(numbers[1].text).map { Int($0) },
+                number: number
+            )
+            return correctedSplit(row, timeConfidence: time.confidence, splitConfidence: split.confidence)
+        }
+        // A dim row, or one where a reading is missing (no rate, no metres): read it column by
+        // column. A time and a split are enough to keep it, since the split is what the notepad
+        // shows and the coach can add the rest.
+        guard let columns, all.count >= 2 else { return nil }
+        let remaining = all.filter { candidate in
+            guard let numberCandidate else { return true }
+            return candidate.x != numberCandidate.x || candidate.text != numberCandidate.text
+        }
+        let (time, distance, split, rate) = readByColumn(remaining, columns: columns)
+        guard split.value != nil else { return nil }
+        let row = MonitorRow(timeMs: time.value, distanceM: distance.value, splitMs: split.value,
+                             rate: rate.value.map { Int($0) }, number: number)
+        return correctedSplit(row, timeConfidence: time.confidence, splitConfidence: split.confidence)
+    }
+
+    /// A split whose tenth was misread ("1:47.9" as "1:47.0"; seen on four sample photos, always
+    /// the split, while the time beside it read right), put back from the time and metres: the
+    /// monitor works the split out as time ÷ (metres ÷ 500), truncated to the tenth. Only the tenth
+    /// is ever changed — the worked-out split must have the same minutes and seconds — and only
+    /// when Vision wasn't surer of the split than of the time, so a misread time can't drag a right
+    /// split with it. A row that already adds up is left alone.
+    private static func correctedSplit(_ row: MonitorRow, timeConfidence: Double, splitConfidence: Double) -> MonitorRow {
+        guard !row.addsUp, let timeMs = row.timeMs, let distanceM = row.distanceM, let splitMs = row.splitMs,
+              distanceM > 0, splitConfidence <= timeConfidence
+        else { return row }
+        let workedOut = (timeMs * 500 / distanceM) / 100 * 100
+        guard workedOut / 1000 == splitMs / 1000 else { return row }
+        var corrected = row
+        corrected.splitMs = workedOut
+        return corrected.addsUp ? corrected : row
+    }
+
     /// A row's colon-shaped values (time, split) and plain-digit values (meter, rate), each
     /// sorted left to right.
     private static func byShape(_ candidates: [Candidate]) -> (durations: [Candidate], numbers: [Candidate]) {

@@ -93,6 +93,8 @@ struct NotepadView: View {
         .background(Tokens.Base.ground)
         .toolbar(.hidden, for: .navigationBar)
         .task { await viewModel.load() }
+        // Back from scanning a monitor: show the scores it filled in.
+        .onAppear { if viewModel.hasLoaded { Task { await viewModel.load() } } }
         .refreshable { await viewModel.load() }
         .onChange(of: viewModel.blocks) { viewModel.pageChanged() }
         .onDisappear { Task { await viewModel.saveNow() } }

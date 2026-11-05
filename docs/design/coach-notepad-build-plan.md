@@ -110,7 +110,32 @@ rows on the page itself.
   conversion for distance and time pieces, and the block cap.
 - **Checklist:** `docs/testing/coach-notepad-np1.md`.
 
-## Phase NP2 — scanning a monitor (board `CoachNotepadScan`)
+## Phase NP2 — scanning a monitor (board `CoachNotepadScan`) — built, waiting on the phone tests
+
+Built 2026-11-05. Files: `Core/Models/MonitorRow.swift`, `MonitorParser.intervalRows`,
+`NotepadRules.join` / `stitch` / `scannedScores`, `Features/Coaching/Notepad/ScanMonitorView` and
+`ScanMonitorViewModel`, `AppRoute.scanMonitor`, the camera column in `NotepadScoresCard`. Tests:
+`NotepadScanTests` (21 with the existing OCR tests, all passing):
+- every sample photo's interval rows are read against `expected-readouts.json`, and **no reading on
+  any of the 16 photos comes out wrong**; readings Vision returned nothing for (the rate on some
+  rows of IMG_0647 and IMG_0880) show as known issues, and the coach types those;
+- **the three real photos of the 20 × 500m (IMG_0897, 0898, 0899) join into exactly the 20 reps**, in
+  order — reps 14–16 on both of the last two screens are kept once.
+
+What the photos taught (so the joining didn't need tuning on invented data):
+- PM3/PM5 monitors don't print row numbers, so joining is by the readings themselves.
+- Vision sometimes misreads the split's tenth ("1:47.9" as "1:47.0") while the time beside it is right;
+  a split is put back from time ÷ (metres ÷ 500) when only its tenth differs.
+- A row can come with no rate or no metres at all; a time and a split are enough to keep it.
+
+Checked in the simulator with the sample photos: the scan screen, a one-piece workout read from its
+summary row (34:40.1 · 10,000 · 1:44.0 · 29) and filled into the notepad. The multi-screen screen (chips,
+highlighted new rows, the overlap line) wasn't seen live: no workout on Dev had several reps.
+**Simulator only:** a **Choose a photo** button beside the shutter stands in for the camera (the
+simulator has none); it's compiled out of phone builds.
+
+The multi-screen photo sets asked for below are still wanted, to test more monitors and lighting.
+Checklist: `docs/testing/coach-notepad-np2.md`.
 
 **Parser.** `MonitorParser` today reads only the summary row under the header. Add
 `MonitorParser.intervalRows(_:) -> [MonitorRow]`, reading every data row below it:

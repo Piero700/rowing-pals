@@ -177,6 +177,132 @@ nonisolated enum NotepadRules {
     private static func roundedToTenth(_ ms: Int) -> Int { roundedToTenth(Double(ms)) }
     private static func roundedToTenth(_ ms: Double) -> Int { Int((ms / 100).rounded()) * 100 }
 
+    // MARK: - Joining monitor screens (NP2)
+
+    /// The pieces read so far after adding one more screen.
+    struct Joined: Equatable {
+        /// Every piece, in order, each kept once.
+        var rows: [MonitorRow]
+        /// The pieces (counting from 1, on `rows`) that were on both screens and so kept once; nil
+        /// when the screens didn't overlap.
+        var overlap: ClosedRange<Int>?
+        /// Which of `rows` came from this screen (indices), for highlighting them.
+        var newIndices: Set<Int>
+    }
+
+    /// Adds one screen's rows to the pieces read so far. The summary row is dropped. When every row
+    /// carries its number, the numbers decide. Otherwise the screens are taken in the order they
+    /// were photographed, and the overlap is the longest run where the end of what's read matches
+    /// the start of the new screen: each pair has to agree on all but at most one reading (a
+    /// misread digit), with at least one pair agreeing on everything — a single-row overlap has to
+    /// agree exactly, so one look-alike split can't fake one. Where the two readings of a row
+    /// differ, the one whose numbers add up is kept.
+    static func join(_ previous: [MonitorRow], _ screen: [MonitorRow]) -> Joined {
+        let incoming = screen.filter { !$0.isSummary }
+        guard !previous.isEmpty else {
+            return Joined(rows: incoming, overlap: nil, newIndices: Set(incoming.indices))
+        }
+        if !incoming.isEmpty, let joined = joinedByNumber(previous, incoming) { return joined }
+
+        let k = overlapLength(previous, incoming)
+        var rows = previous
+        for i in 0..<k {
+            let index = previous.count - k + i
+            rows[index] = better(previous[index], incoming[i])
+        }
+        rows += incoming.dropFirst(k)
+        return Joined(
+            rows: rows,
+            overlap: k > 0 ? (previous.count - k + 1)...previous.count : nil,
+            newIndices: Set(previous.count..<rows.count)
+        )
+    }
+
+    /// Every screen joined in the order taken (`join` one after another).
+    static func stitch(_ screens: [[MonitorRow]]) -> [MonitorRow] {
+        screens.reduce([MonitorRow]()) { join($0, $1).rows }
+    }
+
+    /// The scores a scan fills a rower's row with: piece by piece from the intervals, one per rep
+    /// of the workout (extra rows are left off), or the summary row for a one-piece workout. A row
+    /// without a split is skipped.
+    static func scannedScores(
+        rows: [MonitorRow], summary: MonitorRow?, repCount: Int, workoutId: UUID, rowerId: UUID
+    ) -> [NotepadScore] {
+        let pieces = repCount == 1 ? [summary ?? rows.first].compactMap { $0 } : Array(rows.prefix(repCount))
+        return pieces.enumerated().compactMap { index, row in
+            guard let splitMs = row.splitMs else { return nil }
+            return NotepadScore(
+                workoutId: workoutId, userId: rowerId, pieceIndex: index, splitMs: splitMs,
+                timeMs: row.timeMs, distanceM: row.distanceM, rate: row.rate, satOut: false, source: .scanned
+            )
+        }
+    }
+
+    /// When every row on both sides is numbered: one row per number, in number order.
+    private static func joinedByNumber(_ previous: [MonitorRow], _ incoming: [MonitorRow]) -> Joined? {
+        let old = previous.compactMap { row in row.number.map { ($0, row) } }
+        let new = incoming.compactMap { row in row.number.map { ($0, row) } }
+        guard old.count == previous.count, new.count == incoming.count else { return nil }
+
+        var byNumber = Dictionary(old, uniquingKeysWith: { first, _ in first })
+        let oldNumbers = Set(byNumber.keys)
+        let newNumbers = Set(new.map(\.0))
+        for (number, row) in new {
+            byNumber[number] = byNumber[number].map { better($0, row) } ?? row
+        }
+        let numbers = byNumber.keys.sorted()
+        let rows = numbers.compactMap { byNumber[$0] }
+        let shared = numbers.indices.filter { oldNumbers.contains(numbers[$0]) && newNumbers.contains(numbers[$0]) }
+        let overlap = shared.first.flatMap { first in shared.last.map { (first + 1)...($0 + 1) } }
+        return Joined(rows: rows, overlap: overlap,
+                      newIndices: Set(numbers.indices.filter { !oldNumbers.contains(numbers[$0]) }))
+    }
+
+    private static func overlapLength(_ previous: [MonitorRow], _ incoming: [MonitorRow]) -> Int {
+        for k in stride(from: min(previous.count, incoming.count), through: 1, by: -1) {
+            let pairs = Array(zip(previous.suffix(k), incoming.prefix(k)))
+            let allClose = pairs.allSatisfy { pair in
+                let (matching, differing) = agreement(pair.0, pair.1)
+                return differing <= 1 && matching >= 2
+            }
+            guard allClose, pairs.contains(where: { isSameReading($0.0, $0.1) }) else { continue }
+            if k == 1, !pairs.allSatisfy({ isSameReading($0.0, $0.1) }) { continue }
+            return k
+        }
+        return 0
+    }
+
+    /// How many of the four readings two rows share, and how many they read differently (a reading
+    /// missing from either side counts as neither).
+    private static func agreement(_ a: MonitorRow, _ b: MonitorRow) -> (matching: Int, differing: Int) {
+        let pairs = [(a.timeMs, b.timeMs), (a.distanceM, b.distanceM), (a.splitMs, b.splitMs), (a.rate, b.rate)]
+        let known = pairs.compactMap { pair -> Bool? in
+            guard let first = pair.0, let second = pair.1 else { return nil }
+            return first == second
+        }
+        return (known.filter { $0 }.count, known.filter { !$0 }.count)
+    }
+
+    private static func isSameReading(_ a: MonitorRow, _ b: MonitorRow) -> Bool {
+        let (matching, differing) = agreement(a, b)
+        return differing == 0 && matching >= 3
+    }
+
+    /// The reading to keep of a row seen on two screens: the one whose numbers add up, else the
+    /// first; any reading it's missing is taken from the other.
+    private static func better(_ first: MonitorRow, _ second: MonitorRow) -> MonitorRow {
+        let secondWins = second.addsUp && !first.addsUp
+        var kept = secondWins ? second : first
+        let other = secondWins ? first : second
+        kept.timeMs = kept.timeMs ?? other.timeMs
+        kept.distanceM = kept.distanceM ?? other.distanceM
+        kept.splitMs = kept.splitMs ?? other.splitMs
+        kept.rate = kept.rate ?? other.rate
+        kept.number = kept.number ?? other.number
+        return kept
+    }
+
     // MARK: - Blocks
 
     /// A new text box.

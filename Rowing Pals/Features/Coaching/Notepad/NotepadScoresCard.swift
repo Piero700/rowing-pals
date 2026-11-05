@@ -12,6 +12,7 @@ import SwiftUI
 struct NotepadScoresCard: View {
     let viewModel: NotepadViewModel
     let onSelect: (NotepadRules.Spot) -> Void
+    @Environment(\.navigate) private var navigate
 
     private static let cardShape = RoundedRectangle(cornerRadius: Tokens.Radius.card, style: .continuous)
     private static let headerHeight: CGFloat = Tokens.Size.chip
@@ -46,6 +47,7 @@ struct NotepadScoresCard: View {
                     namesColumn
                         .frame(minWidth: Tokens.Notepad.ergColumn + 4 + Tokens.Notepad.nameColumn,
                                maxWidth: .infinity, alignment: .leading)
+                    scanColumn
                     ScrollView(.horizontal) {
                         boxesColumns
                     }
@@ -99,6 +101,31 @@ struct NotepadScoresCard: View {
                 .accessibilityLabel("Erg \(index + 1), \(rower.name)")
             }
         }
+    }
+
+    /// The camera button by each name (NP2): scan that rower's monitor into their row.
+    private var scanColumn: some View {
+        VStack(spacing: 0) {
+            Color.clear.frame(width: Tokens.Notepad.scanColumn, height: Self.headerHeight)
+            ForEach(viewModel.rowers) { rower in
+                VStack(spacing: 0) {
+                    Divider().overlay(Tokens.Surface.cardEdge)
+                    Button {
+                        navigate(.scanMonitor(viewModel.workoutId, rower.id))
+                    } label: {
+                        RPIconView(icon: .camera, size: Tokens.Icon.small)
+                            .foregroundStyle(Tokens.Accent.brand)
+                            .frame(width: Tokens.Notepad.scanButton, height: Tokens.Notepad.scanButton)
+                            .glassSurface(in: Circle())
+                            .frame(width: Tokens.Notepad.scanColumn, height: Tokens.Notepad.rowHeight - 1)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(IconPressStyle())
+                    .accessibilityLabel("Scan \(rower.name)’s monitor")
+                }
+            }
+        }
+        .frame(width: Tokens.Notepad.scanColumn)
     }
 
     private var boxesColumns: some View {
@@ -200,7 +227,7 @@ struct NotepadScoresCard: View {
                 .fill(Tokens.Accent.brand)
                 .frame(width: Tokens.Notepad.postedDot, height: Tokens.Notepad.postedDot)
                 .accessibilityHidden(true)
-            Text("from their own post · tap a box to type")
+            Text("from their own post · tap a box to type · the camera reads their monitor")
                 .textStyle(Typography.statLabel)
                 .foregroundStyle(Tokens.Ink.secondary)
         }
