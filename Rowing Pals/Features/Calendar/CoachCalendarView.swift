@@ -240,9 +240,8 @@ struct CoachCalendarView: View {
                         .foregroundStyle(Tokens.Ink.secondary)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-                RPIconView(icon: .chevronRight, size: Tokens.Icon.small)
-                    .textStyle(Typography.pill)
-                    .foregroundStyle(Tokens.Ink.secondary)
+                // The notepad's button sits here, over the card (decision 96).
+                Color.clear.frame(width: Tokens.Size.iconButton, height: Tokens.Size.iconButton)
             }
             .padding(Tokens.Spacing.card)
             .background(Self.cardShape.fill(Tokens.Surface.card))
@@ -250,6 +249,12 @@ struct CoachCalendarView: View {
             .contentShape(Self.cardShape)
         }
         .buttonStyle(IconPressStyle())
+        .overlay(alignment: .trailing) {
+            GlassIconButton(icon: .pencil, accessibilityLabel: "Notepad for \(workout.title)") {
+                navigate(.notepad(workout.id))
+            }
+            .padding(.trailing, Tokens.Spacing.card)
+        }
     }
 
     private func waterCard(_ session: WaterSession) -> some View {

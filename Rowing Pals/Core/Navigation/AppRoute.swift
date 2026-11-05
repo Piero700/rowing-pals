@@ -51,6 +51,8 @@ enum AppRoute: Hashable, Identifiable {
     /// Set a workout; one workout's results (decision 39).
     case newWorkout
     case workoutResults(UUID)
+    /// A set workout's notepad: scores, text, tables and notes, for the club's coaches (decision 96).
+    case notepad(UUID)
     /// A rower's results at one test (a coach opening a test row).
     case pbHistory(StandardTest, UUID)
     /// Set a workout for a given day, from the Calendar's Add (decision 68).

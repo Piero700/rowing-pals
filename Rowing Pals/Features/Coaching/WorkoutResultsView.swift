@@ -8,7 +8,7 @@ import SwiftUI
 /// One set workout's results, to the v4 CoachWorkoutResults artboard (decisions 49, 51): the
 /// workout with how many have done it, partly or not yet; a filter; and each rower's reps
 /// against their target split (− faster, + slower). Sessions count when a rower posts with
-/// "Link this session" on. Delete workout sits at the bottom.
+/// "Link this session" on. Delete workout sits at the bottom; the notepad (decision 96) is top right.
 struct WorkoutResultsView: View {
     @State private var viewModel: WorkoutResultsViewModel
     @State private var isConfirmingDelete = false
@@ -80,7 +80,11 @@ struct WorkoutResultsView: View {
             .padding(.bottom, 40)
         }
         .scrollIndicators(.hidden)
-        .safeAreaInset(edge: .top, spacing: 0) { ScreenHeader(title: "Workout") { dismiss() } }
+        .safeAreaInset(edge: .top, spacing: 0) {
+            ScreenHeader(title: "Workout", onBack: { dismiss() }) {
+                GlassIconButton(icon: .pencil, accessibilityLabel: "Notepad") { navigate(.notepad(viewModel.workoutId)) }
+            }
+        }
         .background(Tokens.Base.ground)
         .toolbar(.hidden, for: .navigationBar)
         .task { await viewModel.load() }

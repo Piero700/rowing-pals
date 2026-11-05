@@ -392,6 +392,28 @@ enum Tokens {
         static let effortDotLatest: CGFloat = 5
     }
 
+    /// The coach notepad (decision 96; docs/design/v4/CoachNotepad.dc.html).
+    enum Notepad {
+        /// The Scores table: the erg-number column, the names column, one rep's box.
+        static let ergColumn: CGFloat = 22
+        static let nameColumn: CGFloat = 92
+        static let cellWidth: CGFloat = 64
+        static let cellHeight: CGFloat = 44
+        static let rowHeight: CGFloat = 50
+        static let cellRadius: CGFloat = 12
+        static let selectedBorder: CGFloat = 2
+        /// The dot on a score that came from the rower's own post.
+        static let postedDot: CGFloat = 5
+        static let tableRadius: CGFloat = 24
+        /// A box in a table the coach added.
+        static let tableCellWidth: CGFloat = 104
+        static let textMinLines = 3
+        static let notesMinLines = 5
+        /// The entry bar over the keyboard.
+        static let entryRadius: CGFloat = 28
+        static let rateFieldWidth: CGFloat = 88
+    }
+
     /// The new-PB celebration (docs/design/v2-decisions.md #12): an RGB-LED style glow that
     /// runs around a post when its test result beat the rower's previous best. Its own palette on
     /// purpose — no accent role means "celebrate", and borrowing one would blur that role.

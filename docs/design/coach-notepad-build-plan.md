@@ -17,7 +17,30 @@ phone before the next starts.
 - **Typing times.** Every time is typed with `DurationTextField` with `allowsTenths`
   (decisions 53, 56).
 
-## Phase NP1 — the notepad page, typed scores (boards `CoachNotepadWorkouts`, `CoachNotepad`)
+## Phase NP1 — the notepad page, typed scores (boards `CoachNotepadWorkouts`, `CoachNotepad`) — written, not yet built
+
+Written 2026-11-05 in a cloud session without Xcode: **not compiled or run yet**. The migration was run
+against a local Postgres with a copy of the club, profile and workout tables. That run checked:
+- coaches in the club can read and edit;
+- rowers and other clubs' coaches can't;
+- direct writes are blocked, and the limits hold;
+- the migration is safe to run twice.
+
+`NotepadRulesTests` is written but hasn't been run. Checklist: `docs/testing/coach-notepad-np1.md`.
+
+**Files:**
+- `Core/Models/CoachNotepad.swift`, `NotepadBlock.swift`, `NotepadScore.swift`
+- `Core/Services/NotepadRules.swift`, `NotepadService.swift`
+- `Features/Coaching/Notepad/`: `NotepadView`, `NotepadViewModel`, `NotepadScoresCard`,
+  `NotepadEntryBar`, `NotepadTextBlockView`, `NotepadTableBlockView`, `NotepadRemoveButton`,
+  `ErgOrderSheet`, `NotepadField`
+- `AppRoute.notepad` in `RouteHost`; `Tokens.Notepad`
+- Ways in: `CoachWorkoutsView` (Open notepad under today's cards), `WorkoutResultsView` (pencil top
+  right) and `CoachCalendarView` (pencil on a workout's row)
+
+**Erg order** is the sort button top right, which opens a drag-to-reorder sheet; it replaces dragging
+rows on the page itself.
+
 
 **Server** (`docs/migrations/2026-11-xx-coach-notepad.sql`):
 - **`coach_notepads`:** `workout_id` (unique, on delete cascade), `club_id`, `blocks jsonb`
@@ -156,8 +179,7 @@ reuses `WorkoutPiece.kind`.
 
 ## Open questions (ask before the phase that needs them)
 
-1. **(NP1)** Should other coaches at the club read and edit a coach's notepad, or only its
-   author? The design says "only you and other coaches"; RLS is written that way.
+1. **(NP1) Answered 2026-11-05:** every coach in the club reads and edits every notepad.
 2. **(NP2)** Multi-screen monitor photos are needed to tune the joining (see NP2).
 3. **(NP4)** Is the rower's card wanted at all, given the notepad is a coach tool? Decision 96
    keeps it; it can be switched off without touching the rest.
