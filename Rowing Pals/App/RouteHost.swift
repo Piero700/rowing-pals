@@ -41,9 +41,9 @@ struct RouteHost: View {
                     }
                 }
                 .navigationDestination(for: AppRoute.self) { route in
+                    // The stack's own swipe takes a pushed screen back (decision 61); any
+                    // `edgeSwipeToDismiss()` inside it sees it was pushed and stands aside.
                     destination(route)
-                        // The stack's own swipe takes a pushed screen back (decision 61).
-                        .swipeBackHandledByStack()
                 }
         }
         .tint(Tokens.Accent.brand)
