@@ -30,13 +30,13 @@ For each form below, check:
 - saving works and takes you back;
 - on an existing item, the red delete or cancel row asks you to confirm.
 
-- [ ] **Practice:** Calendar → **Add** → practice. What (with quick picks), Place, Date, Starts, Ends, Every week (with
+- [ ] **Practice:** Calendar → **Add** → Practice. What (with quick picks), Place, Date, Starts, Ends, Every week (with
       Until when on), Squads, Remind rowers. Editing one in a series still asks "This practice only" or "the rest".
-- [ ] **Race or event:** Calendar → **Add** → race or event. The "More than one day" switch shows **Last day**; off means one day.
+- [ ] **Race or event:** Calendar → **Add** → Race or regatta, or Other event. The "More than one day" switch shows **Last day**; off means one day.
       Ask who can race, and the Note.
 - [ ] **Announcement:** **+** → Announcement. Heading, the details, **On the Feed for** (a menu; Custom shows **Until**),
       Send an alert.
-- [ ] **Term dates:** Settings → term dates. Each term is its own card. Swiping left deletes it, **Add a term** adds one, and **Save** top right saves.
+- [ ] **Term dates:** Profile → Attendance totals → the terms button. Each term is its own card. Swiping left deletes it, **Add a term** adds one, and **Save** top right saves.
 - [ ] **Challenge:** **+** → Challenge. **Kind** is a menu. Metres for a personal target or club total, a ticked list of squads for squad vs squad.
 - [ ] **Erg event:** **+** → Erg event. Distance | Time, and the time types with the colon put in for you.
 - [ ] **Squad:** Rowers → the people icon → a squad. Name row, Save top right, red Delete squad.
