@@ -210,3 +210,13 @@ struct NotepadScoresCard: View {
         .overlay(alignment: .top) { Divider().overlay(Tokens.Surface.cardEdge) }
     }
 }
+
+/// The page compares the card by its view model alone, so it isn't rebuilt every time the page is
+/// (a key typed in Notes or a block, + Row). The card reads the view model itself, so @Observable
+/// still redraws it whenever its rowers, selection or scores change. `onSelect` is left out: a
+/// closure can't be compared, and the page's one always does the same thing.
+extension NotepadScoresCard: Equatable {
+    static func == (lhs: NotepadScoresCard, rhs: NotepadScoresCard) -> Bool {
+        lhs.viewModel === rhs.viewModel
+    }
+}

@@ -26,10 +26,14 @@ struct NotepadView: View {
                 VStack(alignment: .leading, spacing: Tokens.Spacing.loose) {
                     if let workout = viewModel.workout {
                         summary(workout)
+                        // `.equatable()`: typing in a block or Notes, or + Row / + Column, no longer
+                        // rebuilds the whole Scores table along with the page. The table still
+                        // redraws by itself whenever the scores it shows change (@Observable).
                         NotepadScoresCard(viewModel: viewModel) { spot in
                             viewModel.select(spot)
                             focus = viewModel.mode == .metres ? .metres : .duration
                         }
+                        .equatable()
                         ForEach($viewModel.blocks) { $block in
                             switch block.kind {
                             case .text:
@@ -44,7 +48,7 @@ struct NotepadView: View {
                             }
                         }
                         addButtons
-                        notesSection
+                        NotepadNotesSection(viewModel: viewModel)
                     } else if viewModel.isLoading || !viewModel.hasLoaded {
                         ProgressView()
                             .frame(maxWidth: .infinity)
@@ -91,7 +95,6 @@ struct NotepadView: View {
         .task { await viewModel.load() }
         .refreshable { await viewModel.load() }
         .onChange(of: viewModel.blocks) { viewModel.pageChanged() }
-        .onChange(of: viewModel.notes) { viewModel.pageChanged() }
         .onDisappear { Task { await viewModel.saveNow() } }
         .sheet(isPresented: $isOrdering) {
             ErgOrderSheet(viewModel: viewModel)
@@ -144,29 +147,4 @@ struct NotepadView: View {
         .disabled(!viewModel.canAddBlock)
     }
 
-    private var notesSection: some View {
-        VStack(alignment: .leading, spacing: Tokens.Spacing.tight) {
-            Text("Notes")
-                .textStyle(Typography.sectionTitle)
-                .foregroundStyle(Tokens.Ink.secondary)
-                .padding(.horizontal, 4)
-                .accessibilityAddTraits(.isHeader)
-            TextField("Anything else from today…", text: $viewModel.notes, axis: .vertical)
-                .lineLimit(Tokens.Notepad.notesMinLines...)
-                .textStyle(Typography.body)
-                .foregroundStyle(Tokens.Ink.primary)
-                .padding(Tokens.Spacing.card)
-                .background(RoundedRectangle(cornerRadius: Tokens.Notepad.tableRadius, style: .continuous).fill(Tokens.Surface.card))
-                .overlay {
-                    RoundedRectangle(cornerRadius: Tokens.Notepad.tableRadius, style: .continuous)
-                        .strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1)
-                }
-                .accessibilityLabel("Notes")
-            Text("Only your club’s coaches see this page. None of it counts towards anyone’s volume, pieces or PBs.")
-                .textStyle(Typography.statLabel)
-                .foregroundStyle(Tokens.Ink.secondary)
-                .padding(.horizontal, 4)
-        }
-        .padding(.top, Tokens.Spacing.loose)
-    }
 }
