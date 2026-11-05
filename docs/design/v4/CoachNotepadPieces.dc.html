@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<title>Notepad, many pieces</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+*{box-sizing:border-box}
+button{font:inherit;color:inherit;cursor:pointer;margin:0}
+a{color:#91b8ff}a:hover{color:#c6adff}
+</style>
+</helmet>
+<div data-screen-label="Coach · Notepad · 20 pieces" style="--base:{{ t.base }};--card:{{ t.card }};--raised:{{ t.raised }};--line:{{ t.line }};--cardEdge:{{ t.cardEdge }};--text:{{ t.text }};--muted:{{ t.muted }};--faint:{{ t.faint }};--brand:{{ t.brand }};--brandSoft:{{ t.brandSoft }};--onBrand:{{ t.onBrand }};--bad:{{ t.bad }};--lg-fill:{{ t.lgFill }};--lg-fill-strong:{{ t.lgFillStrong }};--lg-edge:{{ t.lgEdge }};--lg-hi:{{ t.lgHi }};--lg-lo:{{ t.lgLo }};--lg-shadow:{{ t.lgShadow }};--sep:{{ t.sep }};position:relative;width:393px;height:852px;overflow:hidden;display:flex;flex-direction:column;background:var(--base);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','SF Pro Display','Helvetica Neue',sans-serif;-webkit-font-smoothing:antialiased;font-size:17px">
+<div style="position:absolute;z-index:30;top:10px;left:50%;transform:translateX(-50%);width:106px;height:27px;border-radius:99px;background:#030408"></div>
+<div style="height:51px;flex:none"></div>
+<header style="position:relative;min-height:58px;flex:none;padding:8px 16px 8px;display:flex;align-items:center;gap:8px">
+<a href="CoachNotepadWorkouts.dc.html" aria-label="Back" style="width:42px;height:42px;border-radius:50%;display:grid;place-items:center;flex:none;color:var(--text);background:var(--lg-fill);border:1px solid var(--lg-edge);box-shadow:inset 0 1px 0 var(--lg-hi),inset 0 -1px 0 var(--lg-lo),var(--lg-shadow);text-decoration:none"><svg viewBox="0 0 24 24" aria-hidden="true" style="width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round"><path d="m15 18-6-6 6-6"></path></svg></a>
+<h1 style="margin:0;position:absolute;left:72px;right:72px;text-align:center;font-size:17px;font-weight:600;pointer-events:none">Notepad</h1>
+<span style="flex:1"></span>
+<a href="CoachNotepadWorkouts.dc.html" style="min-height:44px;display:flex;align-items:center;font-size:17px;font-weight:600;color:var(--brand);text-decoration:none">Done</a>
+</header>
+<div style="flex:1;min-height:0;overflow-y:auto;scrollbar-width:none;padding:0 16px 24px;display:grid;align-content:start;grid-template-columns:minmax(0,1fr);grid-auto-rows:max-content;gap:12px">
+<div style="padding:0 4px">
+<div style="font-size:22px;font-weight:700;font-variant-numeric:tabular-nums">20 × 250m</div>
+<div style="font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums">Thu 6 Nov · Senior men · rest 1:00 · rate 32–36</div>
+</div>
+<div role="group" aria-label="Show" style="display:grid;grid-template-columns:1fr 1fr;padding:4px;border-radius:999px;background:var(--lg-fill);border:1px solid var(--lg-edge);box-shadow:inset 0 1px 0 var(--lg-hi),inset 0 -1px 0 var(--lg-lo)">
+<button onClick="{{ segSum.pick }}" style="min-height:40px;border-radius:999px;font-size:15px;font-weight:600;color:{{ segSum.color }};background:{{ segSum.bg }};border:1px solid {{ segSum.border }}">Summary</button>
+<button onClick="{{ segAll.pick }}" style="min-height:40px;border-radius:999px;font-size:15px;font-weight:600;color:{{ segAll.color }};background:{{ segAll.bg }};border:1px solid {{ segAll.border }}">Every piece</button>
+</div>
+<sc-if value="{{ summary }}" hint-placeholder-val="{{ true }}">
+<div style="background:var(--card);border:1px solid var(--cardEdge);border-radius:24px;overflow:hidden">
+<div style="display:grid;grid-template-columns:minmax(0,1fr) 34px 44px 58px 58px 44px;gap:4px;align-items:center;padding:10px 10px 6px 14px;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.02em;color:var(--muted)"><span>Rower</span><span></span><span style="text-align:right">Done</span><span style="text-align:right">Avg</span><span style="text-align:right">Best</span><span style="text-align:right">Fade</span></div>
+<sc-for list="{{ rows }}" as="r" hint-placeholder-count="10">
+<div style="border-top:1px solid var(--sep)">
+<div style="display:grid;grid-template-columns:minmax(0,1fr) 34px 44px 58px 58px 44px;gap:4px;align-items:center;min-height:48px;padding:2px 10px 2px 14px;font-variant-numeric:tabular-nums">
+<button onClick="{{ r.toggle }}" aria-expanded="{{ r.expanded }}" style="min-height:44px;display:flex;align-items:center;gap:6px;padding:0;text-align:left;background:transparent;border:none;font-size:15px;font-weight:600;min-width:0"><svg viewBox="0 0 24 24" aria-hidden="true" style="width:14px;height:14px;flex:none;fill:none;stroke:var(--faint);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;transform:{{ r.rot }}"><path d="m9 6 6 6-6 6"></path></svg><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.name }}</span></button>
+<a href="CoachNotepadScan.dc.html" aria-label="{{ r.scanLabel }}" style="width:34px;height:34px;border-radius:50%;display:grid;place-items:center;color:var(--brand);background:var(--lg-fill);border:1px solid var(--lg-edge);text-decoration:none"><svg viewBox="0 0 24 24" aria-hidden="true" style="width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"></path><circle cx="12" cy="13" r="3.2"></circle></svg></a>
+<span style="text-align:right;font-size:13px;color:{{ r.doneColor }}">{{ r.done }}</span>
+<span style="text-align:right;font-size:15px;font-weight:700">{{ r.avg }}</span>
+<span style="text-align:right;font-size:15px;color:var(--muted)">{{ r.best }}</span>
+<span style="text-align:right;font-size:13px;font-weight:600;color:{{ r.fadeColor }}">{{ r.fade }}</span>
+</div>
+<sc-if value="{{ r.expanded }}" hint-placeholder-val="{{ false }}">
+<div style="padding:4px 12px 14px;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px">
+<sc-for list="{{ r.pieces }}" as="p" hint-placeholder-count="20">
+<button style="min-height:44px;border-radius:12px;background:var(--raised);border:none;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2px 0;font-variant-numeric:tabular-nums"><span style="font-size:11px;color:var(--muted)">{{ p.n }}</span><span style="font-size:13px;font-weight:600;color:{{ p.color }}">{{ p.v }}</span></button>
+</sc-for>
+</div>
+</sc-if>
+</div>
+</sc-for>
+<p style="margin:0;padding:10px 14px 12px;border-top:1px solid var(--sep);font-size:12px;line-height:1.4;color:var(--muted)">Splits /500m. Fade is the last five pieces against the first five. Tap a name for every piece.</p>
+</div>
+</sc-if>
+<sc-if value="{{ every }}" hint-placeholder-val="{{ false }}">
+<div style="background:var(--card);border:1px solid var(--cardEdge);border-radius:24px;overflow:hidden">
+<div style="overflow-x:auto;scrollbar-width:none">
+<div style="display:grid;grid-template-columns:96px repeat(20,56px);width:max-content">
+<span style="position:sticky;left:0;z-index:1;background:var(--card);padding:10px 8px 6px 14px;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.02em;color:var(--muted)">Rower</span>
+<sc-for list="{{ heads }}" as="h" hint-placeholder-count="20"><span style="padding:10px 0 6px;text-align:center;font-size:12px;font-weight:600;color:var(--muted);font-variant-numeric:tabular-nums">{{ h }}</span></sc-for>
+<sc-for list="{{ flat }}" as="c" hint-placeholder-count="210"><span style="{{ c.style }}">{{ c.v }}</span></sc-for>
+</div>
+</div>
+<p style="margin:0;padding:10px 14px 12px;border-top:1px solid var(--sep);font-size:12px;line-height:1.4;color:var(--muted)">Swipe sideways for pieces 1–20. Names stay put.</p>
+</div>
+</sc-if>
+<div style="background:var(--card);border:1px solid var(--cardEdge);border-radius:24px;padding:12px 14px">
+<div style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.02em;margin-bottom:4px">Text</div>
+<div style="font-size:17px;line-height:1.4">Dan and Harry faded hard after 12. Try 15 × 250m with longer rest next week.</div>
+</div>
+<div>
+<h2 style="margin:8px 4px 8px;font-size:13px;text-transform:uppercase;letter-spacing:.02em;color:var(--muted);font-weight:500">Notes</h2>
+<div style="min-height:90px;border:1px solid var(--cardEdge);border-radius:24px;background:var(--card);padding:14px;font-size:17px;line-height:1.45;color:var(--faint)">Anything else from today…</div>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"$preview":{"width":393,"height":852}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const DARK = {base:"#101114",card:"#1b1c21",raised:"#292c34",line:"#464a56",cardEdge:"rgba(70,74,86,.7)",text:"#f7f8fc",muted:"#bbc0ce",faint:"#a3abba",brand:"#91b8ff",brandSoft:"rgba(145,184,255,.14)",onBrand:"#09090b",bad:"#ff766f",lgFill:"rgba(58,62,74,.42)",lgFillStrong:"rgba(92,98,114,.55)",lgEdge:"rgba(255,255,255,.16)",lgHi:"rgba(255,255,255,.28)",lgLo:"rgba(0,0,0,.22)",lgShadow:"0 8px 24px rgba(0,0,0,.22)",sep:"rgba(255,255,255,.12)"};
+    const LIGHT = {base:"#edf0f5",card:"#ffffff",raised:"#dce2ec",line:"#949eae",cardEdge:"#a8b1bf",text:"#111723",muted:"#3e4c61",faint:"#4e5c70",brand:"#214fa3",brandSoft:"rgba(33,79,163,.12)",onBrand:"#ffffff",bad:"#c93c36",lgFill:"rgba(255,255,255,.52)",lgFillStrong:"rgba(255,255,255,.92)",lgEdge:"rgba(40,55,85,.16)",lgHi:"rgba(255,255,255,.95)",lgLo:"rgba(30,45,75,.08)",lgShadow:"0 6px 20px rgba(25,40,70,.12)",sep:"rgba(60,60,67,.18)"};
+    const t = (this.props.theme ?? 'dark') === 'light' ? LIGHT : DARK;
+    const pad2 = (n) => String(n).padStart(2, '0');
+    const f = (ds) => Math.floor(ds / 600) + ':' + pad2(Math.floor((ds % 600) / 10)) + '.' + (ds % 10);
+    const R = [
+      ['Tom A.', 862, 2, 20], ['Piero C.', 874, 3, 20], ['Ollie H.', 885, 3, 20], ['Dan O.', 884, 9, 20], ['Sam C.', 878, 4, 20],
+      ['Ben C.', 893, 5, 20], ['Luke P.', 881, 4, 16], ['Raj P.', 880, 3, 20], ['Harry W.', 890, 10, 12], ['Will N.', 886, 4, 0]
+    ];
+    const data = R.map(([name, base, fadeK, n], i) => ({ name, vals: Array.from({ length: 20 }, (_, p) => p < n ? base + ((i * 5 + p * 7) % 9) - 4 + Math.round(Math.floor(p / 4) * fadeK / 2) : null) }));
+    const view = this.state.view ?? 'summary';
+    const open = this.state.open ?? { 'Ollie H.': true };
+    const avg = (xs) => { const v = xs.filter((x) => x !== null); return v.length ? Math.round(v.reduce((a, b) => a + b, 0) / v.length) : null; };
+    const rows = data.map((d) => {
+      const got = d.vals.filter((x) => x !== null);
+      const first = avg(d.vals.slice(0, 5)), last = avg(d.vals.slice(15));
+      const fade = first !== null && last !== null ? (last - first) / 10 : null;
+      const expanded = !!open[d.name];
+      return {
+        name: d.name, scanLabel: 'Scan ' + d.name + '’s monitor', expanded, rot: expanded ? 'rotate(90deg)' : 'none',
+        done: got.length + '/20', doneColor: got.length === 20 ? t.muted : t.text,
+        avg: got.length ? f(avg(d.vals)) : '–', best: got.length ? f(Math.min(...got)) : '–',
+        fade: fade === null ? '–' : (fade > 0 ? '+' : fade < 0 ? '−' : '±') + Math.abs(fade).toFixed(1),
+        fadeColor: fade !== null && fade > 1.5 ? t.bad : t.muted,
+        pieces: d.vals.map((v, p) => ({ n: p + 1, v: v === null ? '–' : f(v), color: v === null ? t.faint : t.text })),
+        toggle: () => this.setState({ open: { ...open, [d.name]: !expanded } })
+      };
+    });
+    const cellBase = 'min-height:44px;display:flex;align-items:center;font-variant-numeric:tabular-nums;border-top:1px solid ' + t.sep + ';';
+    const flat = [];
+    data.forEach((d) => {
+      flat.push({ v: d.name, style: cellBase + 'position:sticky;left:0;z-index:1;background:' + t.card + ';padding:0 8px 0 14px;font-size:15px;font-weight:600;white-space:nowrap' });
+      d.vals.forEach((v) => flat.push({ v: v === null ? '–' : f(v), style: cellBase + 'justify-content:center;font-size:13px;font-weight:' + (v === null ? 500 : 600) + ';color:' + (v === null ? t.faint : t.text) }));
+    });
+    const seg = (on, pick) => ({ pick, color: on ? t.text : t.muted, bg: on ? t.lgFillStrong : 'transparent', border: on ? t.lgEdge : 'transparent' });
+    return {
+      t, rows, flat, heads: Array.from({ length: 20 }, (_, i) => String(i + 1)),
+      summary: view === 'summary', every: view === 'every',
+      segSum: seg(view === 'summary', () => this.setState({ view: 'summary' })),
+      segAll: seg(view === 'every', () => this.setState({ view: 'every' }))
+    };
+  }
+}
+</script>
+</body>
+</html>

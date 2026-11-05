@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<title>Notepad, test day</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+*{box-sizing:border-box}
+button{font:inherit;color:inherit;cursor:pointer;margin:0}
+a{color:#91b8ff}a:hover{color:#c6adff}
+</style>
+</helmet>
+<div data-screen-label="Coach · Notepad · test" style="--base:{{ t.base }};--card:{{ t.card }};--raised:{{ t.raised }};--line:{{ t.line }};--cardEdge:{{ t.cardEdge }};--text:{{ t.text }};--muted:{{ t.muted }};--faint:{{ t.faint }};--brand:{{ t.brand }};--brandSoft:{{ t.brandSoft }};--onBrand:{{ t.onBrand }};--lg-fill:{{ t.lgFill }};--lg-fill-strong:{{ t.lgFillStrong }};--lg-edge:{{ t.lgEdge }};--lg-hi:{{ t.lgHi }};--lg-lo:{{ t.lgLo }};--lg-shadow:{{ t.lgShadow }};--sep:{{ t.sep }};position:relative;width:393px;height:852px;overflow:hidden;display:flex;flex-direction:column;background:var(--base);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','SF Pro Display','Helvetica Neue',sans-serif;-webkit-font-smoothing:antialiased;font-size:17px">
+<div style="position:absolute;z-index:30;top:10px;left:50%;transform:translateX(-50%);width:106px;height:27px;border-radius:99px;background:#030408"></div>
+<div style="height:51px;flex:none"></div>
+<header style="position:relative;min-height:58px;flex:none;padding:8px 16px 8px;display:flex;align-items:center;gap:8px">
+<a href="CoachNotepadWorkouts.dc.html" aria-label="Back" style="width:42px;height:42px;border-radius:50%;display:grid;place-items:center;flex:none;color:var(--text);background:var(--lg-fill);border:1px solid var(--lg-edge);box-shadow:inset 0 1px 0 var(--lg-hi),inset 0 -1px 0 var(--lg-lo),var(--lg-shadow);text-decoration:none"><svg viewBox="0 0 24 24" aria-hidden="true" style="width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round"><path d="m15 18-6-6 6-6"></path></svg></a>
+<h1 style="margin:0;position:absolute;left:72px;right:72px;text-align:center;font-size:17px;font-weight:600;pointer-events:none">Notepad</h1>
+<span style="flex:1"></span>
+<a href="CoachNotepadWorkouts.dc.html" style="min-height:44px;display:flex;align-items:center;font-size:17px;font-weight:600;color:var(--brand);text-decoration:none">Done</a>
+</header>
+<div style="flex:1;min-height:0;overflow-y:auto;scrollbar-width:none;padding:0 16px 24px;display:grid;align-content:start;grid-template-columns:minmax(0,1fr);grid-auto-rows:max-content;gap:12px">
+<div style="padding:0 4px">
+<div style="display:flex;align-items:center;gap:8px"><span style="font-size:22px;font-weight:700;font-variant-numeric:tabular-nums">2k test</span><span style="font-size:12px;font-weight:600;padding:3px 8px;border-radius:99px;background:var(--brandSoft);color:var(--brand)">Test</span></div>
+<div style="font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums">Sat 8 Nov · Novices · 12 rowers</div>
+</div>
+<div style="background:var(--card);border:1px solid var(--cardEdge);border-radius:24px;overflow:hidden">
+<div style="display:grid;grid-template-columns:minmax(0,1fr) 34px 66px 58px 34px;gap:4px;align-items:center;padding:10px 10px 6px 14px;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.02em;color:var(--muted)"><span>Rower</span><span></span><span style="text-align:right">Time</span><span style="text-align:right">Split</span><span style="text-align:right">Rate</span></div>
+<sc-for list="{{ rows }}" as="r" hint-placeholder-count="8">
+<div style="border-top:1px solid var(--sep)">
+<div style="display:grid;grid-template-columns:minmax(0,1fr) 34px 66px 58px 34px;gap:4px;align-items:center;min-height:48px;padding:2px 10px 2px 14px;font-variant-numeric:tabular-nums">
+<button onClick="{{ r.toggle }}" aria-expanded="{{ r.expanded }}" style="min-height:44px;display:flex;align-items:center;gap:6px;padding:0;text-align:left;background:transparent;border:none;font-size:15px;font-weight:600;min-width:0"><svg viewBox="0 0 24 24" aria-hidden="true" style="width:14px;height:14px;flex:none;fill:none;stroke:var(--faint);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;transform:{{ r.rot }}"><path d="m9 6 6 6-6 6"></path></svg><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.name }}</span></button>
+<a href="CoachNotepadScan.dc.html" aria-label="{{ r.scanLabel }}" style="width:34px;height:34px;border-radius:50%;display:grid;place-items:center;color:var(--brand);background:var(--lg-fill);border:1px solid var(--lg-edge);text-decoration:none"><svg viewBox="0 0 24 24" aria-hidden="true" style="width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"></path><circle cx="12" cy="13" r="3.2"></circle></svg></a>
+<span style="text-align:right;font-size:15px;font-weight:700;color:{{ r.timeColor }};display:flex;align-items:center;justify-content:flex-end;gap:4px"><sc-if value="{{ r.posted }}" hint-placeholder-val="{{ false }}"><span aria-hidden="true" style="width:5px;height:5px;border-radius:50%;background:var(--brand)"></span></sc-if>{{ r.time }}</span>
+<span style="text-align:right;font-size:13px;color:var(--muted)">{{ r.split }}</span>
+<span style="text-align:right;font-size:13px;color:var(--muted)">{{ r.rate }}</span>
+</div>
+<sc-if value="{{ r.expanded }}" hint-placeholder-val="{{ false }}">
+<div style="padding:2px 14px 14px;display:flex;flex-direction:column;gap:6px">
+<div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px">
+<sc-for list="{{ r.splits }}" as="s" hint-placeholder-count="4"><div style="padding:6px 0;border-radius:12px;background:var(--raised);text-align:center;font-variant-numeric:tabular-nums"><div style="font-size:11px;color:var(--muted)">{{ s.label }}</div><div style="font-size:15px;font-weight:600">{{ s.v }}</div></div></sc-for>
+</div>
+<div style="font-size:12px;color:var(--muted)">{{ r.source }}</div>
+</div>
+</sc-if>
+</div>
+</sc-for>
+<p style="margin:0;padding:10px 14px 12px;border-top:1px solid var(--sep);font-size:12px;line-height:1.4;color:var(--muted);display:flex;gap:6px;align-items:baseline"><span aria-hidden="true" style="width:5px;height:5px;border-radius:50%;background:var(--brand);flex:none;transform:translateY(-1px)"></span><span>from their own post. The club’s 2k board only takes rowers’ own posts; numbers you scan or type stay on this page.</span></p>
+</div>
+<div style="background:var(--card);border:1px solid var(--cardEdge);border-radius:24px;padding:12px 14px">
+<div style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.02em;margin-bottom:4px">Text</div>
+<div style="font-size:17px;line-height:1.4">Marcus went out at 1:49 and paid for it. Nina paced it perfectly, negative split.</div>
+</div>
+<div>
+<h2 style="margin:8px 4px 8px;font-size:13px;text-transform:uppercase;letter-spacing:.02em;color:var(--muted);font-weight:500">Notes</h2>
+<div style="min-height:90px;border:1px solid var(--cardEdge);border-radius:24px;background:var(--card);padding:14px;font-size:17px;line-height:1.45">Two ergs need new chains before the next test (4 and 9).</div>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"$preview":{"width":393,"height":852}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const DARK = {base:"#101114",card:"#1b1c21",raised:"#292c34",line:"#464a56",cardEdge:"rgba(70,74,86,.7)",text:"#f7f8fc",muted:"#bbc0ce",faint:"#a3abba",brand:"#91b8ff",brandSoft:"rgba(145,184,255,.14)",onBrand:"#09090b",lgFill:"rgba(58,62,74,.42)",lgFillStrong:"rgba(92,98,114,.55)",lgEdge:"rgba(255,255,255,.16)",lgHi:"rgba(255,255,255,.28)",lgLo:"rgba(0,0,0,.22)",lgShadow:"0 8px 24px rgba(0,0,0,.22)",sep:"rgba(255,255,255,.12)"};
+    const LIGHT = {base:"#edf0f5",card:"#ffffff",raised:"#dce2ec",line:"#949eae",cardEdge:"#a8b1bf",text:"#111723",muted:"#3e4c61",faint:"#4e5c70",brand:"#214fa3",brandSoft:"rgba(33,79,163,.12)",onBrand:"#ffffff",lgFill:"rgba(255,255,255,.52)",lgFillStrong:"rgba(255,255,255,.92)",lgEdge:"rgba(40,55,85,.16)",lgHi:"rgba(255,255,255,.95)",lgLo:"rgba(30,45,75,.08)",lgShadow:"0 6px 20px rgba(25,40,70,.12)",sep:"rgba(60,60,67,.18)"};
+    const t = (this.props.theme ?? 'dark') === 'light' ? LIGHT : DARK;
+    const pad2 = (n) => String(n).padStart(2, '0');
+    const f = (ds) => Math.floor(ds / 600) + ':' + pad2(Math.floor((ds % 600) / 10)) + '.' + (ds % 10);
+    const D = [
+      ['Nina Bergström', [1165, 1158, 1152, 1137], 27, 'post'],
+      ['Joe Fenwick', [1068, 1072, 1069, 1053], 30, 'post'],
+      ['Marcus Reilly', [1093, 1121, 1137, 1129], 31, 'scan'],
+      ['Kate Simmons', [1171, 1180, 1176, 1162], 28, 'scan'],
+      ['Leo Park', [1098, 1106, 1110, 1094], 29, 'typed'],
+      ['Amy Moss', [1203, 1199, 1196, 1187], 26, 'post'],
+      ['Priya Shah', [1182, 1190, 1186, 1171], 28, 'scan'],
+      ['Sam Lowe', null, null, null]
+    ];
+    const open = this.state.open ?? { 'Marcus Reilly': true };
+    const rows = D.map(([name, sp, rate, src]) => {
+      const expanded = !!open[name] && !!sp;
+      const total = sp ? sp.reduce((a, b) => a + b, 0) : 0;
+      return {
+        name, expanded, rot: expanded ? 'rotate(90deg)' : 'none', scanLabel: 'Scan ' + name + '’s monitor',
+        time: sp ? f(total) : '–', timeColor: sp ? t.text : t.faint,
+        split: sp ? f(Math.round(total / 4)) : '', rate: sp ? String(rate) : '', posted: src === 'post',
+        splits: sp && src !== 'typed' ? sp.map((v, i) => ({ label: (i + 1) * 500 + 'm', v: f(v) })) : [],
+        source: src === 'post' ? '500m splits from their own post.' : src === 'scan' ? '500m splits read from the monitor. The photo wasn’t kept.' : 'You typed the time. Scan the monitor to add 500m splits.',
+        toggle: () => sp && this.setState({ open: { ...open, [name]: !open[name] } })
+      };
+    });
+    return { t, rows };
+  }
+}
+</script>
+</body>
+</html>

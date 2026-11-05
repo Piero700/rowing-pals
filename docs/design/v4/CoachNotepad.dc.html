@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<title>Notepad</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+*{box-sizing:border-box}
+button,input,textarea{font:inherit;color:inherit;margin:0}
+button{cursor:pointer}
+textarea::placeholder,input::placeholder{color:#8a91a0}
+a{color:#91b8ff}a:hover{color:#c6adff}
+</style>
+</helmet>
+<div data-screen-label="Coach · Notepad" style="--base:{{ t.base }};--card:{{ t.card }};--raised:{{ t.raised }};--line:{{ t.line }};--cardEdge:{{ t.cardEdge }};--text:{{ t.text }};--muted:{{ t.muted }};--faint:{{ t.faint }};--brand:{{ t.brand }};--brandSoft:{{ t.brandSoft }};--onBrand:{{ t.onBrand }};--lg-fill:{{ t.lgFill }};--lg-fill-strong:{{ t.lgFillStrong }};--lg-edge:{{ t.lgEdge }};--lg-hi:{{ t.lgHi }};--lg-lo:{{ t.lgLo }};--lg-shadow:{{ t.lgShadow }};--sep:{{ t.sep }};position:relative;width:393px;height:852px;overflow:hidden;display:flex;flex-direction:column;background:var(--base);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','SF Pro Display','Helvetica Neue',sans-serif;-webkit-font-smoothing:antialiased;font-size:17px">
+<div style="position:absolute;z-index:30;top:10px;left:50%;transform:translateX(-50%);width:106px;height:27px;border-radius:99px;background:#030408"></div>
+<div style="height:51px;flex:none"></div>
+<header style="position:relative;min-height:58px;flex:none;padding:8px 16px 8px;display:flex;align-items:center;gap:8px">
+<a href="CoachNotepadWorkouts.dc.html" aria-label="Back" style="width:42px;height:42px;border-radius:50%;display:grid;place-items:center;flex:none;color:var(--text);background:var(--lg-fill);border:1px solid var(--lg-edge);box-shadow:inset 0 1px 0 var(--lg-hi),inset 0 -1px 0 var(--lg-lo),var(--lg-shadow);text-decoration:none"><svg viewBox="0 0 24 24" aria-hidden="true" style="width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round"><path d="m15 18-6-6 6-6"></path></svg></a>
+<h1 style="margin:0;position:absolute;left:72px;right:72px;text-align:center;font-size:17px;font-weight:600;pointer-events:none">Notepad</h1>
+<span style="flex:1"></span>
+<a href="CoachNotepadWorkouts.dc.html" style="min-height:44px;display:flex;align-items:center;font-size:17px;font-weight:600;color:var(--brand);text-decoration:none">Done</a>
+</header>
+<div style="flex:1;min-height:0;overflow-y:auto;scrollbar-width:none;padding:0 16px 24px;display:grid;align-content:start;grid-template-columns:minmax(0,1fr);grid-auto-rows:max-content;gap:12px">
+<div style="padding:0 4px">
+<div style="font-size:22px;font-weight:700;font-variant-numeric:tabular-nums">3 × 2,000m</div>
+<div style="font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums">Tue 4 Nov · Senior men · target 1:42.0 · rate 26–28</div>
+</div>
+<sc-for list="{{ blocks }}" as="b" hint-placeholder-count="2">
+<sc-if value="{{ b.isScores }}" hint-placeholder-val="{{ true }}">
+<div style="background:var(--card);border:1px solid var(--cardEdge);border-radius:24px;overflow:hidden">
+<div style="display:flex;align-items:center;gap:8px;padding:12px 12px 4px 14px">
+<span style="flex:1;font-size:15px;font-weight:600">Scores</span>
+<span style="font-size:12px;color:var(--muted)">split /500m</span>
+</div>
+<div style="display:grid;grid-template-columns:20px minmax(0,1fr) 34px 62px 62px 62px;gap:4px;align-items:center;padding:4px 8px;font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.02em">
+<span style="text-align:center">#</span><span>Rower</span><span></span>
+<sc-for list="{{ cols }}" as="col" hint-placeholder-count="3"><span style="text-align:center;color:{{ col.color }}">{{ col.label }}</span></sc-for>
+</div>
+<sc-for list="{{ rows }}" as="row" hint-placeholder-count="10">
+<div style="display:grid;grid-template-columns:20px minmax(0,1fr) 34px 62px 62px 62px;gap:4px;align-items:center;min-height:48px;padding:2px 8px;border-top:1px solid var(--sep)">
+<span style="font-size:12px;color:var(--faint);font-variant-numeric:tabular-nums;text-align:center">{{ row.erg }}</span>
+<span style="font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ row.name }}</span>
+<a href="CoachNotepadScan.dc.html" aria-label="{{ row.scanLabel }}" style="width:34px;height:34px;border-radius:50%;display:grid;place-items:center;color:var(--brand);background:var(--lg-fill);border:1px solid var(--lg-edge);text-decoration:none"><svg viewBox="0 0 24 24" aria-hidden="true" style="width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"></path><circle cx="12" cy="13" r="3.2"></circle></svg></a>
+<sc-for list="{{ row.cells }}" as="c" hint-placeholder-count="3">
+<button onClick="{{ c.pick }}" aria-label="{{ c.aria }}" style="height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;gap:3px;padding:0;font-size:15px;font-weight:{{ c.weight }};font-variant-numeric:tabular-nums;color:{{ c.color }};background:{{ c.bg }};border:{{ c.border }}"><sc-if value="{{ c.posted }}" hint-placeholder-val="{{ false }}"><span aria-hidden="true" style="width:5px;height:5px;border-radius:50%;background:var(--brand);flex:none"></span></sc-if>{{ c.text }}</button>
+</sc-for>
+</div>
+</sc-for>
+<div style="padding:8px 14px 12px;border-top:1px solid var(--sep);font-size:12px;line-height:1.4;color:var(--muted);display:flex;align-items:center;gap:6px;flex-wrap:wrap"><span><span aria-hidden="true" style="display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--brand);margin-right:6px;vertical-align:middle"></span>from their own post · tap a box to type · camera reads their monitor</span></div>
+</div>
+</sc-if>
+<sc-if value="{{ b.isText }}" hint-placeholder-val="{{ false }}">
+<div style="background:var(--card);border:1px solid var(--cardEdge);border-radius:24px;padding:12px 14px;display:flex;flex-direction:column;gap:4px">
+<div style="display:flex;align-items:center"><span style="flex:1;font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.02em">Text</span><button onClick="{{ b.remove }}" aria-label="Remove text" style="width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:transparent;border:none;color:var(--faint)"><svg viewBox="0 0 24 24" aria-hidden="true" style="width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round"><path d="M6 6l12 12M18 6 6 18"></path></svg></button></div>
+<textarea aria-label="Text" value="{{ b.v }}" onChange="{{ b.set }}" placeholder="Write anything…" style="width:100%;min-height:66px;resize:none;border:none;outline:none;background:transparent;font-size:17px;line-height:1.4;padding:0"></textarea>
+</div>
+</sc-if>
+<sc-if value="{{ b.isTable }}" hint-placeholder-val="{{ false }}">
+<div style="background:var(--card);border:1px solid var(--cardEdge);border-radius:24px;overflow:hidden">
+<div style="display:flex;align-items:center;gap:8px;padding:10px 8px 6px 14px">
+<input aria-label="Table name" value="{{ b.title }}" onChange="{{ b.setTitle }}" style="flex:1;min-width:0;border:none;outline:none;background:transparent;font-size:15px;font-weight:600;padding:0">
+<button onClick="{{ b.remove }}" aria-label="Remove table" style="width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:transparent;border:none;color:var(--faint)"><svg viewBox="0 0 24 24" aria-hidden="true" style="width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round"><path d="M6 6l12 12M18 6 6 18"></path></svg></button>
+</div>
+<sc-for list="{{ b.grid }}" as="gr" hint-placeholder-count="3">
+<div style="display:grid;grid-template-columns:{{ b.tpl }};border-top:1px solid var(--sep)">
+<sc-for list="{{ gr.cells }}" as="gc" hint-placeholder-count="3">
+<input aria-label="{{ gc.aria }}" value="{{ gc.v }}" onChange="{{ gc.set }}" placeholder="{{ gc.ph }}" style="min-width:0;min-height:44px;border:none;border-left:{{ gc.edge }};outline:none;background:{{ gc.bg }};padding:0 10px;font-size:15px;font-weight:{{ gc.weight }};font-variant-numeric:tabular-nums">
+</sc-for>
+</div>
+</sc-for>
+<div style="display:flex;gap:4px;padding:6px 8px;border-top:1px solid var(--sep)">
+<button onClick="{{ b.addRow }}" style="min-height:36px;padding:0 10px;border-radius:999px;border:none;background:transparent;font-size:13px;font-weight:600;color:var(--brand)">+ Row</button>
+<button onClick="{{ b.addCol }}" style="min-height:36px;padding:0 10px;border-radius:999px;border:none;background:transparent;font-size:13px;font-weight:600;color:var(--brand)">+ Column</button>
+</div>
+</div>
+</sc-if>
+</sc-for>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+<button onClick="{{ addText }}" style="min-height:44px;border-radius:999px;display:flex;align-items:center;justify-content:center;gap:6px;font-size:15px;font-weight:600;background:var(--lg-fill);border:1px solid var(--lg-edge);box-shadow:inset 0 1px 0 var(--lg-hi),inset 0 -1px 0 var(--lg-lo)"><svg viewBox="0 0 24 24" aria-hidden="true" style="width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M4 6h16M4 12h16M4 18h10"></path></svg>Add text</button>
+<button onClick="{{ addTable }}" style="min-height:44px;border-radius:999px;display:flex;align-items:center;justify-content:center;gap:6px;font-size:15px;font-weight:600;background:var(--lg-fill);border:1px solid var(--lg-edge);box-shadow:inset 0 1px 0 var(--lg-hi),inset 0 -1px 0 var(--lg-lo)"><svg viewBox="0 0 24 24" aria-hidden="true" style="width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M3 10h18M10 4v16"></path></svg>Add table</button>
+</div>
+<div style="margin-top:12px">
+<h2 style="margin:0 4px 8px;font-size:13px;text-transform:uppercase;letter-spacing:.02em;color:var(--muted);font-weight:500">Notes</h2>
+<textarea aria-label="Notes" value="{{ notes }}" onChange="{{ setNotes }}" placeholder="Anything else from today…" style="width:100%;min-height:140px;resize:none;border:1px solid var(--cardEdge);border-radius:24px;outline:none;background:var(--card);padding:14px;font-size:17px;line-height:1.45"></textarea>
+<p style="margin:6px 4px 0;font-size:12px;color:var(--muted)">Only you and other coaches see this page. None of it counts towards anyone’s volume, pieces or PBs.</p>
+</div>
+</div>
+<sc-if value="{{ open }}" hint-placeholder-val="{{ false }}">
+<div style="flex:none;margin:0 8px 8px;padding:14px 14px 16px;border-radius:32px;background:var(--lg-fill-strong);border:1px solid var(--lg-edge);box-shadow:inset 0 1px 0 var(--lg-hi),inset 0 -1px 0 var(--lg-lo),0 -8px 30px rgba(0,0,0,.28);backdrop-filter:blur(26px) saturate(180%);-webkit-backdrop-filter:blur(26px) saturate(180%);display:flex;flex-direction:column;gap:8px">
+<div style="display:flex;align-items:center;gap:8px">
+<div style="flex:1;min-width:0">
+<div style="font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ selTitle }}</div>
+<div style="font-size:12px;color:var(--muted)">{{ selNote }}</div>
+</div>
+<div role="group" aria-label="Type a" style="display:grid;grid-template-columns:1fr 1fr;padding:3px;border-radius:999px;background:var(--lg-fill);border:1px solid var(--lg-edge)">
+<button onClick="{{ modeSplit.pick }}" style="min-height:32px;padding:0 12px;border-radius:999px;font-size:13px;font-weight:600;color:{{ modeSplit.color }};background:{{ modeSplit.bg }};border:1px solid {{ modeSplit.border }}">Split</button>
+<button onClick="{{ modeTime.pick }}" style="min-height:32px;padding:0 12px;border-radius:999px;font-size:13px;font-weight:600;color:{{ modeTime.color }};background:{{ modeTime.bg }};border:1px solid {{ modeTime.border }}">Time</button>
+</div>
+<button onClick="{{ close }}" aria-label="Close keypad" style="width:36px;height:36px;border-radius:50%;display:grid;place-items:center;flex:none;background:var(--lg-fill);border:1px solid var(--lg-edge)"><svg viewBox="0 0 24 24" aria-hidden="true" style="width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="m6 9 6 6 6-6"></path></svg></button>
+</div>
+<div style="display:grid;grid-template-columns:minmax(0,1fr) 92px;gap:8px">
+<button onClick="{{ focusVal }}" style="min-height:56px;padding:6px 14px;border-radius:20px;text-align:left;background:var(--card);border:{{ valBorder }};display:flex;flex-direction:column;justify-content:center">
+<span style="font-size:28px;line-height:1.1;font-weight:700;font-variant-numeric:tabular-nums;color:{{ valColor }}">{{ valText }}<span style="font-size:13px;font-weight:500;color:var(--muted);margin-left:4px">{{ valUnit }}</span></span>
+<span style="font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums">{{ valHelp }}</span>
+</button>
+<button onClick="{{ focusRate }}" style="min-height:56px;padding:6px 12px;border-radius:20px;text-align:left;background:var(--card);border:{{ rateBorder }};display:flex;flex-direction:column;justify-content:center">
+<span style="font-size:12px;color:var(--muted)">Rate</span>
+<span style="font-size:22px;line-height:1.1;font-weight:700;font-variant-numeric:tabular-nums;color:{{ rateColor }}">{{ rateText }}</span>
+</button>
+</div>
+<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px">
+<sc-for list="{{ keys }}" as="k" hint-placeholder-count="12">
+<button onClick="{{ k.press }}" aria-label="{{ k.aria }}" style="min-height:40px;border-radius:14px;font-size:{{ k.size }};font-weight:600;font-variant-numeric:tabular-nums;color:{{ k.color }};background:var(--lg-fill);border:1px solid var(--lg-edge);box-shadow:inset 0 1px 0 var(--lg-hi)">{{ k.label }}</button>
+</sc-for>
+</div>
+<button onClick="{{ next }}" style="min-height:50px;border-radius:999px;display:flex;align-items:center;justify-content:center;gap:8px;font-size:17px;font-weight:600;color:var(--onBrand);background:var(--brand);border:1px solid var(--brand)">{{ nextLabel }}<svg viewBox="0 0 24 24" aria-hidden="true" style="width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round"><path d="M12 5v14M6 13l6 6 6-6"></path></svg></button>
+</div>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"$preview":{"width":393,"height":852}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const DARK = {base:"#101114",card:"#1b1c21",raised:"#292c34",line:"#464a56",cardEdge:"rgba(70,74,86,.7)",text:"#f7f8fc",muted:"#bbc0ce",faint:"#a3abba",brand:"#91b8ff",brandSoft:"rgba(145,184,255,.14)",onBrand:"#09090b",lgFill:"rgba(58,62,74,.42)",lgFillStrong:"rgba(40,43,52,.86)",lgEdge:"rgba(255,255,255,.16)",lgHi:"rgba(255,255,255,.28)",lgLo:"rgba(0,0,0,.22)",lgShadow:"0 8px 24px rgba(0,0,0,.22)",sep:"rgba(255,255,255,.12)"};
+    const LIGHT = {base:"#edf0f5",card:"#ffffff",raised:"#dce2ec",line:"#949eae",cardEdge:"#a8b1bf",text:"#111723",muted:"#3e4c61",faint:"#4e5c70",brand:"#214fa3",brandSoft:"rgba(33,79,163,.12)",onBrand:"#ffffff",lgFill:"rgba(255,255,255,.52)",lgFillStrong:"rgba(255,255,255,.9)",lgEdge:"rgba(40,55,85,.16)",lgHi:"rgba(255,255,255,.95)",lgLo:"rgba(30,45,75,.08)",lgShadow:"0 6px 20px rgba(25,40,70,.12)",sep:"rgba(60,60,67,.18)"};
+    const t = (this.props.theme ?? 'dark') === 'light' ? LIGHT : DARK;
+    const PIECE_M = 2000;
+    const P = (m, s, d) => ((m * 60 + s) * 10 + d) * 100;
+    const po = (ms) => ({ ms, src: 'post' });
+    const co = (ms) => ({ ms, src: 'coach' });
+    const ROWERS = [
+      { erg: 1, name: 'Tom Ashworth', short: 'Tom A.' }, { erg: 2, name: 'Piero Ciobanu', short: 'Piero C.' },
+      { erg: 3, name: 'Ollie Hart', short: 'Ollie H.' }, { erg: 4, name: 'Dan Okafor', short: 'Dan O.' },
+      { erg: 5, name: 'Sam Cole', short: 'Sam C.' }, { erg: 6, name: 'Ben Carter', short: 'Ben C.' },
+      { erg: 7, name: 'Luke Price', short: 'Luke P.' }, { erg: 8, name: 'Raj Patel', short: 'Raj P.' },
+      { erg: 9, name: 'Harry Wade', short: 'Harry W.' }, { erg: 10, name: 'Will Ng', short: 'Will N.' }
+    ];
+    const INITIAL = [
+      [po(P(1,41,6)), po(P(1,41,9)), po(P(1,40,8))],
+      [co(P(1,42,3)), co(P(1,42,9)), null],
+      [co(P(1,43,5)), co(P(1,44,6)), null],
+      [co(P(1,43,9)), null, null],
+      [co(P(1,42,8)), co(P(1,43,1)), null],
+      [co(P(1,44,6)), null, null],
+      ['out', 'out', 'out'],
+      [co(P(1,43,0)), null, null],
+      [co(P(1,44,1)), null, null],
+      [null, null, null]
+    ];
+    const s = this.state;
+    const scores = s.scores ?? INITIAL;
+    const sel = s.sel ?? null;
+    const buf = s.buf ?? '';
+    const rbuf = s.rbuf ?? '';
+    const focus = s.focus ?? 'val';
+    const mode = s.mode ?? 'split';
+    const BLOCKS = [
+      { id: 'scores', type: 'scores' },
+      { id: 'tx1', type: 'text', v: 'Ollie and Ben let the rate drift to 30 in piece 2. Remind them about ratio before Thursday.' }
+    ];
+    const blocksState = s.blocks ?? BLOCKS;
+    const notes = s.notes ?? 'Erg 7 fan cover is loose, report it.\nLuke off with a cold, check in on Thursday.';
+
+    const pad2 = (n) => String(n).padStart(2, '0');
+    const fmt = (ms) => { const d = Math.round(ms / 100); return Math.floor(d / 600) + ':' + pad2(Math.floor((d % 600) / 10)) + '.' + (d % 10); };
+    const fmtBuf = (d) => d.length <= 1 ? d : d.length <= 3 ? d.slice(0, -1) + '.' + d.slice(-1) : d.slice(0, -3) + ':' + d.slice(-3, -1) + '.' + d.slice(-1);
+    const bufMs = (d) => { if (!d) return null; const dd = +d.slice(-1); const ss = +(d.slice(-3, -1) || 0); const mm = +(d.slice(0, -3) || 0); if (ss > 59) return null; return P(mm, ss, dd); };
+    const toSplit = (ms) => mode === 'time' ? Math.round(ms / (PIECE_M / 500) / 100) * 100 : ms;
+    const order = ROWERS.map((_, i) => i);
+    const advance = (fromR, fromP, sc) => {
+      const pos = order.indexOf(fromR);
+      for (let k = pos + 1; k < order.length; k++) { if (sc[order[k]][fromP] !== 'out') return { r: order[k], p: fromP }; }
+      for (let p = fromP + 1; p < 3; p++) { for (const r of order) { if (sc[r][p] === null) return { r, p }; } }
+      return null;
+    };
+    const setCell = (r, p, v) => scores.map((row, i) => i === r ? row.map((c, j) => j === p ? v : c) : row);
+    const commit = () => { const ms = bufMs(buf); if (!sel || ms === null) return scores; return setCell(sel.r, sel.p, { ms: toSplit(ms), src: 'coach', rate: rbuf }); };
+    const go = (sc, nextSel) => this.setState({ scores: sc, sel: nextSel, buf: '', rbuf: '', focus: 'val' });
+
+    const cols = [0, 1, 2].map((p) => ({ label: String(p + 1), color: sel && sel.p === p ? t.brand : t.muted }));
+    const rows = order.map((r) => {
+      const R = ROWERS[r];
+      return {
+        erg: R.erg, name: R.short, scanLabel: 'Scan ' + R.name + '’s monitor',
+        cells: [0, 1, 2].map((p) => {
+          const v = scores[r][p];
+          const isSel = !!sel && sel.r === r && sel.p === p;
+          let text = '–', color = t.faint, weight = 500, posted = false;
+          if (v === 'out') { text = 'out'; }
+          else if (v) { text = fmt(v.ms); color = t.text; weight = 600; posted = v.src === 'post'; }
+          if (isSel && buf && focus === 'val') { const m = bufMs(buf); text = mode === 'time' && m !== null ? fmt(toSplit(m)) : fmtBuf(buf); color = t.text; weight = 600; posted = false; }
+          return {
+            text, color, weight, posted,
+            bg: isSel ? t.brandSoft : 'transparent',
+            border: isSel ? '2px solid ' + t.brand : '2px solid transparent',
+            aria: R.name + ', piece ' + (p + 1) + ': ' + (v === 'out' ? 'sat out' : v ? fmt(v.ms) : 'empty'),
+            pick: () => this.setState({ sel: { r, p }, buf: '', rbuf: '', focus: 'val' })
+          };
+        })
+      };
+    });
+
+    const setBlocks = (fn) => this.setState({ blocks: fn(blocksState) });
+    const upd = (id, patch) => setBlocks((bs) => bs.map((b) => b.id === id ? { ...b, ...patch } : b));
+    const blocks = blocksState.map((b) => {
+      const out = { isScores: b.type === 'scores', isText: b.type === 'text', isTable: b.type === 'table', remove: () => setBlocks((bs) => bs.filter((x) => x.id !== b.id)) };
+      if (b.type === 'text') { out.v = b.v; out.set = (e) => upd(b.id, { v: e.target.value }); }
+      if (b.type === 'table') {
+        out.title = b.title; out.setTitle = (e) => upd(b.id, { title: e.target.value });
+        const nc = b.cells[0].length;
+        out.tpl = 'repeat(' + nc + ',minmax(0,1fr))';
+        out.grid = b.cells.map((row, ri) => ({ cells: row.map((v, ci) => ({
+          v, aria: ri === 0 ? 'Column heading ' + (ci + 1) : 'Row ' + ri + ', column ' + (ci + 1),
+          ph: ri === 0 ? 'Heading' : '',
+          weight: ri === 0 ? 600 : 500, bg: ri === 0 ? t.raised : 'transparent',
+          edge: ci === 0 ? 'none' : '1px solid ' + t.sep,
+          set: (e) => upd(b.id, { cells: b.cells.map((rr, i) => i === ri ? rr.map((cc, j) => j === ci ? e.target.value : cc) : rr) })
+        })) }));
+        out.addRow = () => upd(b.id, { cells: b.cells.concat([Array(nc).fill('')]) });
+        out.addCol = () => { if (nc < 5) upd(b.id, { cells: b.cells.map((rr, i) => rr.concat([i === 0 ? 'Column ' + (nc + 1) : ''])) }); };
+      }
+      return out;
+    });
+    const nid = () => 'b' + Date.now();
+    const addText = () => setBlocks((bs) => bs.concat([{ id: nid(), type: 'text', v: '' }]));
+    const addTable = () => setBlocks((bs) => bs.concat([{ id: nid(), type: 'table', title: 'Table', cells: [['Rower', 'Technique', 'Next time'], ['', '', ''], ['', '', '']] }]));
+
+    const open = !!sel;
+    const cur = sel ? scores[sel.r][sel.p] : null;
+    const R = sel ? ROWERS[sel.r] : ROWERS[0];
+    const selTitle = sel ? R.name + ' · piece ' + (sel.p + 1) : '';
+    let selNote = 'Type the numbers, the colon goes in for you';
+    if (cur && cur.src === 'post') selNote = 'From their own post: ' + fmt(cur.ms) + '. Yours only changes your page.';
+    else if (cur && cur.src === 'coach') selNote = 'You noted ' + fmt(cur.ms) + '. Type to change it.';
+    else if (cur === 'out') selNote = 'Marked as sat out. Type a score to change it.';
+    const m = bufMs(buf);
+    const valText = buf ? fmtBuf(buf) : (cur && cur !== 'out' ? fmt(cur.ms) : '0:00.0');
+    let valHelp = mode === 'time' ? 'Time off the monitor' : 'Average split off the monitor';
+    if (m !== null && buf.length >= 4) valHelp = mode === 'time' ? '= ' + fmt(toSplit(m)) + ' /500m' : '= ' + fmt(m * (PIECE_M / 500)) + ' for 2,000m';
+    const press = (d) => () => {
+      if (focus === 'rate') { if (rbuf.length < 2) this.setState({ rbuf: rbuf + d }); return; }
+      if (buf.length < 5 && !(buf === '' && d === '0')) this.setState({ buf: buf + d });
+    };
+    const back = () => { if (focus === 'rate') this.setState({ rbuf: rbuf.slice(0, -1) }); else this.setState({ buf: buf.slice(0, -1) }); };
+    const satOut = () => { if (!sel) return; const sc = setCell(sel.r, sel.p, 'out'); go(sc, advance(sel.r, sel.p, sc)); };
+    const keys = ['1','2','3','4','5','6','7','8','9'].map((d) => ({ label: d, aria: d, size: '20px', color: t.text, press: press(d) }));
+    keys.push({ label: 'Sat out', aria: 'Mark as sat out', size: '13px', color: t.muted, press: satOut });
+    keys.push({ label: '0', aria: '0', size: '20px', color: t.text, press: press('0') });
+    keys.push({ label: '⌫', aria: 'Delete', size: '18px', color: t.text, press: back });
+    const nxt = sel ? advance(sel.r, sel.p, commit()) : null;
+    const nextLabel = !sel ? 'Next' : nxt ? (nxt.p !== sel.p ? 'Next · piece ' + (nxt.p + 1) : 'Next · ' + ROWERS[nxt.r].short) : 'Save · last one';
+    const seg = (on, pick) => ({ pick, color: on ? t.text : t.muted, bg: on ? t.lgFillStrong : 'transparent', border: on ? t.lgEdge : 'transparent' });
+
+    return {
+      t, cols, rows, blocks, addText, addTable, notes, setNotes: (e) => this.setState({ notes: e.target.value }),
+      open, selTitle, selNote, valText, valHelp, keys, nextLabel,
+      valColor: buf ? t.text : t.faint, valUnit: mode === 'time' ? 'for 2,000m' : '/500m',
+      rateText: rbuf || '–', rateColor: rbuf ? t.text : t.faint,
+      valBorder: focus === 'val' ? '2px solid ' + t.brand : '2px solid transparent',
+      rateBorder: focus === 'rate' ? '2px solid ' + t.brand : '2px solid transparent',
+      focusVal: () => this.setState({ focus: 'val' }), focusRate: () => this.setState({ focus: 'rate' }),
+      modeSplit: seg(mode === 'split', () => this.setState({ mode: 'split', buf: '' })),
+      modeTime: seg(mode === 'time', () => this.setState({ mode: 'time', buf: '' })),
+      close: () => this.setState({ sel: null }),
+      next: () => { if (!sel) return; const sc = commit(); go(sc, advance(sel.r, sel.p, sc)); }
+    };
+  }
+}
+</script>
+</body>
+</html>

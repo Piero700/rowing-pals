@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<title>Notebook</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+*{box-sizing:border-box}
+button{font:inherit;color:inherit;cursor:pointer;margin:0}
+a{color:#91b8ff}a:hover{color:#c6adff}
+</style>
+</helmet>
+<div data-screen-label="Coach · Notebook" style="--base:{{ t.base }};--card:{{ t.card }};--raised:{{ t.raised }};--line:{{ t.line }};--cardEdge:{{ t.cardEdge }};--text:{{ t.text }};--muted:{{ t.muted }};--faint:{{ t.faint }};--brand:{{ t.brand }};--brandSoft:{{ t.brandSoft }};--onBrand:{{ t.onBrand }};--lg-fill:{{ t.lgFill }};--lg-fill-strong:{{ t.lgFillStrong }};--lg-edge:{{ t.lgEdge }};--lg-hi:{{ t.lgHi }};--lg-lo:{{ t.lgLo }};--lg-shadow:{{ t.lgShadow }};--sep:{{ t.sep }};position:relative;width:393px;height:852px;overflow:hidden;display:flex;flex-direction:column;background:var(--base);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','SF Pro Display','Helvetica Neue',sans-serif;-webkit-font-smoothing:antialiased;font-size:17px">
+<div style="position:absolute;z-index:30;top:10px;left:50%;transform:translateX(-50%);width:106px;height:27px;border-radius:99px;background:#030408"></div>
+<div style="height:51px;flex:none"></div>
+<header style="position:relative;min-height:58px;flex:none;padding:8px 16px 8px;display:flex;align-items:center;gap:8px">
+<a href="CoachNotepadWorkouts.dc.html" aria-label="Back" style="width:42px;height:42px;border-radius:50%;display:grid;place-items:center;flex:none;color:var(--text);background:var(--lg-fill);border:1px solid var(--lg-edge);box-shadow:inset 0 1px 0 var(--lg-hi),inset 0 -1px 0 var(--lg-lo),var(--lg-shadow);text-decoration:none"><svg viewBox="0 0 24 24" aria-hidden="true" style="width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round"><path d="m15 18-6-6 6-6"></path></svg></a>
+<h1 style="margin:0;position:absolute;left:72px;right:72px;text-align:center;font-size:17px;font-weight:600;pointer-events:none">Notebook</h1>
+<span style="flex:1"></span>
+<button style="min-height:36px;padding:0 12px;border-radius:999px;font-size:13px;font-weight:600;background:var(--lg-fill);border:1px solid var(--lg-edge);box-shadow:inset 0 1px 0 var(--lg-hi),inset 0 -1px 0 var(--lg-lo);display:flex;align-items:center;gap:4px">Senior men<svg viewBox="0 0 24 24" aria-hidden="true" style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="m6 9 6 6 6-6"></path></svg></button>
+</header>
+<div style="flex:none;padding:4px 16px 12px">
+<div role="group" aria-label="Show" style="display:grid;grid-template-columns:1fr 1fr;padding:4px;border-radius:999px;background:var(--lg-fill);border:1px solid var(--lg-edge);box-shadow:inset 0 1px 0 var(--lg-hi),inset 0 -1px 0 var(--lg-lo)">
+<button onClick="{{ segSplits.pick }}" style="min-height:40px;border-radius:999px;font-size:15px;font-weight:600;color:{{ segSplits.color }};background:{{ segSplits.bg }};border:1px solid {{ segSplits.border }}">Splits</button>
+<button onClick="{{ segTarget.pick }}" style="min-height:40px;border-radius:999px;font-size:15px;font-weight:600;color:{{ segTarget.color }};background:{{ segTarget.bg }};border:1px solid {{ segTarget.border }}">Against target</button>
+</div>
+</div>
+<div onPointerDown="{{ down }}" onPointerUp="{{ up }}" style="flex:1;min-height:0;overflow-y:auto;scrollbar-width:none;padding:0 16px 24px;touch-action:pan-y">
+<div style="background:var(--card);border:1px solid var(--cardEdge);border-radius:28px;overflow:hidden">
+<div style="display:flex;align-items:center;gap:8px;padding:12px 10px 10px">
+<button onClick="{{ prev }}" aria-label="Older page" style="width:40px;height:40px;border-radius:50%;display:grid;place-items:center;flex:none;color:{{ prevColor }};background:var(--lg-fill);border:1px solid var(--lg-edge)"><svg viewBox="0 0 24 24" aria-hidden="true" style="width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="m15 18-6-6 6-6"></path></svg></button>
+<div style="flex:1;min-width:0;text-align:center">
+<div style="font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums">{{ pg.date }}</div>
+<div style="font-size:20px;font-weight:700;font-variant-numeric:tabular-nums">{{ pg.title }}</div>
+<div style="font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums">{{ pg.sub }}</div>
+</div>
+<button onClick="{{ next }}" aria-label="Newer page" style="width:40px;height:40px;border-radius:50%;display:grid;place-items:center;flex:none;color:{{ nextColor }};background:var(--lg-fill);border:1px solid var(--lg-edge)"><svg viewBox="0 0 24 24" aria-hidden="true" style="width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="m9 6 6 6-6 6"></path></svg></button>
+</div>
+<div style="display:grid;grid-template-columns:{{ pg.grid }};gap:2px;align-items:center;padding:6px 12px;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.02em;color:var(--muted);border-top:1px solid var(--sep)">
+<span>Rower</span>
+<sc-for list="{{ pg.cols }}" as="col" hint-placeholder-count="4"><span style="text-align:right">{{ col }}</span></sc-for>
+</div>
+<sc-for list="{{ pg.rows }}" as="row" hint-placeholder-count="10">
+<a href="CoachNotebookRower.dc.html" style="display:grid;grid-template-columns:{{ pg.grid }};gap:2px;align-items:center;min-height:44px;padding:4px 12px;border-top:1px solid var(--sep);color:var(--text);text-decoration:none">
+<span style="font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ row.name }}</span>
+<sc-for list="{{ row.cells }}" as="c" hint-placeholder-count="4"><span style="text-align:right;font-size:{{ pg.fs }};font-weight:{{ c.weight }};font-variant-numeric:tabular-nums;color:{{ c.color }}">{{ c.text }}</span></sc-for>
+</a>
+</sc-for>
+<div style="display:grid;grid-template-columns:{{ pg.grid }};gap:2px;align-items:center;min-height:44px;padding:4px 12px;border-top:1px solid var(--line);background:var(--raised)">
+<span style="font-size:13px;font-weight:600;color:var(--muted)">Squad</span>
+<sc-for list="{{ pg.squad }}" as="c" hint-placeholder-count="4"><span style="text-align:right;font-size:{{ pg.fs }};font-weight:600;font-variant-numeric:tabular-nums;color:{{ c.color }}">{{ c.text }}</span></sc-for>
+</div>
+</div>
+<div style="margin-top:12px;padding:12px 14px;background:var(--card);border:1px solid var(--cardEdge);border-radius:24px"><div style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.02em;margin-bottom:4px">Notes</div><div style="font-size:15px;line-height:1.45;white-space:pre-line">{{ pg.note }}</div></div>
+<div style="display:flex;align-items:center;justify-content:space-between;margin:12px 4px 0;gap:8px">
+<span style="font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums">{{ pg.sources }}</span>
+<a href="CoachNotepad.dc.html" style="min-height:44px;display:flex;align-items:center;gap:6px;font-size:15px;font-weight:600;color:var(--brand);text-decoration:none"><svg viewBox="0 0 24 24" aria-hidden="true" style="width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>Edit page</a>
+</div>
+<div style="display:flex;justify-content:center;gap:6px;margin-top:8px" aria-label="{{ pageLabel }}">
+<sc-for list="{{ dots }}" as="d" hint-placeholder-count="4"><span style="width:7px;height:7px;border-radius:50%;background:{{ d.bg }}"></span></sc-for>
+</div>
+<p style="margin:8px 4px 0;text-align:center;font-size:13px;color:var(--muted)">{{ pageLabel }} · swipe to turn the page · tap a name to see their line</p>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"$preview":{"width":393,"height":852}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const DARK = {base:"#101114",card:"#1b1c21",raised:"#292c34",line:"#464a56",cardEdge:"rgba(70,74,86,.7)",text:"#f7f8fc",muted:"#bbc0ce",faint:"#a3abba",brand:"#91b8ff",brandSoft:"rgba(145,184,255,.14)",onBrand:"#09090b",good:"#78d7ac",bad:"#ff766f",lgFill:"rgba(58,62,74,.42)",lgFillStrong:"rgba(92,98,114,.55)",lgEdge:"rgba(255,255,255,.16)",lgHi:"rgba(255,255,255,.28)",lgLo:"rgba(0,0,0,.22)",lgShadow:"0 8px 24px rgba(0,0,0,.22)",sep:"rgba(255,255,255,.12)"};
+    const LIGHT = {base:"#edf0f5",card:"#ffffff",raised:"#dce2ec",line:"#949eae",cardEdge:"#a8b1bf",text:"#111723",muted:"#3e4c61",faint:"#4e5c70",brand:"#214fa3",brandSoft:"rgba(33,79,163,.12)",onBrand:"#ffffff",good:"#176a4a",bad:"#c93c36",lgFill:"rgba(255,255,255,.52)",lgFillStrong:"rgba(255,255,255,.92)",lgEdge:"rgba(40,55,85,.16)",lgHi:"rgba(255,255,255,.95)",lgLo:"rgba(30,45,75,.08)",lgShadow:"0 6px 20px rgba(25,40,70,.12)",sep:"rgba(60,60,67,.18)"};
+    const t = (this.props.theme ?? 'dark') === 'light' ? LIGHT : DARK;
+    const pad2 = (n) => String(n).padStart(2, '0');
+    const fmt = (ms) => { const d = Math.round(ms / 100); return Math.floor(d / 600) + ':' + pad2(Math.floor((d % 600) / 10)) + '.' + (d % 10); };
+    const S = (m, s) => Math.round((m * 60 + s) * 1000);
+    const NAMES = ['Tom A.', 'Piero C.', 'Ollie H.', 'Dan O.', 'Sam C.', 'Ben C.', 'Luke P.', 'Raj P.', 'Harry W.', 'Will N.'];
+    const BASE = [S(1,41.0), S(1,42.4), S(1,43.6), S(1,43.8), S(1,42.9), S(1,44.4), S(1,43.2), S(1,43.1), S(1,44.0), S(1,43.4)];
+    const wob = (i, p, seed) => (((i * 7 + p * 13 + seed * 5) % 11) - 5) * 200;
+    const mk = (n, shift, seed, gaps) => BASE.map((b, i) => Array.from({ length: n }, (_, p) => (gaps[i] && gaps[i].includes(p)) ? null : b + shift + wob(i, p, seed) - p * 300));
+    const PAGES = [
+      { date: 'Thu 16 Oct · 17:30', title: '2 × 5,000m', sub: 'UT1 · target 1:47.0 · rate 22–24', target: S(1,47.0), n: 2, data: mk(2, 4200, 3, { 9: [1] }), note: 'Long and steady, nobody went off target. Will forgot to post.', sources: '2 posted · 8 you noted', test: false },
+      { date: 'Thu 23 Oct · 17:30', title: '4 × 1,000m', sub: 'TR · target 1:39.0 · rate 30–32', target: S(1,39.0), n: 4, data: mk(4, -3000, 1, { 6: [0, 1, 2, 3] }), note: 'Luke off ill. Rates were high on piece 1, settle them sooner.', sources: '3 posted · 6 you noted · 1 sat out', test: false },
+      { date: 'Sat 25 Oct · 08:00', title: '5k test', sub: 'Test · results on the club board', target: null, n: 1, data: mk(1, 2500, 2, { 9: [0] }), note: 'Good day. Harry still needs to scan his monitor.', sources: '8 posted · 1 you noted', test: true },
+      { date: 'Tue 28 Oct · 17:30', title: '3 × 2,000m', sub: 'AT · target 1:42.0 · rate 26–28', target: S(1,42.0), n: 3, data: mk(3, 600, 4, {}), note: 'Ollie and Ben drifted to rate 30 in piece 2. Remind them about ratio.', sources: '6 posted · 4 you noted', test: false }
+    ];
+    const idx = this.state.page ?? 3;
+    const view = this.state.view ?? 'splits';
+    const P = PAGES[idx];
+    const avg = (xs) => { const v = xs.filter((x) => x !== null); return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null; };
+    const delta = (ms) => { const d = Math.round((ms - P.target) / 100) / 10; return (d > 0 ? '+' : d < 0 ? '−' : '±') + Math.abs(d).toFixed(1); };
+    const cell = (ms, bold) => {
+      if (ms === null) return { text: '–', color: t.faint, weight: 500 };
+      if (P.test) return { text: fmt(ms * 10), color: t.text, weight: bold ? 700 : 600 };
+      if (view === 'target') return { text: delta(ms), color: ms <= P.target ? t.good : t.bad, weight: bold ? 700 : 600 };
+      return { text: fmt(ms), color: t.text, weight: bold ? 700 : 500 };
+    };
+    const cols = P.test ? ['Time', 'Split'] : Array.from({ length: P.n }, (_, p) => String(p + 1)).concat(['Avg']);
+    const rows = P.data.map((r, i) => {
+      if (P.test) { const ms = r[0]; return { name: NAMES[i], cells: ms === null ? [{ text: 'not yet', color: t.faint, weight: 500 }, { text: '–', color: t.faint, weight: 500 }] : [cell(ms, true), { text: fmt(ms), color: t.muted, weight: 500 }] }; }
+      const allOut = r.every((x) => x === null);
+      const cells = r.map((ms) => allOut ? { text: 'out', color: t.faint, weight: 500 } : cell(ms, false));
+      cells.push(allOut ? { text: '–', color: t.faint, weight: 500 } : cell(Math.round(avg(r)), true));
+      return { name: NAMES[i], cells };
+    });
+    const colAvg = Array.from({ length: P.n }, (_, p) => avg(P.data.map((r) => r[p])));
+    const squad = P.test
+      ? [cell(Math.round(avg(P.data.map((r) => r[0]))), true), { text: fmt(Math.round(avg(P.data.map((r) => r[0])))), color: t.muted, weight: 500 }]
+      : colAvg.map((a) => cell(Math.round(a), false)).concat([cell(Math.round(avg(colAvg)), true)]);
+    const nCols = cols.length;
+    const grid = 'minmax(0,1fr) ' + Array.from({ length: nCols }, () => nCols > 4 ? '50px' : '62px').join(' ');
+    const pg = { date: P.date, title: P.title, sub: P.sub, cols, rows, squad, grid, fs: nCols > 4 ? '13px' : '15px', sources: P.sources, note: P.note };
+    const go = (d) => () => { const n = Math.max(0, Math.min(PAGES.length - 1, idx + d)); this.setState({ page: n }); };
+    const seg = (on, pick) => ({ pick, color: on ? t.text : t.muted, bg: on ? t.lgFillStrong : 'transparent', border: on ? t.lgEdge : 'transparent' });
+    return {
+      t, pg,
+      prev: go(-1), next: go(1),
+      prevColor: idx > 0 ? t.text : t.faint, nextColor: idx < PAGES.length - 1 ? t.text : t.faint,
+      dots: PAGES.map((_, i) => ({ bg: i === idx ? t.brand : t.line })),
+      pageLabel: 'Page ' + (idx + 1) + ' of ' + PAGES.length,
+      segSplits: seg(view === 'splits', () => this.setState({ view: 'splits' })),
+      segTarget: seg(view === 'target', () => this.setState({ view: 'target' })),
+      down: (e) => { this._x = e.clientX; },
+      up: (e) => { if (this._x == null) return; const dx = e.clientX - this._x; this._x = null; if (dx > 60) go(-1)(); else if (dx < -60) go(1)(); }
+    };
+  }
+}
+</script>
+</body>
+</html>

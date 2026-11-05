@@ -157,6 +157,10 @@ After any change:
 
 ## Current focus
 
+**Next: the coach notepad** (decision 96): phases NP1–NP4 in `docs/design/coach-notepad-build-plan.md`,
+on branch `t42-coach-notepad` (not started). Canvas boards `CoachNotepad…`, `CoachNotebook…` and
+`RowerCoachScores…` in `docs/design/v4/`. Earlier:
+
 **The coach version** (decisions 67–70): phases CV1–CV3 in `docs/design/coach-version-build-plan.md`, on branch
 `t41-coach-version`. CV1 (the coach's own app shell), CV2 (Calendar and attendance) and CV3 (Boats and water sessions) are built, waiting on the phone tests. Earlier:
 
