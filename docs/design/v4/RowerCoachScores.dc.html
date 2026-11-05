@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<title>Scores your coach noted</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+*{box-sizing:border-box}
+a{color:#91b8ff}a:hover{color:#c6adff}
+</style>
+</helmet>
+<div data-screen-label="Rower · Feed with coach scores" style="--base:{{ t.base }};--card:{{ t.card }};--raised:{{ t.raised }};--line:{{ t.line }};--cardEdge:{{ t.cardEdge }};--text:{{ t.text }};--muted:{{ t.muted }};--faint:{{ t.faint }};--brand:{{ t.brand }};--brandSoft:{{ t.brandSoft }};--onBrand:{{ t.onBrand }};--accent:{{ t.accent }};--lg-fill:{{ t.lgFill }};--lg-edge:{{ t.lgEdge }};--sep:{{ t.sep }};position:relative;width:393px;height:852px;overflow:hidden;background:var(--base);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','SF Pro Display','Helvetica Neue',sans-serif;-webkit-font-smoothing:antialiased;font-size:17px">
+<div style="position:absolute;z-index:30;top:10px;left:50%;transform:translateX(-50%);width:106px;height:27px;border-radius:99px;background:#030408"></div>
+<div style="height:51px"></div>
+<header style="min-height:61px;padding:8px 16px 14px;display:flex;align-items:center"><h1 style="margin:0;flex:1;font-size:34px;font-weight:700;line-height:1.1">Your crew</h1></header>
+<div style="padding:0 16px;display:flex;flex-direction:column;gap:12px">
+<div style="padding:16px;background:var(--card);border:1px solid var(--cardEdge);border-radius:28px;display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;align-items:center;gap:12px">
+<span style="width:40px;height:40px;border-radius:50%;display:grid;place-items:center;flex:none;color:var(--brand);background:var(--brandSoft)"><svg viewBox="0 0 24 24" aria-hidden="true" style="width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg></span>
+<div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:600">Your coach noted your scores</div><div style="font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums">Tue 4 Nov · 3 × 2,000m · erg 3</div></div>
+</div>
+<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px">
+<div style="padding:10px;border-radius:18px;background:var(--raised);text-align:center"><div style="font-size:12px;color:var(--muted)">Piece 1</div><div style="font-size:20px;font-weight:700;font-variant-numeric:tabular-nums">1:43.5</div></div>
+<div style="padding:10px;border-radius:18px;background:var(--raised);text-align:center"><div style="font-size:12px;color:var(--muted)">Piece 2</div><div style="font-size:20px;font-weight:700;font-variant-numeric:tabular-nums">1:44.6</div></div>
+<div style="padding:10px;border-radius:18px;background:var(--raised);text-align:center"><div style="font-size:12px;color:var(--muted)">Piece 3</div><div style="font-size:20px;font-weight:700;font-variant-numeric:tabular-nums">1:43.0</div></div>
+</div>
+<sc-if value="{{ notPosted }}" hint-placeholder-val="{{ true }}">
+<p style="margin:0;font-size:13px;line-height:1.4;color:var(--muted)">Your coach’s numbers don’t count towards your volume, pieces or PBs. Log the session yourself to count it.</p>
+<a href="#" style="min-height:48px;border-radius:999px;display:flex;align-items:center;justify-content:center;gap:8px;font-size:17px;font-weight:600;color:var(--onBrand);background:var(--brand);border:1px solid var(--brand);text-decoration:none"><svg viewBox="0 0 24 24" aria-hidden="true" style="width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M12 5v14M5 12h14"></path></svg>Log your session</a>
+</sc-if>
+<sc-if value="{{ posted }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums"><svg viewBox="0 0 24 24" aria-hidden="true" style="width:16px;height:16px;flex:none;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round"><path d="m5 12 5 5 9-10"></path></svg>You posted this session · your average 1:43.6</div>
+</sc-if>
+</div>
+<div style="padding:16px;background:var(--card);border:1px solid var(--cardEdge);border-radius:28px;display:flex;align-items:center;gap:12px;opacity:.7">
+<span style="width:40px;height:40px;border-radius:50%;display:grid;place-items:center;flex:none;font-size:15px;font-weight:600;color:var(--accent);background:var(--raised)">TA</span>
+<div style="flex:1"><div style="font-size:15px;font-weight:600">Tom Ashworth</div><div style="font-size:13px;color:var(--muted)">UEA Boat Club · 3 × 2,000m</div></div>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"posted":{"editor":"enum","options":["no","yes"],"default":"no"},"$preview":{"width":393,"height":852}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const DARK = {base:"#101114",card:"#1b1c21",raised:"#292c34",line:"#464a56",cardEdge:"rgba(70,74,86,.7)",text:"#f7f8fc",muted:"#bbc0ce",faint:"#a3abba",brand:"#91b8ff",brandSoft:"rgba(145,184,255,.14)",onBrand:"#09090b",accent:"#c6adff",lgFill:"rgba(58,62,74,.42)",lgEdge:"rgba(255,255,255,.16)",sep:"rgba(255,255,255,.12)"};
+    const LIGHT = {base:"#edf0f5",card:"#ffffff",raised:"#dce2ec",line:"#949eae",cardEdge:"#a8b1bf",text:"#111723",muted:"#3e4c61",faint:"#4e5c70",brand:"#214fa3",brandSoft:"rgba(33,79,163,.12)",onBrand:"#ffffff",accent:"#67409b",lgFill:"rgba(255,255,255,.52)",lgEdge:"rgba(40,55,85,.16)",sep:"rgba(60,60,67,.18)"};
+    const t = (this.props.theme ?? 'dark') === 'light' ? LIGHT : DARK;
+    const posted = (this.props.posted ?? 'no') === 'yes';
+    return { t, posted, notPosted: !posted };
+  }
+}
+</script>
+</body>
+</html>

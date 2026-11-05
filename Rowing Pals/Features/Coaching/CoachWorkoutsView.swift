@@ -7,7 +7,8 @@ import SwiftUI
 
 /// The coach version's **Workouts** tab (CoachWorkouts; decisions 39, 52, 60, 67): the workouts the
 /// club's coaches have set — Today, Upcoming, Past. A card opens its results; swiping it right to
-/// left deletes it. New workout is the + beside the tab bar.
+/// left deletes it; today's have **Open notepad** under them (decision 96). New workout is the +
+/// beside the tab bar.
 struct CoachWorkoutsView: View {
     /// Taps on the tab while it's showing: scroll to the top and refresh (decision 27).
     var reselects = 0
@@ -68,10 +69,28 @@ struct CoachWorkoutsView: View {
                 .accessibilityAddTraits(.isHeader)
             LazyVStack(spacing: Tokens.Spacing.tight) {
                 ForEach(items) { item in
-                    WorkoutCard(item: item, isToday: isToday)
-                        .asButton { navigate(.workoutResults(item.workout.id)) }
+                    if isToday {
+                        // Today's card has Open notepad inside it, under the bar (CoachNotepadWorkouts).
+                        // The card is drawn around both, so the two stay separate buttons.
+                        VStack(spacing: 0) {
+                            WorkoutCard(item: item, isToday: true, drawsCard: false)
+                                .asButton { navigate(.workoutResults(item.workout.id)) }
+                            Button {
+                                navigate(.notepad(item.workout.id))
+                            } label: {
+                                Label("Open notepad", icon: .pencil, size: Tokens.Icon.small)
+                            }
+                            .buttonStyle(.rpPrimary)
+                            .padding([.horizontal, .bottom], Tokens.Spacing.card)
+                        }
+                        .background { WorkoutCard.card }
                         // As well as Delete workout on its page (decision 60).
                         .swipeToDelete { await workouts.delete(item.workout.id) }
+                    } else {
+                        WorkoutCard(item: item, isToday: false)
+                            .asButton { navigate(.workoutResults(item.workout.id)) }
+                            .swipeToDelete { await workouts.delete(item.workout.id) }
+                    }
                 }
             }
         }

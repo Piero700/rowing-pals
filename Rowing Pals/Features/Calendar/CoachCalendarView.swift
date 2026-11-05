@@ -226,11 +226,15 @@ struct CoachCalendarView: View {
             navigate(.workoutResults(workout.id))
         } label: {
             HStack(spacing: Tokens.Spacing.gap) {
-                Text(WorkoutRules.startDate(workout, calendar: viewModel.calendar).map { CalendarRules.time($0, calendar: viewModel.calendar) } ?? "")
-                    .textStyle(Typography.rowTitle)
-                    .tabularNumerals()
-                    .foregroundStyle(Tokens.Ink.primary)
-                    .frame(width: Tokens.Schedule.timeColumn, alignment: .leading)
+                // The time column only when the workout has a start time; without one the title
+                // starts at the card's edge instead of after an empty column.
+                if let start = WorkoutRules.startDate(workout, calendar: viewModel.calendar) {
+                    Text(CalendarRules.time(start, calendar: viewModel.calendar))
+                        .textStyle(Typography.rowTitle)
+                        .tabularNumerals()
+                        .foregroundStyle(Tokens.Ink.primary)
+                        .frame(width: Tokens.Schedule.timeColumn, alignment: .leading)
+                }
                 VStack(alignment: .leading, spacing: 1) {
                     Text("Land session · \(workout.title)")
                         .textStyle(Typography.rowTitle)
@@ -240,9 +244,8 @@ struct CoachCalendarView: View {
                         .foregroundStyle(Tokens.Ink.secondary)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-                RPIconView(icon: .chevronRight, size: Tokens.Icon.small)
-                    .textStyle(Typography.pill)
-                    .foregroundStyle(Tokens.Ink.secondary)
+                // The notepad's button sits here, over the card (decision 96).
+                Color.clear.frame(width: Tokens.Size.iconButton, height: Tokens.Size.iconButton)
             }
             .padding(Tokens.Spacing.card)
             .background(Self.cardShape.fill(Tokens.Surface.card))
@@ -250,6 +253,12 @@ struct CoachCalendarView: View {
             .contentShape(Self.cardShape)
         }
         .buttonStyle(IconPressStyle())
+        .overlay(alignment: .trailing) {
+            GlassIconButton(icon: .pencil, accessibilityLabel: "Notepad for \(workout.title)") {
+                navigate(.notepad(workout.id))
+            }
+            .padding(.trailing, Tokens.Spacing.card)
+        }
     }
 
     private func waterCard(_ session: WaterSession) -> some View {

@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<title>Rower in the notebook</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+*{box-sizing:border-box}
+a{color:#91b8ff}a:hover{color:#c6adff}
+</style>
+</helmet>
+<div data-screen-label="Coach · Rower in the notebook" style="--base:{{ t.base }};--card:{{ t.card }};--raised:{{ t.raised }};--line:{{ t.line }};--cardEdge:{{ t.cardEdge }};--text:{{ t.text }};--muted:{{ t.muted }};--faint:{{ t.faint }};--brand:{{ t.brand }};--accent:{{ t.accent }};--good:{{ t.good }};--bad:{{ t.bad }};--lg-fill:{{ t.lgFill }};--lg-edge:{{ t.lgEdge }};--lg-hi:{{ t.lgHi }};--lg-lo:{{ t.lgLo }};--lg-shadow:{{ t.lgShadow }};--sep:{{ t.sep }};position:relative;width:393px;height:852px;overflow:hidden;display:flex;flex-direction:column;background:var(--base);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','SF Pro Display','Helvetica Neue',sans-serif;-webkit-font-smoothing:antialiased;font-size:17px">
+<div style="position:absolute;z-index:30;top:10px;left:50%;transform:translateX(-50%);width:106px;height:27px;border-radius:99px;background:#030408"></div>
+<div style="height:51px;flex:none"></div>
+<header style="position:relative;min-height:58px;flex:none;padding:8px 16px 8px;display:flex;align-items:center;gap:8px">
+<a href="CoachNotebook.dc.html" aria-label="Back" style="width:42px;height:42px;border-radius:50%;display:grid;place-items:center;flex:none;color:var(--text);background:var(--lg-fill);border:1px solid var(--lg-edge);box-shadow:inset 0 1px 0 var(--lg-hi),inset 0 -1px 0 var(--lg-lo),var(--lg-shadow);text-decoration:none"><svg viewBox="0 0 24 24" aria-hidden="true" style="width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round"><path d="m15 18-6-6 6-6"></path></svg></a>
+<h1 style="margin:0;position:absolute;left:72px;right:72px;text-align:center;font-size:17px;font-weight:600;pointer-events:none">Ollie Hart</h1>
+</header>
+<div style="flex:1;min-height:0;overflow-y:auto;scrollbar-width:none;padding:4px 16px 24px;display:flex;flex-direction:column;gap:12px">
+<div style="padding:16px;background:var(--card);border:1px solid var(--cardEdge);border-radius:28px;display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;align-items:center;gap:12px">
+<span style="width:44px;height:44px;border-radius:50%;display:grid;place-items:center;flex:none;font-size:15px;font-weight:600;color:var(--accent);background:var(--raised)">OH</span>
+<div style="flex:1;min-width:0"><div style="font-size:17px;font-weight:600">In the notebook</div><div style="font-size:13px;color:var(--muted)">Senior men · last 5 pages</div></div>
+</div>
+<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;text-align:center">
+<div><div style="font-size:22px;font-weight:700;font-variant-numeric:tabular-nums">5 of 5</div><div style="font-size:12px;color:var(--muted)">sessions</div></div>
+<div><div style="font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--bad)">+1.5</div><div style="font-size:12px;color:var(--muted)">avg vs target</div></div>
+<div><div style="font-size:22px;font-weight:700;font-variant-numeric:tabular-nums">1:39.2</div><div style="font-size:12px;color:var(--muted)">fastest piece</div></div>
+</div>
+</div>
+<h2 style="margin:8px 4px 0;font-size:13px;text-transform:uppercase;letter-spacing:.02em;color:var(--muted);font-weight:500">Page by page</h2>
+<div style="background:var(--card);border:1px solid var(--cardEdge);border-radius:28px;overflow:hidden">
+<sc-for list="{{ lines }}" as="l" hint-placeholder-count="5">
+<a href="{{ l.href }}" style="display:flex;flex-direction:column;gap:4px;padding:12px 16px;border-top:{{ l.border }};color:var(--text);text-decoration:none">
+<div style="display:flex;align-items:baseline;gap:8px">
+<span style="flex:1;min-width:0;font-size:15px;font-weight:600;font-variant-numeric:tabular-nums">{{ l.title }}</span>
+<span style="font-size:17px;font-weight:700;font-variant-numeric:tabular-nums">{{ l.avg }}</span>
+<span style="width:42px;text-align:right;font-size:13px;font-weight:600;font-variant-numeric:tabular-nums;color:{{ l.dColor }}">{{ l.delta }}</span>
+</div>
+<div style="display:flex;gap:8px;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums"><span style="flex:1">{{ l.date }}</span><span>{{ l.pieces }}</span></div>
+</a>
+</sc-for>
+</div>
+<p style="margin:0 4px;font-size:13px;line-height:1.4;color:var(--muted)">Averages are /500m. Tap a session to open its page. Today’s session is still being written.</p>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"$preview":{"width":393,"height":852}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const DARK = {base:"#101114",card:"#1b1c21",raised:"#292c34",line:"#464a56",cardEdge:"rgba(70,74,86,.7)",text:"#f7f8fc",muted:"#bbc0ce",faint:"#a3abba",brand:"#91b8ff",accent:"#c6adff",good:"#78d7ac",bad:"#ff766f",lgFill:"rgba(58,62,74,.42)",lgEdge:"rgba(255,255,255,.16)",lgHi:"rgba(255,255,255,.28)",lgLo:"rgba(0,0,0,.22)",lgShadow:"0 8px 24px rgba(0,0,0,.22)",sep:"rgba(255,255,255,.12)"};
+    const LIGHT = {base:"#edf0f5",card:"#ffffff",raised:"#dce2ec",line:"#949eae",cardEdge:"#a8b1bf",text:"#111723",muted:"#3e4c61",faint:"#4e5c70",brand:"#214fa3",accent:"#67409b",good:"#176a4a",bad:"#c93c36",lgFill:"rgba(255,255,255,.52)",lgEdge:"rgba(40,55,85,.16)",lgHi:"rgba(255,255,255,.95)",lgLo:"rgba(30,45,75,.08)",lgShadow:"0 6px 20px rgba(25,40,70,.12)",sep:"rgba(60,60,67,.18)"};
+    const t = (this.props.theme ?? 'dark') === 'light' ? LIGHT : DARK;
+    const L = [
+      { title: '3 × 2,000m · today', date: 'Tue 4 Nov · AT', pieces: '1:43.5 · 1:44.6 · –', avg: '1:44.1', delta: '+2.1', bad: true, href: 'Notepad.dc.html' },
+      { title: '3 × 2,000m', date: 'Tue 28 Oct · AT', pieces: '1:43.4 · 1:43.5 · 1:43.6', avg: '1:43.5', delta: '+1.5', bad: true, href: 'NotebookPages.dc.html' },
+      { title: '5k test', date: 'Sat 25 Oct · 17:41.0', pieces: 'from his photo', avg: '1:46.1', delta: '', bad: false, href: 'NotebookPages.dc.html' },
+      { title: '4 × 1,000m', date: 'Thu 23 Oct · TR', pieces: '1:41.2 · 1:41.3 · 1:39.2 · 1:39.3', avg: '1:40.3', delta: '+1.3', bad: true, href: 'NotebookPages.dc.html' },
+      { title: '2 × 5,000m', date: 'Thu 16 Oct · UT1', pieces: '1:47.2 · 1:46.3', avg: '1:46.8', delta: '−0.2', bad: false, href: 'NotebookPages.dc.html' }
+    ];
+    const lines = L.map((l, i) => ({ ...l, border: i === 0 ? 'none' : '1px solid ' + t.sep, dColor: l.delta === '' ? t.muted : l.bad ? t.bad : t.good }));
+    return { t, lines };
+  }
+}
+</script>
+</body>
+</html>

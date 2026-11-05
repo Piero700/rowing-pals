@@ -170,6 +170,9 @@ enum Tokens {
         static let minTap: CGFloat = 44
         /// The red Delete revealed by a short swipe on a card (decision 60), as wide as iOS's.
         static let swipeAction: CGFloat = 88
+        /// How far in from the left edge a swipe back may start (decision 61), the same on every
+        /// screen: a full-screen area's root (`edgeSwipeToDismiss()`) and every pushed screen.
+        static let swipeBackEdge: CGFloat = 24
         static let primaryButton: CGFloat = 51
         static let secondaryButton: CGFloat = 50
         static let input: CGFloat = 50
@@ -390,6 +393,53 @@ enum Tokens {
         static let effortLine: CGFloat = 3
         static let effortDot: CGFloat = 3.5
         static let effortDotLatest: CGFloat = 5
+    }
+
+    /// The coach notepad (decision 96; docs/design/v4/CoachNotepad.dc.html).
+    enum Notepad {
+        /// The Scores table: the erg-number column, the names column, one rep's box.
+        static let ergColumn: CGFloat = 22
+        static let nameColumn: CGFloat = 92
+        /// The most a name takes before it's cut short with "…"; the column is only as wide as the
+        /// longest name needs, up to this.
+        static let nameColumnMax: CGFloat = 150
+        /// The least a name keeps when the reps need the room.
+        static let nameColumnMin: CGFloat = 56
+        /// The smallest a rep's box gets: four still fit on a phone beside the names (user,
+        /// 2026-11-05); with room to spare the boxes share it.
+        static let cellWidth: CGFloat = 56
+        static let cellHeight: CGFloat = 44
+        static let rowHeight: CGFloat = 50
+        static let cellRadius: CGFloat = 12
+        static let selectedBorder: CGFloat = 2
+        /// The dot on a score that came from the rower's own post.
+        static let postedDot: CGFloat = 5
+        static let tableRadius: CGFloat = 24
+        static let textMinLines = 3
+        static let notesMinLines = 5
+        /// The entry bar over the keyboard.
+        static let entryRadius: CGFloat = 28
+        static let rateFieldWidth: CGFloat = 88
+        /// The camera button by each name in the Scores table (NP2), and the column it sits in.
+        static let scanButton: CGFloat = 34
+        static let scanColumn: CGFloat = 40
+        /// Scan a monitor (CoachNotepadScan): the camera's finder, the frame drawn inside it (inset
+        /// as a share of the finder's width and height), and the shutter.
+        static let finderRadius: CGFloat = 28
+        static let finderFrameRadius: CGFloat = 18
+        static let finderFrameInsetX: CGFloat = 0.12
+        static let finderFrameInsetY: CGFloat = 0.18
+        static let finderFrameLine: CGFloat = 2
+        static let finderFrameOpacity: Double = 0.75
+        static let shutter: CGFloat = 74
+        static let shutterDot: CGFloat = 58
+        static let shutterRing: CGFloat = 4
+        /// The pieces read so far: # · Time · Split · Metres · Rate.
+        static let scanRowHeight: CGFloat = 40
+        static let scanNumberColumn: CGFloat = 30
+        static let scanValueColumn: CGFloat = 70
+        static let scanRateColumn: CGFloat = 40
+        static let bannerRadius: CGFloat = 20
     }
 
     /// The new-PB celebration (docs/design/v2-decisions.md #12): an RGB-LED style glow that

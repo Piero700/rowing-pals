@@ -41,9 +41,9 @@ struct RouteHost: View {
                     }
                 }
                 .navigationDestination(for: AppRoute.self) { route in
+                    // The stack's own swipe takes a pushed screen back (decision 61); any
+                    // `edgeSwipeToDismiss()` inside it sees it was pushed and stands aside.
                     destination(route)
-                        // The stack's own swipe takes a pushed screen back (decision 61).
-                        .swipeBackHandledByStack()
                 }
         }
         .tint(Tokens.Accent.brand)
@@ -68,7 +68,7 @@ struct RouteHost: View {
     private static func drawsOwnChrome(_ route: AppRoute) -> Bool {
         switch route {
         case .post, .profile, .people, .findClub, .clubHub, .createClub, .editClub, .manageClub,
-             .coachProfile, .editProfile, .coachRower, .squads, .squadEdit, .pbHistory, .newWorkout, .workoutResults,
+             .coachProfile, .editProfile, .coachRower, .squads, .squadEdit, .pbHistory, .newWorkout, .workoutResults, .notepad, .scanMonitor,
              .newWorkoutOn, .practice, .newPractice, .editPractice, .register, .attendanceTotals, .availability,
              .event, .newEvent, .editEvent, .waterSession, .newWaterSession, .sessionBoat, .savedBoat, .newAnnouncement, .editAnnouncement,
              .challenge, .newChallenge, .editChallenge, .ergEvent, .newErgEvent, .editErgEvent, .seasonWrapped: true
@@ -114,6 +114,10 @@ struct RouteHost: View {
             NewWorkoutView()
         case .workoutResults(let workoutId):
             WorkoutResultsView(workoutId: workoutId)
+        case .notepad(let workoutId):
+            NotepadView(workoutId: workoutId)
+        case .scanMonitor(let workoutId, let rowerId):
+            ScanMonitorView(workoutId: workoutId, rowerId: rowerId)
         case .newWorkoutOn(let day):
             NewWorkoutView(date: day)
         case .practice(let practiceId):
