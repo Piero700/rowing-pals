@@ -183,7 +183,31 @@ example 8 × 500m and 20 × 250m) before tuning the joining.
 
 **Checklist:** `docs/testing/coach-notepad-np2.md`.
 
-## Phase NP3 — many pieces and tests (boards `CoachNotepadPieces`, `CoachNotepadTest`)
+## Phase NP3 — many pieces and tests (boards `CoachNotepadPieces`, `CoachNotepadTest`) — built, waiting on the phone tests
+
+Built 2026-11-05, after NP1 and NP2 passed the phone tests and were merged into `main`. **Needs
+`docs/migrations/2026-11-05-coach-notepad-np3.sql`** (checklist step 0). Files: `NotepadSummaryCard`,
+`NotepadTestCard`, `ScanButton`; `NotepadScoresCard` gains `isEveryPiece` and metres for timed pieces;
+`NotepadRules` gains `summary`, `fadeWindow`, `fadeText`, `metres`/`time`, `splitLabels`, `grouped`,
+`test(of:)`; `MonitorParser.splitRows` / `isIntervalTitle`. Tests: 60 notepad, scan and OCR tests pass,
+including the real 2k photo (IMG_0593) giving its four 500m splits exactly.
+
+Decided with the user (2026-11-05): **posted rows get their 500m splits by saving them when the rower
+posts.** Posts didn't keep them: a segment held only time, metres, split and rate. Now the Log flow
+keeps the split rows it reads under a continuous piece (`segments.splits_500_ms`), only while the
+metres are still the ones read off the photo, and never for an interval workout (a "count x" or
+"/…r" title). Tests posted before this build show "Their post doesn't have 500m splits".
+
+The migration also fixes an NP1 bug found here: a workout set by title alone ("4 x 500m") took the
+reps from its title in the app (2026-11-05), but the server counted reps from the pieces only and
+refused every score after column 1. The app works before the migration is run (the splits argument is
+only sent when there are splits; posted splits are read on their own and left blank if they can't be).
+
+Beyond the boards (for the user to check): a test set with no pieces takes its piece from the test
+(a 2k is 2,000 m); a 5k's rows are named "splits" (they're 1,000 m each); with fewer than ten pieces the
+fade compares halves and the footnote says so; a test's scan screen lists the splits it read; a timed
+piece's box shows its metres with the split under it. Simulator check used a temporary, uncommitted
+preview switch (no workout on Dev had over four reps or was a test).
 
 **Many pieces.** When a workout has more reps than fit (more than 4), the Scores block switches
 to **Summary | Every piece**:

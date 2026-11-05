@@ -8,9 +8,12 @@ import SwiftUI
 /// The notepad's Scores table (CoachNotepad, decision 96): one row per rower in erg order — their
 /// erg number and name stay put on the left — and one box per rep, which scrolls sideways when
 /// there are more reps than fit. A box shows the coach's score, else the rower's own post (with
-/// a brand dot), "out" for sat out, or "–". Tapping a box opens the entry bar.
+/// a brand dot), "out" for sat out, or "–". Tapping a box opens the entry bar. A timed piece's box
+/// shows the metres, with the split under them (NP3). With many pieces this is **Every piece**
+/// (CoachNotepadPieces): no title or camera, names pinned, the boxes swiping sideways.
 struct NotepadScoresCard: View {
     let viewModel: NotepadViewModel
+    var isEveryPiece = false
     let onSelect: (NotepadRules.Spot) -> Void
     @Environment(\.navigate) private var navigate
     /// The names column's width, as laid out.
@@ -19,7 +22,7 @@ struct NotepadScoresCard: View {
     /// The width left for the boxes after the names and the camera (worked out from the table's
     /// and the names' widths: a width read off the sideways scroll view itself doesn't follow it).
     private var boxesAreaWidth: CGFloat {
-        max(0, tableWidth - namesWidth - Tokens.Notepad.scanColumn)
+        max(0, tableWidth - namesWidth - scanWidth)
     }
 
     /// The table's whole width, names to boxes.
@@ -37,30 +40,27 @@ struct NotepadScoresCard: View {
     private var nameMaxWidth: CGFloat {
         guard tableWidth > 0 else { return Tokens.Notepad.nameColumnMax }
         let boxes = CGFloat(max(viewModel.reps.count, 1)) * Tokens.Notepad.cellWidth
-        let left = tableWidth - Tokens.Notepad.ergColumn - 4 - Tokens.Notepad.scanColumn - boxes
-        return min(Tokens.Notepad.nameColumnMax, max(Tokens.Notepad.nameColumnMin, left.rounded(.down)))
+        let left = tableWidth - Tokens.Notepad.ergColumn - 4 - scanWidth - boxes
+        // When the reps can't all fit anyway, the boxes scroll and the names keep their usual width
+        // (CoachNotepadPieces' Every piece); otherwise they give way so every rep stays on screen.
+        guard left >= Tokens.Notepad.nameColumnMin else { return Tokens.Notepad.nameColumn }
+        return min(Tokens.Notepad.nameColumnMax, left.rounded(.down))
     }
+
+    private var scanWidth: CGFloat { isEveryPiece ? 0 : Tokens.Notepad.scanColumn }
+
+    /// Whether any rep is a timed piece, whose boxes show metres.
+    private var hasTimedPieces: Bool { viewModel.reps.contains { $0?.kind == .time } }
 
     private static let cardShape = RoundedRectangle(cornerRadius: Tokens.Radius.card, style: .continuous)
     private static let headerHeight: CGFloat = Tokens.Size.chip
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            HStack(alignment: .firstTextBaseline) {
-                Text("Scores")
-                    .textStyle(Typography.rowTitle)
-                    .foregroundStyle(Tokens.Ink.primary)
-                    .accessibilityAddTraits(.isHeader)
-                Spacer(minLength: Tokens.Spacing.tight)
-                Text("split /500m")
-                    .textStyle(Typography.statLabel)
-                    .foregroundStyle(Tokens.Ink.secondary)
-            }
-            .padding(.horizontal, Tokens.Spacing.card)
-            .padding(.top, Tokens.Spacing.loose)
-            .padding(.bottom, Tokens.Spacing.tight)
+            if !isEveryPiece { titleRow }
 
             if viewModel.rowers.isEmpty {
+
                 Text("Nobody is in this workout yet.")
                     .textStyle(Typography.meta)
                     .foregroundStyle(Tokens.Ink.secondary)
@@ -75,7 +75,7 @@ struct NotepadScoresCard: View {
                     namesColumn
                         .fixedSize(horizontal: true, vertical: false)
                         .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { namesWidth = $0 }
-                    scanColumn
+                    if !isEveryPiece { scanColumn }
                     ScrollView(.horizontal) {
                         boxesColumns
                     }
@@ -85,6 +85,7 @@ struct NotepadScoresCard: View {
                 }
                 .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { tableWidth = $0 }
                 .padding(.horizontal, Tokens.Spacing.tight)
+                .padding(.top, isEveryPiece ? Tokens.Spacing.tight : 0)
 
                 legend
             }
@@ -92,6 +93,22 @@ struct NotepadScoresCard: View {
         .background(Self.cardShape.fill(Tokens.Surface.card))
         .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
         .clipShape(Self.cardShape)
+    }
+
+    private var titleRow: some View {
+        HStack(alignment: .firstTextBaseline) {
+            Text("Scores")
+                .textStyle(Typography.rowTitle)
+                .foregroundStyle(Tokens.Ink.primary)
+                .accessibilityAddTraits(.isHeader)
+            Spacer(minLength: Tokens.Spacing.tight)
+            Text(hasTimedPieces ? "metres · split /500m" : "split /500m")
+                .textStyle(Typography.statLabel)
+                .foregroundStyle(Tokens.Ink.secondary)
+        }
+        .padding(.horizontal, Tokens.Spacing.card)
+        .padding(.top, Tokens.Spacing.loose)
+        .padding(.bottom, Tokens.Spacing.tight)
     }
 
     // MARK: - Columns
@@ -199,12 +216,26 @@ struct NotepadScoresCard: View {
                         .frame(width: Tokens.Notepad.postedDot, height: Tokens.Notepad.postedDot)
                         .accessibilityHidden(true)
                 }
-                Text(Self.text(shown))
-                    .textStyle(Self.hasValue(shown) ? Typography.rowTitle : Typography.detail)
+                if let metres = shownMetres(spot, shown: shown) {
+                    VStack(spacing: 0) {
+                        Text(NotepadRules.grouped(metres))
+                            .textStyle(Typography.rowTitle)
+                            .foregroundStyle(Tokens.Ink.primary)
+                        Text(Self.text(shown))
+                            .textStyle(Typography.statLabel)
+                            .foregroundStyle(Tokens.Ink.secondary)
+                    }
                     .tabularNumerals()
-                    .foregroundStyle(Self.hasValue(shown) ? Tokens.Ink.primary : Tokens.Ink.faint)
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
+                } else {
+                    Text(Self.text(shown))
+                        .textStyle(Self.hasValue(shown) ? Typography.rowTitle : Typography.detail)
+                        .tabularNumerals()
+                        .foregroundStyle(Self.hasValue(shown) ? Tokens.Ink.primary : Tokens.Ink.faint)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
+                }
             }
             .frame(width: cellWidth - 4, height: Tokens.Notepad.cellHeight)
             .background(shape.fill(isSelected ? Tokens.Accent.brandSoft : Color.clear))
@@ -223,6 +254,19 @@ struct NotepadScoresCard: View {
     private func shownCell(_ spot: NotepadRules.Spot, isSelected: Bool) -> NotepadRules.Cell {
         if isSelected, viewModel.hasTyped, let entry = viewModel.typedEntry { return .noted(splitMs: entry.splitMs) }
         return viewModel.cell(spot)
+    }
+
+    /// A timed piece's metres for the box: what's being typed, else what's on the page.
+    private func shownMetres(_ spot: NotepadRules.Spot, shown: NotepadRules.Cell) -> Int? {
+        guard viewModel.reps.indices.contains(spot.rep), let piece = viewModel.reps[spot.rep], piece.kind == .time else { return nil }
+        switch shown {
+        case .noted(let split) where viewModel.selection == spot && viewModel.hasTyped:
+            return viewModel.typedEntry?.distanceM ?? NotepadRules.metres(splitMs: split, piece: piece)
+        case .posted, .noted:
+            return viewModel.metres(spot)
+        case .empty, .satOut:
+            return nil
+        }
     }
 
     private static func text(_ cell: NotepadRules.Cell) -> String {
@@ -252,13 +296,19 @@ struct NotepadScoresCard: View {
 
     private var legend: some View {
         HStack(spacing: 6) {
-            Circle()
-                .fill(Tokens.Accent.brand)
-                .frame(width: Tokens.Notepad.postedDot, height: Tokens.Notepad.postedDot)
-                .accessibilityHidden(true)
-            Text("from their own post · tap a box to type · the camera reads their monitor")
-                .textStyle(Typography.statLabel)
-                .foregroundStyle(Tokens.Ink.secondary)
+            if isEveryPiece {
+                Text("Swipe sideways for pieces 1–\(viewModel.reps.count). Names stay put.")
+                    .textStyle(Typography.statLabel)
+                    .foregroundStyle(Tokens.Ink.secondary)
+            } else {
+                Circle()
+                    .fill(Tokens.Accent.brand)
+                    .frame(width: Tokens.Notepad.postedDot, height: Tokens.Notepad.postedDot)
+                    .accessibilityHidden(true)
+                Text("from their own post · tap a box to type · the camera reads their monitor")
+                    .textStyle(Typography.statLabel)
+                    .foregroundStyle(Tokens.Ink.secondary)
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, Tokens.Spacing.card)
@@ -273,6 +323,6 @@ struct NotepadScoresCard: View {
 /// closure can't be compared, and the page's one always does the same thing.
 extension NotepadScoresCard: Equatable {
     static func == (lhs: NotepadScoresCard, rhs: NotepadScoresCard) -> Bool {
-        lhs.viewModel === rhs.viewModel
+        lhs.viewModel === rhs.viewModel && lhs.isEveryPiece == rhs.isEveryPiece
     }
 }

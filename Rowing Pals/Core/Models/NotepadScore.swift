@@ -26,6 +26,8 @@ nonisolated struct NotepadScore: Decodable, Equatable {
     let rate: Int?
     let satOut: Bool
     let source: Source
+    /// A test's 500m splits, when they were scanned off the monitor (NP3).
+    let splits500Ms: [Int]?
 
     enum CodingKeys: String, CodingKey {
         case rate, source
@@ -36,10 +38,12 @@ nonisolated struct NotepadScore: Decodable, Equatable {
         case timeMs = "time_ms"
         case distanceM = "distance_m"
         case satOut = "sat_out"
+        case splits500Ms = "splits_500_ms"
     }
 
     init(workoutId: UUID, userId: UUID, pieceIndex: Int, splitMs: Int?, timeMs: Int? = nil,
-         distanceM: Int? = nil, rate: Int? = nil, satOut: Bool = false, source: Source = .typed) {
+         distanceM: Int? = nil, rate: Int? = nil, satOut: Bool = false, source: Source = .typed,
+         splits500Ms: [Int]? = nil) {
         self.workoutId = workoutId
         self.userId = userId
         self.pieceIndex = pieceIndex
@@ -49,5 +53,6 @@ nonisolated struct NotepadScore: Decodable, Equatable {
         self.rate = rate
         self.satOut = satOut
         self.source = source
+        self.splits500Ms = splits500Ms
     }
 }

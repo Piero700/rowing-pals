@@ -35,7 +35,104 @@ nonisolated enum NotepadRules {
     /// ones its title names ("4 x 500m" → 4 × 500 m), so the page has a column per rep without the
     /// coach doing anything more (user, 2026-11-05).
     static func pieces(of workout: CoachWorkout) -> [WorkoutPiece] {
-        workout.pieces.isEmpty ? pieces(fromTitle: workout.title) : workout.pieces
+        guard workout.pieces.isEmpty else { return workout.pieces }
+        let fromTitle = pieces(fromTitle: workout.title)
+        if !fromTitle.isEmpty { return fromTitle }
+        // A test set with no pieces is still its one piece: a 2k test is 2,000 m, a 30min is 30:00.
+        switch test(of: workout)?.target {
+        case .distance(let m): return [WorkoutPiece(kind: .distance, value: m)]
+        case .duration(let ms): return [WorkoutPiece(kind: .time, value: ms)]
+        case nil: return []
+        }
+    }
+
+    /// The standard test a workout was set as (its `test_key`), if any.
+    static func test(of workout: CoachWorkout) -> StandardTest? {
+        workout.testKey.flatMap { key in StandardTest.all.first { $0.key == key } }
+    }
+
+    // MARK: - Many pieces (NP3)
+
+    /// More reps than this and the Scores block shows Summary | Every piece (CoachNotepadPieces).
+    static let summaryRepThreshold = 4
+    /// Slower by this much at the end and the fade shows in red.
+    static let fadeWarningMs = 1500
+
+    /// One rower's line on the Summary.
+    struct RowSummary: Equatable {
+        let done: Int
+        let total: Int
+        let averageMs: Int?
+        let bestMs: Int?
+        /// The last pieces' average against the first pieces' (positive: slower at the end).
+        let fadeMs: Int?
+    }
+
+    /// How many pieces each end of the fade compares: five, or half the workout when it has fewer
+    /// than ten, so the two ends never overlap.
+    static func fadeWindow(repCount: Int) -> Int { min(5, repCount / 2) }
+
+    /// A rower's splits, one per rep (nil: none, or sat out), as the Summary shows them. Average and
+    /// fade are kept to the tenth, like every split.
+    static func summary(_ splits: [Int?]) -> RowSummary {
+        let values = splits.compactMap { $0 }
+        let window = fadeWindow(repCount: splits.count)
+        func mean(_ items: ArraySlice<Int?>) -> Double? {
+            let known = items.compactMap { $0 }
+            return known.isEmpty ? nil : Double(known.reduce(0, +)) / Double(known.count)
+        }
+        var fade: Int?
+        if window > 0, let first = mean(splits.prefix(window)), let last = mean(splits.suffix(window)) {
+            fade = roundedToTenth(last - first)
+        }
+        return RowSummary(
+            done: values.count, total: splits.count,
+            averageMs: values.isEmpty ? nil : roundedToTenth(Double(values.reduce(0, +)) / Double(values.count)),
+            bestMs: values.min(),
+            fadeMs: fade
+        )
+    }
+
+    /// "+2.1", "−0.4", "±0.0" (seconds).
+    static func fadeText(_ ms: Int) -> String {
+        let sign = ms > 0 ? "+" : (ms < 0 ? "−" : "±")
+        let tenths = abs(ms) / 100
+        return "\(sign)\(tenths / 10).\(tenths % 10)"
+    }
+
+    // MARK: - Timed pieces and tests (NP3)
+
+    /// The metres rowed in a timed piece at this split (time ÷ split × 500); nil for anything else.
+    static func metres(splitMs: Int, piece: WorkoutPiece?) -> Int? {
+        guard let piece, piece.kind == .time, splitMs > 0 else { return nil }
+        return Int((Double(piece.value) / Double(splitMs) * 500).rounded())
+    }
+
+    /// The time a distance piece took at this split; nil for anything else.
+    static func time(splitMs: Int, piece: WorkoutPiece?) -> Int? {
+        guard let piece, piece.kind == .distance else { return nil }
+        return roundedToTenth(Double(splitMs) * Double(piece.value) / 500)
+    }
+
+    /// Where each split row ends, as the tiles label it: "500m", "1,000m", … for a 2k's four rows.
+    /// Plain numbers when the piece's distance isn't known.
+    static func splitLabels(count: Int, piece: WorkoutPiece?) -> [String] {
+        guard count > 0 else { return [] }
+        guard let piece, piece.kind == .distance, piece.value > 0 else { return (1...count).map(String.init) }
+        return (1...count).map { index in "\(grouped(piece.value * index / count))m" }
+    }
+
+    /// "1,000" from 1000: thousands grouped as the UK writes them.
+    static func grouped(_ value: Int) -> String {
+        let digits = String(abs(value))
+        var groups: [String] = []
+        var end = digits.endIndex
+        while end > digits.startIndex {
+            let start = digits.index(end, offsetBy: -3, limitedBy: digits.startIndex) ?? digits.startIndex
+            groups.insert(String(digits[start..<end]), at: 0)
+            end = start
+        }
+        return (value < 0 ? "-" : "") + groups.joined(separator: ",")
     }
 
     /// The pieces a title names, each "count × what": a distance ("4 x 500m", "4×500", "3 x 2,000m",
@@ -264,14 +361,17 @@ nonisolated enum NotepadRules {
     /// of the workout (extra rows are left off), or the summary row for a one-piece workout. A row
     /// without a split is skipped.
     static func scannedScores(
-        rows: [MonitorRow], summary: MonitorRow?, repCount: Int, workoutId: UUID, rowerId: UUID
+        rows: [MonitorRow], summary: MonitorRow?, repCount: Int, workoutId: UUID, rowerId: UUID,
+        splitRowsMs: [Int]? = nil
     ) -> [NotepadScore] {
         let pieces = repCount == 1 ? [summary ?? rows.first].compactMap { $0 } : Array(rows.prefix(repCount))
         return pieces.enumerated().compactMap { index, row in
             guard let splitMs = row.splitMs else { return nil }
             return NotepadScore(
                 workoutId: workoutId, userId: rowerId, pieceIndex: index, splitMs: splitMs,
-                timeMs: row.timeMs, distanceM: row.distanceM, rate: row.rate, satOut: false, source: .scanned
+                timeMs: row.timeMs, distanceM: row.distanceM, rate: row.rate, satOut: false, source: .scanned,
+                // A one-piece workout keeps the split rows under it (a test's 500m splits, NP3).
+                splits500Ms: repCount == 1 ? splitRowsMs : nil
             )
         }
     }

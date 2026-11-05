@@ -249,3 +249,59 @@ extension NotepadRulesTests {
         #expect(Self.read("1:00:03").isEmpty)
     }
 }
+
+// MARK: - Many pieces, timed pieces and tests (NP3)
+
+extension NotepadRulesTests {
+    @Test func theSummaryCountsAveragesAndFindsTheBest() {
+        let summary = NotepadRules.summary([104_000, nil, 106_000, 102_000, nil, 104_100])
+        #expect(summary.done == 4)
+        #expect(summary.total == 6)
+        #expect(summary.averageMs == 104_000)
+        #expect(summary.bestMs == 102_000)
+    }
+
+    @Test func fadeIsTheLastFiveAgainstTheFirstFive() {
+        // 20 pieces: the first five at 1:40.0, the last five at 1:42.5.
+        let splits: [Int?] = Array(repeating: 100_000, count: 5) + Array(repeating: 101_000, count: 10)
+            + Array(repeating: 102_500, count: 5)
+        #expect(NotepadRules.summary(splits).fadeMs == 2500)
+        #expect(NotepadRules.fadeWindow(repCount: 20) == 5)
+    }
+
+    @Test func aShortWorkoutsFadeComparesHalves() {
+        #expect(NotepadRules.fadeWindow(repCount: 6) == 3)
+        #expect(NotepadRules.fadeWindow(repCount: 1) == 0)
+        #expect(NotepadRules.summary([100_000, 100_000, 100_000, 99_000, 99_000, 99_000]).fadeMs == -1000)
+        #expect(NotepadRules.summary([100_000]).fadeMs == nil)
+    }
+
+    @Test func fadeIgnoresPiecesNotRowed() {
+        let splits: [Int?] = [100_000, nil, nil, nil, nil, nil, nil, nil, nil, 101_600]
+        #expect(NotepadRules.summary(splits).fadeMs == 1600)
+        #expect(NotepadRules.summary(Array(repeating: nil, count: 10)).fadeMs == nil)
+    }
+
+    @Test func fadeText() {
+        #expect(NotepadRules.fadeText(2100) == "+2.1")
+        #expect(NotepadRules.fadeText(-400) == "−0.4")
+        #expect(NotepadRules.fadeText(0) == "±0.0")
+    }
+
+    @Test func aTimedPieceShowsItsMetres() {
+        // 10:00 at 2:00.0 /500m is 2,500 m.
+        #expect(NotepadRules.metres(splitMs: 120_000, piece: Self.tenMinutes) == 2500)
+        #expect(NotepadRules.metres(splitMs: 120_000, piece: Self.twoK) == nil)
+        // 2,000 m at 1:45.0 is 7:00.0.
+        #expect(NotepadRules.time(splitMs: 105_000, piece: Self.twoK) == 420_000)
+        #expect(NotepadRules.time(splitMs: 105_000, piece: Self.tenMinutes) == nil)
+    }
+
+    @Test func splitTilesAreLabelledByDistance() {
+        let twoK = WorkoutPiece(kind: .distance, value: 2000)
+        #expect(NotepadRules.splitLabels(count: 4, piece: twoK) == ["500m", "1,000m", "1,500m", "2,000m"])
+        #expect(NotepadRules.splitLabels(count: 3, piece: nil) == ["1", "2", "3"])
+        #expect(NotepadRules.grouped(10_000) == "10,000")
+        #expect(NotepadRules.grouped(999) == "999")
+    }
+}

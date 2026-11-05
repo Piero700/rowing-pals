@@ -434,6 +434,18 @@ enum Tokens {
         static let shutter: CGFloat = 74
         static let shutterDot: CGFloat = 58
         static let shutterRing: CGFloat = 4
+        /// Summary | Every piece (CoachNotepadPieces): the Done, Avg/Best and Fade columns, and the
+        /// tiles a name opens to, five to a row.
+        static let summaryDoneColumn: CGFloat = 44
+        static let summaryValueColumn: CGFloat = 58
+        static let summaryFadeColumn: CGFloat = 44
+        static let tileHeight: CGFloat = 44
+        static let tilesPerRow = 5
+        static let tileGap: CGFloat = 4
+        /// A test (CoachNotepadTest): the Time, Split and Rate columns.
+        static let testTimeColumn: CGFloat = 66
+        static let testSplitColumn: CGFloat = 58
+        static let testRateColumn: CGFloat = 34
         /// The pieces read so far: # · Time · Split · Metres · Rate.
         static let scanRowHeight: CGFloat = 40
         static let scanNumberColumn: CGFloat = 30

@@ -23,9 +23,44 @@ enum NotepadService {
     static func scores(for workoutId: UUID) async throws -> [NotepadScore] {
         try await SupabaseService.shared
             .from("coach_notepad_scores")
-            .select("workout_id, user_id, piece_index, split_ms, time_ms, distance_m, rate, sat_out, source")
+            .select("workout_id, user_id, piece_index, split_ms, time_ms, distance_m, rate, sat_out, source, splits_500_ms")
             .eq("workout_id", value: workoutId)
             .execute().value
+    }
+
+    /// Each rower's 500m splits from their own post linked to the workout (NP3): their main piece's
+    /// split rows, kept when they posted. Rowers whose post has none (posted before NP3, a manual
+    /// entry, an interval photo) aren't in it. Read on its own so nothing else depends on the column.
+    static func postedSplits(for workoutId: UUID) async throws -> [UUID: [Int]] {
+        nonisolated struct Row: Decodable {
+            struct Segment: Decodable {
+                let label: SegmentLabel
+                let position: Int
+                let splits500Ms: [Int]?
+                enum CodingKeys: String, CodingKey {
+                    case label, position
+                    case splits500Ms = "splits_500_ms"
+                }
+            }
+            let userId: UUID
+            let segments: [Segment]
+            enum CodingKeys: String, CodingKey {
+                case segments
+                case userId = "user_id"
+            }
+        }
+        let rows: [Row] = try await SupabaseService.shared
+            .from("sessions")
+            .select("user_id, segments(label, position, splits_500_ms)")
+            .eq("workout_id", value: workoutId)
+            .execute().value
+        var result: [UUID: [Int]] = [:]
+        for row in rows where result[row.userId] == nil {
+            let pieces = row.segments.filter { $0.label != .warmup && $0.label != .cooldown }.sorted { $0.position < $1.position }
+            let main = pieces.first { $0.label == .main } ?? pieces.first
+            if let splits = main?.splits500Ms, !splits.isEmpty { result[row.userId] = splits }
+        }
+        return result
     }
 
     /// Saves the page's blocks, Notes and erg order (the page is made on its first save).
@@ -53,6 +88,7 @@ enum NotepadService {
             let p_rate: Int?
             let p_sat_out: Bool
             let p_source: String
+            let p_splits_500_ms: [Int]?
             // Nil values go as JSON null, so the function's every argument is always named.
             func encode(to encoder: Encoder) throws {
                 var c = encoder.container(keyedBy: Keys.self)
@@ -65,15 +101,20 @@ enum NotepadService {
                 try c.encode(p_rate, forKey: .p_rate)
                 try c.encode(p_sat_out, forKey: .p_sat_out)
                 try c.encode(p_source, forKey: .p_source)
+                // Only sent when there are splits (a scanned test), so typing a score works on a
+                // project whether or not the NP3 migration has reached it yet.
+                try c.encodeIfPresent(p_splits_500_ms, forKey: .p_splits_500_ms)
             }
             enum Keys: String, CodingKey {
-                case p_workout, p_user, p_piece, p_split_ms, p_time_ms, p_distance_m, p_rate, p_sat_out, p_source
+                case p_workout, p_user, p_piece, p_split_ms, p_time_ms, p_distance_m, p_rate, p_sat_out, p_source,
+                     p_splits_500_ms
             }
         }
         try await SupabaseService.shared.rpc("save_notepad_score", params: Params(
             p_workout: score.workoutId, p_user: score.userId, p_piece: score.pieceIndex,
             p_split_ms: score.splitMs, p_time_ms: score.timeMs, p_distance_m: score.distanceM,
-            p_rate: score.rate, p_sat_out: score.satOut, p_source: score.source.rawValue
+            p_rate: score.rate, p_sat_out: score.satOut, p_source: score.source.rawValue,
+            p_splits_500_ms: score.splits500Ms
         )).execute()
     }
 
