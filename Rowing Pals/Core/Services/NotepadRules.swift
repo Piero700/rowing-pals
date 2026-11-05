@@ -35,11 +35,16 @@ nonisolated enum NotepadRules {
     /// ones its title names ("4 x 500m" → 4 × 500 m), so the page has a column per rep without the
     /// coach doing anything more (user, 2026-11-05).
     static func pieces(of workout: CoachWorkout) -> [WorkoutPiece] {
-        guard workout.pieces.isEmpty else { return workout.pieces }
-        let fromTitle = pieces(fromTitle: workout.title)
+        pieces(set: workout.pieces, title: workout.title, testKey: workout.testKey)
+    }
+
+    /// The same, from a workout's parts (the rower's Feed card has no whole `CoachWorkout`).
+    static func pieces(set: [WorkoutPiece], title: String, testKey: String?) -> [WorkoutPiece] {
+        guard set.isEmpty else { return set }
+        let fromTitle = pieces(fromTitle: title)
         if !fromTitle.isEmpty { return fromTitle }
         // A test set with no pieces is still its one piece: a 2k test is 2,000 m, a 30min is 30:00.
-        switch test(of: workout)?.target {
+        switch testKey.flatMap({ key in StandardTest.all.first { $0.key == key } })?.target {
         case .distance(let m): return [WorkoutPiece(kind: .distance, value: m)]
         case .duration(let ms): return [WorkoutPiece(kind: .time, value: ms)]
         case nil: return []
@@ -49,6 +54,24 @@ nonisolated enum NotepadRules {
     /// The standard test a workout was set as (its `test_key`), if any.
     static func test(of workout: CoachWorkout) -> StandardTest? {
         workout.testKey.flatMap { key in StandardTest.all.first { $0.key == key } }
+    }
+
+    // MARK: - The rower's Feed card (NP4)
+
+    /// The card shows from the workout's day to this many days after it.
+    static let rowerCardDays = 3
+
+    /// The first day whose workouts still show a card: `rowerCardDays` before today.
+    static func rowerCardSince(today: Date, calendar: Calendar) -> String {
+        WorkoutRules.dayText(calendar.date(byAdding: .day, value: -rowerCardDays, to: today) ?? today, calendar: calendar)
+    }
+
+    /// The cards to show: workouts up to today (none ahead of it) on which the coach noted at least
+    /// one split for the rower — a page of only "sat out" isn't worth a card.
+    static func rowerCards(_ all: [CoachNotedScores], today: String, since: String) -> [CoachNotedScores] {
+        all.filter { card in
+            card.workoutDate <= today && card.workoutDate >= since && card.scores.contains { $0.splitMs != nil }
+        }
     }
 
     // MARK: - Many pieces (NP3)

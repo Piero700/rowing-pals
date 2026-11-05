@@ -28,6 +28,77 @@ enum NotepadService {
             .execute().value
     }
 
+    /// Every notepad page among these workouts (NP4's Notebook).
+    static func notepads(for workoutIds: [UUID]) async throws -> [CoachNotepad] {
+        guard !workoutIds.isEmpty else { return [] }
+        return try await SupabaseService.shared
+            .from("coach_notepads").select("workout_id, club_id, blocks, notes, rower_order")
+            .in("workout_id", values: workoutIds)
+            .execute().value
+    }
+
+    /// Every score the club's coaches noted on these workouts (NP4's Notebook).
+    static func scores(for workoutIds: [UUID]) async throws -> [NotepadScore] {
+        guard !workoutIds.isEmpty else { return [] }
+        return try await SupabaseService.shared
+            .from("coach_notepad_scores")
+            .select("workout_id, user_id, piece_index, split_ms, time_ms, distance_m, rate, sat_out, source")
+            .in("workout_id", values: workoutIds)
+            .execute().value
+    }
+
+    /// The scores the signed-in rower's coaches noted for them on workouts since `since`
+    /// ("yyyy-MM-dd"), one entry per workout, newest first (NP4's Feed card). Only their own scores:
+    /// `my_notepad_scores` never returns anyone else's, or any page's text, tables or Notes.
+    static func myScores(since: String) async throws -> [CoachNotedScores] {
+        nonisolated struct Row: Decodable {
+            let workoutId: UUID
+            let title: String
+            let workoutDate: String
+            let pieces: [WorkoutPiece]?
+            let testKey: String?
+            let coachName: String?
+            let clubName: String?
+            let erg: Int?
+            let pieceIndex: Int
+            let splitMs: Int?
+            let satOut: Bool
+            let postedAvgSplitMs: Int?
+            enum CodingKeys: String, CodingKey {
+                case title, pieces, erg
+                case workoutId = "workout_id"
+                case workoutDate = "workout_date"
+                case testKey = "test_key"
+                case coachName = "coach_name"
+                case clubName = "club_name"
+                case pieceIndex = "piece_index"
+                case splitMs = "split_ms"
+                case satOut = "sat_out"
+                case postedAvgSplitMs = "posted_avg_split_ms"
+            }
+        }
+        struct Params: Encodable { let p_since: String }
+        let rows: [Row] = try await SupabaseService.shared
+            .rpc("my_notepad_scores", params: Params(p_since: since))
+            .execute().value
+        var order: [UUID] = []
+        var byWorkout: [UUID: [Row]] = [:]
+        for row in rows {
+            if byWorkout[row.workoutId] == nil { order.append(row.workoutId) }
+            byWorkout[row.workoutId, default: []].append(row)
+        }
+        return order.compactMap { id in
+            guard let group = byWorkout[id], let first = group.first else { return nil }
+            return CoachNotedScores(
+                workoutId: id, title: first.title, workoutDate: first.workoutDate, pieces: first.pieces ?? [],
+                testKey: first.testKey, coachName: first.coachName, clubName: first.clubName, erg: first.erg,
+                scores: group.sorted { $0.pieceIndex < $1.pieceIndex }
+                    .map { CoachNotedScores.Piece(index: $0.pieceIndex, splitMs: $0.splitMs, satOut: $0.satOut) },
+                postedAverageMs: first.postedAvgSplitMs
+            )
+        }
+    }
+
     /// Each rower's 500m splits from their own post linked to the workout (NP3): their main piece's
     /// split rows, kept when they posted. Rowers whose post has none (posted before NP3, a manual
     /// entry, an interval photo) aren't in it. Read on its own so nothing else depends on the column.

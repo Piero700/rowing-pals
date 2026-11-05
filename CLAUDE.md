@@ -159,8 +159,9 @@ After any change:
 
 **Next: the coach notepad** (decision 96): phases NP1–NP4 in `docs/design/coach-notepad-build-plan.md`,
 on branch `t42-coach-notepad`. NP1 and NP2 passed the phone tests and are merged into `main` (2026-11-05). NP3
-(many pieces, tests, timed pieces) is built, waiting on the migration `2026-11-05-coach-notepad-np3.sql`
-and the phone tests in `docs/testing/coach-notepad-np3.md`. Canvas boards `CoachNotepad…`, `CoachNotebook…` and
+(many pieces, tests, timed pieces; migration run) and NP4 (the Notebook and the rower's Feed card) are
+built, waiting on the migration `2026-11-05-coach-notepad-np4.sql` and the phone tests in
+`docs/testing/coach-notepad-np3.md` and `-np4.md`. That completes the notepad plan. Canvas boards `CoachNotepad…`, `CoachNotebook…` and
 `RowerCoachScores…` in `docs/design/v4/`. Earlier:
 
 **The coach version** (decisions 67–70): phases CV1–CV3 in `docs/design/coach-version-build-plan.md`, on branch

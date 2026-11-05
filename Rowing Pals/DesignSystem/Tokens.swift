@@ -452,6 +452,20 @@ enum Tokens {
         static let scanValueColumn: CGFloat = 70
         static let scanRateColumn: CGFloat = 40
         static let bannerRadius: CGFloat = 20
+        /// The Notebook (CoachNotebook, NP4): a value column (narrower when there are more than
+        /// four), the names' least width, the page arrows and dots.
+        static let notebookColumn: CGFloat = 62
+        static let notebookColumnTight: CGFloat = 50
+        static let notebookNameMin: CGFloat = 80
+        static let pageArrow: CGFloat = 40
+        static let pageDot: CGFloat = 7
+        static let pageDotGap: CGFloat = 6
+        /// A swipe this far sideways turns the page.
+        static let pageSwipe: CGFloat = 60
+        /// The rower's Feed card (RowerCoachScores): its icon and score tiles.
+        static let scoresIcon: CGFloat = 40
+        static let scoreTileRadius: CGFloat = 18
+        static let scoreTilesPerRow = 3
     }
 
     /// The new-PB celebration (docs/design/v2-decisions.md #12): an RGB-LED style glow that
