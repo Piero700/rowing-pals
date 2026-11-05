@@ -98,7 +98,7 @@ struct CrewTagPicker: View {
                 }
                 .background(Self.rowShape.fill(Tokens.Surface.card))
                 .clipShape(Self.rowShape)
-                .overlay { Self.rowShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+                .overlay { Self.rowShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
                 .padding(.top, Tokens.Spacing.loose)
                 .padding(.bottom, Tokens.Spacing.group)
             }

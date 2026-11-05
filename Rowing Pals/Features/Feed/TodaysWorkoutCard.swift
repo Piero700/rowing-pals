@@ -64,7 +64,7 @@ struct TodaysWorkoutCard: View {
             )
             .background(Self.cardShape.fill(Tokens.Surface.card))
         }
-        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
         .accessibilityElement(children: .combine)
     }
 

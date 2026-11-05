@@ -102,7 +102,7 @@ struct FollowRequestsView: View {
         .padding(Tokens.Spacing.loose)
         .opacity(viewModel.busyIds.contains(person.id) ? 0.6 : 1)
         .background {
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
+            RoundedRectangle(cornerRadius: Tokens.Radius.card, style: .continuous)
                 .fill(Tokens.Ink.primary.opacity(0.06))
         }
     }

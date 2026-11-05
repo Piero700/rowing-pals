@@ -35,7 +35,13 @@ struct EventEditorView: View {
         }
         .scrollIndicators(.hidden)
         .safeAreaInset(edge: .top, spacing: 0) {
-            ScreenHeader(title: viewModel.isNew ? "New race or event" : (viewModel.isRace ? "Edit race" : "Edit event")) { dismiss() }
+            ScreenHeader(title: viewModel.isNew ? "New race or event" : (viewModel.isRace ? "Edit race" : "Edit event"),
+                         onBack: { dismiss() }) {
+                HeaderSaveButton(title: viewModel.isNew ? "Add" : "Save", isSaving: viewModel.isSaving,
+                                 isDisabled: !viewModel.hasLoaded || viewModel.problem != nil) {
+                    Task { if await viewModel.save() { dismiss() } }
+                }
+            }
         }
         .background(Tokens.Base.ground)
         .toolbar(.hidden, for: .navigationBar)
@@ -52,114 +58,77 @@ struct EventEditorView: View {
         }
     }
 
-    @ViewBuilder
     private var form: some View {
-        PillSegmentedControl(
-            options: EventKind.allCases.map(\.label),
-            selection: Binding(
-                get: { EventKind.allCases.firstIndex(of: viewModel.kind) ?? 0 },
-                set: { viewModel.kind = EventKind.allCases[$0] }
+        VStack(alignment: .leading, spacing: Tokens.Grouped.groupGap) {
+            PillSegmentedControl(
+                options: EventKind.allCases.map(\.label),
+                selection: Binding(
+                    get: { EventKind.allCases.firstIndex(of: viewModel.kind) ?? 0 },
+                    set: { viewModel.kind = EventKind.allCases[$0] }
+                )
             )
-        )
 
-        FormLabel("Name").padding(.top, Tokens.Spacing.loose)
-        TextField(viewModel.isRace ? "Norwich Autumn Head" : "Club dinner", text: $viewModel.name)
-            .textStyle(Typography.bodyV3)
-            .padding(.horizontal, Tokens.Spacing.card)
-            .formFieldBox()
-
-        HStack(alignment: .top, spacing: Tokens.Spacing.loose) {
-            VStack(alignment: .leading, spacing: 0) {
-                FormLabel("First day")
-                DatePicker("First day", selection: $viewModel.firstDay, displayedComponents: .date)
-                    .labelsHidden()
-                    .formFieldBox()
+            GroupedSection {
+                GroupedTextRow(label: "Name", placeholder: viewModel.isRace ? "Norwich Autumn Head" : "Club dinner",
+                               text: $viewModel.name)
+                GroupedDivider()
+                GroupedTextRow(label: "Place", placeholder: "River Wensum, Norwich", text: $viewModel.place)
             }
-            VStack(alignment: .leading, spacing: 0) {
-                FormLabel("Last day")
-                if viewModel.isOneDay {
-                    Button("Same day") { viewModel.lastDay = viewModel.firstDay; viewModel.isOneDay = false }
-                        .textStyle(Typography.bodyV3)
-                        .foregroundStyle(Tokens.Ink.primary)
-                        .formFieldBox()
-                        .accessibilityHint("Choose a later last day")
-                } else {
-                    DatePicker("Last day", selection: $viewModel.lastDay, in: viewModel.firstDay..., displayedComponents: .date)
+
+            GroupedSection {
+                GroupedRow(label: "First day") {
+                    DatePicker("First day", selection: $viewModel.firstDay, displayedComponents: .date)
                         .labelsHidden()
-                        .formFieldBox()
-                    Button("Same day") { viewModel.isOneDay = true }
-                        .buttonStyle(.rpText)
+                }
+                GroupedDivider()
+                GroupedToggleRow(label: "More than one day", isOn: Binding(
+                    get: { !viewModel.isOneDay },
+                    set: { isLonger in
+                        if isLonger { viewModel.lastDay = viewModel.firstDay }
+                        viewModel.isOneDay = !isLonger
+                    }
+                ))
+                if !viewModel.isOneDay {
+                    GroupedDivider()
+                    GroupedRow(label: "Last day") {
+                        DatePicker("Last day", selection: $viewModel.lastDay, in: viewModel.firstDay..., displayedComponents: .date)
+                            .labelsHidden()
+                    }
                 }
             }
-        }
-        .padding(.top, Tokens.Spacing.loose)
 
-        FormLabel("Place").padding(.top, Tokens.Spacing.loose)
-        TextField("River Wensum, Norwich", text: $viewModel.place)
-            .textStyle(Typography.bodyV3)
-            .padding(.horizontal, Tokens.Spacing.card)
-            .formFieldBox()
-
-        FormSectionTitle("Squads")
-        WrapLayout(spacing: Tokens.Spacing.tight) {
-            Button("Whole club") { viewModel.squadIds = [] }
-                .buttonStyle(.rpPill(isOn: viewModel.squadIds.isEmpty))
-            ForEach(viewModel.squads) { squad in
-                Button(squad.name) { viewModel.toggle(squad) }
-                    .buttonStyle(.rpPill(isOn: viewModel.squadIds.contains(squad.id)))
+            GroupedSection(header: "Squads") {
+                GroupedChipsRow {
+                    Button("Whole club") { viewModel.squadIds = [] }
+                        .buttonStyle(.rpPill(isOn: viewModel.squadIds.isEmpty, minHeight: Tokens.Size.compactSegment))
+                    ForEach(viewModel.squads) { squad in
+                        Button(squad.name) { viewModel.toggle(squad) }
+                            .buttonStyle(.rpPill(isOn: viewModel.squadIds.contains(squad.id), minHeight: Tokens.Size.compactSegment))
+                    }
+                }
             }
-        }
 
-        FormLabel("Note").padding(.top, Tokens.Spacing.loose)
-        TextField("Entries close Mon 26 Oct. Boats leave at 07:30.", text: $viewModel.note, axis: .vertical)
-            .textStyle(Typography.bodyV3)
-            .lineLimit(2...5)
-            .padding(.horizontal, Tokens.Spacing.card)
-            .padding(.vertical, Tokens.Spacing.loose)
-            .formFieldBox()
-
-        ToggleCard(title: viewModel.isRace ? "Ask who can race" : "Ask who can come",
-                   detail: "Rowers answer in their Calendar. You see the answers on the \(viewModel.isRace ? "race" : "event").",
-                   isOn: $viewModel.asksAvailability)
-            .padding(.top, Tokens.Spacing.group)
-
-        if let problem = viewModel.problem, !viewModel.name.isEmpty {
-            Text(problem)
-                .textStyle(Typography.meta)
-                .foregroundStyle(Tokens.System.error)
-                .padding(.horizontal, 4)
-                .padding(.top, Tokens.Spacing.loose)
-        }
-        if let error = viewModel.errorMessage {
-            Text(error)
-                .textStyle(Typography.meta)
-                .foregroundStyle(Tokens.System.error)
-                .padding(.horizontal, 4)
-                .padding(.top, Tokens.Spacing.loose)
-        }
-
-        Button {
-            Task { if await viewModel.save() { dismiss() } }
-        } label: {
-            if viewModel.isSaving {
-                ProgressView().tint(Tokens.Ink.onBrand)
-            } else {
-                Text(viewModel.isNew ? "Add to calendar" : "Save changes")
+            GroupedSection(footer: viewModel.isNew
+                ? "\(viewModel.audienceCount) rower\(viewModel.audienceCount == 1 ? "" : "s") \(viewModel.squadIds.isEmpty ? "in the club" : "in these squads") \(viewModel.audienceCount == 1 ? "is" : "are") told."
+                : nil) {
+                GroupedToggleRow(label: viewModel.isRace ? "Ask who can race" : "Ask who can come",
+                                 detail: "Rowers answer in their Calendar. You see the answers on the \(viewModel.isRace ? "race" : "event").",
+                                 isOn: $viewModel.asksAvailability)
+                GroupedDivider()
+                GroupedNotesRow(placeholder: "Note: entries close Mon 26 Oct. Boats leave at 07:30.", text: $viewModel.note)
             }
-        }
-        .buttonStyle(.rpPrimary)
-        .disabled(viewModel.isSaving || viewModel.problem != nil)
-        .padding(.top, Tokens.Spacing.group)
 
-        if viewModel.isNew {
-            FormFootnote("\(viewModel.audienceCount) rower\(viewModel.audienceCount == 1 ? "" : "s") \(viewModel.squadIds.isEmpty ? "in the club" : "in these squads") \(viewModel.audienceCount == 1 ? "is" : "are") told.")
-                .frame(maxWidth: .infinity)
-                .multilineTextAlignment(.center)
-        } else {
-            Button(viewModel.isRace ? "Delete race" : "Delete event") { isConfirmingDelete = true }
-                .buttonStyle(.rpDestructive)
+            if let problem = viewModel.problem, !viewModel.name.isEmpty { GroupedError(text: problem) }
+            if let error = viewModel.errorMessage { GroupedError(text: error) }
+
+            if !viewModel.isNew {
+                GroupedSection {
+                    GroupedButtonRow(title: viewModel.isRace ? "Delete race" : "Delete event", isDestructive: true, isCentred: true) {
+                        isConfirmingDelete = true
+                    }
+                }
                 .disabled(viewModel.isSaving)
-                .padding(.top, Tokens.Spacing.tight)
+            }
         }
     }
 }

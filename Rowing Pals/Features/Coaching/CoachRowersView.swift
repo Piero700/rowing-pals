@@ -142,7 +142,7 @@ struct CoachRowersView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(Tokens.Spacing.loose)
         .background(Self.statShape.fill(Tokens.Surface.card))
-        .overlay { Self.statShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+        .overlay { Self.statShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
         .accessibilityElement(children: .combine)
     }
 }

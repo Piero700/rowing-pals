@@ -68,47 +68,33 @@ struct WaterSessionView: View {
 
     @ViewBuilder
     private var form: some View {
-        FormLabel("Title")
-        TextField("3 × 2km at rate 28", text: $viewModel.title)
-            .textStyle(Typography.bodyV3)
-            .padding(.horizontal, Tokens.Spacing.card)
-            .formFieldBox()
-
-        FormLabel("Date").padding(.top, Tokens.Spacing.loose)
-        DatePicker("Date", selection: $viewModel.day, displayedComponents: .date)
-            .labelsHidden()
-            .formFieldBox()
-
-        // Starts and Ends, as a practice's (decisions 73, 79): the end follows the start.
-        HStack(spacing: Tokens.Spacing.loose) {
-            VStack(alignment: .leading, spacing: 0) {
-                FormLabel("Starts")
-                DatePicker("Starts", selection: $viewModel.time, displayedComponents: .hourAndMinute)
-                    .labelsHidden()
-                    .formFieldBox()
+        VStack(alignment: .leading, spacing: Tokens.Grouped.groupGap) {
+            GroupedSection {
+                GroupedTextRow(label: "Title", placeholder: "3 × 2km at rate 28", text: $viewModel.title)
+                GroupedDivider()
+                GroupedTextRow(label: "Meet at", placeholder: "Boathouse, 06:45", text: $viewModel.meetAt)
             }
-            VStack(alignment: .leading, spacing: 0) {
-                FormLabel("Ends")
-                DatePicker("Ends", selection: $viewModel.endTime, in: viewModel.endRange, displayedComponents: .hourAndMinute)
-                    .labelsHidden()
-                    .formFieldBox()
+            // Starts and Ends, as a practice's (decisions 73, 79): the end follows the start.
+            GroupedSection {
+                GroupedRow(label: "Date") {
+                    DatePicker("Date", selection: $viewModel.day, displayedComponents: .date)
+                        .labelsHidden()
+                }
+                GroupedDivider()
+                GroupedRow(label: "Starts") {
+                    DatePicker("Starts", selection: $viewModel.time, displayedComponents: .hourAndMinute)
+                        .labelsHidden()
+                }
+                GroupedDivider()
+                GroupedRow(label: "Ends") {
+                    DatePicker("Ends", selection: $viewModel.endTime, in: viewModel.endRange, displayedComponents: .hourAndMinute)
+                        .labelsHidden()
+                }
+            }
+            GroupedSection(header: "The plan") {
+                GroupedNotesRow(placeholder: "Pieces, rates, where to turn…", text: $viewModel.plan)
             }
         }
-        .padding(.top, Tokens.Spacing.loose)
-
-        FormLabel("Meet at").padding(.top, Tokens.Spacing.loose)
-        TextField("Boathouse, 06:45", text: $viewModel.meetAt)
-            .textStyle(Typography.bodyV3)
-            .padding(.horizontal, Tokens.Spacing.card)
-            .formFieldBox()
-
-        FormLabel("The plan").padding(.top, Tokens.Spacing.loose)
-        TextField("Pieces, rates, where to turn…", text: $viewModel.plan, axis: .vertical)
-            .textStyle(Typography.bodyV3)
-            .lineLimit(2...6)
-            .padding(.horizontal, Tokens.Spacing.card)
-            .padding(.vertical, Tokens.Spacing.loose)
-            .formFieldBox()
 
         // Save the details now and see that they're saved (user, 2026-10-18); leaving still saves.
         Button {
@@ -151,7 +137,7 @@ struct WaterSessionView: View {
             .padding(.vertical, Tokens.Spacing.loose)
             .padding(.horizontal, Tokens.Spacing.gap)
             .background(Self.cardShape.fill(Tokens.Surface.card))
-            .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+            .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
         }
         Button {
             if viewModel.hasTitle { isAddingBoat = true } else { viewModel.errorMessage = "Give the session a title first." }
@@ -174,7 +160,7 @@ struct WaterSessionView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(Tokens.Spacing.card)
         .background(Self.cardShape.fill(Tokens.Surface.card))
-        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
         .padding(.top, Tokens.Spacing.group)
 
         if let error = viewModel.errorMessage {
@@ -200,10 +186,11 @@ struct WaterSessionView: View {
         .padding(.top, Tokens.Spacing.loose)
 
         if !viewModel.isNew {
-            Button("Delete session") { isConfirmingDelete = true }
-                .buttonStyle(.rpDestructive)
-                .disabled(viewModel.isWorking)
-                .padding(.top, Tokens.Spacing.tight)
+            GroupedSection {
+                GroupedButtonRow(title: "Delete session", isDestructive: true, isCentred: true) { isConfirmingDelete = true }
+            }
+            .disabled(viewModel.isWorking)
+            .padding(.top, Tokens.Spacing.group)
         }
     }
 

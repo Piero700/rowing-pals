@@ -140,7 +140,7 @@ struct MetresLeaderboardView: View {
                 )
             )
         }
-        .overlay { shape.strokeBorder(Tokens.Surface.line, lineWidth: 1) }
+        .overlay { shape.strokeBorder(Tokens.Surface.line, lineWidth: Tokens.Grouped.hairline) }
         .accessibilityElement(children: .combine)
     }
 
@@ -186,7 +186,7 @@ struct MetresLeaderboardView: View {
         }
         .background(shape.fill(Tokens.Surface.card))
         .clipShape(shape)
-        .overlay { shape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+        .overlay { shape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
     }
 
     /// 72 pt row, columns 20 | 32 | name | score with 7 pt gaps. #1: ♛ and score in gold, gold
@@ -281,7 +281,7 @@ struct MetresLeaderboardView: View {
         }
         .overlay {
             RoundedRectangle(cornerRadius: Tokens.Radius.card, style: .continuous)
-                .strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1)
+                .strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline)
         }
     }
 }

@@ -126,22 +126,28 @@ enum Tokens {
 
     /// v3 corner radii. Interactive controls (buttons, pills, segmented, nav) use a `Capsule`.
     enum Radius {
-        static let card: CGFloat = 28
+        /// Grouped rows (decision 97, app-wide 2026-11-05): small corners, not bubbles.
+        static let card: CGFloat = 12
         /// Inputs, club rows, split rows, PB tiles.
-        static let input: CGFloat = 24
-        static let estimate: CGFloat = 22
-        static let photo: CGFloat = 22
-        static let iconChoice: CGFloat = 20
+        static let input: CGFloat = 10
+        static let estimate: CGFloat = 12
+        static let photo: CGFloat = 12
+        static let iconChoice: CGFloat = 10
         /// One comment's bubble (workout screen and the comments thread).
-        static let comment: CGFloat = 20
+        static let comment: CGFloat = 14
         /// The floating "Say something…" composer.
-        static let composer: CGFloat = 25
+        static let composer: CGFloat = 20
         /// An inset panel inside a card (PB history's selected result).
-        static let panel: CGFloat = 20
-        static let workoutLink: CGFloat = 18
-        static let photoInset: CGFloat = 17
-        static let select: CGFloat = 15
-        static let crest: CGFloat = 13
+        static let panel: CGFloat = 10
+        static let workoutLink: CGFloat = 10
+        static let photoInset: CGFloat = 8
+        static let select: CGFloat = 8
+        static let crest: CGFloat = 10
+        /// Buttons: rounded rectangles, not capsules.
+        static let button: CGFloat = 12
+        /// Segmented controls: the track and the chosen segment.
+        static let segmentTrack: CGFloat = 10
+        static let segment: CGFloat = 8
     }
 
     /// v3 spacing.
@@ -149,7 +155,7 @@ enum Tokens {
     enum Spacing {
         static let screen: CGFloat = 16
         static let headerHorizontal: CGFloat = 16
-        static let card: CGFloat = 16
+        static let card: CGFloat = 14
         static let tight: CGFloat = 8
         /// Room either side of a segment's label, so a long one ("Stroke side") shrinks a little
         /// rather than touching the capsule.
@@ -173,9 +179,9 @@ enum Tokens {
         /// How far in from the left edge a swipe back may start (decision 61), the same on every
         /// screen: a full-screen area's root (`edgeSwipeToDismiss()`) and every pushed screen.
         static let swipeBackEdge: CGFloat = 24
-        static let primaryButton: CGFloat = 51
-        static let secondaryButton: CGFloat = 50
-        static let input: CGFloat = 50
+        static let primaryButton: CGFloat = 46
+        static let secondaryButton: CGFloat = 44
+        static let input: CGFloat = 44
         static let navHeight: CGFloat = 55
         /// The floating tab bar's pill and its + / Log button (user 2026-10-17: a little taller than
         /// the v4 55 pt now the bar holds four tabs).
@@ -189,6 +195,8 @@ enum Tokens {
         static let iconButton: CGFloat = 42
         /// v4 at 95% (2026-10-15): segmented controls, glass pills and text buttons draw 40 pt.
         static let control: CGFloat = 40
+        /// A segment of a segmented control (decision 97): compact, still tappable across 44 pt with the track.
+        static let segment: CGFloat = 34
         /// A tile in the Test results grid, and the "+ Add test" tile.
         static let testTile: CGFloat = 100
         /// The camera badge on your own profile picture (decision 29).
@@ -209,8 +217,8 @@ enum Tokens {
         /// A compact segmented control's segment (Settings' units), tappable across 44 pt.
         static let compactSegment: CGFloat = 34
         /// A settings row: with a description line, and without.
-        static let row: CGFloat = 66
-        static let rowCompact: CGFloat = 56
+        static let row: CGFloat = 56
+        static let rowCompact: CGFloat = 44
         /// The round icon at the start of Settings' Switch to coaching / rowing row (decision 67).
         static let rowIcon: CGFloat = 36
         /// An account's bar with no Log button sits 52 pt in from each side (CoachOnlyFeed,
@@ -249,14 +257,14 @@ enum Tokens {
     enum Schedule {
         static let dateBlockWidth: CGFloat = 44
         static let dateBlockHeight: CGFloat = 48
-        static let dateBlockRadius: CGFloat = 14
+        static let dateBlockRadius: CGFloat = 10
         /// The start / end times beside a session.
         static let timeColumn: CGFloat = 44
         /// Available · Can't, beside a session or a day.
         static let answerControlWidth: CGFloat = 150
         /// A day in the month: its number's circle, the dots beneath, the whole cell.
         static let dayNumber: CGFloat = 32
-        static let dayCell: CGFloat = 46
+        static let dayCell: CGFloat = 40
         static let dot: CGFloat = 4
         static let flag: CGFloat = 11
         /// Who's available at a glance: each session's bar.
@@ -265,7 +273,7 @@ enum Tokens {
         static let glanceCountWidth: CGFloat = 64
         /// A small round icon in a calendar card (a race's flag, the availability card).
         static let iconTile: CGFloat = 44
-        static let iconTileRadius: CGFloat = 14
+        static let iconTileRadius: CGFloat = 10
         /// A rower's attendance strip: nine squares a row, 6 pt apart, 6 pt corners.
         static let markColumns = 9
         static let markGap: CGFloat = 6
@@ -296,10 +304,10 @@ enum Tokens {
         /// The ⇄ that moves an oar to the other side when crewing (custom rigging, decision 74).
         static let flipButton: CGFloat = 26
         /// A boat card on the Boats tab and a water session (decision 88).
-        static let cardRadius: CGFloat = 22
+        static let cardRadius: CGFloat = 12
         /// A name button under a seat when crewing, and its corners.
         static let seatButtonHeight: CGFloat = 48
-        static let seatButtonRadius: CGFloat = 16
+        static let seatButtonRadius: CGFloat = 10
         static let lineWidth: CGFloat = 1.3
         static let selectedLineWidth: CGFloat = 2.2
         static let riggerLineWidth: CGFloat = 1.8
@@ -376,7 +384,7 @@ enum Tokens {
     /// Coaching's own radii and the zone-mix shades (docs/design/v4/CoachRower.dc.html).
     enum Coaching {
         /// The three stat cards over the Rowers list.
-        static let statRadius: CGFloat = 24
+        static let statRadius: CGFloat = 12
         /// A volume bar: rounder on top than at its foot.
         static let barTopRadius: CGFloat = 8
         static let barFootRadius: CGFloat = 4
@@ -432,19 +440,19 @@ enum Tokens {
         static let selectedBorder: CGFloat = 2
         /// The dot on a score that came from the rower's own post.
         static let postedDot: CGFloat = 5
-        static let tableRadius: CGFloat = 24
+        static let tableRadius: CGFloat = 12
         static let textMinLines = 3
         static let notesMinLines = 5
         /// The entry bar over the keyboard.
-        static let entryRadius: CGFloat = 28
+        static let entryRadius: CGFloat = 14
         static let rateFieldWidth: CGFloat = 88
         /// The camera button by each name in the Scores table (NP2), and the column it sits in.
         static let scanButton: CGFloat = 34
         static let scanColumn: CGFloat = 40
         /// Scan a monitor (CoachNotepadScan): the camera's finder, the frame drawn inside it (inset
         /// as a share of the finder's width and height), and the shutter.
-        static let finderRadius: CGFloat = 28
-        static let finderFrameRadius: CGFloat = 18
+        static let finderRadius: CGFloat = 14
+        static let finderFrameRadius: CGFloat = 10
         static let finderFrameInsetX: CGFloat = 0.12
         static let finderFrameInsetY: CGFloat = 0.18
         static let finderFrameLine: CGFloat = 2
@@ -469,7 +477,7 @@ enum Tokens {
         static let scanNumberColumn: CGFloat = 30
         static let scanValueColumn: CGFloat = 70
         static let scanRateColumn: CGFloat = 40
-        static let bannerRadius: CGFloat = 20
+        static let bannerRadius: CGFloat = 12
         /// The Notebook (CoachNotebook, NP4): a value column (narrower when there are more than
         /// four), the names' least width, the page arrows and dots.
         static let notebookColumn: CGFloat = 62
@@ -482,7 +490,7 @@ enum Tokens {
         static let pageSwipe: CGFloat = 60
         /// The rower's Feed card (RowerCoachScores): its icon and score tiles.
         static let scoresIcon: CGFloat = 40
-        static let scoreTileRadius: CGFloat = 18
+        static let scoreTileRadius: CGFloat = 10
         static let scoreTilesPerRow = 3
     }
 

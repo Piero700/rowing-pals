@@ -54,7 +54,7 @@ struct InviteRowerView: View {
                     }
                     .background(Self.cardShape.fill(Tokens.Surface.card))
                     .clipShape(Self.cardShape)
-                    .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+                    .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
                 }
             }
             .padding(.horizontal, Tokens.Spacing.screen)
@@ -89,7 +89,7 @@ struct InviteRowerView: View {
         .padding(.horizontal, 14)
         .frame(minHeight: Tokens.Size.input)
         .background(shape.fill(Tokens.Surface.card))
-        .overlay { shape.strokeBorder(Tokens.Surface.line, lineWidth: 1) }
+        .overlay { shape.strokeBorder(Tokens.Surface.line, lineWidth: Tokens.Grouped.hairline) }
     }
 
     private func row(_ person: PersonSummary) -> some View {

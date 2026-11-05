@@ -24,60 +24,41 @@ struct TermsEditorView: View {
     @State private var errorMessage: String?
     @Environment(\.dismiss) private var dismiss
 
-    private static let cardShape = RoundedRectangle(cornerRadius: Tokens.Radius.card, style: .continuous)
-
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 0) {
-                FormFootnote("Attendance’s This term counts from the first day of the term holding today.")
+            VStack(alignment: .leading, spacing: Tokens.Grouped.groupGap) {
+                Text("Attendance’s This term counts from the first day of the term holding today. Swipe a term left to delete it.")
+                    .textStyle(Typography.statLabel)
+                    .foregroundStyle(Tokens.Ink.secondary)
+                    .padding(.horizontal, Tokens.Grouped.rowPadding)
+                    .fixedSize(horizontal: false, vertical: true)
                 ForEach($drafts) { $draft in
                     let id = draft.id
                     termCard($draft)
-                        // Gone from the list now; Save terms deletes it from the club.
+                        // Gone from the list now; Save deletes it from the club.
                         .swipeToDelete {
                             withAnimation(.snappy) { drafts.removeAll { $0.id == id } }
                             return true
                         }
-                        .padding(.top, Tokens.Spacing.loose)
                 }
-                Button {
-                    drafts.append(newDraft())
-                } label: {
-                    Label("Add a term", icon: .plus)
+                GroupedSection {
+                    GroupedButtonRow(title: "Add a term") { drafts.append(newDraft()) }
                 }
-                .buttonStyle(.rpGlass)
-                .padding(.top, Tokens.Spacing.loose)
-
-                if let errorMessage {
-                    Text(errorMessage)
-                        .textStyle(Typography.meta)
-                        .foregroundStyle(Tokens.System.error)
-                        .padding(.horizontal, 4)
-                        .padding(.top, Tokens.Spacing.loose)
-                }
-
-                Button {
-                    Task { await save() }
-                } label: {
-                    if isSaving {
-                        ProgressView().tint(Tokens.Ink.onBrand)
-                    } else {
-                        Text("Save terms")
-                    }
-                }
-                .buttonStyle(.rpPrimary)
-                .disabled(isSaving || problem != nil)
-                .padding(.top, Tokens.Spacing.group)
-                if let problem {
-                    FormFootnote(problem)
-                }
+                if let errorMessage { GroupedError(text: errorMessage) }
+                if let problem { GroupedError(text: problem) }
             }
             .padding(.horizontal, Tokens.Spacing.screen)
             .padding(.top, 4)
             .padding(.bottom, 40)
         }
         .scrollIndicators(.hidden)
-        .safeAreaInset(edge: .top, spacing: 0) { ScreenHeader(title: "Term dates") { dismiss() } }
+        .safeAreaInset(edge: .top, spacing: 0) {
+            ScreenHeader(title: "Term dates", onBack: { dismiss() }) {
+                HeaderSaveButton(title: "Save", isSaving: isSaving, isDisabled: !hasLoaded || problem != nil) {
+                    Task { await save() }
+                }
+            }
+        }
         .background(Tokens.Base.ground)
         .dismissesKeyboardOnTap()
         .task { await load() }
@@ -90,29 +71,19 @@ struct TermsEditorView: View {
     }
 
     private func termCard(_ draft: Binding<Draft>) -> some View {
-        VStack(alignment: .leading, spacing: 0) {
-            TextField("Autumn", text: draft.name)
-                .textStyle(Typography.rowTitle)
-                .foregroundStyle(Tokens.Ink.primary)
-            HStack(spacing: Tokens.Spacing.loose) {
-                VStack(alignment: .leading, spacing: 0) {
-                    FormLabel("First day")
-                    DatePicker("First day", selection: draft.startsOn, displayedComponents: .date)
-                        .labelsHidden()
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                VStack(alignment: .leading, spacing: 0) {
-                    FormLabel("Last day")
-                    DatePicker("Last day", selection: draft.endsOn, displayedComponents: .date)
-                        .labelsHidden()
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
+        GroupedSection {
+            GroupedTextRow(label: "Term", placeholder: "Autumn", text: draft.name)
+            GroupedDivider()
+            GroupedRow(label: "First day") {
+                DatePicker("First day", selection: draft.startsOn, displayedComponents: .date)
+                    .labelsHidden()
             }
-            .padding(.top, Tokens.Spacing.loose)
+            GroupedDivider()
+            GroupedRow(label: "Last day") {
+                DatePicker("Last day", selection: draft.endsOn, displayedComponents: .date)
+                    .labelsHidden()
+            }
         }
-        .padding(Tokens.Spacing.card)
-        .background(Self.cardShape.fill(Tokens.Surface.card))
-        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
     }
 
     private func newDraft() -> Draft {

@@ -112,7 +112,7 @@ struct CoachBoatsView: View {
             .padding(.horizontal, Tokens.Spacing.card)
             .padding(.vertical, Tokens.Spacing.loose)
             .background(Self.cardShape.fill(Tokens.Surface.card))
-            .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+            .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
         }
     }
 
@@ -184,7 +184,7 @@ struct CoachBoatsView: View {
         .padding(.vertical, Tokens.Spacing.card)
         .padding(.horizontal, Tokens.Spacing.gap)
         .background(Self.cardShape.fill(Tokens.Surface.card))
-        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
         .padding(.bottom, Tokens.Spacing.tight)
     }
 
@@ -220,7 +220,7 @@ struct CoachBoatsView: View {
             .padding(.vertical, Tokens.Spacing.loose)
             .padding(.horizontal, Tokens.Spacing.gap)
             .background(Self.cardShape.fill(Tokens.Surface.card))
-            .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+            .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
         }
         Button {
             navigate(.savedBoat(nil))

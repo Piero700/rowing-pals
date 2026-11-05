@@ -67,7 +67,7 @@ struct AnswerListCard: View {
                 }
                 .background(Self.cardShape.fill(Tokens.Surface.card))
                 .clipShape(Self.cardShape)
-                .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+                .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
             }
         }
     }

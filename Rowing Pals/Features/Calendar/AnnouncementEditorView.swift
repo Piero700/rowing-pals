@@ -34,7 +34,12 @@ struct AnnouncementEditorView: View {
         }
         .scrollIndicators(.hidden)
         .safeAreaInset(edge: .top, spacing: 0) {
-            ScreenHeader(title: viewModel.isNew ? "New announcement" : "Announcement") { dismiss() }
+            ScreenHeader(title: viewModel.isNew ? "New announcement" : "Announcement", onBack: { dismiss() }) {
+                HeaderSaveButton(title: viewModel.isNew ? "Post" : "Save", isSaving: viewModel.isSaving,
+                                 isDisabled: !viewModel.hasLoaded || viewModel.problem != nil) {
+                    Task { if await viewModel.save() { dismiss() } }
+                }
+            }
         }
         .background(Tokens.Base.ground)
         .toolbar(.hidden, for: .navigationBar)
@@ -50,90 +55,61 @@ struct AnnouncementEditorView: View {
         }
     }
 
-    @ViewBuilder
     private var form: some View {
-        if let posted = viewModel.postedLine {
-            Text(posted)
-                .textStyle(Typography.meta)
-                .tabularNumerals()
-                .foregroundStyle(Tokens.Ink.secondary)
-                .padding(.horizontal, 4)
-                .padding(.top, Tokens.Spacing.tight)
-        }
+        VStack(alignment: .leading, spacing: Tokens.Grouped.groupGap) {
+            if let posted = viewModel.postedLine {
+                Text(posted)
+                    .textStyle(Typography.meta)
+                    .tabularNumerals()
+                    .foregroundStyle(Tokens.Ink.secondary)
+                    .padding(.horizontal, Tokens.Grouped.rowPadding)
+            }
 
-        FormLabel("Heading").padding(.top, Tokens.Spacing.card)
-        TextField("Kit order closes Friday", text: $viewModel.heading)
-            .textStyle(Typography.bodyV3)
-            .padding(.horizontal, Tokens.Spacing.card)
-            .formFieldBox()
-        FormFootnote("This is all rowers see on their Feed until they tap it.")
+            GroupedSection(footer: "The heading is all rowers see on their Feed until they tap it.") {
+                GroupedTextRow(label: "Heading", placeholder: "Kit order closes Friday", text: $viewModel.heading)
+                GroupedDivider()
+                GroupedNotesRow(placeholder: "The details", text: $viewModel.message, lines: 3...10)
+            }
 
-        FormLabel("Message").padding(.top, Tokens.Spacing.card)
-        TextField("The details", text: $viewModel.message, axis: .vertical)
-            .textStyle(Typography.bodyV3)
-            .lineLimit(3...10)
-            .padding(.horizontal, Tokens.Spacing.card)
-            .padding(.vertical, Tokens.Spacing.loose)
-            .formFieldBox()
+            GroupedSection(footer: "\(viewModel.expiryText) It stays in the Calendar.") {
+                GroupedRow(label: "On the Feed for") {
+                    Menu {
+                        Picker("On the Feed for", selection: $viewModel.duration) {
+                            ForEach(AnnouncementDuration.allCases, id: \.self) { duration in
+                                Text(duration.label).tag(duration)
+                            }
+                        }
+                    } label: {
+                        GroupedValue(text: viewModel.duration.label)
+                    }
+                }
+                if viewModel.duration == .custom {
+                    GroupedDivider()
+                    GroupedRow(label: "Until") {
+                        DatePicker("Until", selection: $viewModel.until, in: Date()..., displayedComponents: [.date, .hourAndMinute])
+                            .labelsHidden()
+                    }
+                }
+            }
 
-        FormLabel("On the Feed for").padding(.top, Tokens.Spacing.card)
-        PillSegmentedControl(options: AnnouncementDuration.allCases.map(\.label), selection: Binding(
-            get: { viewModel.duration.rawValue },
-            set: { viewModel.duration = AnnouncementDuration(rawValue: $0) ?? .day }
-        ), compact: true)
-        if viewModel.duration == .custom {
-            DatePicker("Until", selection: $viewModel.until, in: Date()..., displayedComponents: [.date, .hourAndMinute])
-                .labelsHidden()
-                .formFieldBox()
-                .padding(.top, Tokens.Spacing.tight)
-        }
-        FormFootnote("\(viewModel.expiryText) It stays in the Calendar.")
+            if viewModel.isNew {
+                GroupedSection(footer: "Every rower in your club sees it on their Feed.") {
+                    GroupedToggleRow(label: "Send an alert",
+                                     detail: "Rowers also get “New announcement: \(viewModel.heading.isEmpty ? "…" : viewModel.heading)”.",
+                                     isOn: $viewModel.sendsAlert)
+                }
+            }
 
-        if viewModel.isNew {
-            ToggleCard(title: "Send an alert",
-                       detail: "Rowers also get “New announcement: \(viewModel.heading.isEmpty ? "…" : viewModel.heading)”.",
-                       isOn: $viewModel.sendsAlert)
-                .padding(.top, Tokens.Spacing.group)
-        }
+            if let problem = viewModel.problem, !viewModel.heading.isEmpty { GroupedError(text: problem) }
+            if let error = viewModel.errorMessage { GroupedError(text: error) }
 
-        if let problem = viewModel.problem, !viewModel.heading.isEmpty {
-            Text(problem)
-                .textStyle(Typography.meta)
-                .foregroundStyle(Tokens.System.error)
-                .padding(.horizontal, 4)
-                .padding(.top, Tokens.Spacing.loose)
-        }
-        if let error = viewModel.errorMessage {
-            Text(error)
-                .textStyle(Typography.meta)
-                .foregroundStyle(Tokens.System.error)
-                .padding(.horizontal, 4)
-                .padding(.top, Tokens.Spacing.loose)
-        }
-
-        Button {
-            Task { if await viewModel.save() { dismiss() } }
-        } label: {
-            if viewModel.isSaving {
-                ProgressView().tint(Tokens.Ink.onBrand)
-            } else {
-                Text(viewModel.isNew ? "Post announcement" : "Save changes")
+            if !viewModel.isNew {
+                GroupedSection(footer: "Coaches, the owner and co-owners can edit or delete it.") {
+                    GroupedButtonRow(title: "Delete announcement", isDestructive: true, isCentred: true) { isConfirmingDelete = true }
+                }
+                .disabled(viewModel.isSaving)
             }
         }
-        .buttonStyle(.rpPrimary)
-        .disabled(viewModel.isSaving || viewModel.problem != nil)
-        .padding(.top, Tokens.Spacing.group)
-
-        if viewModel.isNew {
-            FormFootnote("Every rower in your club sees it on their Feed.")
-                .frame(maxWidth: .infinity)
-                .multilineTextAlignment(.center)
-        } else {
-            Button("Delete announcement") { isConfirmingDelete = true }
-                .buttonStyle(.rpDestructive)
-                .disabled(viewModel.isSaving)
-                .padding(.top, Tokens.Spacing.tight)
-            FormFootnote("Coaches, the owner and co-owners can edit or delete it.")
-        }
+        .padding(.top, Tokens.Spacing.tight)
     }
 }

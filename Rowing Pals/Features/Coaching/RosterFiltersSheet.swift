@@ -72,7 +72,7 @@ struct RosterFiltersSheet: View {
                     }
                     .background(Self.cardShape.fill(Tokens.Surface.card))
                     .clipShape(Self.cardShape)
-                    .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+                    .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
 
                     title("Sort by")
                         .padding(.top, Tokens.Spacing.group)
@@ -84,7 +84,7 @@ struct RosterFiltersSheet: View {
                     }
                     .background(Self.cardShape.fill(Tokens.Surface.card))
                     .clipShape(Self.cardShape)
-                    .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+                    .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
                 }
                 .padding(.horizontal, Tokens.Spacing.screen)
                 .padding(.bottom, Tokens.Spacing.group)

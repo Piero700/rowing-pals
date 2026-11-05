@@ -40,7 +40,7 @@ struct FeedWrappedCard: View {
             }
             .padding(Tokens.Spacing.card)
             .background(Self.cardShape.fill(Tokens.Surface.card))
-            .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+            .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
             .contentShape(Self.cardShape)
         }
         .buttonStyle(IconPressStyle())

@@ -255,7 +255,7 @@ struct ScanMonitorView: View {
             }
         }
         .background(shape.fill(Tokens.Surface.card))
-        .overlay { shape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+        .overlay { shape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
         .clipShape(shape)
     }
 

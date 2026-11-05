@@ -26,7 +26,10 @@ private struct PressEffect: ViewModifier {
     }
 }
 
-/// Primary: 54 tall, full width, brand gradient, `onBrand` text, soft brand glow.
+/// The grouped style's button shape (decision 97, app-wide 2026-11-05): a rounded rectangle.
+private let buttonShape = RoundedRectangle(cornerRadius: Tokens.Radius.button, style: .continuous)
+
+/// Primary: full width, brand fill, `onBrand` text; compact, without the old glow.
 struct PrimaryButtonStyle: ButtonStyle {
     @Environment(\.isEnabled) private var isEnabled
 
@@ -35,52 +38,53 @@ struct PrimaryButtonStyle: ButtonStyle {
             .textStyle(Typography.button)
             .foregroundStyle(isEnabled ? Tokens.Ink.onBrand : Tokens.Ink.faint)
             .frame(maxWidth: .infinity, minHeight: Tokens.Size.primaryButton)
-            .padding(.horizontal, 16)
+            .padding(.horizontal, Tokens.Spacing.card)
             .background {
                 if isEnabled {
-                    Capsule().fill(
+                    buttonShape.fill(
                         LinearGradient(
-                            colors: [Tokens.Accent.brand.mix(with: .white, by: 0.12), Tokens.Accent.brand],
+                            colors: [Tokens.Accent.brand.mix(with: .white, by: 0.08), Tokens.Accent.brand],
                             startPoint: .top,
                             endPoint: .bottom
                         )
                     )
                 } else {
                     // Solid when disabled — a faded button lets content show through it.
-                    Capsule().fill(Tokens.Surface.raised)
+                    buttonShape.fill(Tokens.Surface.raised)
                 }
             }
             .overlay {
-                ZStack {
-                    Capsule().strokeBorder(Tokens.Accent.brand.opacity(0.6), lineWidth: 1)
-                    Capsule().inset(by: 1).strokeBorder(
-                        LinearGradient(colors: [Color.white.opacity(0.45), .clear], startPoint: .top, endPoint: .center),
-                        lineWidth: 1
-                    )
-                }
+                buttonShape.inset(by: Tokens.Grouped.hairline).strokeBorder(
+                    LinearGradient(colors: [Color.white.opacity(0.35), .clear], startPoint: .top, endPoint: .center),
+                    lineWidth: Tokens.Grouped.hairline
+                )
                 .allowsHitTesting(false)
             }
-            .shadow(color: Tokens.Accent.brand.opacity(isEnabled ? 0.3 : 0), radius: 11, y: 8)
-            .contentShape(Capsule())
+            .contentShape(buttonShape)
             .modifier(PressEffect(isPressed: configuration.isPressed))
     }
 }
 
-/// Secondary: 52 tall, full width, v3 glass.
+/// Secondary: glass. Full width it's a rounded rectangle like the primary; compact it stays a capsule.
 struct GlassButtonStyle: ButtonStyle {
     var fullWidth = true
     @Environment(\.isEnabled) private var isEnabled
 
     func makeBody(configuration: Configuration) -> some View {
-        configuration.label
+        let label = configuration.label
             .textStyle(Typography.button)
             .foregroundStyle(Tokens.Ink.primary)
             .frame(maxWidth: fullWidth ? .infinity : nil, minHeight: fullWidth ? Tokens.Size.secondaryButton : Tokens.Size.minTap)
-            .padding(.horizontal, fullWidth ? 18 : 14)
-            .glassSurface(in: Capsule())
-            .opacity(isEnabled ? 1 : 0.45)
-            .contentShape(Capsule())
-            .modifier(PressEffect(isPressed: configuration.isPressed))
+            .padding(.horizontal, fullWidth ? Tokens.Spacing.card : Tokens.Spacing.loose)
+        return Group {
+            if fullWidth {
+                label.glassSurface(in: buttonShape).contentShape(buttonShape)
+            } else {
+                label.glassSurface(in: Capsule()).contentShape(Capsule())
+            }
+        }
+        .opacity(isEnabled ? 1 : 0.45)
+        .modifier(PressEffect(isPressed: configuration.isPressed))
     }
 }
 
@@ -99,7 +103,7 @@ struct TextButtonStyle: ButtonStyle {
     }
 }
 
-/// Destructive: error colour at 13 % fill, error text, radius 24.
+/// Destructive: error colour at 13 % fill, error text, the button corners.
 struct DestructiveButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
@@ -107,10 +111,9 @@ struct DestructiveButtonStyle: ButtonStyle {
             .foregroundStyle(Tokens.System.error)
             .frame(maxWidth: .infinity, minHeight: Tokens.Size.secondaryButton)
             .background {
-                RoundedRectangle(cornerRadius: Tokens.Radius.input, style: .continuous)
-                    .fill(Tokens.System.error.opacity(0.13))
+                buttonShape.fill(Tokens.System.error.opacity(0.13))
             }
-            .contentShape(RoundedRectangle(cornerRadius: Tokens.Radius.input, style: .continuous))
+            .contentShape(buttonShape)
             .modifier(PressEffect(isPressed: configuration.isPressed))
     }
 }

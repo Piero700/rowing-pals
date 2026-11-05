@@ -39,7 +39,10 @@ struct PracticeEditorView: View {
         }
         .scrollIndicators(.hidden)
         .safeAreaInset(edge: .top, spacing: 0) {
-            ScreenHeader(title: viewModel.isNew ? "New practice" : "Edit practice") { dismiss() }
+            ScreenHeader(title: viewModel.isNew ? "New practice" : "Edit practice", onBack: { dismiss() }) {
+                HeaderSaveButton(title: "Save", isSaving: viewModel.isSaving,
+                                 isDisabled: !viewModel.hasLoaded || viewModel.problem != nil) { saveTapped() }
+            }
         }
         .background(Tokens.Base.ground)
         .toolbar(.hidden, for: .navigationBar)
@@ -65,123 +68,92 @@ struct PracticeEditorView: View {
         }
     }
 
-    @ViewBuilder
     private var form: some View {
-        FormLabel("What")
-        TextField("Water, Erg, Circuits…", text: $viewModel.title)
-            .textStyle(Typography.bodyV3)
-            .padding(.horizontal, Tokens.Spacing.card)
-            .formFieldBox()
-        WrapLayout(spacing: Tokens.Spacing.tight) {
-            ForEach(PracticeEditorViewModel.titles, id: \.self) { title in
-                Button(title) { viewModel.title = title }
-                    .buttonStyle(.rpPill(isOn: viewModel.title == title))
+        VStack(alignment: .leading, spacing: Tokens.Grouped.groupGap) {
+            GroupedSection {
+                GroupedTextRow(label: "What", placeholder: "Water, Erg, Circuits…", text: $viewModel.title)
+                GroupedDivider()
+                GroupedChipsRow {
+                    ForEach(PracticeEditorViewModel.titles, id: \.self) { title in
+                        Button(title) { viewModel.title = title }
+                            .buttonStyle(.rpPill(isOn: viewModel.title == title, minHeight: Tokens.Size.compactSegment))
+                    }
+                }
+                GroupedDivider()
+                GroupedTextRow(label: "Place", placeholder: "UEA boathouse", text: $viewModel.place)
             }
-        }
-        .padding(.top, Tokens.Spacing.tight)
 
-        FormLabel("Date").padding(.top, Tokens.Spacing.loose)
-        DatePicker("Date", selection: $viewModel.day, displayedComponents: .date)
-            .labelsHidden()
-            .formFieldBox()
-            .disabled(viewModel.isSeries)
-
-        FormLabel("Place").padding(.top, Tokens.Spacing.loose)
-        TextField("UEA boathouse", text: $viewModel.place)
-            .textStyle(Typography.bodyV3)
-            .padding(.horizontal, Tokens.Spacing.card)
-            .formFieldBox()
-
-        HStack(spacing: Tokens.Spacing.loose) {
-            VStack(alignment: .leading, spacing: 0) {
-                FormLabel("Starts")
-                DatePicker("Starts", selection: $viewModel.startTime, displayedComponents: .hourAndMinute)
-                    .labelsHidden()
-                    .formFieldBox()
+            GroupedSection {
+                GroupedRow(label: "Date") {
+                    DatePicker("Date", selection: $viewModel.day, displayedComponents: .date)
+                        .labelsHidden()
+                        .disabled(viewModel.isSeries)
+                }
+                GroupedDivider()
+                GroupedRow(label: "Starts") {
+                    DatePicker("Starts", selection: $viewModel.startTime, displayedComponents: .hourAndMinute)
+                        .labelsHidden()
+                }
+                GroupedDivider()
+                GroupedRow(label: "Ends") {
+                    DatePicker("Ends", selection: $viewModel.endTime, in: viewModel.endRange, displayedComponents: .hourAndMinute)
+                        .labelsHidden()
+                }
+                if viewModel.isNew || viewModel.isSeries {
+                    GroupedDivider()
+                    GroupedToggleRow(label: "Every week", detail: viewModel.repeatDayText, isOn: $viewModel.repeats)
+                        // A series keeps its weeks; to end it early, cancel the rest of the series.
+                        .disabled(!viewModel.isNew)
+                    if viewModel.repeats {
+                        GroupedDivider()
+                        GroupedRow(label: "Until") {
+                            DatePicker("Until", selection: $viewModel.repeatUntil, in: viewModel.day..., displayedComponents: .date)
+                                .labelsHidden()
+                                .disabled(!viewModel.isNew)
+                        }
+                    }
+                }
             }
-            VStack(alignment: .leading, spacing: 0) {
-                FormLabel("Ends")
-                DatePicker("Ends", selection: $viewModel.endTime, in: viewModel.endRange, displayedComponents: .hourAndMinute)
-                    .labelsHidden()
-                    .formFieldBox()
+            .groupedFooter(viewModel.isSeries
+                ? "When you save, choose this practice only or the rest of the series. The day can only change for one practice at a time."
+                : nil)
+
+            GroupedSection(header: "Squads") {
+                GroupedChipsRow {
+                    Button("Whole club") { viewModel.squadIds = [] }
+                        .buttonStyle(.rpPill(isOn: viewModel.squadIds.isEmpty, minHeight: Tokens.Size.compactSegment))
+                    ForEach(viewModel.squads) { squad in
+                        Button(squad.name) { viewModel.toggle(squad) }
+                            .buttonStyle(.rpPill(isOn: viewModel.squadIds.contains(squad.id), minHeight: Tokens.Size.compactSegment))
+                    }
+                }
             }
-        }
-        .padding(.top, Tokens.Spacing.loose)
 
-        FormSectionTitle("Squads")
-        WrapLayout(spacing: Tokens.Spacing.tight) {
-            Button("Whole club") { viewModel.squadIds = [] }
-                .buttonStyle(.rpPill(isOn: viewModel.squadIds.isEmpty))
-            ForEach(viewModel.squads) { squad in
-                Button(squad.name) { viewModel.toggle(squad) }
-                    .buttonStyle(.rpPill(isOn: viewModel.squadIds.contains(squad.id)))
+            GroupedSection(footer: viewModel.isNew
+                ? "\(viewModel.audienceCount) rower\(viewModel.audienceCount == 1 ? " is" : "s are") notified. Editing or cancelling this practice or its series notifies them again."
+                : "Everyone it’s for is notified when you save or cancel it.") {
+                GroupedToggleRow(label: "Remind rowers", detail: "2 hours before. Rowers can turn this off in Settings.",
+                                 isOn: $viewModel.remind)
             }
-        }
 
-        if viewModel.isNew || viewModel.isSeries {
-            FormSectionTitle("Repeats")
-            ToggleCard(title: "Every week", detail: viewModel.repeatDayText, isOn: $viewModel.repeats)
-                // A series keeps its weeks; to end it early, cancel the rest of the series.
-                .disabled(!viewModel.isNew)
-            if viewModel.repeats {
-                FormLabel("Until").padding(.top, Tokens.Spacing.loose)
-                DatePicker("Until", selection: $viewModel.repeatUntil, in: viewModel.day..., displayedComponents: .date)
-                    .labelsHidden()
-                    .formFieldBox()
-                    .disabled(!viewModel.isNew)
-            }
-            if viewModel.isSeries {
-                FormFootnote("When you save, choose this practice only or the rest of the series. The day can only change for one practice at a time.")
-            }
-        }
+            if let problem = viewModel.problem { GroupedError(text: problem) }
+            if let error = viewModel.errorMessage { GroupedError(text: error) }
 
-        FormSectionTitle("Reminder")
-        ToggleCard(title: "Remind rowers", detail: "2 hours before. Rowers can turn this off in Settings.", isOn: $viewModel.remind)
-
-        FormFootnote(viewModel.isNew
-            ? "\(viewModel.audienceCount) rower\(viewModel.audienceCount == 1 ? " is" : "s are") notified. Editing or cancelling this practice or its series notifies them again."
-            : "Everyone it’s for is notified when you save or cancel it.")
-
-        if let problem = viewModel.problem {
-            Text(problem)
-                .textStyle(Typography.meta)
-                .foregroundStyle(Tokens.System.error)
-                .padding(.horizontal, 4)
-                .padding(.top, Tokens.Spacing.loose)
-        }
-        if let error = viewModel.errorMessage {
-            Text(error)
-                .textStyle(Typography.meta)
-                .foregroundStyle(Tokens.System.error)
-                .padding(.horizontal, 4)
-                .padding(.top, Tokens.Spacing.loose)
-        }
-
-        Button {
-            if viewModel.isSeries { isAskingScope = true } else { save(restOfSeries: false) }
-        } label: {
-            if viewModel.isSaving {
-                ProgressView().tint(Tokens.Ink.onBrand)
-            } else {
-                Text("Save practice")
-            }
-        }
-        .buttonStyle(.rpPrimary)
-        .disabled(viewModel.isSaving || viewModel.problem != nil)
-        .padding(.top, Tokens.Spacing.group)
-
-        if !viewModel.isNew && viewModel.existing?.cancelled == false {
-            Button("Cancel this practice") { cancelling = .one }
-                .buttonStyle(.rpDestructive)
+            if !viewModel.isNew && viewModel.existing?.cancelled == false {
+                GroupedSection {
+                    GroupedButtonRow(title: "Cancel this practice", isDestructive: true, isCentred: true) { cancelling = .one }
+                    if viewModel.isSeries {
+                        GroupedDivider()
+                        GroupedButtonRow(title: "Cancel the whole series", isDestructive: true, isCentred: true) { cancelling = .series }
+                    }
+                }
                 .disabled(viewModel.isSaving)
-                .padding(.top, Tokens.Spacing.tight)
-            if viewModel.isSeries {
-                Button("Cancel the whole series") { cancelling = .series }
-                    .buttonStyle(.rpDestructive)
-                    .disabled(viewModel.isSaving)
-                    .padding(.top, Tokens.Spacing.tight)
             }
         }
+    }
+
+    private func saveTapped() {
+        if viewModel.isSeries { isAskingScope = true } else { save(restOfSeries: false) }
     }
 
     private func save(restOfSeries: Bool) {

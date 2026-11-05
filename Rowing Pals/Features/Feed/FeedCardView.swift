@@ -67,7 +67,7 @@ struct FeedCardView: View {
         }
         .padding(Tokens.Spacing.card)
         .background { Self.cardShape.fill(Tokens.Surface.card) }
-        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1).allowsHitTesting(false) }
+        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline).allowsHitTesting(false) }
         .pbGlow(post.isNewPB, in: Self.cardShape)
         .sheet(isPresented: $isShowingReactionPicker) {
             reactionPicker
@@ -265,7 +265,7 @@ struct FeedCardView: View {
             }
             .overlay {
                 RoundedRectangle(cornerRadius: Tokens.Radius.workoutLink, style: .continuous)
-                    .strokeBorder(Tokens.Surface.line, lineWidth: 1)
+                    .strokeBorder(Tokens.Surface.line, lineWidth: Tokens.Grouped.hairline)
             }
             .contentShape(RoundedRectangle(cornerRadius: Tokens.Radius.workoutLink, style: .continuous))
         }
@@ -320,10 +320,10 @@ struct FeedCardView: View {
                             .font(.system(size: 26))
                             .frame(maxWidth: .infinity, minHeight: 52)
                             .background {
-                                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                RoundedRectangle(cornerRadius: Tokens.Radius.input, style: .continuous)
                                     .fill(isMine ? Tokens.Accent.brandSoft : Tokens.Surface.raised)
                             }
-                            .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                            .contentShape(RoundedRectangle(cornerRadius: Tokens.Radius.input, style: .continuous))
                     }
                     .buttonStyle(IconPressStyle())
                     .accessibilityLabel(kind.name)

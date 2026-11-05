@@ -5,8 +5,8 @@
 
 import SwiftUI
 
-/// The v3 segmented control (docs/design/rowing-pals-v3-spec.md §Layout — Segmented control):
-/// a glass capsule, 4 pt padding, equal segments with no gap (wider for a long label when they
+/// The segmented control: since decision 97 (app-wide, 2026-11-05) a compact glass track with
+/// small corners, like iOS's own, 2 pt padding, equal segments with no gap (wider for a long label when they
 /// can't all fit an equal share — `SegmentRowLayout`), each at least 44 pt tall, and a
 /// glass thumb that slides to the selected segment with a slight overshoot. Every segment is a
 /// real button whose whole capsule is tappable. Used for Following/Club, Volume/Test results,
@@ -27,8 +27,8 @@ struct PillSegmentedControl: View {
                 segment(index)
             }
         }
-        .padding(3)
-        .glassSurface(in: Capsule())
+        .padding(2)
+        .glassSurface(in: RoundedRectangle(cornerRadius: Tokens.Radius.segmentTrack, style: .continuous))
     }
 
     private func segment(_ index: Int) -> some View {
@@ -48,15 +48,16 @@ struct PillSegmentedControl: View {
                 .foregroundStyle(isSelected ? Tokens.Ink.primary : Tokens.Ink.secondary)
                 .padding(.horizontal, Tokens.Spacing.segmentInset)
                 // A compact segment draws 36 pt but still takes taps across 44 pt.
-                .frame(maxWidth: .infinity, minHeight: compact ? Tokens.Size.compactSegment : Tokens.Size.control)
+                .frame(maxWidth: .infinity, minHeight: compact ? Tokens.Size.compactSegment : Tokens.Size.segment)
                 .background {
                     if isSelected {
                         Color.clear
-                            .glassSurface(in: Capsule(), isSelected: true, usesNativeGlass: false)
+                            .glassSurface(in: RoundedRectangle(cornerRadius: Tokens.Radius.segment, style: .continuous),
+                                          isSelected: true, usesNativeGlass: false)
                             .matchedGeometryEffect(id: "thumb", in: thumb)
                     }
                 }
-                .contentShape(Capsule().inset(by: compact ? -4 : 0))
+                .contentShape(Rectangle().inset(by: compact ? -4 : -2))
         }
         .buttonStyle(.plain)
         .accessibilityAddTraits(isSelected ? .isSelected : [])

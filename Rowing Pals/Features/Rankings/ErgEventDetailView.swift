@@ -97,7 +97,7 @@ struct ErgEventDetailView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(Tokens.Spacing.card)
             .background(Self.cardShape.fill(Tokens.Surface.card))
-            .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+            .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
             .padding(.top, Tokens.Spacing.loose)
         }
 
@@ -128,7 +128,7 @@ struct ErgEventDetailView: View {
             }
             .background(Self.cardShape.fill(Tokens.Surface.card))
             .clipShape(Self.cardShape)
-            .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+            .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
         }
     }
 

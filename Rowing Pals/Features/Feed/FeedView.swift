@@ -325,7 +325,7 @@ struct FeedView: View {
         }
         .overlay {
             RoundedRectangle(cornerRadius: Tokens.Radius.card, style: .continuous)
-                .strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1)
+                .strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline)
         }
     }
 }

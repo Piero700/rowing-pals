@@ -84,7 +84,7 @@ struct NewSessionSheet: View {
             }
             .padding(Tokens.Spacing.loose)
             .background(Self.rowShape.fill(Tokens.Surface.card))
-            .overlay { Self.rowShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+            .overlay { Self.rowShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
             .contentShape(Self.rowShape)
         }
         .buttonStyle(IconPressStyle())

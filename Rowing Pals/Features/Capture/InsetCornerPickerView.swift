@@ -79,7 +79,7 @@ struct InsetCornerPickerView: View {
         // tokens... for a control the user taps" — the selected option gets
         // the brand tint (this app's one "active/selected control" role),
         // the rest stay neutral.
-        .interactiveGlassSurface(cornerRadius: 18, tint: isSelected ? Tokens.Accent.brand : Tokens.Surface.raised)
+        .interactiveGlassSurface(cornerRadius: Tokens.Radius.photo, tint: isSelected ? Tokens.Accent.brand : Tokens.Surface.raised)
         .accessibilityAddTraits(isSelected ? [.isSelected] : [])
     }
 }

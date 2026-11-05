@@ -92,3 +92,198 @@ struct GroupedValue: View {
         }
     }
 }
+
+/// A typed value in a row: the label on the left, the field on the right.
+struct GroupedTextRow: View {
+    let label: String
+    let placeholder: String
+    @Binding var text: String
+    var keyboard: UIKeyboardType = .default
+
+    var body: some View {
+        GroupedRow(label: label) {
+            TextField(placeholder, text: $text)
+                .keyboardType(keyboard)
+                .textStyle(Typography.detail)
+                .tabularNumerals()
+                .multilineTextAlignment(.trailing)
+                .foregroundStyle(Tokens.Ink.primary)
+        }
+    }
+}
+
+/// Longer writing (notes, a plan, an announcement's text) across the whole row, growing as it's typed.
+struct GroupedNotesRow: View {
+    let placeholder: String
+    @Binding var text: String
+    var lines: ClosedRange<Int> = 1...6
+
+    var body: some View {
+        TextField(placeholder, text: $text, axis: .vertical)
+            .textStyle(Typography.detail)
+            .foregroundStyle(Tokens.Ink.primary)
+            .lineLimit(lines)
+            .padding(.horizontal, Tokens.Grouped.rowPadding)
+            .padding(.vertical, Tokens.Spacing.loose)
+            .frame(maxWidth: .infinity, minHeight: Tokens.Grouped.rowHeight, alignment: .leading)
+    }
+}
+
+/// A switch, with an optional line under its label.
+struct GroupedToggleRow: View {
+    let label: String
+    var detail: String?
+    @Binding var isOn: Bool
+
+    var body: some View {
+        HStack(spacing: Tokens.Spacing.loose) {
+            VStack(alignment: .leading, spacing: 1) {
+                Text(label)
+                    .textStyle(Typography.detail)
+                    .foregroundStyle(Tokens.Ink.primary)
+                if let detail {
+                    Text(detail)
+                        .textStyle(Typography.statLabel)
+                        .tabularNumerals()
+                        .foregroundStyle(Tokens.Ink.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            Toggle(label, isOn: $isOn)
+                .labelsHidden()
+                .tint(Tokens.Accent.brand)
+        }
+        .padding(.horizontal, Tokens.Grouped.rowPadding)
+        .padding(.vertical, detail == nil ? 0 : Tokens.Spacing.tight)
+        .frame(minHeight: Tokens.Grouped.rowHeight)
+    }
+}
+
+/// A row that does something: blue, or red for a destructive action, centred or leading.
+struct GroupedButtonRow: View {
+    let title: String
+    var isDestructive = false
+    var isCentred = false
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Text(title)
+                .textStyle(Typography.detail)
+                .foregroundStyle(isDestructive ? Tokens.System.error : Tokens.Accent.brand)
+                .frame(maxWidth: .infinity, minHeight: Tokens.Grouped.rowHeight,
+                       alignment: isCentred ? .center : .leading)
+                .padding(.horizontal, Tokens.Grouped.rowPadding)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(IconPressStyle())
+    }
+}
+
+/// A row of choices as small chips (quick picks, squads), wrapping onto more lines when needed.
+struct GroupedChipsRow<Content: View>: View {
+    @ViewBuilder var content: () -> Content
+
+    var body: some View {
+        WrapLayout(spacing: Tokens.Spacing.tight) { content() }
+            .padding(.horizontal, Tokens.Grouped.rowPadding)
+            .padding(.vertical, Tokens.Spacing.tight)
+            .frame(maxWidth: .infinity, minHeight: Tokens.Grouped.rowHeight, alignment: .leading)
+    }
+}
+
+/// A Save (or Set, Post…) text button for a screen's header, greyed out until the form can be saved.
+struct HeaderSaveButton: View {
+    let title: String
+    var isSaving = false
+    var isDisabled = false
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            if isSaving { ProgressView() } else { Text(title) }
+        }
+        .buttonStyle(.rpText)
+        .disabled(isSaving || isDisabled)
+        .frame(minWidth: Tokens.Size.minTap, minHeight: Tokens.Size.minTap)
+    }
+}
+
+/// An error under a form's groups.
+struct GroupedError: View {
+    let text: String
+
+    var body: some View {
+        Text(text)
+            .textStyle(Typography.meta)
+            .foregroundStyle(Tokens.System.error)
+            .padding(.horizontal, Tokens.Grouped.rowPadding)
+            .fixedSize(horizontal: false, vertical: true)
+    }
+}
+
+extension View {
+    /// A grey note under a group, for a footer that only sometimes shows.
+    @ViewBuilder
+    func groupedFooter(_ text: String?) -> some View {
+        if let text {
+            VStack(alignment: .leading, spacing: Tokens.Grouped.headerGap) {
+                self
+                Text(text)
+                    .textStyle(Typography.statLabel)
+                    .tabularNumerals()
+                    .foregroundStyle(Tokens.Ink.secondary)
+                    .padding(.horizontal, Tokens.Grouped.rowPadding)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        } else {
+            self
+        }
+    }
+}
+
+/// A grey note on its own, between groups.
+struct GroupedNote: View {
+    let text: String
+
+    var body: some View {
+        Text(text)
+            .textStyle(Typography.statLabel)
+            .tabularNumerals()
+            .foregroundStyle(Tokens.Ink.secondary)
+            .padding(.horizontal, Tokens.Grouped.rowPadding)
+            .fixedSize(horizontal: false, vertical: true)
+    }
+}
+
+/// An action at the foot of a card (Open notepad, Take register): a hairline, then the icon, the
+/// action in blue and a chevron, in place of a big button (decision 97, app-wide). Sits inside the
+/// card's own padding.
+struct CardLinkRow: View {
+    let icon: RPIcon
+    let title: String
+    let action: () -> Void
+
+    var body: some View {
+        VStack(spacing: 0) {
+            Rectangle()
+                .fill(Tokens.Surface.line)
+                .frame(height: Tokens.Grouped.hairline)
+            Button(action: action) {
+                HStack(spacing: Tokens.Spacing.tight) {
+                    RPIconView(icon: icon, size: Tokens.Icon.small)
+                    Text(title)
+                    Spacer(minLength: 0)
+                    RPIconView(icon: .chevronRight, size: Tokens.Icon.small)
+                        .foregroundStyle(Tokens.Ink.faint)
+                }
+                .textStyle(Typography.detail)
+                .foregroundStyle(Tokens.Accent.brand)
+                .frame(minHeight: Tokens.Size.minTap)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(IconPressStyle())
+        }
+    }
+}

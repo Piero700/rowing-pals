@@ -205,7 +205,7 @@ struct ReviewSheetView: View {
                 .padding(.vertical, Tokens.Spacing.tight)
                 .frame(minHeight: 62)
                 .background(shape.fill(Tokens.Surface.card))
-                .overlay { shape.strokeBorder(Tokens.Surface.line, lineWidth: 1) }
+                .overlay { shape.strokeBorder(Tokens.Surface.line, lineWidth: Tokens.Grouped.hairline) }
                 .accessibilityElement(children: .combine)
             }
         }
@@ -257,7 +257,7 @@ struct ReviewSheetView: View {
             .padding(.vertical, Tokens.Spacing.loose)
             .frame(maxWidth: .infinity, minHeight: Tokens.Size.input, alignment: .leading)
             .background(shape.fill(Tokens.Surface.card))
-            .overlay { shape.strokeBorder(Tokens.Surface.line, lineWidth: 1) }
+            .overlay { shape.strokeBorder(Tokens.Surface.line, lineWidth: Tokens.Grouped.hairline) }
             .contentShape(shape)
         }
         .buttonStyle(IconPressStyle())
@@ -281,7 +281,7 @@ struct ReviewSheetView: View {
             .padding(.vertical, Tokens.Spacing.loose)
             .frame(maxWidth: .infinity, minHeight: 82, alignment: .topLeading)
             .background(shape.fill(Tokens.Surface.card))
-            .overlay { shape.strokeBorder(Tokens.Surface.line, lineWidth: 1) }
+            .overlay { shape.strokeBorder(Tokens.Surface.line, lineWidth: Tokens.Grouped.hairline) }
     }
 
     /// Sticky "Post session" over a fade of the screen colour, with the reason it's unavailable.
@@ -378,7 +378,7 @@ struct ReviewSheetView: View {
         }
         .overlay {
             RoundedRectangle(cornerRadius: Tokens.Radius.select, style: .continuous)
-                .strokeBorder(Tokens.Surface.line, lineWidth: 1)
+                .strokeBorder(Tokens.Surface.line, lineWidth: Tokens.Grouped.hairline)
         }
         .contentShape(RoundedRectangle(cornerRadius: Tokens.Radius.select, style: .continuous))
     }
@@ -442,7 +442,7 @@ struct ReviewSheetView: View {
                     .resizable()
                     .scaledToFill()
                     .frame(width: 84, height: 84)
-                    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                    .clipShape(RoundedRectangle(cornerRadius: Tokens.Radius.input, style: .continuous))
                     .contextMenu {
                         Button {
                             viewModel.readGalleryPhotoAsMonitor(photo.id)
@@ -556,7 +556,7 @@ struct ReviewSheetView: View {
         .padding(.vertical, Tokens.Spacing.tight)
         .frame(minHeight: 66)
         .background(shape.fill(Tokens.Surface.card))
-        .overlay { shape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+        .overlay { shape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
     }
 
     /// Who can see this post — a new choice at post time, added after
@@ -599,7 +599,7 @@ struct ReviewSheetView: View {
         .padding(Tokens.Spacing.card)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(shape.fill(Tokens.Surface.card))
-        .overlay { shape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+        .overlay { shape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
         .accessibilityElement(children: .combine)
     }
 
@@ -629,7 +629,7 @@ struct ReviewSheetView: View {
                     .padding(.horizontal, 16)
                     .padding(.vertical, Tokens.Spacing.tight)
                     .background {
-                        RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Tokens.Accent.brand)
+                        RoundedRectangle(cornerRadius: Tokens.Radius.input, style: .continuous).fill(Tokens.Accent.brand)
                     }
             }
             Button {
@@ -641,17 +641,17 @@ struct ReviewSheetView: View {
                     .padding(.horizontal, 16)
                     .padding(.vertical, Tokens.Spacing.tight)
                     .background {
-                        RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Tokens.Ink.primary.opacity(0.1))
+                        RoundedRectangle(cornerRadius: Tokens.Radius.input, style: .continuous).fill(Tokens.Ink.primary.opacity(0.1))
                     }
             }
         }
         .padding(14)
         .background {
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
+            RoundedRectangle(cornerRadius: Tokens.Radius.card, style: .continuous)
                 .fill(Tokens.Accent.brand.opacity(0.14))
         }
         .overlay {
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
+            RoundedRectangle(cornerRadius: Tokens.Radius.card, style: .continuous)
                 .strokeBorder(Tokens.Accent.brand.opacity(0.35), lineWidth: 1)
         }
         .buttonStyle(.plain)

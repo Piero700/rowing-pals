@@ -94,13 +94,25 @@ struct CoachWorkoutsView: View {
                         VStack(spacing: 0) {
                             WorkoutCard(item: item, isToday: true, drawsCard: false)
                                 .asButton { navigate(.workoutResults(item.workout.id)) }
+                            // A thin row under the bar, in the grouped style (decision 97, app-wide).
+                            GroupedDivider()
                             Button {
                                 navigate(.notepad(item.workout.id))
                             } label: {
-                                Label("Open notepad", icon: .pencil, size: Tokens.Icon.small)
+                                HStack(spacing: Tokens.Spacing.tight) {
+                                    RPIconView(icon: .pencil, size: Tokens.Icon.small)
+                                    Text("Open notepad")
+                                    Spacer(minLength: 0)
+                                    RPIconView(icon: .chevronRight, size: Tokens.Icon.small)
+                                        .foregroundStyle(Tokens.Ink.faint)
+                                }
+                                .textStyle(Typography.detail)
+                                .foregroundStyle(Tokens.Accent.brand)
+                                .padding(.horizontal, Tokens.Grouped.rowPadding)
+                                .frame(minHeight: Tokens.Grouped.rowHeight)
+                                .contentShape(Rectangle())
                             }
-                            .buttonStyle(.rpPrimary)
-                            .padding([.horizontal, .bottom], Tokens.Spacing.card)
+                            .buttonStyle(IconPressStyle())
                         }
                         .background { WorkoutCard.card }
                         // As well as Delete workout on its page (decision 60).

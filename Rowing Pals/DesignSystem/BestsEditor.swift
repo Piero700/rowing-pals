@@ -100,7 +100,7 @@ struct BestsEditor: View {
         }
         .padding(Tokens.Spacing.card)
         .background(Self.cardShape.fill(Tokens.Surface.card))
-        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
     }
 
     private func label(_ text: String) -> some View {
@@ -121,7 +121,7 @@ struct BestsEditor: View {
                 .frame(maxWidth: .infinity, minHeight: Tokens.Size.input, alignment: .leading)
                 .background(Self.fieldShape.fill(Tokens.Base.ground))
                 .overlay {
-                    Self.fieldShape.strokeBorder(value.isInvalid ? Tokens.System.error : Tokens.Surface.line, lineWidth: 1)
+                    Self.fieldShape.strokeBorder(value.isInvalid ? Tokens.System.error : Tokens.Surface.line, lineWidth: Tokens.Grouped.hairline)
                 }
         }
     }
@@ -148,7 +148,7 @@ struct BestsEditor: View {
             .frame(maxWidth: .infinity, minHeight: Tokens.Size.input, alignment: .leading)
             .background(Self.fieldShape.fill(Tokens.Base.ground))
             .overlay {
-                Self.fieldShape.strokeBorder(value.isInvalid ? Tokens.System.error : Tokens.Surface.line, lineWidth: 1)
+                Self.fieldShape.strokeBorder(value.isInvalid ? Tokens.System.error : Tokens.Surface.line, lineWidth: Tokens.Grouped.hairline)
             }
         }
     }

@@ -116,7 +116,7 @@ struct ChallengeDetailView: View {
             }
             .padding(Tokens.Spacing.card)
             .background(Self.cardShape.fill(Tokens.Surface.card))
-            .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+            .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
             .padding(.top, Tokens.Spacing.loose)
         }
         sectionTitle("Rowers", trailing: "\(viewModel.doneCount) of \(viewModel.targetRows.count) done")
@@ -153,7 +153,7 @@ struct ChallengeDetailView: View {
         }
         .padding(Tokens.Spacing.card)
         .background(Self.cardShape.fill(Tokens.Surface.card))
-        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
         .padding(.top, Tokens.Spacing.loose)
 
         let rows = viewModel.contributors
@@ -232,7 +232,7 @@ struct ChallengeDetailView: View {
                 }
                 .padding(Tokens.Spacing.card)
                 .background(Self.cardShape.fill(Tokens.Surface.card))
-                .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+                .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
             }
         }
     }
@@ -261,7 +261,7 @@ struct ChallengeDetailView: View {
         VStack(spacing: 0) { content() }
             .background(Self.cardShape.fill(Tokens.Surface.card))
             .clipShape(Self.cardShape)
-            .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+            .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
     }
 
     private func personRow(place: Int, name: String, userId: UUID, value: String, fraction: Double, isDone: Bool) -> some View {

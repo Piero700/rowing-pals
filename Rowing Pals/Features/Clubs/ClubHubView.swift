@@ -162,7 +162,7 @@ struct ClubHubView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(Tokens.Spacing.card + 3)
         .background(Self.cardShape.fill(Tokens.Surface.card))
-        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
     }
 
     private func tag(_ text: String) -> some View {
@@ -209,7 +209,7 @@ struct ClubHubView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(Tokens.Spacing.card)
                 .background(Self.cardShape.fill(Tokens.Surface.card))
-                .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+                .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
         } else {
             crewmatesList
         }
@@ -254,7 +254,7 @@ struct ClubHubView: View {
         }
         .background(Self.cardShape.fill(Tokens.Surface.card))
         .clipShape(Self.cardShape)
-        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
     }
 
     /// Accepts at once for a club without coaches; otherwise says so first (decision 34).
@@ -343,7 +343,7 @@ struct ClubHubView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(Tokens.Spacing.card)
         .background(Self.cardShape.fill(Tokens.Surface.card))
-        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
     }
 
     private func invitations(_ clubs: [Club]) -> some View {
@@ -374,7 +374,7 @@ struct ClubHubView: View {
             }
             .background(Self.cardShape.fill(Tokens.Surface.card))
             .clipShape(Self.cardShape)
-            .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+            .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
         }
     }
 }

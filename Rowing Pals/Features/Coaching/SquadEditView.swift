@@ -19,20 +19,19 @@ struct SquadEditView: View {
     @Environment(\.dismiss) private var dismiss
 
     private static let cardShape = RoundedRectangle(cornerRadius: Tokens.Radius.card, style: .continuous)
-    private static let fieldShape = RoundedRectangle(cornerRadius: Tokens.Radius.input, style: .continuous)
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
-                title("Name")
-                    .padding(.top, Tokens.Spacing.tight)
-                TextField("Squad name", text: $name)
-                    .textStyle(Typography.bodyV3)
-                    .textInputAutocapitalization(.words)
-                    .padding(.horizontal, Tokens.Spacing.card)
-                    .frame(minHeight: Tokens.Size.input)
-                    .background(Self.fieldShape.fill(Tokens.Surface.card))
-                    .overlay { Self.fieldShape.strokeBorder(Tokens.Surface.line, lineWidth: 1) }
+                GroupedSection {
+                    GroupedRow(label: "Name") {
+                        TextField("Squad name", text: $name)
+                            .textStyle(Typography.detail)
+                            .textInputAutocapitalization(.words)
+                            .multilineTextAlignment(.trailing)
+                    }
+                }
+                .padding(.top, Tokens.Spacing.tight)
 
                 HStack(alignment: .firstTextBaseline) {
                     title("Members · \(memberIds.count) selected")
@@ -55,26 +54,12 @@ struct SquadEditView: View {
                         .padding(.top, Tokens.Spacing.loose)
                 }
 
-                Button {
-                    Task {
-                        if await viewModel.save(id: squadId, name: name, memberIds: memberIds) { dismiss() }
-                    }
-                } label: {
-                    if viewModel.isSaving {
-                        ProgressView().tint(Tokens.Ink.onBrand)
-                    } else {
-                        Text("Save squad")
-                    }
-                }
-                .buttonStyle(.rpPrimary)
-                .disabled(viewModel.isSaving || name.trimmingCharacters(in: .whitespaces).isEmpty)
-                .padding(.top, Tokens.Spacing.group)
-
                 if squadId != nil {
-                    Button("Delete squad") { isConfirmingDelete = true }
-                        .buttonStyle(.rpDestructive)
-                        .disabled(viewModel.isSaving)
-                        .padding(.top, Tokens.Spacing.loose)
+                    GroupedSection {
+                        GroupedButtonRow(title: "Delete squad", isDestructive: true, isCentred: true) { isConfirmingDelete = true }
+                    }
+                    .disabled(viewModel.isSaving)
+                    .padding(.top, Tokens.Spacing.group)
                 }
             }
             .padding(.horizontal, Tokens.Spacing.screen)
@@ -83,7 +68,12 @@ struct SquadEditView: View {
         }
         .scrollIndicators(.hidden)
         .safeAreaInset(edge: .top, spacing: 0) {
-            ScreenHeader(title: squadId == nil ? "New squad" : "Edit squad") { dismiss() }
+            ScreenHeader(title: squadId == nil ? "New squad" : "Edit squad", onBack: { dismiss() }) {
+                HeaderSaveButton(title: "Save", isSaving: viewModel.isSaving,
+                                 isDisabled: name.trimmingCharacters(in: .whitespaces).isEmpty) {
+                    Task { if await viewModel.save(id: squadId, name: name, memberIds: memberIds) { dismiss() } }
+                }
+            }
         }
         .background(Tokens.Base.ground)
         .toolbar(.hidden, for: .navigationBar)
@@ -121,7 +111,7 @@ struct SquadEditView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(Tokens.Spacing.card)
                 .background(Self.cardShape.fill(Tokens.Surface.card))
-                .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+                .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
         } else {
             VStack(spacing: 0) {
                 ForEach(Array(viewModel.rowers.enumerated()), id: \.element.id) { index, person in
@@ -163,7 +153,7 @@ struct SquadEditView: View {
             }
             .background(Self.cardShape.fill(Tokens.Surface.card))
             .clipShape(Self.cardShape)
-            .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+            .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
         }
     }
 

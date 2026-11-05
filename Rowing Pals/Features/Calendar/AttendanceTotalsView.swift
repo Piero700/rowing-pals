@@ -30,18 +30,15 @@ struct AttendanceTotalsView: View {
                 .padding(.top, Tokens.Spacing.loose)
 
                 if viewModel.span == .custom {
-                    HStack(spacing: Tokens.Spacing.loose) {
-                        VStack(alignment: .leading, spacing: 0) {
-                            FormLabel("From")
+                    GroupedSection {
+                        GroupedRow(label: "From") {
                             DatePicker("From", selection: $viewModel.customFrom, displayedComponents: .date)
                                 .labelsHidden()
-                                .formFieldBox()
                         }
-                        VStack(alignment: .leading, spacing: 0) {
-                            FormLabel("To")
+                        GroupedDivider()
+                        GroupedRow(label: "To") {
                             DatePicker("To", selection: $viewModel.customTo, displayedComponents: .date)
                                 .labelsHidden()
-                                .formFieldBox()
                         }
                     }
                     .padding(.top, Tokens.Spacing.loose)
@@ -122,7 +119,7 @@ struct AttendanceTotalsView: View {
         }
         .padding(Tokens.Spacing.card)
         .background(Self.cardShape.fill(Tokens.Surface.card))
-        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
     }
 
     private func listCard(_ lines: [AttendanceTotalsViewModel.Line], opensRower: Bool) -> some View {
@@ -162,6 +159,6 @@ struct AttendanceTotalsView: View {
         }
         .background(Self.cardShape.fill(Tokens.Surface.card))
         .clipShape(Self.cardShape)
-        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
     }
 }

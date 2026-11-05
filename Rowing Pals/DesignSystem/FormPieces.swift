@@ -14,10 +14,10 @@ struct FormLabel: View {
 
     var body: some View {
         Text(text)
-            .textStyle(Typography.meta)
+            .textStyle(Typography.sectionTitle)
             .foregroundStyle(Tokens.Ink.secondary)
-            .padding(.horizontal, 4)
-            .padding(.bottom, 6)
+            .padding(.horizontal, Tokens.Grouped.rowPadding)
+            .padding(.bottom, Tokens.Grouped.headerGap)
     }
 }
 
@@ -29,9 +29,9 @@ struct FormSectionTitle: View {
         Text(text)
             .textStyle(Typography.sectionTitle)
             .foregroundStyle(Tokens.Ink.secondary)
-            .padding(.horizontal, 4)
-            .padding(.top, Tokens.Spacing.group)
-            .padding(.bottom, Tokens.Spacing.tight)
+            .padding(.horizontal, Tokens.Grouped.rowPadding)
+            .padding(.top, Tokens.Grouped.groupGap)
+            .padding(.bottom, Tokens.Grouped.headerGap)
             .accessibilityAddTraits(.isHeader)
     }
 }
@@ -42,11 +42,11 @@ struct FormFootnote: View {
 
     var body: some View {
         Text(text)
-            .textStyle(Typography.meta)
+            .textStyle(Typography.statLabel)
             .tabularNumerals()
             .foregroundStyle(Tokens.Ink.secondary)
-            .padding(.horizontal, 4)
-            .padding(.top, Tokens.Spacing.tight)
+            .padding(.horizontal, Tokens.Grouped.rowPadding)
+            .padding(.top, Tokens.Grouped.headerGap)
             .fixedSize(horizontal: false, vertical: true)
     }
 }
@@ -57,7 +57,7 @@ struct ToggleCard: View {
     let detail: String
     @Binding var isOn: Bool
 
-    private static let shape = RoundedRectangle(cornerRadius: Tokens.Radius.card, style: .continuous)
+    private static let shape = RoundedRectangle(cornerRadius: Tokens.Grouped.radius, style: .continuous)
 
     var body: some View {
         HStack(spacing: Tokens.Spacing.loose) {
@@ -74,11 +74,11 @@ struct ToggleCard: View {
                 .labelsHidden()
                 .tint(Tokens.Accent.brand)
         }
-        .padding(.horizontal, Tokens.Spacing.card)
-        .padding(.vertical, Tokens.Spacing.loose)
-        .frame(minHeight: Tokens.Size.row)
+        .padding(.horizontal, Tokens.Grouped.rowPadding)
+        .padding(.vertical, Tokens.Spacing.tight)
+        .frame(minHeight: Tokens.Grouped.rowHeight)
         .background(Self.shape.fill(Tokens.Surface.card))
-        .overlay { Self.shape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+        .overlay { Self.shape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
     }
 }
 
@@ -89,6 +89,6 @@ extension View {
         return self
             .frame(maxWidth: .infinity, minHeight: Tokens.Size.input)
             .background(shape.fill(Tokens.Surface.card))
-            .overlay { shape.strokeBorder(Tokens.Surface.line, lineWidth: 1) }
+            .overlay { shape.strokeBorder(Tokens.Surface.line, lineWidth: Tokens.Grouped.hairline) }
     }
 }

@@ -57,7 +57,7 @@ struct FeedBoatCard: View {
         .padding(Tokens.Spacing.card)
         .background(Self.cardShape.fill(LinearGradient(colors: [Tokens.Accent.brandSoft, Tokens.Surface.card],
                                                        startPoint: .topLeading, endPoint: UnitPoint(x: 0.7, y: 0.7))))
-        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
     }
 
     /// "Sat 07:00".

@@ -50,7 +50,7 @@ struct MonthGridView: View {
         .padding(.horizontal, Tokens.Spacing.tight)
         .padding(.vertical, Tokens.Spacing.loose)
         .background(Self.shape.fill(Tokens.Surface.card))
-        .overlay { Self.shape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+        .overlay { Self.shape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
     }
 
     private func cell(_ day: Date) -> some View {

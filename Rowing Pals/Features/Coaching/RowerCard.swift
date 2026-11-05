@@ -56,8 +56,8 @@ struct RowerCard: View {
                     .tabularNumerals()
                     .foregroundStyle(Tokens.Ink.secondary)
             }
-            .padding(.top, 14)
-            .padding(.bottom, 6)
+            .padding(.top, Tokens.Spacing.loose)
+            .padding(.bottom, 4)
 
             TargetBar(metres: rower.weekMetres, target: rower.weeklyTargetM, isBehind: rower.isBehindTarget)
 
@@ -87,7 +87,7 @@ struct RowerCard: View {
         }
         .padding(Tokens.Spacing.card)
         .background(Self.cardShape.fill(Tokens.Surface.card))
-        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
         .accessibilityElement(children: .combine)
     }
 }

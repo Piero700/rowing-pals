@@ -26,7 +26,7 @@ struct SquadsView: View {
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(Tokens.Spacing.card)
                             .background(Self.cardShape.fill(Tokens.Surface.card))
-                            .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+                            .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
                     }
                 } else {
                     VStack(spacing: 0) {
@@ -59,7 +59,7 @@ struct SquadsView: View {
                     }
                     .background(Self.cardShape.fill(Tokens.Surface.card))
                     .clipShape(Self.cardShape)
-                    .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+                    .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
                 }
 
                 Text("Rowers can be in more than one squad. Squads are filters and workout targets: coaches still see every rower in the club.")

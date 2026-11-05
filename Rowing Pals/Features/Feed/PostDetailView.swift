@@ -155,11 +155,11 @@ struct PostDetailView: View {
                 withAnimation(.snappy) { isSelfiePrimary.toggle() }
             } label: {
                 CachedAsyncImage(url: insetURL) {
-                    PhotoPlaceholder(cornerRadius: 18, caption: "SELFIE")
+                    PhotoPlaceholder(cornerRadius: Tokens.Radius.photo, caption: "SELFIE")
                 }
                 .aspectRatio(contentMode: .fill)
                 .frame(width: 86, height: 116)
-                .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                .clipShape(RoundedRectangle(cornerRadius: Tokens.Radius.photo, style: .continuous))
             }
             .buttonStyle(.plain)
             .padding(.leading, 14)
@@ -407,7 +407,7 @@ struct PostDetailView: View {
             }
         }
         .padding(14)
-        .glassSurface(cornerRadius: 22)
+        .glassSurface(cornerRadius: Tokens.Radius.card)
     }
 
     /// "1:04:50 · 2:01.6 /500m" for split, "1:04:50 · 186W" for watts — the
@@ -458,7 +458,7 @@ struct PostDetailView: View {
             }
         }
         .padding(14)
-        .glassSurface(cornerRadius: 22)
+        .glassSurface(cornerRadius: Tokens.Radius.card)
     }
 
     private func detailSegmentRow(_ segment: PostDetailViewModel.DetailSegment) -> some View {
@@ -633,19 +633,19 @@ struct PostDetailView: View {
                         // strip come first, then other pieces' monitor photos.
                         ForEach(viewModel.galleryPaths, id: \.self) { path in
                             CachedAsyncImage(url: viewModel.monitorURLs[path]) {
-                                PhotoPlaceholder(cornerRadius: 18, caption: nil)
+                                PhotoPlaceholder(cornerRadius: Tokens.Radius.photo, caption: nil)
                             }
                             .aspectRatio(contentMode: .fill)
                             .frame(width: 150, height: 150)
-                            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                            .clipShape(RoundedRectangle(cornerRadius: Tokens.Radius.photo, style: .continuous))
                         }
                         ForEach(extraPhotoSegments) { segment in
                             CachedAsyncImage(url: segment.monitorPhotoPath.flatMap { viewModel.monitorURLs[$0] }) {
-                                PhotoPlaceholder(cornerRadius: 18, caption: segment.label.rawValue.uppercased())
+                                PhotoPlaceholder(cornerRadius: Tokens.Radius.photo, caption: segment.label.rawValue.uppercased())
                             }
                             .aspectRatio(contentMode: .fill)
                             .frame(width: 150, height: 150)
-                            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                            .clipShape(RoundedRectangle(cornerRadius: Tokens.Radius.photo, style: .continuous))
                         }
                     }
                 }

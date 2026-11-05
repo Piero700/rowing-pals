@@ -46,7 +46,7 @@ struct EditProfileView: View {
                     .padding(.horizontal, Tokens.Spacing.card)
                     .frame(minHeight: Tokens.Size.input)
                     .background(field.fill(Tokens.Surface.card))
-                    .overlay { field.strokeBorder(Tokens.Surface.line, lineWidth: 1) }
+                    .overlay { field.strokeBorder(Tokens.Surface.line, lineWidth: Tokens.Grouped.hairline) }
 
                 // Shown as @username; you can sign in with it (decision 85).
                 sectionTitle("Username")
@@ -64,7 +64,7 @@ struct EditProfileView: View {
                 .padding(.horizontal, Tokens.Spacing.card)
                 .frame(minHeight: Tokens.Size.input)
                 .background(field.fill(Tokens.Surface.card))
-                .overlay { field.strokeBorder(Tokens.Surface.line, lineWidth: 1) }
+                .overlay { field.strokeBorder(Tokens.Surface.line, lineWidth: Tokens.Grouped.hairline) }
                 .task(id: viewModel.username) {
                     try? await Task.sleep(for: .milliseconds(400))
                     guard !Task.isCancelled else { return }
@@ -144,7 +144,7 @@ struct EditProfileView: View {
                     .padding(.horizontal, Tokens.Spacing.card)
                     .frame(minHeight: Tokens.Size.input)
                     .background(field.fill(Tokens.Surface.card))
-                    .overlay { field.strokeBorder(Tokens.Surface.line, lineWidth: 1) }
+                    .overlay { field.strokeBorder(Tokens.Surface.line, lineWidth: Tokens.Grouped.hairline) }
                     footnote("Your weekly volume goal. Any logged session counts towards it.")
                     if let targetProblem = viewModel.weeklyTargetProblem {
                         problem(targetProblem)
@@ -261,7 +261,7 @@ struct EditProfileView: View {
         .padding(.leading, Tokens.Spacing.card)
         .frame(maxWidth: .infinity, minHeight: Tokens.Size.input)
         .background(field.fill(Tokens.Surface.card))
-        .overlay { field.strokeBorder(Tokens.Surface.line, lineWidth: 1) }
+        .overlay { field.strokeBorder(Tokens.Surface.line, lineWidth: Tokens.Grouped.hairline) }
     }
 
     private var weightField: some View {
@@ -278,7 +278,7 @@ struct EditProfileView: View {
         .padding(.horizontal, Tokens.Spacing.card)
         .frame(maxWidth: .infinity, minHeight: Tokens.Size.input)
         .background(field.fill(Tokens.Surface.card))
-        .overlay { field.strokeBorder(Tokens.Surface.line, lineWidth: 1) }
+        .overlay { field.strokeBorder(Tokens.Surface.line, lineWidth: Tokens.Grouped.hairline) }
     }
 
     /// Born 1900 or later, and at least 5 years old (the engine's own range).

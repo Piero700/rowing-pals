@@ -406,7 +406,7 @@ struct ProfileView: View {
         .padding(.vertical, 30)
         .padding(.horizontal, 20)
         .background(Self.cardShape.fill(Tokens.Surface.card))
-        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
     }
 
     // MARK: - Stats
@@ -446,7 +446,7 @@ struct ProfileView: View {
         }
         .padding(.vertical, Tokens.Spacing.loose)
         .background(Self.cardShape.fill(Tokens.Surface.card))
-        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
     }
 
     private var currentWeekVolumeM: Int {
@@ -526,7 +526,7 @@ struct ProfileView: View {
         }
         .padding(.vertical, Tokens.Spacing.loose)
         .background(Self.cardShape.fill(Tokens.Surface.card))
-        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
     }
 
     /// v3 §08's two PB tiles.
@@ -572,14 +572,14 @@ struct ProfileView: View {
                 .padding(.vertical, 16)
                 .padding(.horizontal, Tokens.Spacing.card)
                 .background(Self.cardShape.fill(Tokens.Surface.card))
-                .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+                .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
 
             sectionHeader("Consistency") { chip("\(viewModel.activeDaysInGrid) active days") }
             ConsistencyCalendarView(days: viewModel.consistencyDays, footnote: streakFootnote)
                 .padding(.vertical, 16)
                 .padding(.horizontal, Tokens.Spacing.card)
                 .background(Self.cardShape.fill(Tokens.Surface.card))
-                .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+                .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
 
             if let latest = viewModel.latestSession {
                 sectionTitle("Recent activity")
@@ -715,7 +715,7 @@ struct ProfileView: View {
             .padding(Tokens.Spacing.card)
             .frame(maxWidth: .infinity, minHeight: 68, alignment: .leading)
             .background(shape.fill(Tokens.Surface.card))
-            .overlay { shape.strokeBorder(Tokens.Surface.line, lineWidth: 1) }
+            .overlay { shape.strokeBorder(Tokens.Surface.line, lineWidth: Tokens.Grouped.hairline) }
             .contentShape(shape)
         }
         .buttonStyle(IconPressStyle())

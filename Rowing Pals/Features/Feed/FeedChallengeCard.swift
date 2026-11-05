@@ -59,15 +59,12 @@ struct FeedChallengeCard: View {
             .buttonStyle(IconPressStyle())
 
             if case .event(let event) = item, event.isOpenForPosting(at: Date()) {
-                Button(action: onLog) {
-                    Label("Log your \(event.pieceLabel)", icon: .plus)
-                }
-                .buttonStyle(.rpGlass)
+                CardLinkRow(icon: .plus, title: "Log your \(event.pieceLabel)", action: onLog)
                 .padding(.top, 4)
             }
         }
         .padding(Tokens.Spacing.card)
         .background(Self.cardShape.fill(Tokens.Surface.card))
-        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
     }
 }

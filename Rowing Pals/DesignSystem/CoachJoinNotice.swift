@@ -74,7 +74,7 @@ struct CoachJoinNotice: View {
                 }
                 .background(Self.cardShape.fill(Tokens.Surface.card))
                 .clipShape(Self.cardShape)
-                .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+                .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
                 .padding(.top, Tokens.Spacing.group)
 
                 Text("Everyone else still sees only what your privacy settings allow. You can read this again in Settings → Profile visibility.")

@@ -146,7 +146,7 @@ struct RowerCalendarView: View {
         .padding(Tokens.Spacing.card)
         .background(Self.cardShape.fill(LinearGradient(colors: [Tokens.Accent.brandSoft, Tokens.Surface.card],
                                                       startPoint: .topLeading, endPoint: .bottomTrailing)))
-        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
         .padding(.top, Tokens.Spacing.loose)
     }
 
@@ -169,7 +169,7 @@ struct RowerCalendarView: View {
             .padding(.horizontal, Tokens.Spacing.card)
             .padding(.vertical, Tokens.Spacing.loose)
             .background(Self.cardShape.fill(Tokens.Surface.card))
-            .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+            .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
         } else {
             VStack(alignment: .leading, spacing: 0) {
                 HStack(spacing: Tokens.Spacing.gap) {
@@ -199,7 +199,7 @@ struct RowerCalendarView: View {
             .padding(.horizontal, Tokens.Spacing.card)
             .padding(.vertical, Tokens.Spacing.loose)
             .background(Self.cardShape.fill(Tokens.Surface.card))
-            .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+            .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
         }
     }
 
@@ -381,6 +381,6 @@ struct RowerCalendarView: View {
         }
         .padding(Tokens.Spacing.card)
         .background(Self.cardShape.fill(Tokens.Surface.card))
-        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
     }
 }

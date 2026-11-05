@@ -75,7 +75,7 @@ struct PredictionDetailView: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(Tokens.Spacing.card)
                         .background(Self.cardShape.fill(Tokens.Surface.card))
-                        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+                        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
                 }
 
                 if !advice.isEmpty {
@@ -90,7 +90,7 @@ struct PredictionDetailView: View {
                     }
                     .padding(Tokens.Spacing.card)
                     .background(Self.cardShape.fill(Tokens.Surface.card))
-                    .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+                    .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
                 }
 
                 Text("Worked out on your phone from your erg sessions in the last 30 days.")
@@ -211,7 +211,7 @@ struct PredictionDetailView: View {
         }
         .background(Self.cardShape.fill(Tokens.Surface.card))
         .clipShape(Self.cardShape)
-        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
     }
 
     // MARK: - Formatting

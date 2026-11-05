@@ -78,7 +78,7 @@ struct ConsistencyCalendarView: View {
         let posted = (day?.distanceM ?? 0) > 0
         shape
             .fill(posted ? Tokens.Accent.brand : Tokens.Surface.raised)
-            .overlay { shape.strokeBorder(posted ? Tokens.Accent.brand : Tokens.Surface.line, lineWidth: 1) }
+            .overlay { shape.strokeBorder(posted ? Tokens.Accent.brand : Tokens.Surface.line, lineWidth: Tokens.Grouped.hairline) }
             .overlay {
                 if isToday {
                     RoundedRectangle(cornerRadius: 5, style: .continuous)

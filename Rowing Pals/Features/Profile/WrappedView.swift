@@ -108,15 +108,17 @@ struct WrappedView: View {
                 Button("Cancel") { isChoosingDates = false }
                     .buttonStyle(.rpText)
             }
-            FormLabel("From")
-            DatePicker("From", selection: $viewModel.customStart, in: ...Date(), displayedComponents: .date)
-                .labelsHidden()
-                .formFieldBox()
-            FormLabel("To")
-            DatePicker("To", selection: $viewModel.customEnd, in: viewModel.customStart..., displayedComponents: .date)
-                .labelsHidden()
-                .formFieldBox()
-            FormFootnote("Up to a year. Both days count.")
+            GroupedSection(footer: "Up to a year. Both days count.") {
+                GroupedRow(label: "From") {
+                    DatePicker("From", selection: $viewModel.customStart, in: ...Date(), displayedComponents: .date)
+                        .labelsHidden()
+                }
+                GroupedDivider()
+                GroupedRow(label: "To") {
+                    DatePicker("To", selection: $viewModel.customEnd, in: viewModel.customStart..., displayedComponents: .date)
+                        .labelsHidden()
+                }
+            }
             Button("Show my season") {
                 isChoosingDates = false
                 page = 0

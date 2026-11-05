@@ -340,7 +340,7 @@ struct ClubSearchView: View {
         .padding(.horizontal, 14)
         .frame(minHeight: Tokens.Size.input)
         .background(shape.fill(Tokens.Surface.card))
-        .overlay { shape.strokeBorder(Tokens.Surface.line, lineWidth: 1) }
+        .overlay { shape.strokeBorder(Tokens.Surface.line, lineWidth: Tokens.Grouped.hairline) }
     }
 
     @ViewBuilder
@@ -400,7 +400,7 @@ struct ClubSearchView: View {
         .padding(Tokens.Spacing.gap)
         .frame(minHeight: 76)
         .background(shape.fill(isSelected ? Tokens.Accent.brandSoft : Tokens.Surface.card))
-        .overlay { shape.strokeBorder(isSelected ? Tokens.Accent.brand : Tokens.Surface.line, lineWidth: 1) }
+        .overlay { shape.strokeBorder(isSelected ? Tokens.Accent.brand : Tokens.Surface.line, lineWidth: Tokens.Grouped.hairline) }
         .asButton { viewModel.selectedClub = club }
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(isSelected ? .isSelected : [])
@@ -609,7 +609,7 @@ struct ClubSearchView: View {
         }
         .padding(Tokens.Spacing.card)
         .background(shape.fill(Tokens.Surface.card))
-        .overlay { shape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+        .overlay { shape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
     }
 
     // MARK: - Sticky primary button
@@ -784,7 +784,7 @@ struct ClubSearchView: View {
         }
         .padding(Tokens.Spacing.card)
         .background(shape.fill(Tokens.Surface.card))
-        .overlay { shape.strokeBorder(request.isDeclined ? Tokens.System.error.opacity(0.5) : Tokens.Surface.line, lineWidth: 1) }
+        .overlay { shape.strokeBorder(request.isDeclined ? Tokens.System.error.opacity(0.5) : Tokens.Surface.line, lineWidth: Tokens.Grouped.hairline) }
     }
 }
 

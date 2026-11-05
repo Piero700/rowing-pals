@@ -181,7 +181,7 @@ struct TestLeaderboardView: View {
         }
         .padding(Tokens.Spacing.loose)
         .background {
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
+            RoundedRectangle(cornerRadius: Tokens.Radius.card, style: .continuous)
                 .fill(isPodium ? Tokens.Accent.records.opacity(0.07) : Tokens.Ink.primary.opacity(0.05))
         }
     }
