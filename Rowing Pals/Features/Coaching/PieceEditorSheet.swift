@@ -6,8 +6,8 @@
 import SwiftUI
 
 /// Adding or changing one piece of a set workout (CoachWorkoutNew: "Each piece can be a
-/// distance or a time, with reps, rest, target rate and target split"). The canvas lists the
-/// pieces but doesn't draw this sheet; it follows the app's other forms.
+/// distance or a time, with reps, rest, target rate and target split"), in the compact grouped-rows
+/// style (user, 2026-11-05): what the piece is, then its optional targets.
 struct PieceEditorSheet: View {
     let original: WorkoutPiece?
     let onSave: (WorkoutPiece) -> Void
@@ -30,8 +30,6 @@ struct PieceEditorSheet: View {
 
     /// The highest stroke rate a target can ask for (user, 2026-10-12).
     static let rateRange = 10...70
-
-    private static let fieldShape = RoundedRectangle(cornerRadius: Tokens.Radius.input, style: .continuous)
 
     init(piece: WorkoutPiece?, onSave: @escaping (WorkoutPiece) -> Void, onDelete: (() -> Void)?) {
         original = piece
@@ -62,78 +60,87 @@ struct PieceEditorSheet: View {
                     .fontWeight(.semibold)
                     .disabled(piece == nil)
                 }
-                Text(original == nil ? "Add piece" : "Piece")
+                Text(original == nil ? "Add piece" : "Edit piece")
                     .textStyle(Typography.navTitle)
                     .foregroundStyle(Tokens.Ink.primary)
                     .accessibilityAddTraits(.isHeader)
             }
-            .padding(.horizontal, Tokens.Spacing.tight)
+            .padding(.horizontal, Tokens.Spacing.screen)
             .padding(.top, Tokens.Spacing.loose)
             .frame(minHeight: Tokens.Size.minTap)
 
             ScrollView {
-                VStack(alignment: .leading, spacing: 0) {
+                VStack(alignment: .leading, spacing: Tokens.Grouped.groupGap) {
                     PillSegmentedControl(options: ["Distance", "Time"], selection: Binding(
                         get: { kind == .distance ? 0 : 1 },
                         set: { kind = $0 == 0 ? .distance : .time; valueText = "" }
                     ))
                     .padding(.top, Tokens.Spacing.loose)
 
-                    label(kind == .distance ? "Distance" : "Time")
-                    if kind == .distance {
-                        field("2000", text: $valueText, unit: "m", keyboard: .numberPad, isInvalid: valueProblem != nil)
-                    } else {
-                        timeField("20:00", text: $valueText, unit: nil, field: .value, isInvalid: valueProblem != nil)
+                    GroupedSection {
+                        GroupedRow(label: kind == .distance ? "Distance" : "Time") {
+                            if kind == .distance {
+                                numberField("2000", text: $valueText, width: Tokens.Grouped.valueWidth,
+                                            isInvalid: valueProblem != nil)
+                                unit("m")
+                            } else {
+                                timeField("20:00", text: $valueText, field: .value, isInvalid: valueProblem != nil)
+                            }
+                        }
+                        GroupedDivider()
+                        GroupedRow(label: "Reps") {
+                            Text("\(reps)")
+                                .textStyle(Typography.detail)
+                                .tabularNumerals()
+                                .foregroundStyle(Tokens.Ink.primary)
+                            Stepper("Reps", value: $reps, in: 1...30)
+                                .labelsHidden()
+                        }
                     }
 
-                    label("Reps")
-                    HStack {
-                        Text("\(reps)")
-                            .textStyle(Typography.bodyV3)
-                            .tabularNumerals()
-                            .foregroundStyle(Tokens.Ink.primary)
-                        Spacer()
-                        Stepper("Reps", value: $reps, in: 1...30)
-                            .labelsHidden()
+                    GroupedSection(
+                        header: "Targets · optional",
+                        footer: "Split on Auto: each rower gets their own target from the Pace Engine, for this zone and distance."
+                    ) {
+                        GroupedRow(label: "Rest") {
+                            timeField("None", text: $restText, field: .rest, isInvalid: restProblem != nil)
+                        }
+                        GroupedDivider()
+                        GroupedRow(label: "Rate") {
+                            numberField("From", text: $rateMinText, width: Tokens.Grouped.shortValueWidth,
+                                        isInvalid: optionalRate(rateMinText) == nil)
+                            unit("–")
+                            numberField("To", text: $rateMaxText, width: Tokens.Grouped.shortValueWidth,
+                                        isInvalid: optionalRate(rateMaxText) == nil || ratesOutOfOrder)
+                        }
+                        GroupedDivider()
+                        GroupedRow(label: "Split") {
+                            timeField("Auto", text: $splitText, field: .split, isInvalid: splitProblem != nil)
+                            unit("/500m")
+                        }
                     }
-                    .padding(.horizontal, Tokens.Spacing.card)
-                    .frame(minHeight: Tokens.Size.input)
-                    .background(Self.fieldShape.fill(Tokens.Surface.card))
-                    .overlay { Self.fieldShape.strokeBorder(Tokens.Surface.line, lineWidth: 1) }
-
-                    label("Rest between reps (optional)")
-                    timeField("5:00", text: $restText, unit: nil, field: .rest, isInvalid: restProblem != nil)
-
-                    label("Target rate (optional)")
-                    HStack(spacing: Tokens.Spacing.loose) {
-                        field("From", text: $rateMinText, unit: nil, keyboard: .numberPad, isInvalid: optionalRate(rateMinText) == nil)
-                        field("To", text: $rateMaxText, unit: nil, keyboard: .numberPad,
-                              isInvalid: optionalRate(rateMaxText) == nil || ratesOutOfOrder)
-                    }
-
-                    label("Target split (optional)")
-                    timeField("1:42", text: $splitText, unit: "/500m", field: .split, isInvalid: splitProblem != nil)
-                    Text("Leave the split empty and each rower gets their own target from the Pace Engine, for this zone and distance.")
-                        .textStyle(Typography.meta)
-                        .foregroundStyle(Tokens.Ink.secondary)
-                        .padding(.horizontal, 4)
-                        .padding(.top, Tokens.Spacing.tight)
 
                     if let problem {
                         Text(problem)
                             .textStyle(Typography.meta)
                             .foregroundStyle(Tokens.System.error)
-                            .padding(.horizontal, 4)
-                            .padding(.top, Tokens.Spacing.loose)
+                            .padding(.horizontal, Tokens.Grouped.rowPadding)
                     }
 
                     if let onDelete {
-                        Button("Remove piece") {
-                            onDelete()
-                            dismiss()
+                        GroupedSection {
+                            Button {
+                                onDelete()
+                                dismiss()
+                            } label: {
+                                Text("Remove piece")
+                                    .textStyle(Typography.detail)
+                                    .foregroundStyle(Tokens.System.error)
+                                    .frame(maxWidth: .infinity, minHeight: Tokens.Grouped.rowHeight)
+                                    .contentShape(Rectangle())
+                            }
+                            .buttonStyle(IconPressStyle())
                         }
-                        .buttonStyle(.rpDestructive)
-                        .padding(.top, Tokens.Spacing.group)
                     }
                 }
                 .padding(.horizontal, Tokens.Spacing.screen)
@@ -228,49 +235,33 @@ struct PieceEditorSheet: View {
 
     // MARK: - Building blocks
 
-    private func label(_ text: String) -> some View {
+    /// A unit or separator beside a typed value ("m", "/500m", "–").
+    private func unit(_ text: String) -> some View {
         Text(text)
-            .textStyle(Typography.sectionTitle)
+            .textStyle(Typography.detail)
             .foregroundStyle(Tokens.Ink.secondary)
-            .padding(.horizontal, 4)
-            .padding(.top, Tokens.Spacing.group)
-            .padding(.bottom, Tokens.Spacing.tight)
     }
 
-    /// A time on the number pad, shown with its colon as it's typed (5 0 0 → "5:00").
-    private func timeField(_ placeholder: String, text: Binding<String>, unit: String?, field: TimeField,
+    /// A time on the number pad, on the right of its row, with its colon put in as it's typed.
+    private func timeField(_ placeholder: String, text: Binding<String>, field: TimeField,
                            isInvalid: Bool) -> some View {
-        HStack(spacing: Tokens.Spacing.tight) {
-            DurationTextField(placeholder: placeholder, text: text, focus: $focusedTime, field: field)
-                .textStyle(Typography.bodyV3)
-                .tabularNumerals()
-            if let unit {
-                Text(unit)
-                    .textStyle(Typography.detail)
-                    .foregroundStyle(Tokens.Ink.secondary)
-            }
-        }
-        .padding(.horizontal, Tokens.Spacing.card)
-        .frame(maxWidth: .infinity, minHeight: Tokens.Size.input)
-        .background(Self.fieldShape.fill(Tokens.Surface.card))
-        .overlay { Self.fieldShape.strokeBorder(isInvalid ? Tokens.System.error : Tokens.Surface.line, lineWidth: 1) }
+        DurationTextField(placeholder: placeholder, text: text, focus: $focusedTime, field: field,
+                          alignment: .trailing)
+            .textStyle(Typography.detail)
+            .tabularNumerals()
+            .foregroundStyle(isInvalid ? Tokens.System.error : Tokens.Ink.primary)
+            .frame(width: Tokens.Grouped.valueWidth, height: Tokens.Grouped.rowHeight)
     }
 
-    private func field(_ placeholder: String, text: Binding<String>, unit: String?, keyboard: UIKeyboardType, isInvalid: Bool) -> some View {
-        HStack(spacing: Tokens.Spacing.tight) {
-            TextField(placeholder, text: text)
-                .keyboardType(keyboard)
-                .textStyle(Typography.bodyV3)
-                .tabularNumerals()
-            if let unit {
-                Text(unit)
-                    .textStyle(Typography.detail)
-                    .foregroundStyle(Tokens.Ink.secondary)
-            }
-        }
-        .padding(.horizontal, Tokens.Spacing.card)
-        .frame(maxWidth: .infinity, minHeight: Tokens.Size.input)
-        .background(Self.fieldShape.fill(Tokens.Surface.card))
-        .overlay { Self.fieldShape.strokeBorder(isInvalid ? Tokens.System.error : Tokens.Surface.line, lineWidth: 1) }
+    /// Whole numbers on the number pad, on the right of their row; red while they can't be read.
+    private func numberField(_ placeholder: String, text: Binding<String>, width: CGFloat,
+                             isInvalid: Bool) -> some View {
+        TextField(placeholder, text: text)
+            .keyboardType(.numberPad)
+            .multilineTextAlignment(.trailing)
+            .textStyle(Typography.detail)
+            .tabularNumerals()
+            .foregroundStyle(isInvalid ? Tokens.System.error : Tokens.Ink.primary)
+            .frame(width: width)
     }
 }

@@ -183,7 +183,31 @@ example 8 × 500m and 20 × 250m) before tuning the joining.
 
 **Checklist:** `docs/testing/coach-notepad-np2.md`.
 
-## Phase NP3 — many pieces and tests (boards `CoachNotepadPieces`, `CoachNotepadTest`)
+## Phase NP3 — many pieces and tests (boards `CoachNotepadPieces`, `CoachNotepadTest`) — built, waiting on the phone tests
+
+Built 2026-11-05, after NP1 and NP2 passed the phone tests and were merged into `main`. **Needs
+`docs/migrations/2026-11-05-coach-notepad-np3.sql`** (checklist step 0). Files: `NotepadSummaryCard`,
+`NotepadTestCard`, `ScanButton`; `NotepadScoresCard` gains `isEveryPiece` and metres for timed pieces;
+`NotepadRules` gains `summary`, `fadeWindow`, `fadeText`, `metres`/`time`, `splitLabels`, `grouped`,
+`test(of:)`; `MonitorParser.splitRows` / `isIntervalTitle`. Tests: 60 notepad, scan and OCR tests pass,
+including the real 2k photo (IMG_0593) giving its four 500m splits exactly.
+
+Decided with the user (2026-11-05): **posted rows get their 500m splits by saving them when the rower
+posts.** Posts didn't keep them: a segment held only time, metres, split and rate. Now the Log flow
+keeps the split rows it reads under a continuous piece (`segments.splits_500_ms`), only while the
+metres are still the ones read off the photo, and never for an interval workout (a "count x" or
+"/…r" title). Tests posted before this build show "Their post doesn't have 500m splits".
+
+The migration also fixes an NP1 bug found here: a workout set by title alone ("4 x 500m") took the
+reps from its title in the app (2026-11-05), but the server counted reps from the pieces only and
+refused every score after column 1. The app works before the migration is run (the splits argument is
+only sent when there are splits; posted splits are read on their own and left blank if they can't be).
+
+Beyond the boards (for the user to check): a test set with no pieces takes its piece from the test
+(a 2k is 2,000 m); a 5k's rows are named "splits" (they're 1,000 m each); with fewer than ten pieces the
+fade compares halves and the footnote says so; a test's scan screen lists the splits it read; a timed
+piece's box shows its metres with the split under it. Simulator check used a temporary, uncommitted
+preview switch (no workout on Dev had over four reps or was a test).
 
 **Many pieces.** When a workout has more reps than fit (more than 4), the Scores block switches
 to **Summary | Every piece**:
@@ -202,7 +226,33 @@ reuses `WorkoutPiece.kind`.
 
 **Checklist:** `docs/testing/coach-notepad-np3.md`.
 
-## Phase NP4 — the notebook and the rower's card
+## Phase NP4 — the notebook and the rower's card — built, waiting on the phone tests
+
+Built 2026-11-05 with NP3, so the user can test both together. **Needs
+`docs/migrations/2026-11-05-coach-notepad-np4.sql`** for the rower's card (the Notebook works without it).
+Files: `NotebookRules` (pages, sources, squad averages, against target, a rower's line and summary),
+`NotebookViewModel`, `NotebookView`, `NotebookRowerView`, `AppRoute.notebook` / `.notebookRower`,
+**Notebook ›** beside Workouts' Past heading; `CoachNotedScores`, `NotepadService.myScores` /
+`notepads(for:)` / `scores(for:)`, `NotepadRules.rowerCards` / `rowerCardSince` / `pieces(set:title:testKey:)`,
+`CoachScoresCard` on the Feed. Tests: `NotebookRulesTests` (10), with the notepad suites: 45 passing.
+
+The rower's card is built, as decision 96 keeps it (the user said to carry on without settling open
+question 3; it can still be switched off without touching the rest).
+
+Choices made here, for the user to check:
+- The card shows on the workout's day and the **three days after** it, and only when the coach noted
+  at least one split (a page that only marks the rower "sat out" gets no card).
+- "erg N" on the card only when the coach set an erg order.
+- **Log your session** opens the normal Log flow linked to that workout; nothing is copied from the coach.
+- Against target uses each rower's own target (the workout's split, or their predicted 2k by zone, as
+  on the results screen); "–" where there's none. Green faster, red slower, as on the results screen.
+- A rower's line includes today's workout ("· today"), not counted in the summary, as on the board.
+- With more than 4 pieces, the Notebook's columns narrow; past what fits, they swipe sideways with the
+  names pinned (the board only draws up to 4).
+
+Simulator check: the Notebook page and a rower's line, with a temporary, uncommitted switch treating
+today's workouts as past (Dev had no past workouts). The Feed card wasn't seen: the simulator is
+signed in as a coach.
 
 **Notebook** (board `CoachNotebook`). Workouts → Past → **Notebook** (`AppRoute.notebook`):
 - One page per past workout that has a notepad or any posted scores, newest last.

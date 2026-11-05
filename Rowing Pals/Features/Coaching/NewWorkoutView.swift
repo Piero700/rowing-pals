@@ -5,16 +5,20 @@
 
 import SwiftUI
 
-/// New workout, to the v4 CoachWorkoutNew artboard (decision 39): title, date and an optional
-/// time, a description, the target zone, pieces, test day, and who it's for — the whole club,
-/// squads or rowers — with how many it reaches. Set workout tells them ("New workout from your
-/// coach"); it shows on their Feed and Log screen on the day.
+/// Setting or editing a land session (CoachWorkoutNew, decision 39), in the compact grouped-rows
+/// style (user, 2026-11-05): the pieces first, since they decide the reps; then the title, date,
+/// time, zone and who it's for; then test day and notes. The title is written from the pieces
+/// unless the coach types their own. **Set** (or **Save** when editing) sits top right. Setting
+/// tells the rowers ("New workout from your coach"); saving changes doesn't tell them again.
 struct NewWorkoutView: View {
-    @State private var viewModel = NewWorkoutViewModel()
+    @State private var viewModel: NewWorkoutViewModel
     @State private var editingPiece: EditingPiece?
+    @State private var choosing: WorkoutAudience?
     @Environment(\.dismiss) private var dismiss
 
-    init() {}
+    init() {
+        _viewModel = State(initialValue: NewWorkoutViewModel())
+    }
 
     /// New workout on a chosen day, from Add on the coach's Calendar.
     init(date: Date) {
@@ -23,117 +27,39 @@ struct NewWorkoutView: View {
         _viewModel = State(initialValue: viewModel)
     }
 
+    /// Editing a workout already set, from Edit on its results.
+    init(editing workoutId: UUID) {
+        _viewModel = State(initialValue: NewWorkoutViewModel(editing: workoutId))
+    }
+
     private struct EditingPiece: Identifiable {
         let id = UUID()
         let piece: WorkoutPiece?
     }
 
-    private static let cardShape = RoundedRectangle(cornerRadius: Tokens.Radius.card, style: .continuous)
-    private static let fieldShape = RoundedRectangle(cornerRadius: Tokens.Radius.input, style: .continuous)
-
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 0) {
-                fieldLabel("Title")
-                TextField("3 × 2,000m", text: $viewModel.title)
-                    .textStyle(Typography.bodyV3)
-                    .padding(.horizontal, Tokens.Spacing.card)
-                    .frame(minHeight: Tokens.Size.input)
-                    .background(Self.fieldShape.fill(Tokens.Surface.card))
-                    .overlay { Self.fieldShape.strokeBorder(Tokens.Surface.line, lineWidth: 1) }
-
-                HStack(alignment: .top, spacing: Tokens.Spacing.loose) {
-                    VStack(alignment: .leading, spacing: 0) {
-                        fieldLabel("Date")
-                        DatePicker("Date", selection: $viewModel.date, displayedComponents: .date)
-                            .labelsHidden()
-                            .frame(maxWidth: .infinity, minHeight: Tokens.Size.input)
-                            .background(Self.fieldShape.fill(Tokens.Surface.card))
-                            .overlay { Self.fieldShape.strokeBorder(Tokens.Surface.line, lineWidth: 1) }
-                    }
-                    VStack(alignment: .leading, spacing: 0) {
-                        fieldLabel("Time (optional)")
-                        HStack(spacing: 0) {
-                            if viewModel.hasTime {
-                                DatePicker("Time", selection: $viewModel.time, displayedComponents: .hourAndMinute)
-                                    .labelsHidden()
-                                    .frame(maxWidth: .infinity)
-                                Button {
-                                    viewModel.hasTime = false
-                                } label: {
-                                    RPIconView(icon: .clear)
-                                        .foregroundStyle(Tokens.Ink.secondary)
-                                        .frame(width: Tokens.Size.minTap, height: Tokens.Size.minTap)
-                                }
-                                .buttonStyle(IconPressStyle())
-                                .accessibilityLabel("No set time")
-                            } else {
-                                Button("Add time") { viewModel.hasTime = true }
-                                    .buttonStyle(.rpText)
-                                    .frame(maxWidth: .infinity)
-                            }
-                        }
-                        .frame(minHeight: Tokens.Size.input)
-                        .background(Self.fieldShape.fill(Tokens.Surface.card))
-                        .overlay { Self.fieldShape.strokeBorder(Tokens.Surface.line, lineWidth: 1) }
-                    }
-                }
-                .padding(.top, Tokens.Spacing.loose)
-
-                fieldLabel("Description")
-                    .padding(.top, Tokens.Spacing.loose)
-                TextField("What to do, and how it should feel", text: $viewModel.description, axis: .vertical)
-                    .textStyle(Typography.bodyV3)
-                    .lineLimit(3...8)
-                    .padding(.horizontal, Tokens.Spacing.card)
-                    .padding(.vertical, 14)
-                    .frame(minHeight: Tokens.Size.input)
-                    .background(Self.fieldShape.fill(Tokens.Surface.card))
-                    .overlay { Self.fieldShape.strokeBorder(Tokens.Surface.line, lineWidth: 1) }
-
-                if !viewModel.isTestDay {
-                    sectionTitle("Target zone")
-                    PillSegmentedControl(
-                        options: TrainingZone.allCases.map(\.rawValue),
-                        selection: Binding(
-                            get: { TrainingZone.allCases.firstIndex(of: viewModel.zone) ?? 0 },
-                            set: { viewModel.zone = TrainingZone.allCases[$0] }
-                        ),
-                        compact: true
-                    )
-                }
-
+            VStack(alignment: .leading, spacing: Tokens.Grouped.groupGap) {
                 piecesSection
-                testDaySection
-                audienceSection
-
+                detailsSection
+                extrasSection
                 if let error = viewModel.errorMessage {
                     Text(error)
                         .textStyle(Typography.meta)
                         .foregroundStyle(Tokens.System.error)
-                        .padding(.horizontal, 4)
-                        .padding(.top, Tokens.Spacing.loose)
+                        .padding(.horizontal, Tokens.Grouped.rowPadding)
                 }
-
-                Button {
-                    Task { if await viewModel.save() { dismiss() } }
-                } label: {
-                    if viewModel.isSaving {
-                        ProgressView().tint(Tokens.Ink.onBrand)
-                    } else {
-                        Text("Set workout")
-                    }
-                }
-                .buttonStyle(.rpPrimary)
-                .disabled(viewModel.isSaving || viewModel.problem != nil)
-                .padding(.top, Tokens.Spacing.group)
             }
             .padding(.horizontal, Tokens.Spacing.screen)
-            .padding(.top, 4)
-            .padding(.bottom, 40)
+            .padding(.bottom, Tokens.Spacing.tabScrollBottom)
         }
         .scrollIndicators(.hidden)
-        .safeAreaInset(edge: .top, spacing: 0) { header }
+        .safeAreaInset(edge: .top, spacing: 0) {
+            ScreenHeader(title: viewModel.isEditing ? "Edit land session" : "New land session",
+                         onBack: { dismiss() }) {
+                setButton
+            }
+        }
         .background(Tokens.Base.ground)
         .toolbar(.hidden, for: .navigationBar)
         .dismissesKeyboardOnTap()
@@ -154,211 +80,237 @@ struct NewWorkoutView: View {
             )
             .presentationDetents([.large])
         }
+        .sheet(item: $choosing) { audience in
+            chooseSheet(audience)
+                .presentationDetents([.medium, .large])
+        }
     }
 
-    /// Cancel · New workout.
-    private var header: some View {
-        ZStack {
-            HStack(spacing: 0) {
-                GlassIconButton(icon: .close, accessibilityLabel: "Cancel") { dismiss() }
-                Spacer(minLength: 0)
+    /// Set (new) or Save (editing), top right; greyed out until the form can be saved.
+    private var setButton: some View {
+        Button {
+            Task { if await viewModel.save() { dismiss() } }
+        } label: {
+            if viewModel.isSaving {
+                ProgressView()
+            } else {
+                Text(viewModel.isEditing ? "Save" : "Set")
             }
-            Text("New workout")
-                .textStyle(Typography.navTitle)
-                .foregroundStyle(Tokens.Ink.primary)
-                .accessibilityAddTraits(.isHeader)
         }
-        .padding(.top, Tokens.Spacing.tight)
-        .padding(.horizontal, Tokens.Spacing.headerHorizontal)
-        .padding(.bottom, Tokens.Spacing.loose)
-        .frame(minHeight: Tokens.Size.navHeight)
-        .background(Tokens.Base.ground)
+        .buttonStyle(.rpText)
+        .disabled(viewModel.isSaving || viewModel.problem != nil)
+        .frame(minWidth: Tokens.Size.minTap, minHeight: Tokens.Size.minTap)
     }
 
     // MARK: - Pieces
 
-    @ViewBuilder
     private var piecesSection: some View {
-        HStack(alignment: .firstTextBaseline) {
-            sectionTitle("Pieces")
-            Spacer(minLength: 0)
-            Button("Add piece") { editingPiece = EditingPiece(piece: nil) }
-                .buttonStyle(.rpText)
-        }
-        if !viewModel.pieces.isEmpty {
-            VStack(spacing: 0) {
-                ForEach(Array(viewModel.pieces.enumerated()), id: \.element.id) { index, piece in
-                    HStack(spacing: Tokens.Spacing.loose) {
-                        Text("\(index + 1)")
-                            .textStyle(Typography.pill)
-                            .tabularNumerals()
-                            .foregroundStyle(Tokens.Ink.primary)
-                            .frame(width: Tokens.Size.checkbox, height: Tokens.Size.checkbox)
-                            .background(Circle().fill(Tokens.Surface.raised))
-                        VStack(alignment: .leading, spacing: 2) {
+        GroupedSection(
+            header: "Pieces",
+            footer: viewModel.pieces.isEmpty ? "Each piece is a column on the notepad and the results." : nil
+        ) {
+            ForEach(viewModel.pieces) { piece in
+                Button {
+                    editingPiece = EditingPiece(piece: piece)
+                } label: {
+                    HStack(spacing: Tokens.Spacing.tight) {
+                        VStack(alignment: .leading, spacing: 1) {
                             Text(WorkoutRules.pieceTitle(piece))
                                 .textStyle(Typography.rowTitle)
-                                .tabularNumerals()
                                 .foregroundStyle(Tokens.Ink.primary)
                             Text(WorkoutRules.pieceDetail(piece) ?? "Each rower's own target split")
-                                .textStyle(Typography.meta)
-                                .tabularNumerals()
+                                .textStyle(Typography.statLabel)
                                 .foregroundStyle(Tokens.Ink.secondary)
+                                .lineLimit(1)
                         }
-                        Spacer(minLength: 0)
+                        .tabularNumerals()
+                        Spacer(minLength: Tokens.Spacing.tight)
                         RPIconView(icon: .chevronRight, size: Tokens.Icon.small)
-                            .textStyle(Typography.pill)
-                            .foregroundStyle(Tokens.Ink.secondary)
+                            .foregroundStyle(Tokens.Ink.faint)
                     }
-                    .padding(.horizontal, Tokens.Spacing.card)
-                    .padding(.vertical, Tokens.Spacing.loose)
-                    .frame(minHeight: Tokens.Size.row)
-                    .asButton { editingPiece = EditingPiece(piece: piece) }
-                    .accessibilityElement(children: .combine)
-                    if index < viewModel.pieces.count - 1 {
-                        Rectangle().fill(Tokens.Surface.line).frame(height: 1)
+                    .padding(.horizontal, Tokens.Grouped.rowPadding)
+                    .padding(.vertical, Tokens.Spacing.tight)
+                    .frame(minHeight: Tokens.Grouped.rowHeight)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(IconPressStyle())
+                GroupedDivider()
+            }
+            Button {
+                editingPiece = EditingPiece(piece: nil)
+            } label: {
+                HStack(spacing: Tokens.Spacing.tight) {
+                    RPIconView(icon: .plus, size: Tokens.Icon.small)
+                    Text("Add piece")
+                    Spacer(minLength: 0)
+                }
+                .textStyle(Typography.detail)
+                .foregroundStyle(Tokens.Accent.brand)
+                .padding(.horizontal, Tokens.Grouped.rowPadding)
+                .frame(minHeight: Tokens.Grouped.rowHeight)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(IconPressStyle())
+        }
+    }
+
+    // MARK: - Title, when, zone, who
+
+    private var detailsSection: some View {
+        let count = viewModel.recipientCount
+        return GroupedSection(
+            footer: viewModel.isEditing
+                ? "Saving changes doesn't alert anyone again."
+                : "\(count) rower\(count == 1 ? "" : "s") get “New workout from your coach”."
+        ) {
+            GroupedRow(label: "Title") {
+                TextField(viewModel.autoTitle.isEmpty ? "From the pieces" : viewModel.autoTitle,
+                          text: $viewModel.customTitle)
+                    .textStyle(Typography.detail)
+                    .tabularNumerals()
+                    .multilineTextAlignment(.trailing)
+                    .foregroundStyle(Tokens.Ink.primary)
+            }
+            GroupedDivider()
+            GroupedRow(label: "Date") {
+                DatePicker("Date", selection: $viewModel.date, displayedComponents: .date)
+                    .labelsHidden()
+            }
+            GroupedDivider()
+            GroupedRow(label: "Time") {
+                if viewModel.hasTime {
+                    DatePicker("Time", selection: $viewModel.time, displayedComponents: .hourAndMinute)
+                        .labelsHidden()
+                    Button {
+                        viewModel.hasTime = false
+                    } label: {
+                        RPIconView(icon: .clear, size: Tokens.Icon.small)
+                            .foregroundStyle(Tokens.Ink.faint)
+                            .frame(width: Tokens.Size.minTap, height: Tokens.Size.minTap)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(IconPressStyle())
+                    .accessibilityLabel("No set time")
+                } else {
+                    Button("Add") { viewModel.hasTime = true }
+                        .textStyle(Typography.detail)
+                        .foregroundStyle(Tokens.Accent.brand)
+                }
+            }
+            if !viewModel.isTestDay {
+                GroupedDivider()
+                GroupedRow(label: "Zone") {
+                    Menu {
+                        Picker("Zone", selection: $viewModel.zone) {
+                            ForEach(TrainingZone.allCases, id: \.self) { zone in Text(zone.rawValue).tag(zone) }
+                        }
+                    } label: {
+                        GroupedValue(text: viewModel.zone.rawValue)
                     }
                 }
             }
-            .background(Self.cardShape.fill(Tokens.Surface.card))
-            .clipShape(Self.cardShape)
-            .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+            GroupedDivider()
+            GroupedRow(label: "For") {
+                Menu {
+                    Picker("For", selection: $viewModel.audience) {
+                        ForEach(WorkoutAudience.allCases) { audience in Text(audience.label).tag(audience) }
+                    }
+                } label: {
+                    GroupedValue(text: viewModel.audience.label)
+                }
+            }
+            if viewModel.audience != .club {
+                GroupedDivider()
+                Button {
+                    choosing = viewModel.audience
+                } label: {
+                    GroupedRow(label: viewModel.audience == .squads ? "Squads" : "Rowers") {
+                        GroupedValue(text: viewModel.audienceText,
+                                     isPlaceholder: viewModel.audienceText.hasPrefix("Choose"))
+                    }
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(IconPressStyle())
+            }
         }
-        footnote("Each piece can be a distance or a time, with reps, rest, target rate and target split.")
     }
 
-    // MARK: - Test day
+    // MARK: - Test day and notes
 
-    @ViewBuilder
-    private var testDaySection: some View {
-        sectionTitle("Test day")
-        VStack(spacing: 0) {
-            HStack(spacing: Tokens.Spacing.loose) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("This is a test")
-                        .textStyle(Typography.rowTitle)
-                        .foregroundStyle(Tokens.Ink.primary)
-                    Text("Results go to the test’s leaderboard.")
-                        .textStyle(Typography.meta)
-                        .foregroundStyle(Tokens.Ink.secondary)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
+    private var extrasSection: some View {
+        GroupedSection {
+            GroupedRow(label: "Test day") {
                 Toggle("Test day", isOn: $viewModel.isTestDay)
                     .labelsHidden()
                     .tint(Tokens.Accent.brand)
             }
-            .padding(.horizontal, Tokens.Spacing.card)
-            .padding(.vertical, Tokens.Spacing.loose)
-            .frame(minHeight: Tokens.Size.row)
-
             if viewModel.isTestDay {
-                Rectangle().fill(Tokens.Surface.line).frame(height: 1)
-                Menu {
-                    ForEach(viewModel.tests) { test in
-                        Button(test.label) { viewModel.test = test }
-                    }
-                } label: {
-                    HStack {
-                        Text("Test")
-                            .textStyle(Typography.rowTitle)
-                            .foregroundStyle(Tokens.Ink.primary)
-                        Spacer()
-                        Text(viewModel.test?.label ?? "Choose")
-                            .textStyle(Typography.detail)
-                            .tabularNumerals()
-                            .foregroundStyle(viewModel.test == nil ? Tokens.Accent.brand : Tokens.Ink.secondary)
-                        RPIconView(icon: .chevronUpDown, size: Tokens.Icon.small)
-                            .textStyle(Typography.pill)
-                            .foregroundStyle(Tokens.Ink.secondary)
-                    }
-                    .padding(.horizontal, Tokens.Spacing.card)
-                    .frame(minHeight: Tokens.Size.rowCompact)
-                    .contentShape(Rectangle())
-                }
-            }
-        }
-        .background(Self.cardShape.fill(Tokens.Surface.card))
-        .clipShape(Self.cardShape)
-        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
-    }
-
-    // MARK: - Who it's for
-
-    @ViewBuilder
-    private var audienceSection: some View {
-        sectionTitle("Who it’s for")
-        PillSegmentedControl(
-            options: WorkoutAudience.allCases.map(\.label),
-            selection: Binding(
-                get: { WorkoutAudience.allCases.firstIndex(of: viewModel.audience) ?? 0 },
-                set: { viewModel.audience = WorkoutAudience.allCases[$0] }
-            ),
-            compact: true
-        )
-        switch viewModel.audience {
-        case .club:
-            EmptyView()
-        case .squads:
-            if viewModel.squads.isEmpty {
-                footnote("Your club has no squads yet. Make them in Squads, top right in Coaching.")
-            } else {
-                WrapLayout(spacing: Tokens.Spacing.tight) {
-                    ForEach(viewModel.squads) { squad in
-                        chip(squad.name, isOn: viewModel.squadIds.contains(squad.id)) {
-                            viewModel.squadIds.formSymmetricDifference([squad.id])
+                GroupedDivider()
+                GroupedRow(label: "Test") {
+                    Menu {
+                        ForEach(viewModel.tests) { test in
+                            Button(test.label) { viewModel.test = test }
                         }
-                    }
-                }
-                .padding(.top, Tokens.Spacing.loose)
-            }
-        case .rowers:
-            WrapLayout(spacing: Tokens.Spacing.tight) {
-                ForEach(viewModel.rowers) { rower in
-                    chip(rower.displayName, isOn: viewModel.rowerIds.contains(rower.id)) {
-                        viewModel.rowerIds.formSymmetricDifference([rower.id])
+                    } label: {
+                        GroupedValue(text: viewModel.test?.label ?? "Choose", isPlaceholder: viewModel.test == nil)
                     }
                 }
             }
-            .padding(.top, Tokens.Spacing.loose)
+            GroupedDivider()
+            TextField("Notes for rowers", text: $viewModel.description, axis: .vertical)
+                .textStyle(Typography.detail)
+                .foregroundStyle(Tokens.Ink.primary)
+                .lineLimit(1...6)
+                .padding(.horizontal, Tokens.Grouped.rowPadding)
+                .padding(.vertical, Tokens.Spacing.loose)
+                .frame(minHeight: Tokens.Grouped.rowHeight, alignment: .leading)
         }
-        let count = viewModel.recipientCount
-        footnote("\(count) rower\(count == 1 ? "" : "s") get “New workout from your coach”. It shows on their Feed and Log screen on the day.")
-            .padding(.top, 4)
     }
 
-    private func chip(_ text: String, isOn: Bool, action: @escaping () -> Void) -> some View {
-        Button(action: action) { Text(text) }
-            .buttonStyle(.rpPill(isOn: isOn))
-            .accessibilityAddTraits(isOn ? .isSelected : [])
-    }
+    // MARK: - Choosing squads or rowers
 
-    // MARK: - Building blocks
-
-    private func fieldLabel(_ text: String) -> some View {
-        Text(text)
-            .textStyle(Typography.meta)
-            .foregroundStyle(Tokens.Ink.secondary)
-            .padding(.horizontal, 4)
-            .padding(.bottom, 6)
-    }
-
-    private func sectionTitle(_ text: String) -> some View {
-        Text(text)
-            .textStyle(Typography.sectionTitle)
-            .foregroundStyle(Tokens.Ink.secondary)
-            .padding(.horizontal, 4)
-            .padding(.top, Tokens.Spacing.group)
-            .padding(.bottom, Tokens.Spacing.tight)
-            .accessibilityAddTraits(.isHeader)
-    }
-
-    private func footnote(_ text: String) -> some View {
-        Text(text)
-            .textStyle(Typography.meta)
-            .tabularNumerals()
-            .foregroundStyle(Tokens.Ink.secondary)
-            .padding(.horizontal, 4)
-            .padding(.top, Tokens.Spacing.tight)
-            .fixedSize(horizontal: false, vertical: true)
+    private func chooseSheet(_ audience: WorkoutAudience) -> some View {
+        let items: [(id: UUID, name: String)] = audience == .squads
+            ? viewModel.squads.map { ($0.id, $0.name) }
+            : viewModel.rowers.map { ($0.id, $0.displayName) }
+        return NavigationStack {
+            ScrollView {
+                GroupedSection(footer: audience == .squads && items.isEmpty
+                               ? "Your club has no squads yet. Make them in Squads, in Coaching." : nil) {
+                    ForEach(Array(items.enumerated()), id: \.element.id) { index, item in
+                        let isOn = audience == .squads
+                            ? viewModel.squadIds.contains(item.id)
+                            : viewModel.rowerIds.contains(item.id)
+                        Button {
+                            if audience == .squads {
+                                viewModel.squadIds.formSymmetricDifference([item.id])
+                            } else {
+                                viewModel.rowerIds.formSymmetricDifference([item.id])
+                            }
+                        } label: {
+                            GroupedRow(label: item.name) {
+                                if isOn {
+                                    RPIconView(icon: .check, size: Tokens.Icon.small)
+                                        .foregroundStyle(Tokens.Accent.brand)
+                                }
+                            }
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(IconPressStyle())
+                        .accessibilityAddTraits(isOn ? .isSelected : [])
+                        if index < items.count - 1 { GroupedDivider() }
+                    }
+                }
+                .padding(Tokens.Spacing.screen)
+            }
+            .background(Tokens.Base.ground)
+            .navigationTitle(audience == .squads ? "Squads" : "Rowers")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") { choosing = nil }
+                }
+            }
+        }
     }
 }

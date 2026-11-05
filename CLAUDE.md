@@ -78,6 +78,9 @@ Structure that should survive any redesign:
   navigation stack (an `AppRoute` in `RouteHost`) or present full-screen areas through `RouteHost`,
   and the swipe comes for free (`App/SwipeBackNavigation.swift`, `edgeSwipeToDismiss()`); never
   turn it off.
+- **Grouped rows (decision 97, on trial):** setting or editing a land session uses the compact grouped-rows
+  style (`DesignSystem/GroupedForm.swift`, `Tokens.Grouped`): one card per group with 12 pt corners and a hairline
+  edge, 44 pt rows with the label left and the value right. The user will decide whether the rest of the app follows.
 - **Every workout time is typed with `DurationTextField`** (decisions 53, 56): digits only, the colon
   put in as you type.
 
@@ -158,8 +161,12 @@ After any change:
 ## Current focus
 
 **Next: the coach notepad** (decision 96): phases NP1–NP4 in `docs/design/coach-notepad-build-plan.md`,
-on branch `t42-coach-notepad`. NP1 (the page and typed scores) and NP2 (scanning a monitor) are built and
-checked in the simulator, waiting on the phone tests in `docs/testing/coach-notepad-np1.md` and `-np2.md`. Canvas boards `CoachNotepad…`, `CoachNotebook…` and
+on branch `t42-coach-notepad`. NP1 and NP2 passed the phone tests and are merged into `main` (2026-11-05). NP3
+(many pieces, tests, timed pieces; migration run) and NP4 (the Notebook and the rower's Feed card) are
+built, waiting on the migration `2026-11-05-coach-notepad-np4.sql` and the phone tests in
+`docs/testing/coach-notepad-np3.md` and `-np4.md`. Also on the branch (decision 97): editing a land session
+(migration `2026-11-05-edit-workout.sql`), reps from the pieces only, and the grouped-rows land session screen
+(checklist `docs/testing/land-session-edit-and-grouped.md`). That completes the notepad plan. Canvas boards `CoachNotepad…`, `CoachNotebook…` and
 `RowerCoachScores…` in `docs/design/v4/`. Earlier:
 
 **The coach version** (decisions 67–70): phases CV1–CV3 in `docs/design/coach-version-build-plan.md`, on branch

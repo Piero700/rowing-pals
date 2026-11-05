@@ -38,8 +38,12 @@ final class NotepadViewModel {
     var metresText = ""
     var rateText = ""
 
+    /// The standard test the workout was set as (CoachNotepadTest), if any.
+    var test: StandardTest?
     /// Each rower's reps from their own linked posts (nil: not rowed).
-    private var posted: [UUID: [Int?]] = [:]
+    private var posted: [UUID: [WorkoutRules.RowedRep?]] = [:]
+    /// Each rower's 500m splits from their own post (a test, NP3).
+    private var postedSplits: [UUID: [Int]] = [:]
     /// The coaches' scores, by rower and rep.
     private(set) var noted: [NotepadRules.Spot: NotepadScore] = [:]
     /// What the server last held, so loading or a no-op edit never saves.
@@ -69,10 +73,16 @@ final class NotepadViewModel {
             async let rosterTask = CoachingService.roster()
             async let pageTask = NotepadService.notepad(for: workoutId)
             async let scoresTask = NotepadService.scores(for: workoutId)
+            // Posted 500m splits are extra: if they can't be read (a project without the NP3
+            // migration), the page still opens, with no splits on posted rows.
+            async let splitsTask = try? NotepadService.postedSplits(for: workoutId)
             let (workout, audiences, sessions, roster, page, scores) =
                 try await (workoutTask, audienceTask, sessionsTask, rosterTask, pageTask, scoresTask)
+            let splits = await splitsTask ?? [:]
 
             self.workout = workout
+            test = NotepadRules.test(of: workout)
+            postedSplits = splits
             let squads = Dictionary(uniqueKeysWithValues: roster.squads.map { ($0.id, $0.name) })
             let names = Dictionary(uniqueKeysWithValues: roster.rowers.map { ($0.id, $0.displayName) })
             audienceText = WorkoutsText.audience(workout, squads: squads, names: names)
@@ -90,7 +100,7 @@ final class NotepadViewModel {
             for rower in inWorkout {
                 let segments = sessions.filter { $0.userId == rower.id }.flatMap(\.segments)
                 guard !segments.isEmpty else { continue }
-                posted[rower.id] = WorkoutRules.rowedReps(pieces: pieces, segments: segments).map { $0?.splitMs }
+                posted[rower.id] = WorkoutRules.rowedReps(pieces: pieces, segments: segments)
             }
             noted = Dictionary(scores.map { (NotepadRules.Spot(rowerId: $0.userId, rep: $0.pieceIndex), $0) },
                                uniquingKeysWith: { _, last in last })
@@ -111,8 +121,81 @@ final class NotepadViewModel {
     // MARK: - Boxes
 
     func cell(_ spot: NotepadRules.Spot) -> NotepadRules.Cell {
-        let rowed = posted[spot.rowerId].flatMap { $0.indices.contains(spot.rep) ? $0[spot.rep] : nil }
-        return NotepadRules.cell(noted: noted[spot], postedSplitMs: rowed)
+        return NotepadRules.cell(noted: noted[spot], postedSplitMs: postedRep(spot)?.splitMs)
+    }
+
+    private func postedRep(_ spot: NotepadRules.Spot) -> WorkoutRules.RowedRep? {
+        posted[spot.rowerId].flatMap { $0.indices.contains(spot.rep) ? $0[spot.rep] : nil }
+    }
+
+    // MARK: - Many pieces and tests (NP3)
+
+    /// More reps than fit: the Scores block shows Summary | Every piece.
+    var hasManyPieces: Bool { reps.count > NotepadRules.summaryRepThreshold }
+
+    /// A test with one piece: the Scores block shows Time · Split · Rate (CoachNotepadTest).
+    var isTestPage: Bool { test != nil && reps.count == 1 }
+
+    /// The split a box shows, or nil (empty, sat out).
+    func splitMs(_ spot: NotepadRules.Spot) -> Int? {
+        switch cell(spot) {
+        case .posted(let split), .noted(let split): split
+        case .empty, .satOut: nil
+        }
+    }
+
+    /// A rower's line on the Summary: pieces done, average, best, fade.
+    func summary(_ rowerId: UUID) -> NotepadRules.RowSummary {
+        NotepadRules.summary(reps.indices.map { splitMs(NotepadRules.Spot(rowerId: rowerId, rep: $0)) })
+    }
+
+    /// The metres a timed piece's box shows; nil for a distance piece or an empty box.
+    func metres(_ spot: NotepadRules.Spot) -> Int? {
+        guard reps.indices.contains(spot.rep), let piece = reps[spot.rep], piece.kind == .time else { return nil }
+        if let score = noted[spot], !score.satOut, let distance = score.distanceM { return distance }
+        return splitMs(spot).flatMap { NotepadRules.metres(splitMs: $0, piece: piece) }
+    }
+
+    /// One rower's line on a test page.
+    struct TestLine: Equatable {
+        enum Source: Equatable {
+            case none, post, scanned, typed
+        }
+        /// The piece's time, or the metres for a timed test (4min, 30min, 60min).
+        var result: String
+        var split: String
+        var rate: String
+        var isPosted: Bool
+        var splits: [Int]
+        var source: Source
+    }
+
+    func testLine(_ rowerId: UUID) -> TestLine {
+        let spot = NotepadRules.Spot(rowerId: rowerId, rep: 0)
+        let piece = reps.first ?? nil
+        guard let split = splitMs(spot) else {
+            return TestLine(result: "–", split: "", rate: "", isPosted: false, splits: [], source: .none)
+        }
+        let score = noted[spot]
+        let rate = score?.rate ?? postedRep(spot)?.rate.map { Int($0.rounded()) }
+        let result: String
+        if piece?.kind == .time {
+            result = metres(spot).map(NotepadRules.grouped) ?? "–"
+        } else {
+            let time = score?.timeMs ?? NotepadRules.time(splitMs: split, piece: piece)
+            result = time.map(WorkoutRules.splitTenthsText) ?? WorkoutRules.splitTenthsText(split)
+        }
+        let source: TestLine.Source
+        let splits: [Int]
+        if let score {
+            splits = score.splits500Ms ?? []
+            source = score.source == .scanned ? .scanned : .typed
+        } else {
+            splits = postedSplits[rowerId] ?? []
+            source = .post
+        }
+        return TestLine(result: result, split: WorkoutRules.splitTenthsText(split), rate: rate.map(String.init) ?? "",
+                        isPosted: score == nil, splits: splits, source: source)
     }
 
     var selectedRower: Rower? {
@@ -197,7 +280,12 @@ final class NotepadViewModel {
     func select(_ spot: NotepadRules.Spot) {
         selection = spot
         clearTyping()
-        if !modes.contains(mode) { mode = .split }
+        if isTestPage {
+            // A test is read off the monitor as its time (or metres for a timed test).
+            mode = modes.contains(.metres) ? .metres : (modes.contains(.time) ? .time : .split)
+        } else if !modes.contains(mode) {
+            mode = .split
+        }
     }
 
     func closeEntry() {

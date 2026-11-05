@@ -33,7 +33,19 @@ struct DraftSegment: Identifiable {
     /// An interval session's rep distance, read off the monitor's workout title
     /// ("8x500m/1:00r" → 500). Nil for a continuous piece, a timed-rep workout or a manual entry.
     var repDistanceM: Int?
+    /// The split of each row the monitor showed under a continuous piece (a 2k's four 500m
+    /// splits), read off the photo (NP3). Nil for a manual entry or an interval workout.
+    var splitRowsMs: [Int]?
+    /// The metres read off the photo, to tell whether the split rows still belong to this piece.
+    private(set) var readDistanceM: Int?
     var isManual: Bool { photoJPEG == nil }
+
+    /// The split rows to post: only while the metres are still the ones read off the photo, since
+    /// the rows are that distance's splits. Fixing a misread time or changing the label keeps them.
+    var postedSplitRowsMs: [Int]? {
+        guard let splitRowsMs, let readDistanceM, readDistanceM == distanceM, distanceM > 0 else { return nil }
+        return splitRowsMs
+    }
 
     /// Builds a segment from one photo's OCR output. Any field with no
     /// reading defaults to 0 so the user has something to type over, and is
@@ -59,6 +71,8 @@ struct DraftSegment: Identifiable {
         splitMs = resolve(fields.splitMs, .split, default: 0)
         rate = resolve(fields.rate, .rate, default: 0)
         repDistanceM = fields.repDistanceM
+        splitRowsMs = fields.splitRowsMs
+        readDistanceM = fields.distanceM.value
 
         // The average is derived from distance and time, never read, so it
         // can't be "low confidence" — nothing for the rower to check.

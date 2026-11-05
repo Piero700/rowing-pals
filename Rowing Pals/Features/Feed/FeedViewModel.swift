@@ -40,6 +40,8 @@ final class FeedViewModel {
     var viewerIsRower = true
     /// The workouts the viewer's coaches set for today (RowerFeedCoaching, decision 39).
     var todaysWorkouts: [TodaysWorkout] = []
+    /// The scores coaches noted for the rower on recent workouts (RowerCoachScores, NP4).
+    var coachScores: [CoachNotedScores] = []
     /// Posts the viewer sees only as the author's coach: read-only (decision 40).
     var readOnlyPostIds: Set<UUID> = []
     /// Who each post's author trained with (decision 90), by post.
@@ -164,14 +166,28 @@ final class FeedViewModel {
         defer { isLoading = false; PerfLog.done("Feed", since: perf) }
         async let page: Void = loadPage(offset: 0, replacing: true)
         async let workouts = WorkoutService.today()
-        let (_, today) = await (page, workouts)
+        async let scores = Self.recentCoachScores()
+        let (_, today, noted) = await (page, workouts, scores)
         todaysWorkouts = today
+        coachScores = noted
+    }
+
+    /// The last few days' workouts on which the rower's coach noted their scores (NP4). Rowers
+    /// only, and empty when it can't be read (a project without the NP4 migration).
+    private static func recentCoachScores(calendar: Calendar = .current) async -> [CoachNotedScores] {
+        guard let viewer = try? await ViewerContext.shared.current(), viewer.isRower else { return [] }
+        let since = NotepadRules.rowerCardSince(today: Date(), calendar: calendar)
+        let today = WorkoutRules.dayText(Date(), calendar: calendar)
+        let all = (try? await NotepadService.myScores(since: since)) ?? []
+        return NotepadRules.rowerCards(all, today: today, since: since)
     }
 
     /// Just today's workouts — on coming back to the app, which may be a new day (decision 57).
     @MainActor
     func refreshWorkouts() async {
-        todaysWorkouts = await WorkoutService.today()
+        async let workouts = WorkoutService.today()
+        async let scores = Self.recentCoachScores()
+        (todaysWorkouts, coachScores) = await (workouts, scores)
     }
 
     /// The viewer just joined a club (decision 24): forget the cached club and clubmates, then
