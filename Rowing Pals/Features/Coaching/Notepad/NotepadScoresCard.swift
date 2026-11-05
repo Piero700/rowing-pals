@@ -13,6 +13,33 @@ struct NotepadScoresCard: View {
     let viewModel: NotepadViewModel
     let onSelect: (NotepadRules.Spot) -> Void
     @Environment(\.navigate) private var navigate
+    /// The names column's width, as laid out.
+    @State private var namesWidth: CGFloat = 0
+
+    /// The width left for the boxes after the names and the camera (worked out from the table's
+    /// and the names' widths: a width read off the sideways scroll view itself doesn't follow it).
+    private var boxesAreaWidth: CGFloat {
+        max(0, tableWidth - namesWidth - Tokens.Notepad.scanColumn)
+    }
+
+    /// The table's whole width, names to boxes.
+    @State private var tableWidth: CGFloat = 0
+
+    /// Each box's width: an equal share of the space left, never under the smallest box.
+    private var cellWidth: CGFloat {
+        let count = CGFloat(max(viewModel.reps.count, 1))
+        return max(Tokens.Notepad.cellWidth, (boxesAreaWidth / count).rounded(.down))
+    }
+
+    /// The most a name may take: what's left once every rep has its smallest box, so a long name is
+    /// cut short ("Forgotpa…") rather than pushing a rep off the screen; never less than a short
+    /// name needs, never more than the cap.
+    private var nameMaxWidth: CGFloat {
+        guard tableWidth > 0 else { return Tokens.Notepad.nameColumnMax }
+        let boxes = CGFloat(max(viewModel.reps.count, 1)) * Tokens.Notepad.cellWidth
+        let left = tableWidth - Tokens.Notepad.ergColumn - 4 - Tokens.Notepad.scanColumn - boxes
+        return min(Tokens.Notepad.nameColumnMax, max(Tokens.Notepad.nameColumnMin, left.rounded(.down)))
+    }
 
     private static let cardShape = RoundedRectangle(cornerRadius: Tokens.Radius.card, style: .continuous)
     private static let headerHeight: CGFloat = Tokens.Size.chip
@@ -40,22 +67,23 @@ struct NotepadScoresCard: View {
                     .padding(.horizontal, Tokens.Spacing.card)
                     .padding(.bottom, Tokens.Spacing.card)
             } else {
-                // As on the board, the names take whatever the boxes leave, and the boxes sit
-                // against the card's right edge: the boxes take their full width first (up to
-                // what's left after the narrowest names column) and scroll sideways beyond it.
+                // The names take only the width the longest one needs (up to a cap), the camera
+                // sits right after them, and the boxes share whatever is left equally, so there's
+                // no empty strip in the middle (user, 2026-11-05). With more reps than fit, each
+                // box keeps its smallest width and the boxes scroll sideways.
                 HStack(alignment: .top, spacing: 0) {
                     namesColumn
-                        .frame(minWidth: Tokens.Notepad.ergColumn + 4 + Tokens.Notepad.nameColumn,
-                               maxWidth: .infinity, alignment: .leading)
+                        .fixedSize(horizontal: true, vertical: false)
+                        .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { namesWidth = $0 }
                     scanColumn
                     ScrollView(.horizontal) {
                         boxesColumns
                     }
                     .scrollIndicators(.hidden)
                     .scrollBounceBehavior(.basedOnSize, axes: .horizontal)
-                    .frame(maxWidth: Tokens.Notepad.cellWidth * CGFloat(viewModel.reps.count))
-                    .layoutPriority(1)
+                    .frame(maxWidth: .infinity)
                 }
+                .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { tableWidth = $0 }
                 .padding(.horizontal, Tokens.Spacing.tight)
 
                 legend
@@ -92,6 +120,7 @@ struct NotepadScoresCard: View {
                             .foregroundStyle(Tokens.Ink.primary)
                             .lineLimit(1)
                             .truncationMode(.tail)
+                            .frame(maxWidth: nameMaxWidth, alignment: .leading)
                     }
                     .frame(maxWidth: .infinity, minHeight: Tokens.Notepad.rowHeight - 1,
                            maxHeight: Tokens.Notepad.rowHeight - 1, alignment: .leading)
@@ -136,7 +165,7 @@ struct NotepadScoresCard: View {
                         .textStyle(Typography.tag)
                         .tabularNumerals()
                         .foregroundStyle(viewModel.selection?.rep == rep ? Tokens.Accent.brand : Tokens.Ink.secondary)
-                        .frame(width: Tokens.Notepad.cellWidth)
+                        .frame(width: cellWidth)
                 }
             }
             .frame(height: Self.headerHeight)
@@ -177,12 +206,12 @@ struct NotepadScoresCard: View {
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
             }
-            .frame(width: Tokens.Notepad.cellWidth - 4, height: Tokens.Notepad.cellHeight)
+            .frame(width: cellWidth - 4, height: Tokens.Notepad.cellHeight)
             .background(shape.fill(isSelected ? Tokens.Accent.brandSoft : Color.clear))
             .overlay {
                 shape.strokeBorder(isSelected ? Tokens.Accent.brand : Color.clear, lineWidth: Tokens.Notepad.selectedBorder)
             }
-            .frame(width: Tokens.Notepad.cellWidth)
+            .frame(width: cellWidth)
             .contentShape(Rectangle())
         }
         .buttonStyle(IconPressStyle())

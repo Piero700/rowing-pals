@@ -400,7 +400,14 @@ enum Tokens {
         /// The Scores table: the erg-number column, the names column, one rep's box.
         static let ergColumn: CGFloat = 22
         static let nameColumn: CGFloat = 92
-        static let cellWidth: CGFloat = 64
+        /// The most a name takes before it's cut short with "…"; the column is only as wide as the
+        /// longest name needs, up to this.
+        static let nameColumnMax: CGFloat = 150
+        /// The least a name keeps when the reps need the room.
+        static let nameColumnMin: CGFloat = 56
+        /// The smallest a rep's box gets: four still fit on a phone beside the names (user,
+        /// 2026-11-05); with room to spare the boxes share it.
+        static let cellWidth: CGFloat = 56
         static let cellHeight: CGFloat = 44
         static let rowHeight: CGFloat = 50
         static let cellRadius: CGFloat = 12

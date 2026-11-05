@@ -31,6 +31,43 @@ nonisolated enum NotepadRules {
         return all.isEmpty ? [nil] : all
     }
 
+    /// The pieces the notepad goes by: the ones set in New workout, or, when none were set, the
+    /// ones its title names ("4 x 500m" → 4 × 500 m), so the page has a column per rep without the
+    /// coach doing anything more (user, 2026-11-05).
+    static func pieces(of workout: CoachWorkout) -> [WorkoutPiece] {
+        workout.pieces.isEmpty ? pieces(fromTitle: workout.title) : workout.pieces
+    }
+
+    /// The pieces a title names, each "count × what": a distance ("4 x 500m", "4×500", "3 x 2,000m",
+    /// "2 x 6k") or a time ("8 x 2:00", "4 x 10'", "3 x 12 min"). Several can be joined ("2 x 2k +
+    /// 4 x 500m"). Anything else — a single piece ("2k", "5000m"), a word — names none.
+    static func pieces(fromTitle title: String) -> [WorkoutPiece] {
+        let pattern = #"(?<![\d:])(\d{1,2})\s*[xX×]\s*(?:(\d{1,2}):(\d{2})(?![\d.])|(\d{1,3})\s*(?:'|′|’|min\b|mins\b|minutes\b)|(\d{1,2}(?:,\d{3})+|\d{3,5}|\d{1,2}(?:\.\d)?)\s*(km|k|m)?(?![\d:]))"#
+        guard let regex = try? NSRegularExpression(pattern: pattern) else { return [] }
+        let text = title as NSString
+        return regex.matches(in: title, range: NSRange(location: 0, length: text.length)).compactMap { match in
+            func group(_ index: Int) -> String? {
+                let range = match.range(at: index)
+                return range.location == NSNotFound ? nil : text.substring(with: range)
+            }
+            guard let count = group(1).flatMap(Int.init), (1...50).contains(count) else { return nil }
+            if let minutes = group(2).flatMap(Int.init), let seconds = group(3).flatMap(Int.init), seconds < 60 {
+                let ms = (minutes * 60 + seconds) * 1000
+                return (60_000...7_200_000).contains(ms) ? WorkoutPiece(kind: .time, value: ms, reps: count) : nil
+            }
+            if let minutes = group(4).flatMap(Int.init) {
+                let ms = minutes * 60_000
+                return (60_000...7_200_000).contains(ms) ? WorkoutPiece(kind: .time, value: ms, reps: count) : nil
+            }
+            guard let number = group(5).flatMap({ Double($0.replacingOccurrences(of: ",", with: "")) }) else { return nil }
+            let unit = group(6)?.lowercased()
+            // "6k" and "2.5km" are kilometres; a bare small number ("4 x 2") is too ambiguous.
+            let metres = unit == "k" || unit == "km" ? Int((number * 1000).rounded()) : Int(number)
+            guard unit != nil || metres >= 100, (100...42_195).contains(metres) else { return nil }
+            return WorkoutPiece(kind: .distance, value: metres, reps: count)
+        }
+    }
+
     // MARK: - Boxes
 
     /// One box, as the page shows it.

@@ -44,7 +44,7 @@ final class ScanMonitorViewModel {
             async let rosterTask = CoachingService.roster()
             let (workout, roster) = try await (workoutTask, rosterTask)
             workoutTitle = workout.title
-            repCount = NotepadRules.reps(workout.pieces).count
+            repCount = NotepadRules.reps(NotepadRules.pieces(of: workout)).count
             rowerName = roster.rowers.first { $0.id == rowerId }?.displayName ?? ""
         } catch {
             errorMessage = error.localizedDescription

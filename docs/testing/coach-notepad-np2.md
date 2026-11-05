@@ -18,6 +18,12 @@ In Xcode choose **RP Dev** and **your iPhone**, press **Cmd+R**. Sign in as **Co
 3. Type a long sentence in **Notes**, then in a text box (**Add text**), then in a table box.
    - [ ] The letters appear as fast as you type, in all three.
 
+4. Open the notepad of a workout set with **only a title** like "4 x 500m" (no pieces added).
+   - [ ] The Scores table has columns **1 2 3 4** straight away; a title like "Steady state" has one.
+5. Look at the Scores table on any workout.
+   - [ ] No empty strip between the names and the boxes: the camera sits right after the longest name
+         and the boxes fill to the card's right edge.
+
 ## 1. The camera button
 **Workouts** → today's interval workout → **Open notepad**.
 - [ ] Every name in the Scores table has a round **camera** button between the name and the boxes.

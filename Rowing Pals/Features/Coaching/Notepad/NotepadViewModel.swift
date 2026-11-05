@@ -76,7 +76,8 @@ final class NotepadViewModel {
             let squads = Dictionary(uniqueKeysWithValues: roster.squads.map { ($0.id, $0.name) })
             let names = Dictionary(uniqueKeysWithValues: roster.rowers.map { ($0.id, $0.displayName) })
             audienceText = WorkoutsText.audience(workout, squads: squads, names: names)
-            reps = NotepadRules.reps(workout.pieces)
+            let pieces = NotepadRules.pieces(of: workout)
+            reps = NotepadRules.reps(pieces)
             let audience = audiences[workoutId] ?? []
             let inWorkout = roster.rowers.filter { audience.contains($0.id) }
             let order = NotepadRules.ordered(inWorkout.map { (id: $0.id, name: $0.displayName) }, savedOrder: page?.rowerOrder ?? [])
@@ -89,7 +90,7 @@ final class NotepadViewModel {
             for rower in inWorkout {
                 let segments = sessions.filter { $0.userId == rower.id }.flatMap(\.segments)
                 guard !segments.isEmpty else { continue }
-                posted[rower.id] = WorkoutRules.rowedReps(pieces: workout.pieces, segments: segments).map { $0?.splitMs }
+                posted[rower.id] = WorkoutRules.rowedReps(pieces: pieces, segments: segments).map { $0?.splitMs }
             }
             noted = Dictionary(scores.map { (NotepadRules.Spot(rowerId: $0.userId, rep: $0.pieceIndex), $0) },
                                uniquingKeysWith: { _, last in last })

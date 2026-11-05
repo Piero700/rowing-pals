@@ -30,6 +30,15 @@ on the way, to match the boards:
   and the column lines no longer cut through the headings;
 - **Open notepad** sits inside today's card, under the bar, as on `CoachNotepadWorkouts`.
 
+Changed after the first phone test (user, 2026-11-05):
+- **Reps from the title.** A workout set with only a title and no pieces ("4 x 500m") gets one column
+  per rep the title names (`NotepadRules.pieces(fromTitle:)`: "4 x 500m", "3 x 2,000m", "2 x 6k",
+  "8 x 2:00", "4 x 10'", "2 x 2k + 4 x 500m"). Pieces set in New workout always win over the title.
+  The scan screen counts the same reps. A title with no "count ×" (a 2k, "work out buddy") stays one column.
+- **No dead space in the Scores table.** The names column is only as wide as the longest name (cut short
+  with "…" when the reps need the room), the camera sits right after it, and the rep boxes share the
+  rest of the card equally. With more reps than fit, boxes keep a 56 pt minimum and scroll sideways.
+
 Still differs from the boards, on purpose: the erg-order button replaces Done top right (below), and
 the system decimal pad with `DurationTextField` replaces the board's own keypad, so the tenth is typed
 after "." as everywhere else in the app. Not done in NP1: the board's "Scores in 4 of 10" on today's
