@@ -17,10 +17,26 @@ phone before the next starts.
 - **Typing times.** Every time is typed with `DurationTextField` with `allowsTenths`
   (decisions 53, 56).
 
-## Phase NP1 — the notepad page, typed scores (boards `CoachNotepadWorkouts`, `CoachNotepad`) — written, not yet built
+## Phase NP1 — the notepad page, typed scores (boards `CoachNotepadWorkouts`, `CoachNotepad`) — built, waiting on the phone tests
 
-Written 2026-11-05 in a cloud session without Xcode: **not compiled or run yet**. The migration was run
-against a local Postgres with a copy of the club, profile and workout tables. That run checked:
+Written 2026-11-05 in a cloud session without Xcode, then **built and run in the simulator the same day**
+against the Dev database (where the migration had already been run). It compiled first time and all 24
+`NotepadRulesTests` pass. Checked in the simulator: typing a split, Next, Sat out, Clear, erg order,
+text and table blocks, and everything coming back after leaving the page and after relaunching. Fixed
+on the way, to match the boards:
+- the Scores table: erg numbers now line up under `#`, names take the spare width and the boxes sit
+  against the card's right edge (they had stopped two-thirds across);
+- tables: columns share the card's width equally (they were fixed at 104 pt, with a gap on the right),
+  and the column lines no longer cut through the headings;
+- **Open notepad** sits inside today's card, under the bar, as on `CoachNotepadWorkouts`.
+
+Still differs from the boards, on purpose: the erg-order button replaces Done top right (below), and
+the system decimal pad with `DurationTextField` replaces the board's own keypad, so the tenth is typed
+after "." as everywhere else in the app. Not done in NP1: the board's "Scores in 4 of 10" on today's
+card (the card still says "Completed", counting posts only).
+
+The migration was run against a local Postgres with a copy of the club, profile and workout tables.
+That run checked:
 - coaches in the club can read and edit;
 - rowers and other clubs' coaches can't;
 - direct writes are blocked, and the limits hold;

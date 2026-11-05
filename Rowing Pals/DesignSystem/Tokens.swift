@@ -405,8 +405,6 @@ enum Tokens {
         /// The dot on a score that came from the rower's own post.
         static let postedDot: CGFloat = 5
         static let tableRadius: CGFloat = 24
-        /// A box in a table the coach added.
-        static let tableCellWidth: CGFloat = 104
         static let textMinLines = 3
         static let notesMinLines = 5
         /// The entry bar over the keyboard.

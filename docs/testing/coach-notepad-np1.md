@@ -20,8 +20,8 @@ In Xcode choose **RP Dev** and **your iPhone**, press **Cmd+R**.
       the first build is the first time the Swift has been compiled.
 
 ## 2. Ways in (Coach_J)
-- [ ] **Workouts** tab: today's workout has an **Open notepad** button under its card; upcoming and
-      past ones don't.
+- [ ] **Workouts** tab: today's workout has an **Open notepad** button inside its card, under the
+      Completed bar; upcoming and past ones don't.
 - [ ] Tapping the card still opens the workout's results; tapping **Open notepad** opens the notepad.
 - [ ] On the workout's results screen there's a **pencil** top right; it opens the same notepad.
 - [ ] **Calendar** tab → today: the workout's row has a **pencil** on the right that opens the notepad;
@@ -80,7 +80,7 @@ In Xcode choose **RP Dev** and **your iPhone**, press **Cmd+R**.
 2. **Add table**.
 - [ ] A table named "Table" with headings **Rower · Technique · Next time** and two empty rows.
 3. Rename it, fill a box, **+ Row**, **+ Column** twice.
-- [ ] **+ Column** greys out at five columns; the table scrolls sideways when it's wider than the card.
+- [ ] **+ Column** greys out at five columns; the columns always share the card's width equally.
 4. Write in **Notes**.
 5. Leave the notepad (back), open it again.
 - [ ] Everything you wrote is still there.

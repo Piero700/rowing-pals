@@ -7,7 +7,7 @@ import SwiftUI
 
 /// A table a coach added to the notepad (decision 96): its name, a heading row and the rows under
 /// it, every box typed into directly; **+ Row** and **+ Column** (up to five columns) and ✕ to take
-/// it off the page. Scrolls sideways when the columns are wider than the card.
+/// it off the page. The columns share the card's width equally, as on the board.
 struct NotepadTableBlockView: View {
     @Binding var block: NotepadBlock
     let onAddRow: () -> Void
@@ -15,6 +15,7 @@ struct NotepadTableBlockView: View {
     let onRemove: () -> Void
 
     private static let shape = RoundedRectangle(cornerRadius: Tokens.Notepad.tableRadius, style: .continuous)
+    private static let line = Rectangle().fill(Tokens.Surface.cardEdge)
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -30,21 +31,18 @@ struct NotepadTableBlockView: View {
             }
             .padding(.leading, Tokens.Spacing.card)
 
-            ScrollView(.horizontal) {
-                VStack(alignment: .leading, spacing: 0) {
-                    ForEach(block.cells.indices, id: \.self) { row in
-                        HStack(spacing: 0) {
-                            ForEach(block.cells[row].indices, id: \.self) { column in
-                                box(row: row, column: column)
-                            }
+            // As on the board, the columns share the card's width equally (up to five fit).
+            VStack(alignment: .leading, spacing: 0) {
+                ForEach(block.cells.indices, id: \.self) { row in
+                    HStack(spacing: 0) {
+                        ForEach(block.cells[row].indices, id: \.self) { column in
+                            box(row: row, column: column)
                         }
-                        .background(row == 0 ? Tokens.Surface.raised : Color.clear)
-                        .overlay(alignment: .top) { Divider().overlay(Tokens.Surface.cardEdge) }
                     }
+                    .background(row == 0 ? Tokens.Surface.raised : Color.clear)
+                    .overlay(alignment: .top) { Self.line.frame(height: 1) }
                 }
             }
-            .scrollIndicators(.hidden)
-            .scrollBounceBehavior(.basedOnSize, axes: .horizontal)
 
             HStack(spacing: Tokens.Spacing.tight) {
                 Button("+ Row", action: onAddRow)
@@ -54,7 +52,8 @@ struct NotepadTableBlockView: View {
             }
             .buttonStyle(.rpText)
             .padding(.horizontal, Tokens.Spacing.tight)
-            .overlay(alignment: .top) { Divider().overlay(Tokens.Surface.cardEdge) }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .overlay(alignment: .top) { Self.line.frame(height: 1) }
         }
         .background(Self.shape.fill(Tokens.Surface.card))
         .overlay { Self.shape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
@@ -73,10 +72,10 @@ struct NotepadTableBlockView: View {
         .tabularNumerals()
         .foregroundStyle(Tokens.Ink.primary)
         .padding(.horizontal, Tokens.Spacing.gap)
-        .frame(width: Tokens.Notepad.tableCellWidth, alignment: .leading)
-        .frame(minHeight: Tokens.Size.minTap)
+        .frame(maxWidth: .infinity, minHeight: Tokens.Size.minTap, alignment: .leading)
+        // A plain 1 pt line: a Divider here would lie flat across the box, not stand at its edge.
         .overlay(alignment: .leading) {
-            if column > 0 { Divider().overlay(Tokens.Surface.cardEdge) }
+            if column > 0 { Self.line.frame(width: 1) }
         }
         .accessibilityLabel(row == 0 ? "Heading \(column + 1)" : "Row \(row), \(headingText(column))")
     }

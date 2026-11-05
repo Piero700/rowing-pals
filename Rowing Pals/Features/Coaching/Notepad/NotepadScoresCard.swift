@@ -39,13 +39,20 @@ struct NotepadScoresCard: View {
                     .padding(.horizontal, Tokens.Spacing.card)
                     .padding(.bottom, Tokens.Spacing.card)
             } else {
+                // As on the board, the names take whatever the boxes leave, and the boxes sit
+                // against the card's right edge: the boxes take their full width first (up to
+                // what's left after the narrowest names column) and scroll sideways beyond it.
                 HStack(alignment: .top, spacing: 0) {
                     namesColumn
+                        .frame(minWidth: Tokens.Notepad.ergColumn + 4 + Tokens.Notepad.nameColumn,
+                               maxWidth: .infinity, alignment: .leading)
                     ScrollView(.horizontal) {
                         boxesColumns
                     }
                     .scrollIndicators(.hidden)
                     .scrollBounceBehavior(.basedOnSize, axes: .horizontal)
+                    .frame(maxWidth: Tokens.Notepad.cellWidth * CGFloat(viewModel.reps.count))
+                    .layoutPriority(1)
                 }
                 .padding(.horizontal, Tokens.Spacing.tight)
 
@@ -70,7 +77,7 @@ struct NotepadScoresCard: View {
             .foregroundStyle(Tokens.Ink.secondary)
             .frame(height: Self.headerHeight)
             ForEach(Array(viewModel.rowers.enumerated()), id: \.element.id) { index, rower in
-                VStack(spacing: 0) {
+                VStack(alignment: .leading, spacing: 0) {
                     Divider().overlay(Tokens.Surface.cardEdge)
                     HStack(spacing: 4) {
                         Text("\(index + 1)")
@@ -84,8 +91,8 @@ struct NotepadScoresCard: View {
                             .lineLimit(1)
                             .truncationMode(.tail)
                     }
-                    .frame(width: Tokens.Notepad.ergColumn + Tokens.Notepad.nameColumn, height: Tokens.Notepad.rowHeight - 1,
-                           alignment: .leading)
+                    .frame(maxWidth: .infinity, minHeight: Tokens.Notepad.rowHeight - 1,
+                           maxHeight: Tokens.Notepad.rowHeight - 1, alignment: .leading)
                 }
                 .id(rower.id)
                 .accessibilityElement(children: .ignore)

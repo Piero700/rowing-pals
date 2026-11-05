@@ -69,19 +69,27 @@ struct CoachWorkoutsView: View {
                 .accessibilityAddTraits(.isHeader)
             LazyVStack(spacing: Tokens.Spacing.tight) {
                 ForEach(items) { item in
-                    VStack(spacing: Tokens.Spacing.tight) {
-                        WorkoutCard(item: item, isToday: isToday)
-                            .asButton { navigate(.workoutResults(item.workout.id)) }
-                            // As well as Delete workout on its page (decision 60).
-                            .swipeToDelete { await workouts.delete(item.workout.id) }
-                        if isToday {
+                    if isToday {
+                        // Today's card has Open notepad inside it, under the bar (CoachNotepadWorkouts).
+                        // The card is drawn around both, so the two stay separate buttons.
+                        VStack(spacing: 0) {
+                            WorkoutCard(item: item, isToday: true, drawsCard: false)
+                                .asButton { navigate(.workoutResults(item.workout.id)) }
                             Button {
                                 navigate(.notepad(item.workout.id))
                             } label: {
                                 Label("Open notepad", icon: .pencil, size: Tokens.Icon.small)
                             }
                             .buttonStyle(.rpPrimary)
+                            .padding([.horizontal, .bottom], Tokens.Spacing.card)
                         }
+                        .background { WorkoutCard.card }
+                        // As well as Delete workout on its page (decision 60).
+                        .swipeToDelete { await workouts.delete(item.workout.id) }
+                    } else {
+                        WorkoutCard(item: item, isToday: false)
+                            .asButton { navigate(.workoutResults(item.workout.id)) }
+                            .swipeToDelete { await workouts.delete(item.workout.id) }
                     }
                 }
             }

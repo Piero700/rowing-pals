@@ -10,6 +10,9 @@ import SwiftUI
 struct WorkoutCard: View {
     let item: WorkoutsViewModel.Item
     let isToday: Bool
+    /// False when the caller draws the card around this and more (today's card, which has
+    /// Open notepad inside it under the bar, decision 96).
+    var drawsCard = true
 
     private static let cardShape = RoundedRectangle(cornerRadius: Tokens.Radius.card, style: .continuous)
 
@@ -57,8 +60,13 @@ struct WorkoutCard: View {
             .accessibilityHidden(true)
         }
         .padding(Tokens.Spacing.card)
-        .background(Self.cardShape.fill(Tokens.Surface.card))
-        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+        .background { if drawsCard { Self.card } }
         .accessibilityElement(children: .combine)
+    }
+
+    /// The card's ground and edge, for a caller that draws it around more than this.
+    @ViewBuilder static var card: some View {
+        cardShape.fill(Tokens.Surface.card)
+            .overlay { cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
     }
 }
