@@ -16,6 +16,9 @@ struct Club: Codable, Identifiable {
     var description: String?
     var joinPolicy: ClubJoinPolicy
     var focus: ClubFocus
+    /// Approved by the app's team (decision 98): shows the verified tag beside the name. False
+    /// before docs/migrations/2026-11-05-clubs-open-and-verified.sql.
+    var isVerified: Bool
     let createdAt: Date
 
     enum CodingKeys: String, CodingKey {
@@ -23,6 +26,7 @@ struct Club: Codable, Identifiable {
         case crestPath = "crest_path"
         case joinPolicy = "join_policy"
         case createdAt = "created_at"
+        case isVerified = "is_verified"
     }
 
     init(from decoder: Decoder) throws {
@@ -37,5 +41,6 @@ struct Club: Codable, Identifiable {
         // has run) reads as All rowing rather than failing the whole club.
         focus = (try c.decodeIfPresent(String.self, forKey: .focus)).flatMap(ClubFocus.init(rawValue:)) ?? .allRowing
         createdAt = try c.decode(Date.self, forKey: .createdAt)
+        isVerified = try c.decodeIfPresent(Bool.self, forKey: .isVerified) ?? false
     }
 }

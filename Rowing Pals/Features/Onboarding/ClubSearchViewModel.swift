@@ -16,7 +16,11 @@ final class ClubSearchViewModel {
         let name: String
         let location: String?
         private let joinPolicyValue: ClubJoinPolicy?
+        private let isVerifiedValue: Bool?
         private let profiles: [CountWrapper]
+
+        /// The verified tag (decision 98); absent before its migration.
+        var isVerified: Bool { isVerifiedValue ?? false }
 
         /// Absent before docs/migrations/2026-09-30-clubs.sql has run: every club was open.
         var joinPolicy: ClubJoinPolicy { joinPolicyValue ?? .open }
@@ -24,6 +28,7 @@ final class ClubSearchViewModel {
         private enum CodingKeys: String, CodingKey {
             case id, name, location, profiles
             case joinPolicyValue = "join_policy"
+            case isVerifiedValue = "is_verified"
         }
 
         var memberCount: Int { profiles.first?.count ?? 0 }

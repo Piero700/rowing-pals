@@ -156,7 +156,7 @@ struct ChallengeEditorView: View {
     @ViewBuilder
     private var squadPicker: some View {
         if viewModel.squads.isEmpty {
-            Text("Your club has no squads yet. Coaches, the owner and co-owners make them in Squads.")
+            GuidedText("Your club has no squads yet.", hint: "Coaches, the owner and co-owners make them in Squads.")
                 .textStyle(Typography.meta)
                 .foregroundStyle(Tokens.Ink.secondary)
                 .padding(.horizontal, 4)

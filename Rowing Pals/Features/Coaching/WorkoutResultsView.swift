@@ -51,7 +51,7 @@ struct WorkoutResultsView: View {
                         }
                     }
 
-                    Text("Showing \(viewModel.shownRows.count) of \(viewModel.rows.count). Sessions are linked when a rower posts while the workout is showing.")
+                    GuidedText("Showing \(viewModel.shownRows.count) of \(viewModel.rows.count).", hint: "Sessions are linked when a rower posts while the workout is showing.")
                         .textStyle(Typography.meta)
                         .tabularNumerals()
                         .foregroundStyle(Tokens.Ink.secondary)

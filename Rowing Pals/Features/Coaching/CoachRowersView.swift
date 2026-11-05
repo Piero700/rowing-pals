@@ -127,6 +127,7 @@ struct CoachRowersView: View {
             .frame(maxWidth: .infinity)
             .multilineTextAlignment(.center)
             .padding(.top, Tokens.Spacing.loose)
+            .guidance()
     }
 
     private func stat(_ value: String, _ label: String) -> some View {

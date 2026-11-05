@@ -28,6 +28,7 @@ struct InviteRowerView: View {
                     .foregroundStyle(Tokens.Ink.secondary)
                     .padding(.horizontal, 2)
                     .padding(.bottom, Tokens.Spacing.loose)
+                    .guidance()
                 searchField
                     .padding(.bottom, 14)
                 if let errorMessage {
@@ -101,7 +102,8 @@ struct InviteRowerView: View {
                     .textStyle(Typography.name)
                     .foregroundStyle(Tokens.Ink.primary)
                     .lineLimit(1)
-                Text(person.club?.name ?? "No club")
+                ClubNameLabel(name: person.club?.name ?? "No club",
+                              isVerified: person.club?.isVerified ?? false, badgeSize: Tokens.Icon.badge)
                     .textStyle(Typography.meta)
                     .foregroundStyle(Tokens.Ink.secondary)
                     .lineLimit(1)

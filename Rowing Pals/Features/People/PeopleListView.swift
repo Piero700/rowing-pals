@@ -126,7 +126,13 @@ struct PeopleListView: View {
                                 .accessibilityLabel("Private account")
                         }
                     }
-                    Text([person.username.map { "@\($0)" }, person.club?.name ?? "No club"].compactMap { $0 }.joined(separator: " · "))
+                    HStack(spacing: Tokens.Spacing.verifiedGap) {
+                        if let username = person.username {
+                            Text("@\(username) ·")
+                        }
+                        ClubNameLabel(name: person.club?.name ?? "No club",
+                                      isVerified: person.club?.isVerified ?? false, badgeSize: Tokens.Icon.badge)
+                    }
                         .textStyle(Typography.meta)
                         .foregroundStyle(Tokens.Ink.secondary)
                         .lineLimit(1)

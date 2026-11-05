@@ -150,7 +150,9 @@ struct PostDetailView: View {
             .clipped()
 
             // Tap-to-swap, BeReal-style — unchanged from the pre-redesign
-            // screen, just repositioned under the back button.
+            // screen, just repositioned under the back button. Only when the session has a
+            // selfie: it's optional (decision 98), and manual sessions never had one.
+            if viewModel.selfieURL != nil {
             Button {
                 withAnimation(.snappy) { isSelfiePrimary.toggle() }
             } label: {
@@ -164,6 +166,7 @@ struct PostDetailView: View {
             .buttonStyle(.plain)
             .padding(.leading, 14)
             .padding(.top, 70)
+            }
 
             backButton
                 .padding(.leading, 14)

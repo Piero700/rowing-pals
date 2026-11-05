@@ -206,7 +206,7 @@ struct MetresLeaderboardView: View {
                     .textStyle(Typography.fieldLabel)
                     .foregroundStyle(Tokens.Ink.primary)
                     .lineLimit(1)
-                Text(rowMeta(row))
+                leaderboardClubLine(row, after: row.level.map { " · \($0.rawValue)" } ?? "")
                     .font(.system(size: 10))
                     .foregroundStyle(Tokens.Ink.secondary)
                     .lineLimit(1)
@@ -242,9 +242,6 @@ struct MetresLeaderboardView: View {
         .modifier(TrackVisibility(isTracked: row.isCurrentUser, isVisible: $isOwnRowVisible))
     }
 
-    private func rowMeta(_ row: MetresLeaderboardViewModel.Row) -> String {
-        [row.club ?? "No club", row.level?.rawValue].compactMap { $0 }.joined(separator: " · ")
-    }
 
     private var emptyCard: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -262,6 +259,7 @@ struct MetresLeaderboardView: View {
                 Text("Join one to see how your metres stack up against your crew.")
                     .textStyle(Typography.meta)
                     .foregroundStyle(Tokens.Ink.secondary)
+                    .guidance()
                 Button("Find a club") { navigate(.findClub) }
                     .buttonStyle(.rpPrimary)
                     .padding(.top, 4)
@@ -323,7 +321,7 @@ struct MetresPinnedRow: View {
                 Text("You")
                     .textStyle(Typography.name)
                     .foregroundStyle(Tokens.Ink.primary)
-                Text("\(row.club ?? "No club") · this \(periodLabel)")
+                leaderboardClubLine(row, after: " · this \(periodLabel)")
                     .textStyle(Typography.meta)
                     .foregroundStyle(Tokens.Ink.secondary)
                     .lineLimit(1)
@@ -345,4 +343,15 @@ struct MetresPinnedRow: View {
 
 #Preview {
     MetresLeaderboardView(mode: .constant(.volume))
+}
+
+/// "Club ✓ · novice": the club with its verified tag (decision 98), then the rest.
+private func leaderboardClubLine(_ row: MetresLeaderboardViewModel.Row, after rest: String) -> some View {
+    HStack(spacing: Tokens.Spacing.verifiedGap) {
+        ClubNameLabel(name: row.club ?? "No club", isVerified: row.club != nil && row.clubIsVerified,
+                      badgeSize: Tokens.Icon.badge)
+        if !rest.isEmpty {
+            Text(rest.trimmingCharacters(in: .whitespaces))
+        }
+    }
 }

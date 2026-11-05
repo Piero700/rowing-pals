@@ -161,7 +161,11 @@ struct TestLeaderboardView: View {
                             }
                     }
                 }
-                Text("\(row.club ?? "No club") · \(row.dateLabel)")
+                HStack(spacing: Tokens.Spacing.verifiedGap) {
+                    ClubNameLabel(name: row.club ?? "No club", isVerified: row.club != nil && row.clubIsVerified,
+                                  badgeSize: Tokens.Icon.badge)
+                    Text("· \(row.dateLabel)")
+                }
                     .textStyle(Typography.statLabel)
                     .tabularNumerals()
                     .foregroundStyle(Tokens.Ink.secondary)

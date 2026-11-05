@@ -110,6 +110,8 @@ enum RPIcon: String, CaseIterable, Sendable {
     case checkbox
     /// A tick box, ticked (drawn to match).
     case checkboxOn
+    /// A verified club (drawn to match).
+    case verified
 
     /// The outline in a 24 × 24 box.
     var outline: Path {
@@ -563,6 +565,17 @@ enum RPIcon: String, CaseIterable, Sendable {
             p.move(to: .init(x: 8, y: 12.5))
             p.addLine(to: .init(x: 11, y: 15.5))
             p.addLine(to: .init(x: 16, y: 9.5))
+        case .verified:
+            p.move(to: .init(x: 12, y: 3))
+            p.addLine(to: .init(x: 19, y: 6))
+            p.addLine(to: .init(x: 19, y: 11.5))
+            p.addCurve(to: .init(x: 12, y: 21), control1: .init(x: 19, y: 15.8), control2: .init(x: 16.1, y: 19.4))
+            p.addCurve(to: .init(x: 5, y: 11.5), control1: .init(x: 7.9, y: 19.4), control2: .init(x: 5, y: 15.8))
+            p.addLine(to: .init(x: 5, y: 6))
+            p.closeSubpath()
+            p.move(to: .init(x: 8.5, y: 12))
+            p.addLine(to: .init(x: 11, y: 14.5))
+            p.addLine(to: .init(x: 15.5, y: 9.5))
         }
         return p
     }

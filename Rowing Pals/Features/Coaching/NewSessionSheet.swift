@@ -47,6 +47,7 @@ struct NewSessionSheet: View {
                 .foregroundStyle(Tokens.Ink.secondary)
                 .padding(.horizontal, 4)
                 .padding(.top, 4)
+                .guidance()
         }
         .padding(.horizontal, Tokens.Spacing.screen)
         .padding(.top, Tokens.Spacing.group)

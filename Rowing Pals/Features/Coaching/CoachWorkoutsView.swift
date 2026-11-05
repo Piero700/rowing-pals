@@ -29,7 +29,7 @@ struct CoachWorkoutsView: View {
                         .padding(.bottom, Tokens.Spacing.loose)
                 }
                 if workouts.hasLoaded && workouts.today.isEmpty && workouts.upcoming.isEmpty && workouts.past.isEmpty {
-                    Text("No workouts yet. Tap + to set one: the rowers it's for are told, and see it on the day.")
+                    GuidedText("No workouts yet.", hint: "Tap + to set one: the rowers it's for are told, and see it on the day.")
                         .textStyle(Typography.meta)
                         .foregroundStyle(Tokens.Ink.secondary)
                         .padding(.horizontal, 4)

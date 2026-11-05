@@ -34,8 +34,12 @@ final class ReviewSheetViewModel {
     /// storage cost bounded.
     static let maxGalleryPhotos = 6
 
-    /// Nil for a manual entry: no camera was used.
+    /// The selfie (front camera). Nil for a manual entry or a library photo, and for a live
+    /// capture with the selfie switched off (decision 98).
     let selfieJPEG: Data?
+    /// True when Log's shutter took the first monitor photo live — with or without a selfie. Only
+    /// a live photo can be checked, so only it can go on leaderboards or set a test result.
+    let isLiveCapture: Bool
     var segments: [DraftSegment] = []
     var galleryPhotos: [GalleryPhoto] = []
     var caption = ""
@@ -91,7 +95,9 @@ final class ReviewSheetViewModel {
     var isPosting = false
     var postError: String?
 
-    var isManual: Bool { selfieJPEG == nil }
+    /// Typed in, or started from a library photo: nothing was photographed live (decision 98 — a
+    /// live monitor photo without a selfie is not manual).
+    var isManual: Bool { !isLiveCapture }
 
     var totalDistanceM: Int { segments.reduce(0) { $0 + $1.distanceM } }
     var totalTimeMs: Int { segments.reduce(0) { $0 + $1.timeMs } }
@@ -178,13 +184,14 @@ final class ReviewSheetViewModel {
     /// single blank piece to type into.
     /// `startsBlank` is false when a session without a selfie begins from a library photo: that
     /// photo becomes the first piece instead of a blank one.
-    init(selfieJPEG: Data?, startsBlank: Bool = true, linkedWorkout: CoachWorkout? = nil) {
+    init(selfieJPEG: Data?, isLiveCapture: Bool, startsBlank: Bool = true, linkedWorkout: CoachWorkout? = nil) {
         self.selfieJPEG = selfieJPEG
+        self.isLiveCapture = isLiveCapture
         self.linkedWorkout = linkedWorkout
         if let zone = linkedWorkout?.zone.flatMap(TrainingZone.init(rawValue:)) {
             self.zone = zone
         }
-        if selfieJPEG == nil && startsBlank {
+        if !isLiveCapture && startsBlank {
             segments = [DraftSegment(manualLabel: .main)]
         }
     }

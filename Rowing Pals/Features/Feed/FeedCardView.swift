@@ -89,8 +89,8 @@ struct FeedCardView: View {
                         .textStyle(Typography.name)
                         .foregroundStyle(Tokens.Ink.primary)
                         .lineLimit(1)
-                    if let club = post.author.club?.name {
-                        Text(club)
+                    if let club = post.author.club {
+                        ClubNameLabel(name: club.name, isVerified: club.isVerified, badgeSize: Tokens.Icon.badge)
                             .textStyle(Typography.meta)
                             .foregroundStyle(Tokens.Ink.secondary)
                             .lineLimit(1)

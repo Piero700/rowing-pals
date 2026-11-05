@@ -93,6 +93,7 @@ struct ErgEventDetailView: View {
                     .textStyle(Typography.meta)
                     .tabularNumerals()
                     .foregroundStyle(Tokens.Ink.secondary)
+                    .guidance()
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(Tokens.Spacing.card)

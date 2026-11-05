@@ -34,7 +34,11 @@ struct SignInView: View {
         }
     }
 
+    /// Signing in or up: the email form at the top, Apple and Google at the bottom of the screen.
+    private var isCredentialsStep: Bool { viewModel.step == .signIn || viewModel.step == .signUp }
+
     private var page: some View {
+        GeometryReader { proxy in
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
                 if viewModel.step != .signIn {
@@ -63,8 +67,20 @@ struct SignInView: View {
                         .textStyle(Typography.bodySecondary)
                         .foregroundStyle(Tokens.System.error)
                 }
+
+                // Apple and Google sit at the foot of the screen, below the email form (user,
+                // 2026-11-05); on a short screen they follow the form and scroll.
+                if isCredentialsStep {
+                    Spacer(minLength: Tokens.Spacing.group)
+                    VStack(spacing: 20) {
+                        orDivider
+                        socialButtons
+                    }
+                }
             }
             .padding(24)
+            .frame(minHeight: proxy.size.height, alignment: .top)
+        }
         }
         .scrollIndicators(.hidden)
         .background(Tokens.Base.ground)
@@ -150,14 +166,15 @@ struct SignInView: View {
         }
 
         if viewModel.step == .signIn {
+            // On the left, under the password (user, 2026-11-05), clear of the right-hand thumb.
             HStack {
-                Spacer()
                 Button("Forgot password?") {
                     focusedField = nil
                     viewModel.go(to: .forgotEmail)
                 }
                 .buttonStyle(.rpText)
                 .textStyle(Typography.bodySecondary)
+                Spacer()
             }
             .padding(.top, -12)
         }
@@ -169,9 +186,6 @@ struct SignInView: View {
         primaryButton(viewModel.isSigningUp ? "Sign up" : "Sign in", isEnabled: canSubmit) {
             await viewModel.submit()
         }
-
-        orDivider
-        socialButtons
 
         Button {
             viewModel.go(to: viewModel.isSigningUp ? .signIn : .signUp)
@@ -285,6 +299,7 @@ struct SignInView: View {
         Text("Can't find it? Check your junk folder. The code works for an hour.")
             .textStyle(Typography.meta)
             .foregroundStyle(Tokens.Ink.secondary)
+            .guidance()
     }
 
     // MARK: - Forgot password

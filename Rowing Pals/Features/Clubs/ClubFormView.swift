@@ -26,9 +26,13 @@ struct ClubFormView: View {
     @State private var currentClubName: String?
     @State private var isSaving = false
     @State private var errorMessage: String?
+    /// The club being edited, so keeping its own name isn't "taken".
+    @State private var editingClubId: UUID?
+    /// Another club already has the typed name (decision 98), checked once typing pauses.
+    @State private var isNameTaken = false
 
     private var canSave: Bool {
-        !name.trimmingCharacters(in: .whitespaces).isEmpty && !isSaving
+        ClubNameRules.problem(with: name) == nil && !isNameTaken && !isSaving
     }
 
     var body: some View {
@@ -40,12 +44,22 @@ struct ClubFormView: View {
                         .foregroundStyle(Tokens.Ink.secondary)
                         .padding(.horizontal, 2)
                         .padding(.bottom, 14)
+                        .guidance()
                 }
 
                 field("Club name") {
                     TextField("Your club name", text: $name)
                         .textInputAutocapitalization(.words)
-                        .onChange(of: name) { name = String(name.prefix(60)) }
+                        .onChange(of: name) { name = String(name.prefix(ClubNameRules.maxLength)) }
+                        .task(id: name) { await checkName() }
+                }
+                if isNameTaken {
+                    Text(ClubNameRules.takenMessage(for: name))
+                        .textStyle(Typography.meta)
+                        .foregroundStyle(Tokens.System.error)
+                        .padding(.horizontal, 2)
+                        .padding(.top, -6)
+                        .padding(.bottom, Tokens.Spacing.loose)
                 }
                 field("Description") {
                     TextField("What brings your crew together?", text: $description, axis: .vertical)
@@ -77,6 +91,7 @@ struct ClubFormView: View {
                     .foregroundStyle(Tokens.Ink.secondary)
                     .padding(.horizontal, 2)
                     .padding(.top, 2)
+                    .guidance()
 
                 if let errorMessage {
                     Text(errorMessage)
@@ -165,6 +180,7 @@ struct ClubFormView: View {
         guard let membership = try? await ClubService.membership(), let club = membership.club else { return }
         currentClubName = club.name
         guard mode == .edit else { return }
+        editingClubId = club.id
         name = club.name
         description = club.description ?? ""
         location = club.location ?? ""
@@ -172,12 +188,27 @@ struct ClubFormView: View {
         focus = club.focus
     }
 
+    /// Asks the database whether the name is free once typing pauses. Before the clubs migration
+    /// has run the check can't be made, so it says nothing and Create still answers.
+    private func checkName() async {
+        let typed = name
+        guard ClubNameRules.problem(with: typed) == nil else {
+            isNameTaken = false
+            return
+        }
+        try? await Task.sleep(for: .milliseconds(400))
+        guard !Task.isCancelled else { return }
+        let isFree = (try? await ClubService.nameIsFree(ClubNameRules.tidied(typed), except: editingClubId)) ?? true
+        guard !Task.isCancelled, typed == name else { return }
+        isNameTaken = !isFree
+    }
+
     private func save() async {
         isSaving = true
         errorMessage = nil
         defer { isSaving = false }
         let details = ClubService.Details(
-            p_name: name.trimmingCharacters(in: .whitespacesAndNewlines),
+            p_name: ClubNameRules.tidied(name),
             p_description: description,
             p_location: location,
             p_policy: policy,

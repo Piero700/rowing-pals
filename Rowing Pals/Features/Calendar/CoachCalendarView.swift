@@ -82,6 +82,7 @@ struct CoachCalendarView: View {
                     .foregroundStyle(Tokens.Ink.secondary)
                     .padding(.horizontal, 4)
                     .padding(.top, Tokens.Spacing.loose)
+                    .guidance()
                 Color.clear.frame(height: Tokens.Spacing.tabScrollBottom)
             }
             .padding(.horizontal, Tokens.Spacing.screen)
@@ -356,6 +357,7 @@ struct CoachCalendarView: View {
             .foregroundStyle(Tokens.Ink.secondary)
             .padding(.horizontal, 4)
             .padding(.top, Tokens.Spacing.tight)
+            .guidance()
     }
 
     private func challengeRow(_ item: CoachChallengesModel.Item) -> some View {
@@ -441,6 +443,7 @@ struct CoachCalendarView: View {
             .foregroundStyle(Tokens.Ink.secondary)
             .padding(.horizontal, 4)
             .padding(.top, Tokens.Spacing.tight)
+            .guidance()
     }
 
     private func announcementRow(_ announcement: Announcement) -> some View {

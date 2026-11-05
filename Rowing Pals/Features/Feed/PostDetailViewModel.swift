@@ -130,7 +130,7 @@ final class PostDetailViewModel {
 
             struct SessionRow: Decodable {
                 struct AuthorRow: Decodable {
-                    struct Club: Decodable { let name: String }
+                    typealias Club = ClubNameRef
                     let id: UUID
                     let displayName: String
                     let category: RowerCategory
@@ -204,7 +204,7 @@ final class PostDetailViewModel {
                 .select("""
                 user_id, type, caption, workout_label, total_distance_m, total_time_ms, avg_split_ms, avg_rate, \
                 photo_verified, logged_late, posted_at, \
-                profiles!sessions_user_id_fkey(id, display_name, category, gender, clubs(name)), \
+                profiles!sessions_user_id_fkey(id, display_name, category, gender, clubs(*)), \
                 segments(id, label, position, distance_m, time_ms, split_ms, rate, monitor_photo_path), \
                 session_photos(position, path)
                 """)

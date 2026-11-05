@@ -286,7 +286,15 @@ struct ProfileView: View {
                     .foregroundStyle(Tokens.Ink.secondary)
                     .padding(.top, 2)
             }
-            Text(identityMeta)
+            // The club, with its verified tag (decision 98), then the level on your own profile.
+            HStack(spacing: Tokens.Spacing.verifiedGap) {
+                ClubNameLabel(name: viewModel.clubName ?? "No club",
+                              isVerified: viewModel.clubName != nil && viewModel.clubIsVerified,
+                              badgeSize: Tokens.Icon.badge)
+                if let level = identityLevel {
+                    Text("· \(level)")
+                }
+            }
                 .textStyle(Typography.meta)
                 .foregroundStyle(Tokens.Ink.secondary)
                 .padding(.top, 4)
@@ -307,11 +315,10 @@ struct ProfileView: View {
 
     /// Your own profile: "Club · Level". Another rower's (v3 §08), or a coach-only account's
     /// (no level, decision 34): the club alone.
-    private var identityMeta: String {
-        let club = viewModel.clubName ?? "No club"
-        if isOtherRower || !viewModel.isRower { return club }
+    private var identityLevel: String? {
+        if isOtherRower || !viewModel.isRower { return nil }
         let level = viewModel.categoryLabel.capitalized
-        return level.isEmpty ? club : "\(club) · \(level)"
+        return level.isEmpty ? nil : level
     }
 
     /// Someone else's profile, reached from a post, a list or a search.

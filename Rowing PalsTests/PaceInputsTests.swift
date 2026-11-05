@@ -28,7 +28,7 @@ struct PaceInputsTests {
     }
 
     @Test func choosingATestPreselectsAllOut() {
-        let viewModel = ReviewSheetViewModel(selfieJPEG: Data([0x01]))
+        let viewModel = ReviewSheetViewModel(selfieJPEG: Data([0x01]), isLiveCapture: true)
         #expect(viewModel.zone == .ut2)
         viewModel.sessionKind = .test(StandardTest.all[2])
         #expect(viewModel.zone == .an)

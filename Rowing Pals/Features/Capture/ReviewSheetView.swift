@@ -41,11 +41,12 @@ struct ReviewSheetView: View {
 
     /// A photographed session passes both photos; a manual entry passes nil
     /// for both.
-    init(selfieJPEG: Data?, initialMonitorPhoto: Data?, linkedWorkout: CoachWorkout? = nil, onPosted: @escaping () -> Void) {
+    init(selfieJPEG: Data?, isLiveCapture: Bool, initialMonitorPhoto: Data?, linkedWorkout: CoachWorkout? = nil,
+         onPosted: @escaping () -> Void) {
         self.initialMonitorPhoto = initialMonitorPhoto
         self.onPosted = onPosted
         _viewModel = State(initialValue: ReviewSheetViewModel(
-            selfieJPEG: selfieJPEG, startsBlank: initialMonitorPhoto == nil, linkedWorkout: linkedWorkout
+            selfieJPEG: selfieJPEG, isLiveCapture: isLiveCapture, startsBlank: initialMonitorPhoto == nil, linkedWorkout: linkedWorkout
         ))
     }
 
@@ -110,6 +111,7 @@ struct ReviewSheetView: View {
                     Text("Manual sessions count toward your own totals and streak, but never appear on leaderboards or set test results — the numbers can't be checked against a monitor photo.")
                         .textStyle(Typography.meta)
                         .foregroundStyle(Tokens.Ink.secondary)
+                        .guidance()
                 } else {
                     leaderboardToggle
                 }
@@ -142,6 +144,7 @@ struct ReviewSheetView: View {
             Button("Choose from library") { isShowingLibrary = true }
         } message: {
             Text("A photo of the erg monitor is read and added as a piece. Any other photo is added to the post's photos.")
+                .guidance()
         }
         .sheet(isPresented: $isShowingCamera) {
             NavigationStack {
@@ -331,6 +334,7 @@ struct ReviewSheetView: View {
                 Text("A test is an all-out effort, so AN is chosen. Change it if this wasn't flat out.")
                     .textStyle(Typography.bodySecondary)
                     .foregroundStyle(Tokens.Ink.secondary)
+                    .guidance()
             }
         }
     }
@@ -431,6 +435,7 @@ struct ReviewSheetView: View {
                     .textStyle(Typography.meta)
                     .foregroundStyle(Tokens.Ink.secondary)
                     .padding(.bottom, Tokens.Spacing.loose)
+                    .guidance()
             }
         }
     }
@@ -574,6 +579,7 @@ struct ReviewSheetView: View {
                 .textStyle(Typography.statLabel)
                 .foregroundStyle(Tokens.Ink.secondary)
                 .padding(.horizontal, 4)
+                .guidance()
         }
     }
 
@@ -691,6 +697,6 @@ struct ReviewSheetView: View {
 
 #Preview {
     NavigationStack {
-        ReviewSheetView(selfieJPEG: Data(), initialMonitorPhoto: Data(), onPosted: {})
+        ReviewSheetView(selfieJPEG: Data(), isLiveCapture: true, initialMonitorPhoto: Data(), onPosted: {})
     }
 }

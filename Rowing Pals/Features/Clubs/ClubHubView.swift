@@ -122,16 +122,23 @@ struct ClubHubView: View {
                 .foregroundStyle(Tokens.Ink.secondary)
                 .padding(.horizontal, 4)
                 .padding(.top, Tokens.Spacing.tight)
+                .guidance()
         }
 
         VStack(alignment: .leading, spacing: 6) {
             if membership.role == .owner {
-                Text("You own this club. To leave it, hand it over to another member or delete it in Manage club.")
+                Text("You own this club. To leave it or start another, hand it over to another member or delete it in Manage club.")
                     .textStyle(Typography.meta)
                     .foregroundStyle(Tokens.Ink.secondary)
+                    .guidance()
             } else {
                 Button("Leave club") { isConfirmingLeave = true }
                     .buttonStyle(.rpDestructive)
+                // Anyone can start their own club (decision 98), in a club or not; creating one
+                // moves you into it as its owner.
+                Button("Create your own club") { navigate(.createClub) }
+                    .buttonStyle(.rpGlass)
+                    .padding(.top, Tokens.Spacing.tight)
             }
         }
         .padding(.top, Tokens.Spacing.sectionTop)
@@ -143,7 +150,7 @@ struct ClubHubView: View {
             Text(roleLine(membership))
                 .textStyle(Typography.overline)
                 .foregroundStyle(Tokens.Accent.brand)
-            Text(club.name)
+            ClubNameLabel(name: club.name, isVerified: club.isVerified, badgeSize: Tokens.Icon.regular)
                 .textStyle(Typography.profileName)
                 .foregroundStyle(Tokens.Ink.primary)
             if let description = club.description, !description.isEmpty {
@@ -285,6 +292,7 @@ struct ClubHubView: View {
             Text("Join an existing crew, start your own, or row independently.")
                 .textStyle(Typography.meta)
                 .foregroundStyle(Tokens.Ink.secondary)
+                .guidance()
         }
         .padding(.horizontal, 2)
         .padding(.top, 6)
@@ -353,7 +361,7 @@ struct ClubHubView: View {
                 ForEach(Array(clubs.enumerated()), id: \.element.id) { index, club in
                     HStack(spacing: Tokens.Spacing.gap) {
                         VStack(alignment: .leading, spacing: 2) {
-                            Text(club.name)
+                            ClubNameLabel(name: club.name, isVerified: club.isVerified)
                                 .textStyle(Typography.name)
                                 .foregroundStyle(Tokens.Ink.primary)
                             Text("invited you to join")

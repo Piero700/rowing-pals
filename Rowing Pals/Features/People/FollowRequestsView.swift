@@ -58,7 +58,8 @@ struct FollowRequestsView: View {
                             .font(.system(size: 15.5, weight: .semibold))
                             .foregroundStyle(Tokens.Ink.primary)
                             .lineLimit(1)
-                        Text(person.club?.name ?? person.category.rawValue.capitalized)
+                        ClubNameLabel(name: person.club?.name ?? person.category.rawValue.capitalized,
+                                      isVerified: person.club?.isVerified ?? false, badgeSize: Tokens.Icon.badge)
                             .textStyle(Typography.bodySecondary)
                             .foregroundStyle(Tokens.Ink.secondary)
                             .lineLimit(1)

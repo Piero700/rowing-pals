@@ -31,6 +31,7 @@ struct NotepadNotesSection: View {
                 .textStyle(Typography.statLabel)
                 .foregroundStyle(Tokens.Ink.secondary)
                 .padding(.horizontal, 4)
+                .guidance()
         }
         .padding(.top, Tokens.Spacing.loose)
         .onChange(of: viewModel.notes) { viewModel.pageChanged() }

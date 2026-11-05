@@ -118,6 +118,7 @@ struct PieceEditorSheet: View {
                         .foregroundStyle(Tokens.Ink.secondary)
                         .padding(.horizontal, 4)
                         .padding(.top, Tokens.Spacing.tight)
+                        .guidance()
 
                     if let problem {
                         Text(problem)

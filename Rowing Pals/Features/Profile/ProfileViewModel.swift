@@ -125,6 +125,8 @@ final class ProfileViewModel {
     var username: String?
     var categoryLabel = ""
     var clubName: String?
+    /// The club carries the verified tag (decision 98).
+    var clubIsVerified = false
     /// Your role in your club, for the Profile club button (decision 25); nil with no club.
     var clubRole: ClubRole?
     /// Coaches their club: Profile → Club then shows Coaching (decision 39).
@@ -191,7 +193,7 @@ final class ProfileViewModel {
             isOwnProfile = userId == viewerId
 
             nonisolated struct ProfileRow: Decodable {
-                struct Club: Decodable { let name: String }
+                typealias Club = ClubNameRef
                 let displayName: String
                 /// Absent before docs/migrations/2026-10-18-usernames.sql.
                 let username: String?
@@ -225,7 +227,7 @@ final class ProfileViewModel {
             let isOwn = isOwnProfile
             async let profileRequest: ProfileRow = SupabaseService.shared
                 .from("profiles")
-                .select("*, clubs(name)")
+                .select("*, clubs(*)")
                 .eq("id", value: userId)
                 .single()
                 .execute()
@@ -243,6 +245,7 @@ final class ProfileViewModel {
             username = profile.username
             categoryLabel = profile.category.rawValue.uppercased()
             clubName = profile.club?.name
+            clubIsVerified = profile.club?.isVerified ?? false
             clubRole = profile.club == nil ? nil : (profile.clubRole ?? .member)
             isCoach = profile.club != nil && (profile.isCoach ?? false)
             isRower = profile.isRower ?? true
@@ -319,15 +322,15 @@ final class ProfileViewModel {
 
     private static func fetchOwnExtras(userId: UUID) async -> OwnExtras {
         struct ClubNameRow: Decodable {
-            struct Club: Decodable { let name: String }
+            typealias Club = ClubNameRef
             let clubs: Club
         }
         async let pending: [ClubNameRow]? = try? await SupabaseService.shared
-            .from("club_join_requests").select("clubs(name)").eq("user_id", value: userId)
+            .from("club_join_requests").select("clubs(*)").eq("user_id", value: userId)
             .eq("status", value: "pending").execute().value
         // Invitations waiting for an answer (decision 26): shown in the app as well as by alert.
         async let invites: [ClubNameRow]? = try? await SupabaseService.shared
-            .from("club_invites").select("clubs(name)").eq("user_id", value: userId)
+            .from("club_invites").select("clubs(*)").eq("user_id", value: userId)
             .eq("status", value: "pending").execute().value
         async let requests: Int? = try? await FollowService.pendingRequestCount()
         let (pendingRows, inviteRows, requestCount) = await (pending, invites, requests)

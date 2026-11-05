@@ -17,7 +17,7 @@ enum FollowState: Equatable {
 /// A rower as shown in a list row — name, club, level, privacy — and
 /// nothing about their training.
 struct PersonSummary: Identifiable, Decodable, Equatable {
-    struct Club: Decodable, Equatable { let name: String }
+    typealias Club = ClubNameRef
 
     let id: UUID
     let displayName: String
@@ -39,7 +39,7 @@ struct PersonSummary: Identifiable, Decodable, Equatable {
     }
 
     /// Every column, so one a migration hasn't added yet (username) is just absent.
-    static let selectColumns = "*, clubs(name)"
+    static let selectColumns = "*, clubs(*)"
 }
 
 /// All follow, follow-request and people-list queries in one place, so every

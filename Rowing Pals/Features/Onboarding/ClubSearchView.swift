@@ -46,6 +46,7 @@ struct ClubSearchView: View {
     /// Joining later: the rower's join request, waiting or declined (decision 26).
     @State private var myRequest: ClubService.JoinRequest?
     @Environment(\.closeRoute) private var closeRoute
+    @Environment(\.navigate) private var navigate
     @Environment(\.scenePhase) private var scenePhase
     /// Onboarding's back button: the account exists by now, so going back means signing out.
     @State private var isConfirmingSignOut = false
@@ -129,6 +130,11 @@ struct ClubSearchView: View {
                     .frame(maxWidth: .infinity)
                     .padding(.top, Tokens.Spacing.tight)
 
+                // Anyone can start a club and becomes its owner (decision 98).
+                Button("Create a club") { navigate(.createClub) }
+                    .buttonStyle(.rpText)
+                    .frame(maxWidth: .infinity)
+
                 if mode == .onboarding {
                     Button("I’m not in a club") {
                         viewModel.selectedClub = nil
@@ -202,6 +208,11 @@ struct ClubSearchView: View {
             Text("Enter the code a club admin shared with you.")
         }
         .task { await refreshMembership() }
+        // A club made from Create a club: its owner goes straight on (About you at onboarding;
+        // back to Your crew when joining later).
+        .onReceive(NotificationCenter.default.publisher(for: .rowerClubChanged)) { _ in
+            Task { await afterCreatingClub() }
+        }
         .task {
             guard mode == .joinLater else { return }
             for await _ in ClubLiveUpdates.changes() { await refreshMembership() }
@@ -279,6 +290,20 @@ struct ClubSearchView: View {
         }
     }
 
+    private func afterCreatingClub() async {
+        guard joinedByCodeName == nil,
+              let membership = try? await ClubService.membership(),
+              let club = membership.club, membership.role == .owner else { return }
+        joinedByCodeName = club.name
+        isWithoutClub = false
+        viewModel.selectedClub = nil
+        if mode == .joinLater {
+            dismiss()
+        } else {
+            isAboutYou = true
+        }
+    }
+
     private func joinWithCode(_ code: String) async {
         saveError = nil
         do {
@@ -316,6 +341,7 @@ struct ClubSearchView: View {
                     .textStyle(Typography.bodyV3)
                     .foregroundStyle(Tokens.Ink.secondary)
                     .padding(.bottom, 16)
+                    .guidance()
             } else {
                 Spacer().frame(height: Tokens.Spacing.tight)
             }
@@ -379,7 +405,7 @@ struct ClubSearchView: View {
                 .background(RoundedRectangle(cornerRadius: Tokens.Radius.crest, style: .continuous).fill(Tokens.Surface.raised))
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 2) {
-                Text(club.name)
+                ClubNameLabel(name: club.name, isVerified: club.isVerified)
                     .textStyle(Typography.name)
                     .foregroundStyle(Tokens.Ink.primary)
                 Text(clubMeta(club))
@@ -473,6 +499,7 @@ struct ClubSearchView: View {
                         .textStyle(Typography.meta)
                         .foregroundStyle(Tokens.Ink.secondary)
                         .padding(.top, Tokens.Spacing.tight)
+                        .guidance()
 
                     Text("Side")
                         .textStyle(Typography.fieldLabel)
@@ -484,6 +511,7 @@ struct ClubSearchView: View {
                         .textStyle(Typography.meta)
                         .foregroundStyle(Tokens.Ink.secondary)
                         .padding(.top, Tokens.Spacing.tight)
+                        .guidance()
                 }
 
                 Text("You can change this later in Edit profile.")
@@ -491,6 +519,7 @@ struct ClubSearchView: View {
                     .foregroundStyle(Tokens.Ink.secondary)
                     .padding(.horizontal, 4)
                     .padding(.top, Tokens.Spacing.loose)
+                    .guidance()
 
                 if let saveError {
                     Text(saveError)
@@ -538,6 +567,7 @@ struct ClubSearchView: View {
                     .foregroundStyle(Tokens.Ink.secondary)
                     .padding(.horizontal, 4)
                     .padding(.top, Tokens.Spacing.loose)
+                    .guidance()
 
                 if let saveError {
                     Text(saveError)
@@ -606,6 +636,7 @@ struct ClubSearchView: View {
                 .textStyle(Typography.meta)
                 .foregroundStyle(Tokens.Ink.secondary)
                 .frame(maxWidth: .infinity, alignment: .leading)
+                .guidance()
         }
         .padding(Tokens.Spacing.card)
         .background(shape.fill(Tokens.Surface.card))
