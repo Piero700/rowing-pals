@@ -19,8 +19,8 @@ render() { # id width height
   echo "  $1.png  ($2×$3)"
 }
 
-for id in 01-proven 02-capture 03-numbers 04-rankings 05-pbs 06-streaks \
-          07-coach-rowers 08-coach-workouts 09-coach-boats 10-coach-calendar; do
+for id in 01-proven 02-capture 03-numbers 04-rankings 05-challenges 06-pbs 07-your-boat \
+          08-coach-rowers 09-coach-notepad 10-coach-boats; do
   render $id 1290 2796
 done
 render banner-feature-1920x1080 1920 1080
