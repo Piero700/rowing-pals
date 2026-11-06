@@ -97,6 +97,7 @@ struct PredictionDetailView: View {
                     .textStyle(Typography.meta)
                     .foregroundStyle(Tokens.Ink.secondary)
                     .padding(.top, Tokens.Spacing.loose)
+                    .guidance()
             }
             .padding(Tokens.Spacing.screen)
     }

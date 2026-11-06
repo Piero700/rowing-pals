@@ -36,6 +36,7 @@ struct ErgOrderSheet: View {
                     Text("Drag rowers to match the ergs. Next walks down this order, and every coach sees it.")
                         .textStyle(Typography.meta)
                         .foregroundStyle(Tokens.Ink.secondary)
+                        .guidance()
                 }
             }
             .environment(\.editMode, .constant(.active))

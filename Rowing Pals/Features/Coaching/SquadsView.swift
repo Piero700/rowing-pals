@@ -68,6 +68,7 @@ struct SquadsView: View {
                     .padding(.horizontal, 4)
                     .padding(.top, Tokens.Spacing.tight)
                     .fixedSize(horizontal: false, vertical: true)
+                    .guidance()
 
                 Button("New squad") { navigate(.squadEdit(nil)) }
                     .buttonStyle(.rpGlass)

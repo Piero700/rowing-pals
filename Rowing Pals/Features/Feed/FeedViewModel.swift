@@ -17,7 +17,7 @@ final class FeedViewModel {
     private static let selectColumns = """
     id, user_id, type, caption, workout_label, total_distance_m, total_time_ms, avg_split_ms, avg_rate, \
     photo_verified, logged_late, is_new_pb, posted_at, \
-    profiles!sessions_user_id_fkey(display_name, category, gender, avatar_path, clubs(name)), \
+    profiles!sessions_user_id_fkey(display_name, category, gender, avatar_path, clubs(*)), \
     segments(id, label, position, distance_m, time_ms, split_ms, monitor_photo_path, is_lead), \
     session_photos(position, path), \
     reactions(kind, user_id), \
@@ -85,11 +85,11 @@ final class FeedViewModel {
     /// A join request still waiting on a club's answer (decision 26).
     private static func pendingClubName(for userId: UUID) async -> String? {
         struct Pending: Decodable {
-            struct Club: Decodable { let name: String }
+            typealias Club = ClubNameRef
             let clubs: Club
         }
         let pending: [Pending]? = try? await SupabaseService.shared
-            .from("club_join_requests").select("clubs(name)").eq("user_id", value: userId)
+            .from("club_join_requests").select("clubs(*)").eq("user_id", value: userId)
             .eq("status", value: "pending").execute().value
         return pending?.first?.clubs.name
     }

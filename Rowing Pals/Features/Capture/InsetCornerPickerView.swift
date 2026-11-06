@@ -35,6 +35,7 @@ struct InsetCornerPickerView: View {
                     .foregroundStyle(Tokens.Ink.secondary)
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
+                    .guidance()
 
                 LazyVGrid(columns: columns, spacing: Tokens.Spacing.loose) {
                     ForEach(InsetCorner.allCases) { corner in

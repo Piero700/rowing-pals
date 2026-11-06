@@ -205,6 +205,7 @@ struct PBHistoryView: View {
                 .frame(maxWidth: .infinity)
                 .padding(.top, Tokens.Spacing.tight)
                 .padding(.bottom, 3)
+                .guidance()
         }
         .padding(.top, 16)
         .padding(.horizontal, Tokens.Spacing.gap)

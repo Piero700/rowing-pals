@@ -71,6 +71,7 @@ ICONS = {
     "clear": ("Clear a field (drawn to match)", '<circle cx="12" cy="12" r="9"/><path d="m9 9 6 6M15 9l-6 6"/>'),
     "checkbox": ("A tick box, empty (drawn to match)", '<rect x="4" y="4" width="16" height="16" rx="4"/>'),
     "checkboxOn": ("A tick box, ticked (drawn to match)", '<rect x="4" y="4" width="16" height="16" rx="4"/><path d="m8 12.5 3 3 5-6"/>'),
+    "verified": ("A verified club (drawn to match)", '<path d="M12 3 19 6v5.5c0 4.3-2.9 7.9-7 9.5-4.1-1.6-7-5.2-7-9.5V6z"/><path d="m8.5 12 2.5 2.5 4.5-5"/>'),
 }
 
 

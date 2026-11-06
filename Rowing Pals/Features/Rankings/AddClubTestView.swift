@@ -62,6 +62,7 @@ struct AddClubTestView: View {
             Text("Every member of your club will see it under Test results and can post to it.")
                 .textStyle(Typography.meta)
                 .foregroundStyle(Tokens.Ink.secondary)
+                .guidance()
 
             PillSegmentedControl(options: ["Distance", "Time"], selection: kindSelection)
 

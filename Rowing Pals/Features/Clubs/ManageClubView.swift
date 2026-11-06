@@ -133,7 +133,7 @@ struct ManageClubView: View {
             Text("You are \(viewModel.myRole == .owner ? "the owner" : "\(viewModel.myRole == .admin ? "an" : "a") \(viewModel.myRole.label.lowercased())")")
                 .textStyle(Typography.overline)
                 .foregroundStyle(Tokens.Accent.brand)
-            Text(club.name)
+            ClubNameLabel(name: club.name, isVerified: club.isVerified, badgeSize: Tokens.Icon.regular)
                 .textStyle(Typography.profileName)
                 .foregroundStyle(Tokens.Ink.primary)
             Text(club.description ?? "Your rowing community")

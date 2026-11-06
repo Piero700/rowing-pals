@@ -137,7 +137,7 @@ struct CommentsView: View {
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 20)
             } else if thread.hasLoaded {
-                Text("No comments yet. Say something to start the conversation.")
+                GuidedText("No comments yet.", hint: "Say something to start the conversation.")
                     .textStyle(Typography.bodySecondary)
                     .foregroundStyle(Tokens.Ink.secondary)
             }

@@ -27,7 +27,8 @@ struct CoachProfileView: View {
                 group("Club") {
                     if let me {
                         row(me.clubName ?? "Your club",
-                            subtitle: me.clubRole.canManageMembers ? "Members, requests and roles" : "Your crew") {
+                            subtitle: me.clubRole.canManageMembers ? "Members, requests and roles" : "Your crew",
+                            isVerifiedClub: me.clubName != nil && me.clubIsVerified) {
                             navigate(me.clubRole.canManageMembers ? .manageClub : .clubHub)
                         }
                         divider
@@ -64,7 +65,14 @@ struct CoachProfileView: View {
                 .textStyle(Typography.profileName)
                 .foregroundStyle(Tokens.Ink.primary)
                 .padding(.top, Tokens.Spacing.loose)
-            Text(me?.clubName.map { "Coach · \($0)" } ?? "Coach")
+            HStack(spacing: Tokens.Spacing.verifiedGap) {
+                if let clubName = me?.clubName {
+                    Text("Coach ·")
+                    ClubNameLabel(name: clubName, isVerified: me?.clubIsVerified ?? false, badgeSize: Tokens.Icon.badge)
+                } else {
+                    Text("Coach")
+                }
+            }
                 .textStyle(Typography.meta)
                 .foregroundStyle(Tokens.Ink.secondary)
                 .padding(.top, 2)
@@ -105,11 +113,12 @@ struct CoachProfileView: View {
 
     /// As Settings' rows: title 15 semibold, optional 13 description; 66 pt with one, 56 without.
     private func row(_ title: String, subtitle: String? = nil, titleColor: Color = Tokens.Ink.primary,
+                     isVerifiedClub: Bool = false,
                      showsChevron: Bool = true, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             HStack(spacing: Tokens.Spacing.loose) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(title)
+                    ClubNameLabel(name: title, isVerified: isVerifiedClub)
                         .textStyle(Typography.rowTitle)
                         .foregroundStyle(titleColor)
                     if let subtitle {

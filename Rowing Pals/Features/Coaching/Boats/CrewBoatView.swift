@@ -249,6 +249,7 @@ struct CrewBoatView: View {
                 Text("Stroke side’s oars are above the boat, bow side’s below.")
                     .textStyle(Typography.statLabel)
                     .foregroundStyle(Tokens.Ink.secondary)
+                    .guidance()
             }
         }
         .padding(.horizontal, Tokens.Spacing.loose)

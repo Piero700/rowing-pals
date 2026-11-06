@@ -82,6 +82,9 @@ Structure that should survive any redesign:
   rows with the label left and the value right, Save top right, destructive actions as red rows, and an action at the
   foot of a card as a thin `CardLinkRow`. Build new forms and lists from `DesignSystem/GroupedForm.swift` and
   `Tokens.Grouped`, not label-above-box fields or a card per row.
+- **Helper text is marked, not hard-coded (decision 98):** explanatory notes and hints use `.guidance()` (or
+  `GuidedText` for an empty state's hint) from `DesignSystem/Guidance.swift`, so they hide after 7 days of use or
+  when turned off in Settings. Never mark errors, empty-state facts or anything needed to use a screen.
 - **Every workout time is typed with `DurationTextField`** (decisions 53, 56): digits only, the colon
   put in as you type.
 
@@ -99,6 +102,7 @@ Current v2 palette (dark / light):
 | `Accent.records` | `#C6ADFF` | `#67409B` | Personal bests, avatars, the rank-hero card |
 | `Accent.rank` | `#EFC37C` | `#84500B` | The #1 leaderboard row and rank-movement indicators |
 | `Accent.success` | `#78D7AC` | `#176A4A` | Success confirmation; the Review screen's "Include on leaderboards" switch |
+| `Accent.verified` | `#91B8FF` | `#214FA3` | The verified-club tag beside a club's name (decision 98); brand blue's value, its own role |
 | `System.error` | `#FF766F` | `#C93C36` | Error/destructive text and controls |
 | `Ink.primary` / `.secondary` / `.faint` | `#F7F8FC` / `#BBC0CE` / `#A3ABBA` | `#111723` / `#3E4C61` / `#4E5C70` | Text levels |
 | `Base` | `#101114` | `#EDF0F5` | Screen/card ground |

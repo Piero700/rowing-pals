@@ -43,7 +43,7 @@ struct AvailabilityView: View {
                         .frame(maxWidth: .infinity)
                         .padding(.top, 40)
                 } else if viewModel.practices.isEmpty {
-                    Text("No practices this week yet. Add them from the Calendar.")
+                    GuidedText("No practices this week yet.", hint: "Add them from the Calendar.")
                         .textStyle(Typography.meta)
                         .foregroundStyle(Tokens.Ink.secondary)
                         .padding(.horizontal, 4)

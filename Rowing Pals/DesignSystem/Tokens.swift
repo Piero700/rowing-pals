@@ -46,6 +46,10 @@ enum Tokens {
         static let rank = Color(light: Color(hex: 0x84500B), dark: Color(hex: 0xEFC37C))
         /// Success confirmation and "on" toggle states. Nothing else.
         static let success = Color(light: Color(hex: 0x176A4A), dark: Color(hex: 0x78D7AC))
+        /// The verified-club tag beside a club's name (decision 98). Nothing else. Brand blue's
+        /// value, the colour people expect a verified mark in, kept as its own role so the tag can
+        /// change without touching what's interactive.
+        static let verified = Color(light: Color(hex: 0x214FA3), dark: Color(hex: 0x91B8FF))
 
         /// Tinted backgrounds for each role above — real per-theme alpha values from the
         /// prototype's `--brandSoft`/`--accentSoft`/`--goldSoft`/`--goodSoft`, not a flat
@@ -168,6 +172,8 @@ enum Tokens {
         static let group: CGFloat = 24
         /// Bottom inset on tab screens so content clears the floating nav.
         static let tabScrollBottom: CGFloat = 98
+        /// Between a club's name and its verified tag.
+        static let verifiedGap: CGFloat = 4
     }
 
     /// v3 component sizes.
@@ -298,6 +304,8 @@ enum Tokens {
         /// The canvas's stroke on its 24 grid: 1.9, a little heavier at 16 and below so small
         /// icons don't look faint.
         static func stroke(for size: CGFloat) -> CGFloat { size <= small ? 2.2 : 1.9 }
+        /// The verified tag's stroke on the 24 grid: heavier, so the small shield reads at a glance.
+        static let verifiedStroke: CGFloat = 2.4
     }
 
     enum Boat {

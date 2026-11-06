@@ -10,9 +10,7 @@ import Foundation
 /// its comment count, in one PostgREST query. Feed-local, not a `Core/Models` table mirror.
 struct FeedPost: Decodable, Identifiable {
     struct Author: Decodable {
-        struct Club: Decodable {
-            let name: String
-        }
+        typealias Club = ClubNameRef
 
         let displayName: String
         let category: RowerCategory

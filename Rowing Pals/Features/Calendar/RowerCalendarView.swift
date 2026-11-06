@@ -50,7 +50,7 @@ struct RowerCalendarView: View {
                     if !viewModel.openPractices.isEmpty {
                         answerBanner
                     } else if viewModel.practices.isEmpty && viewModel.water.isEmpty {
-                        Text("No sessions set for you this week yet. When your coaches add practices, they show here.")
+                        GuidedText("No sessions set for you this week yet.", hint: "When your coaches add practices, they show here.")
                             .textStyle(Typography.meta)
                             .foregroundStyle(Tokens.Ink.secondary)
                             .padding(.horizontal, 4)
@@ -68,6 +68,7 @@ struct RowerCalendarView: View {
                         .foregroundStyle(Tokens.Ink.secondary)
                         .padding(.horizontal, 4)
                         .padding(.top, Tokens.Spacing.loose)
+                        .guidance()
                 }
                 Color.clear.frame(height: Tokens.Spacing.tabScrollBottom)
             }
@@ -127,7 +128,7 @@ struct RowerCalendarView: View {
             Text("Say which sessions you can make")
                 .textStyle(Typography.cardTitle)
                 .foregroundStyle(Tokens.Ink.primary)
-            Text("\(answered) of \(total) answered. Your coaches plan the week from your answers, so a week’s notice helps.")
+            GuidedText("\(answered) of \(total) answered.", hint: "Your coaches plan the week from your answers, so a week’s notice helps.")
                 .textStyle(Typography.meta)
                 .tabularNumerals()
                 .foregroundStyle(Tokens.Ink.secondary)

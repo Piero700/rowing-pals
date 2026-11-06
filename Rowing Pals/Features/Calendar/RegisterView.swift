@@ -29,6 +29,7 @@ struct RegisterView: View {
                         .padding(.horizontal, 4)
                         .padding(.top, Tokens.Spacing.loose)
                         .fixedSize(horizontal: false, vertical: true)
+                        .guidance()
 
                     Text("\(viewModel.squadText) · \(viewModel.rows.count)")
                         .textStyle(Typography.sectionTitle)

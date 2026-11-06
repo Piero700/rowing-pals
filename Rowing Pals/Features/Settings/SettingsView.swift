@@ -28,6 +28,11 @@ struct SettingsView: View {
     private static let supportMailtoURL = URL(string: "mailto:\(supportEmail)")
 
     @AppStorage(Appearance.storageKey) private var appearance: Appearance = .dark
+    /// Helper text (decision 98): the days counted and the person's own choice, which wins once made.
+    @AppStorage(GuidanceStore.daysKey) private var guidanceDays = ""
+    @AppStorage(GuidanceStore.choiceKey) private var guidanceChoice = ""
+    /// Whether Log takes a selfie with the monitor photo (decision 98).
+    @AppStorage(SelfieDefault.storageKey) private var selfieByDefault = true
     /// The rower or coach version (decision 67); the switch row changes it.
     @AppStorage(AppMode.storageKey) private var appMode: AppMode = .rowing
     /// Which water sessions the Calendar shows (decision 79): theirs or the whole club's.
@@ -39,6 +44,9 @@ struct SettingsView: View {
     /// Coaches set the day the club's week starts (decision 69); nil for anyone else.
     @State private var clubWeek: (clubName: String, day: WeekStart)?
     @State private var weekStartError: String?
+    /// The club the viewer owns (decision 98): its name, renamed here, and its verification.
+    @State private var ownedClub: (id: UUID, name: String)?
+    @State private var verification: ClubService.Verification = .none
 
     private static let cardShape = RoundedRectangle(cornerRadius: Tokens.Radius.card, style: .continuous)
 
@@ -70,6 +78,41 @@ struct SettingsView: View {
                         } action: { appearance = .system }
                     }
 
+                    if let ownedClub {
+                        group("Your club") {
+                            NavigationLink {
+                                ClubNameEditView(currentName: ownedClub.name, clubId: ownedClub.id) { saved in
+                                    self.ownedClub = (ownedClub.id, saved)
+                                }
+                            } label: {
+                                rowContent(title: "Club name", subtitle: nil) {
+                                    ClubNameLabel(name: ownedClub.name, isVerified: verification == .verified)
+                                        .textStyle(Typography.detail)
+                                        .foregroundStyle(Tokens.Ink.secondary)
+                                        .lineLimit(1)
+                                    chevron
+                                }
+                            }
+                            .buttonStyle(IconPressStyle())
+                            divider
+                            NavigationLink {
+                                ClubVerificationView(clubName: ownedClub.name, status: $verification)
+                            } label: {
+                                rowContent(title: "Verification", subtitle: "A tag that shows your club is the real one") {
+                                    value(verificationLabel)
+                                    chevron
+                                }
+                            }
+                            .buttonStyle(IconPressStyle())
+                        }
+                        Text("Only the club’s owner sees this. Everything else about the club is in Manage club.")
+                            .textStyle(Typography.meta)
+                            .foregroundStyle(Tokens.Ink.secondary)
+                            .padding(.horizontal, 4)
+                            .padding(.top, Tokens.Spacing.tight)
+                            .guidance()
+                    }
+
                     if canChooseWaterScope {
                         group("Boats") {
                             stackedRow(title: "Water sessions in Calendar",
@@ -92,11 +135,20 @@ struct SettingsView: View {
                                 ), compact: true)
                             }
                         }
-                        Text(weekStartError ?? "Only coaches see this. Rankings and streaks still run Monday to Sunday.")
-                            .textStyle(Typography.meta)
-                            .foregroundStyle(weekStartError == nil ? Tokens.Ink.secondary : Tokens.System.error)
-                            .padding(.horizontal, 4)
-                            .padding(.top, Tokens.Spacing.tight)
+                        if let weekStartError {
+                            Text(weekStartError)
+                                .textStyle(Typography.meta)
+                                .foregroundStyle(Tokens.System.error)
+                                .padding(.horizontal, 4)
+                                .padding(.top, Tokens.Spacing.tight)
+                        } else {
+                            Text("Only coaches see this. Rankings and streaks still run Monday to Sunday.")
+                                .textStyle(Typography.meta)
+                                .foregroundStyle(Tokens.Ink.secondary)
+                                .padding(.horizontal, 4)
+                                .padding(.top, Tokens.Spacing.tight)
+                                .guidance()
+                        }
                     }
 
                     group("Units and display") {
@@ -113,6 +165,20 @@ struct SettingsView: View {
                                 set: { paceDisplay = $0 == 1 ? .watts : .split }
                             ), compact: true)
                         }
+                    }
+
+                    if viewModel.isRower {
+                        group("Logging") {
+                            plainToggleRow(title: "Selfie with each session",
+                                           subtitle: "The front camera takes you with the monitor photo.",
+                                           isOn: $selfieByDefault)
+                        }
+                        Text("You can still turn it on or off on the Log screen for one session.")
+                            .textStyle(Typography.meta)
+                            .foregroundStyle(Tokens.Ink.secondary)
+                            .padding(.horizontal, 4)
+                            .padding(.top, Tokens.Spacing.tight)
+                            .guidance()
                     }
 
                     notificationsGroup
@@ -134,6 +200,7 @@ struct SettingsView: View {
                         .foregroundStyle(Tokens.Ink.secondary)
                         .padding(.horizontal, 4)
                         .padding(.top, Tokens.Spacing.tight)
+                        .guidance()
 
                     group("Account") {
                         NavigationLink {
@@ -159,6 +226,10 @@ struct SettingsView: View {
                     }
 
                     group("Help") {
+                        plainToggleRow(title: "Helper text",
+                                       subtitle: "Tips and explanations under sections and forms.",
+                                       isOn: helperTextBinding)
+                        divider
                         if let supportMailtoURL = Self.supportMailtoURL {
                             Link(destination: supportMailtoURL) {
                                 rowContent(title: "Contact us", subtitle: nil) { chevron }
@@ -216,6 +287,10 @@ struct SettingsView: View {
                     canSwitchVersion = viewer.isCoach && viewer.isRower
                     canChooseWaterScope = viewer.isRower && viewer.clubId != nil
                         && WaterCalendarScope.canChoose(isCoach: viewer.isCoach, clubRole: viewer.clubRole)
+                    if viewer.clubRole == .owner, let clubId = viewer.clubId {
+                        ownedClub = (clubId, viewer.clubName ?? "Your club")
+                        verification = (try? await ClubService.verificationStatus()) ?? .none
+                    }
                     if viewer.isCoach, viewer.clubId != nil {
                         clubWeek = (viewer.clubName ?? "your club", await CalendarService.weekStart())
                     }
@@ -379,6 +454,15 @@ struct SettingsView: View {
             .foregroundStyle(Tokens.Ink.secondary)
     }
 
+    private var verificationLabel: String {
+        switch verification {
+        case .none: "Apply"
+        case .pending: "Waiting"
+        case .declined: "Not approved"
+        case .verified: "Verified"
+        }
+    }
+
     private var paceExample: String {
         // 1:58.7 /500m, shown in the chosen form.
         let sample = 118_700
@@ -390,6 +474,36 @@ struct SettingsView: View {
         let version = info?["CFBundleShortVersionString"] as? String ?? "1.0"
         let build = info?["CFBundleVersion"] as? String ?? "1"
         return "Rowing Pals \(version) (\(build))"
+    }
+
+    /// On while helper text shows; turning it either way is the person's own choice from then on,
+    /// so the 7-day count no longer decides (decision 98).
+    private var helperTextBinding: Binding<Bool> {
+        Binding(
+            get: {
+                GuidanceRules.showsGuidance(storedDays: guidanceDays,
+                                            choice: GuidanceRules.Choice(rawValue: guidanceChoice) ?? .automatic)
+            },
+            set: { guidanceChoice = ($0 ? GuidanceRules.Choice.on : .off).rawValue }
+        )
+    }
+
+    /// A 66 pt row with a switch bound straight to a value (brand blue when on, as v4).
+    private func plainToggleRow(title: String, subtitle: String, isOn: Binding<Bool>) -> some View {
+        Toggle(isOn: isOn) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .textStyle(Typography.rowTitle)
+                    .foregroundStyle(Tokens.Ink.primary)
+                Text(subtitle)
+                    .textStyle(Typography.meta)
+                    .foregroundStyle(Tokens.Ink.secondary)
+            }
+        }
+        .tint(Tokens.Accent.brand)
+        .padding(.horizontal, Tokens.Spacing.card)
+        .padding(.vertical, Tokens.Spacing.loose)
+        .frame(minHeight: Tokens.Size.row)
     }
 
     // MARK: - Notifications

@@ -21,6 +21,8 @@ final class TestLeaderboardViewModel {
         let rank: Int
         let name: String
         let club: String?
+        /// The club carries the verified tag (decision 98).
+        var clubIsVerified = false
         /// Time for a distance test, distance for a duration test — see
         /// `StandardTest.isDurationBased`.
         let primaryValue: String
@@ -95,7 +97,7 @@ final class TestLeaderboardViewModel {
 
             struct ResultRow: Decodable {
                 struct Author: Decodable {
-                    struct Club: Decodable { let name: String }
+                    typealias Club = ClubNameRef
                     let displayName: String
                     let club: Club?
                     enum CodingKeys: String, CodingKey {
@@ -127,7 +129,7 @@ final class TestLeaderboardViewModel {
                 .from("test_results")
                 .select("""
                 user_id, distance_m, time_ms, split_ms, category_at_time, set_at, \
-                profiles(display_name, clubs(name))
+                profiles(display_name, clubs(*))
                 """)
                 .eq("distance_key", value: test.key)
                 .in("user_id", values: scopeIds)
@@ -197,6 +199,7 @@ final class TestLeaderboardViewModel {
                     rank: index + 1,
                     name: row.author.displayName,
                     club: row.author.club?.name,
+                    clubIsVerified: row.author.club?.isVerified ?? false,
                     // Duration tests (e.g. 30'): the metric is distance covered, unit-aware.
                     // Distance tests (e.g. 2k): the metric is total time taken to finish —
                     // elapsed time, never watts, so this stays formattedDurationMs.

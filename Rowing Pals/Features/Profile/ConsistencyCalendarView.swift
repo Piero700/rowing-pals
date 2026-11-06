@@ -23,6 +23,7 @@ struct ConsistencyCalendarView: View {
                 .textStyle(Typography.meta)
                 .foregroundStyle(Tokens.Ink.secondary)
                 .padding(.bottom, 14)
+                .guidance()
 
             HStack(alignment: .top, spacing: Tokens.Spacing.tight) {
                 VStack(spacing: 4) {
