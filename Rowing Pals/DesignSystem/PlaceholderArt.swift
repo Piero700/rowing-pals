@@ -52,18 +52,12 @@ struct AvatarPlaceholder: View {
     /// over the initials; with no picture, or one this viewer may not see, the initials stay.
     var userId: UUID? = nil
 
-    /// v3 avatar: a circle with a 145° gradient from `recordsSoft` to `raised`, initials in the
+    /// v3 avatar: a solid `raised` circle (no gradients, user 2026-11-06), initials in the
     /// records colour at heavy weight, and a 🔥 streak badge in a card-coloured circle at the
     /// top-right (23 pt at the 41 pt feed size, scaled for other sizes).
     var body: some View {
         Circle()
-            .fill(
-                LinearGradient(
-                    colors: [Tokens.Accent.recordsSoft, Tokens.Surface.raised],
-                    startPoint: UnitPoint(x: 0.15, y: 0.1),
-                    endPoint: UnitPoint(x: 0.85, y: 0.9)
-                )
-            )
+            .fill(Tokens.Surface.raised)
             .overlay {
                 if let initials {
                     Text(initials)

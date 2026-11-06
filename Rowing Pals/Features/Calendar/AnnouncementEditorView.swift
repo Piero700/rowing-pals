@@ -65,7 +65,7 @@ struct AnnouncementEditorView: View {
                     .padding(.horizontal, Tokens.Grouped.rowPadding)
             }
 
-            GroupedSection(footer: "The heading is all rowers see on their Feed until they tap it.") {
+            GroupedSection(hint: "The heading is all rowers see on their Feed until they tap it.") {
                 GroupedTextRow(label: "Heading", placeholder: "Kit order closes Friday", text: $viewModel.heading)
                 GroupedDivider()
                 GroupedNotesRow(placeholder: "The details", text: $viewModel.message, lines: 3...10)
@@ -93,7 +93,7 @@ struct AnnouncementEditorView: View {
             }
 
             if viewModel.isNew {
-                GroupedSection(footer: "Every rower in your club sees it on their Feed.") {
+                GroupedSection(hint: "Every rower in your club sees it on their Feed.") {
                     GroupedToggleRow(label: "Send an alert",
                                      detail: "Rowers also get “New announcement: \(viewModel.heading.isEmpty ? "…" : viewModel.heading)”.",
                                      isOn: $viewModel.sendsAlert)
@@ -104,7 +104,7 @@ struct AnnouncementEditorView: View {
             if let error = viewModel.errorMessage { GroupedError(text: error) }
 
             if !viewModel.isNew {
-                GroupedSection(footer: "Coaches, the owner and co-owners can edit or delete it.") {
+                GroupedSection(hint: "Coaches, the owner and co-owners can edit or delete it.") {
                     GroupedButtonRow(title: "Delete announcement", isDestructive: true, isCentred: true) { isConfirmingDelete = true }
                 }
                 .disabled(viewModel.isSaving)

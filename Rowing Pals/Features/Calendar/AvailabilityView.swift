@@ -178,6 +178,7 @@ struct AvailabilityView: View {
         .buttonStyle(.rpGlass)
         .padding(.top, Tokens.Spacing.group)
         FormFootnote("Only available rowers are offered when you crew the boats.")
+            .guidance()
     }
 
     /// Opens the water session already planned for this practice, or a new one from it.

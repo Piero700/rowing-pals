@@ -57,7 +57,7 @@ struct ChallengeEditorView: View {
 
     private var form: some View {
         VStack(alignment: .leading, spacing: Tokens.Grouped.groupGap) {
-            GroupedSection(footer: viewModel.kind.explanation + " Erg metres on the leaderboards count, as in Rankings.") {
+            GroupedSection(hint: viewModel.kind.explanation + " Erg metres on the leaderboards count, as in Rankings.") {
                 GroupedRow(label: "Kind") {
                     Menu {
                         Picker("Kind", selection: $viewModel.kind) {
@@ -94,7 +94,7 @@ struct ChallengeEditorView: View {
                 squadPicker
             }
 
-            GroupedSection(footer: "Both days count. Every rower in your club is in it; it shows in Rankings and on their Feed while it’s on.") {
+            GroupedSection(hint: "Both days count. Every rower in your club is in it; it shows in Rankings and on their Feed while it’s on.") {
                 GroupedRow(label: "Starts") {
                     DatePicker("Starts", selection: $viewModel.startsOn, displayedComponents: .date)
                         .labelsHidden()
@@ -111,8 +111,9 @@ struct ChallengeEditorView: View {
 
             if viewModel.isNew {
                 GroupedNote(text: "Coaches, the owner, co-owners and admins can set, change and delete challenges.")
+                    .guidance()
             } else {
-                GroupedSection(footer: "Coaches, the owner, co-owners and admins can set, change and delete challenges.") {
+                GroupedSection(hint: "Coaches, the owner, co-owners and admins can set, change and delete challenges.") {
                     GroupedButtonRow(title: "Delete challenge", isDestructive: true, isCentred: true) { isConfirmingDelete = true }
                         .disabled(viewModel.isSaving)
                 }
@@ -131,8 +132,9 @@ struct ChallengeEditorView: View {
 
     private var squadPicker: some View {
         GroupedSection(header: "Squads",
-                       footer: viewModel.squads.isEmpty
-                        ? "Your club has no squads yet. Coaches, the owner and co-owners make them in Squads."
+                       footer: viewModel.squads.isEmpty ? "Your club has no squads yet." : nil,
+                       hint: viewModel.squads.isEmpty
+                        ? "Coaches, the owner and co-owners make them in Squads."
                         : "Ranked on metres per rower, so a bigger squad doesn’t win by size. Someone in two of them counts for both.") {
             ForEach(Array(viewModel.squads.enumerated()), id: \.element.id) { index, squad in
                 if index > 0 { GroupedDivider() }

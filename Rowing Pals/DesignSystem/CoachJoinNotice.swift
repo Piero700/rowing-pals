@@ -68,7 +68,7 @@ struct CoachJoinNotice: View {
                         .frame(minHeight: Tokens.Size.rowCompact)
                         .accessibilityElement(children: .combine)
                         if index < coaches.count - 1 {
-                            Rectangle().fill(Tokens.Surface.line).frame(height: 1)
+                            Rectangle().fill(Tokens.Surface.line).frame(height: Tokens.Grouped.hairline)
                         }
                     }
                 }

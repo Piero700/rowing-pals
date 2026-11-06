@@ -82,6 +82,8 @@ Structure that should survive any redesign:
   rows with the label left and the value right, Save top right, destructive actions as red rows, and an action at the
   foot of a card as a thin `CardLinkRow`. Build new forms and lists from `DesignSystem/GroupedForm.swift` and
   `Tokens.Grouped`, not label-above-box fields or a card per row.
+- **No gradients (decision 100):** solid colours only, for fills, buttons, cards and fades. The one exception is the
+  glass rim in `GlassSurface`, pending the user's decision.
 - **Helper text is marked, not hard-coded (decision 98):** explanatory notes and hints use `.guidance()` (or
   `GuidedText` for an empty state's hint) from `DesignSystem/Guidance.swift`, so they hide after 7 days of use or
   when turned off in Settings. Never mark errors, empty-state facts or anything needed to use a screen.
@@ -165,9 +167,9 @@ After any change:
 
 ## Current focus
 
-**Next: grouped rows across the whole app** (decision 99), on branch `t44-grouped-everywhere`; checklist
-`docs/testing/grouped-rows-everywhere.md`. Sign in, Settings, Clubs and Capture finish after
-`t43-clubs-guidance-selfie` (decision 98) is merged. Earlier:
+**Next: grouped rows and no gradients across the whole app** (decisions 99, 100), with helper text, open clubs and
+the optional selfie (decision 98) merged in, on branch `t44-grouped-everywhere`, waiting on the phone tests in
+`docs/testing/grouped-rows-everywhere.md`. Earlier:
 
 **The coach notepad** (decision 96): phases NP1–NP4 and editing land sessions (decision 97) passed the phone tests
 and are merged into `main` (2026-11-05); general checklist `docs/testing/note-taking.md`. Canvas boards `CoachNotepad…`, `CoachNotebook…` and

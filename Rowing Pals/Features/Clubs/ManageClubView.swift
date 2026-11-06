@@ -31,13 +31,13 @@ struct ManageClubView: View {
                 if let club = viewModel.club, viewModel.myRole.canManageMembers {
                     summary(club)
                     if viewModel.myRole.canEditClub {
-                        Button("Edit club") { navigate(.editClub) }
-                            .buttonStyle(.rpGlass)
-                            .padding(.top, Tokens.Spacing.loose)
-                        // The owner and co-owners look after squads too, coach or not (decision 39).
-                        Button("Squads") { navigate(.squads) }
-                            .buttonStyle(.rpGlass)
-                            .padding(.top, Tokens.Spacing.loose)
+                        GroupedSection {
+                            GroupedNavRow(title: "Edit club") { navigate(.editClub) }
+                            GroupedDivider()
+                            // The owner and co-owners look after squads too, coach or not (decision 39).
+                            GroupedNavRow(title: "Squads") { navigate(.squads) }
+                        }
+                        .padding(.top, Tokens.Spacing.loose)
                     }
                     if let error = viewModel.errorMessage {
                         Text(error)
@@ -258,7 +258,7 @@ struct ManageClubView: View {
                 }
                 .padding(Tokens.Spacing.loose)
                 if index < viewModel.invitations.count - 1 {
-                    Rectangle().fill(Tokens.Surface.line).frame(height: 1)
+                    Rectangle().fill(Tokens.Surface.line).frame(height: Tokens.Grouped.hairline)
                 }
             }
         }
@@ -300,19 +300,18 @@ struct ManageClubView: View {
         VStack(alignment: .leading, spacing: Tokens.Spacing.loose) {
             SectionTitle(viewModel.myRole == .owner ? "Ownership" : "Membership")
             if viewModel.myRole == .owner {
-                Button("Hand over ownership") { isChoosingNewOwner = true }
-                    .buttonStyle(.rpGlass)
-                    .disabled(viewModel.otherMembers.isEmpty)
-                Button("Delete club") { isConfirmingDelete = true }
-                    .buttonStyle(.rpDestructive)
-                Text(viewModel.otherMembers.isEmpty
-                     ? "You're the only member. Delete the club to leave it."
-                     : "To leave, hand the club over to another member or delete it.")
-                    .textStyle(Typography.meta)
-                    .foregroundStyle(Tokens.Ink.secondary)
+                GroupedSection(footer: viewModel.otherMembers.isEmpty
+                               ? "You're the only member. Delete the club to leave it."
+                               : "To leave, hand the club over to another member or delete it.") {
+                    GroupedButtonRow(title: "Hand over ownership") { isChoosingNewOwner = true }
+                        .disabled(viewModel.otherMembers.isEmpty)
+                    GroupedDivider()
+                    GroupedButtonRow(title: "Delete club", isDestructive: true) { isConfirmingDelete = true }
+                }
             } else {
-                Button("Leave club") { isConfirmingLeave = true }
-                    .buttonStyle(.rpDestructive)
+                GroupedSection {
+                    GroupedButtonRow(title: "Leave club", isDestructive: true) { isConfirmingLeave = true }
+                }
             }
         }
     }
@@ -357,7 +356,7 @@ struct ManageClubView: View {
                     HStack(spacing: Tokens.Spacing.gap) { row(person) }
                         .padding(Tokens.Spacing.loose)
                     if index < people.count - 1 {
-                        Rectangle().fill(Tokens.Surface.line).frame(height: 1)
+                        Rectangle().fill(Tokens.Surface.line).frame(height: Tokens.Grouped.hairline)
                     }
                 }
             }

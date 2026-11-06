@@ -93,7 +93,7 @@ struct ErgEventEditorView: View {
                 }
             }
 
-            GroupedSection(footer: "A piece posted during it, or up to six hours after, can count — the rower turns on “Count for \(viewModel.title.isEmpty ? "this event" : viewModel.title)” when posting.") {
+            GroupedSection(hint: "A piece posted during it, or up to six hours after, can count — the rower turns on “Count for \(viewModel.title.isEmpty ? "this event" : viewModel.title)” when posting.") {
                 GroupedRow(label: "Starts") {
                     DatePicker("Starts", selection: $viewModel.startsAt, displayedComponents: [.date, .hourAndMinute])
                         .labelsHidden()
@@ -110,8 +110,9 @@ struct ErgEventEditorView: View {
 
             if viewModel.isNew {
                 GroupedNote(text: "Every rower in your club sees it in Rankings, and on their Feed on the day.")
+                    .guidance()
             } else {
-                GroupedSection(footer: "Every rower in your club sees it in Rankings, and on their Feed on the day.") {
+                GroupedSection(hint: "Every rower in your club sees it in Rankings, and on their Feed on the day.") {
                     GroupedButtonRow(title: "Delete event", isDestructive: true, isCentred: true) { isConfirmingDelete = true }
                         .disabled(viewModel.isSaving)
                 }

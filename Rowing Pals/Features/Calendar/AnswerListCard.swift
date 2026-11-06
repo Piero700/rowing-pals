@@ -51,12 +51,12 @@ struct AnswerListCard: View {
                 VStack(spacing: 0) {
                     ForEach(Array(shown.enumerated()), id: \.element.id) { index, person in
                         if index > 0 {
-                            Rectangle().fill(Tokens.Surface.line).frame(height: 1)
+                            Rectangle().fill(Tokens.Surface.line).frame(height: Tokens.Grouped.hairline)
                         }
                         personRow(person)
                     }
                     if hidden > 0 {
-                        Rectangle().fill(Tokens.Surface.line).frame(height: 1)
+                        Rectangle().fill(Tokens.Surface.line).frame(height: Tokens.Grouped.hairline)
                         Button("and \(hidden) more") { isShowingAll = true }
                             .buttonStyle(.rpText)
                             .tabularNumerals()

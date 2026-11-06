@@ -49,6 +49,7 @@ struct AttendanceTotalsView: View {
                 if viewModel.range == nil && viewModel.hasLoaded {
                     FormFootnote("Set this term’s dates with Edit dates, or choose 4 weeks or Custom.")
                         .padding(.top, Tokens.Spacing.loose)
+                        .guidance()
                 } else if viewModel.hasLoaded {
                     FormSectionTitle("By squad")
                     if viewModel.squadLines.isEmpty {
@@ -73,6 +74,7 @@ struct AttendanceTotalsView: View {
 
                     FormFootnote("Present and Late count as attended. Excused practices are left out of the total.")
                         .padding(.top, Tokens.Spacing.tight)
+                        .guidance()
                 } else {
                     ProgressView()
                         .frame(maxWidth: .infinity)
@@ -126,7 +128,7 @@ struct AttendanceTotalsView: View {
         VStack(spacing: 0) {
             ForEach(Array(lines.enumerated()), id: \.element.id) { index, line in
                 if index > 0 {
-                    Rectangle().fill(Tokens.Surface.line).frame(height: 1)
+                    Rectangle().fill(Tokens.Surface.line).frame(height: Tokens.Grouped.hairline)
                 }
                 let row = HStack(spacing: Tokens.Spacing.loose) {
                     VStack(alignment: .leading, spacing: 2) {

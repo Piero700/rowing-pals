@@ -147,7 +147,7 @@ struct SquadEditView: View {
                     .accessibilityElement(children: .combine)
                     .accessibilityAddTraits(isOn ? .isSelected : [])
                     if index < viewModel.rowers.count - 1 {
-                        Rectangle().fill(Tokens.Surface.line).frame(height: 1)
+                        Rectangle().fill(Tokens.Surface.line).frame(height: Tokens.Grouped.hairline)
                     }
                 }
             }

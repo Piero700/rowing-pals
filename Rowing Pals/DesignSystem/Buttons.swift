@@ -41,24 +41,11 @@ struct PrimaryButtonStyle: ButtonStyle {
             .padding(.horizontal, Tokens.Spacing.card)
             .background {
                 if isEnabled {
-                    buttonShape.fill(
-                        LinearGradient(
-                            colors: [Tokens.Accent.brand.mix(with: .white, by: 0.08), Tokens.Accent.brand],
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
-                    )
+                    buttonShape.fill(Tokens.Accent.brand)
                 } else {
                     // Solid when disabled — a faded button lets content show through it.
                     buttonShape.fill(Tokens.Surface.raised)
                 }
-            }
-            .overlay {
-                buttonShape.inset(by: Tokens.Grouped.hairline).strokeBorder(
-                    LinearGradient(colors: [Color.white.opacity(0.35), .clear], startPoint: .top, endPoint: .center),
-                    lineWidth: Tokens.Grouped.hairline
-                )
-                .allowsHitTesting(false)
             }
             .contentShape(buttonShape)
             .modifier(PressEffect(isPressed: configuration.isPressed))

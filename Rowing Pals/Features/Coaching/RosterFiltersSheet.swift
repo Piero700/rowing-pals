@@ -66,7 +66,7 @@ struct RosterFiltersSheet: View {
                     VStack(spacing: 0) {
                         choiceRow(name: "All squads", detail: Self.rowers(rowerCount), isSelected: squad == nil) { squad = nil }
                         ForEach(squads) { item in
-                            Rectangle().fill(Tokens.Surface.line).frame(height: 1)
+                            Rectangle().fill(Tokens.Surface.line).frame(height: Tokens.Grouped.hairline)
                             choiceRow(name: item.name, detail: Self.rowers(item.memberIds.count), isSelected: squad == item.id) { squad = item.id }
                         }
                     }
@@ -78,7 +78,7 @@ struct RosterFiltersSheet: View {
                         .padding(.top, Tokens.Spacing.group)
                     VStack(spacing: 0) {
                         ForEach(Array(RosterSort.allCases.enumerated()), id: \.element) { index, option in
-                            if index > 0 { Rectangle().fill(Tokens.Surface.line).frame(height: 1) }
+                            if index > 0 { Rectangle().fill(Tokens.Surface.line).frame(height: Tokens.Grouped.hairline) }
                             choiceRow(name: option.label, detail: option.detail, isSelected: sort == option) { sort = option }
                         }
                     }

@@ -9,7 +9,6 @@ import SwiftUI
 /// distance or a time, with reps, rest, target rate and target split"), in the compact grouped-rows
 /// style (user, 2026-11-05): what the piece is, then its optional targets.
 struct PieceEditorSheet: View {
-    @Environment(\.showsGuidance) private var showsGuidance
     let original: WorkoutPiece?
     let onSave: (WorkoutPiece) -> Void
     let onDelete: (() -> Void)?
@@ -101,10 +100,7 @@ struct PieceEditorSheet: View {
 
                     GroupedSection(
                         header: "Targets · optional",
-                        // Helper text (decision 98): the footer goes once helper text is off.
-                        footer: showsGuidance
-                            ? "Split on Auto: each rower gets their own target from the Pace Engine, for this zone and distance."
-                            : nil
+                        hint: "Split on Auto: each rower gets their own target from the Pace Engine, for this zone and distance."
                     ) {
                         GroupedRow(label: "Rest") {
                             timeField("None", text: $restText, field: .rest, isInvalid: restProblem != nil)

@@ -49,7 +49,7 @@ struct RegisterView: View {
                         VStack(spacing: 0) {
                             ForEach(Array(viewModel.rows.enumerated()), id: \.element.id) { index, row in
                                 if index > 0 {
-                                    Rectangle().fill(Tokens.Surface.line).frame(height: 1)
+                                    Rectangle().fill(Tokens.Surface.line).frame(height: Tokens.Grouped.hairline)
                                 }
                                 rowView(row)
                             }

@@ -53,7 +53,7 @@ struct SquadsView: View {
                             .asButton { navigate(.squadEdit(squad.id)) }
                             .accessibilityElement(children: .combine)
                             if index < viewModel.squads.count - 1 {
-                                Rectangle().fill(Tokens.Surface.line).frame(height: 1)
+                                Rectangle().fill(Tokens.Surface.line).frame(height: Tokens.Grouped.hairline)
                             }
                         }
                     }

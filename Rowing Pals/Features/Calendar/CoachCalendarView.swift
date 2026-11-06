@@ -341,7 +341,7 @@ struct CoachCalendarView: View {
         VStack(spacing: 0) {
             ForEach(Array(challenges.items.enumerated()), id: \.element.id) { index, item in
                 if index > 0 {
-                    Rectangle().fill(Tokens.Surface.line).frame(height: 1)
+                    Rectangle().fill(Tokens.Surface.line).frame(height: Tokens.Grouped.hairline)
                 }
                 challengeRow(item)
             }
@@ -427,7 +427,7 @@ struct CoachCalendarView: View {
         VStack(spacing: 0) {
             ForEach(Array(viewModel.announcements.enumerated()), id: \.element.id) { index, announcement in
                 if index > 0 {
-                    Rectangle().fill(Tokens.Surface.line).frame(height: 1)
+                    Rectangle().fill(Tokens.Surface.line).frame(height: Tokens.Grouped.hairline)
                 }
                 announcementRow(announcement)
             }
@@ -506,8 +506,12 @@ struct CoachCalendarView: View {
                     .foregroundStyle(Tokens.Ink.secondary)
             }
             .padding(Tokens.Spacing.card)
-            .background(Self.cardShape.fill(LinearGradient(colors: [Tokens.Accent.brandSoft, Tokens.Surface.card],
-                                                          startPoint: .topLeading, endPoint: .bottomTrailing)))
+            .background {
+            ZStack {
+                Self.cardShape.fill(Tokens.Surface.card)
+                Self.cardShape.fill(Tokens.Accent.brandSoft)
+            }
+        }
             .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
             .contentShape(Self.cardShape)
         }

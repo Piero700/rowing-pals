@@ -49,7 +49,7 @@ struct InviteRowerView: View {
                         ForEach(Array(candidates.enumerated()), id: \.element.id) { index, person in
                             row(person)
                             if index < candidates.count - 1 {
-                                Rectangle().fill(Tokens.Surface.line).frame(height: 1)
+                                Rectangle().fill(Tokens.Surface.line).frame(height: Tokens.Grouped.hairline)
                             }
                         }
                     }

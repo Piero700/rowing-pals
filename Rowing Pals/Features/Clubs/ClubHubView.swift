@@ -102,9 +102,10 @@ struct ClubHubView: View {
             .padding(.top, 6)
 
         if membership.role.canManageMembers {
-            Button("Manage club") { navigate(.manageClub) }
-                .buttonStyle(.rpGlass)
-                .padding(.top, Tokens.Spacing.loose)
+            GroupedSection {
+                GroupedNavRow(title: "Manage club") { navigate(.manageClub) }
+            }
+            .padding(.top, Tokens.Spacing.loose)
         }
 
         if !coaches.isEmpty {
@@ -132,13 +133,13 @@ struct ClubHubView: View {
                     .foregroundStyle(Tokens.Ink.secondary)
                     .guidance()
             } else {
-                Button("Leave club") { isConfirmingLeave = true }
-                    .buttonStyle(.rpDestructive)
                 // Anyone can start their own club (decision 98), in a club or not; creating one
                 // moves you into it as its owner.
-                Button("Create your own club") { navigate(.createClub) }
-                    .buttonStyle(.rpGlass)
-                    .padding(.top, Tokens.Spacing.tight)
+                GroupedSection {
+                    GroupedNavRow(title: "Create your own club") { navigate(.createClub) }
+                    GroupedDivider()
+                    GroupedButtonRow(title: "Leave club", isDestructive: true) { isConfirmingLeave = true }
+                }
             }
         }
         .padding(.top, Tokens.Spacing.sectionTop)
@@ -255,7 +256,7 @@ struct ClubHubView: View {
                 .asButton { navigate(person.id == viewModel.myId && !person.isRower ? .coachProfile : .profile(person.id)) }
                 .accessibilityElement(children: .combine)
                 if index < people.count - 1 {
-                    Rectangle().fill(Tokens.Surface.line).frame(height: 1)
+                    Rectangle().fill(Tokens.Surface.line).frame(height: Tokens.Grouped.hairline)
                 }
             }
         }
@@ -376,7 +377,7 @@ struct ClubHubView: View {
                     }
                     .padding(Tokens.Spacing.loose)
                     if index < clubs.count - 1 {
-                        Rectangle().fill(Tokens.Surface.line).frame(height: 1)
+                        Rectangle().fill(Tokens.Surface.line).frame(height: Tokens.Grouped.hairline)
                     }
                 }
             }

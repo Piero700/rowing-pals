@@ -16,7 +16,6 @@ struct CalendarAddSheet: View {
     /// The options' own height, so the sheet shows all four without scrolling.
     @State private var contentHeight: CGFloat = 480
 
-    private static let rowShape = RoundedRectangle(cornerRadius: Tokens.Radius.panel, style: .continuous)
 
     var body: some View {
         VStack(alignment: .leading, spacing: Tokens.Spacing.tight) {
@@ -30,13 +29,19 @@ struct CalendarAddSheet: View {
                     .buttonStyle(.rpText)
             }
             .padding(.bottom, 4)
-            option(.calendar, "Practice", "A time and place for squads. Can repeat every week, and rowers say if they can come.",
-                   .newPractice(day))
-            option(.stopwatch, "Land session", "An erg workout with pieces and target splits.", .newWorkoutOn(day))
-            option(.boat, "Water session", "The plan, then crew the boats from who’s available.",
-                   .newWaterSession(WaterSessionSeed(day: day)))
-            option(.flag, "Race or regatta", "Rowers say if they can race. Crew the boats when you know.", .newEvent(.race, day))
-            option(.clock, "Other event", "A meeting, social or kit day. Shows in everyone’s calendar.", .newEvent(.event, day))
+            GroupedSection {
+                option(.calendar, "Practice", "A time and place for squads. Can repeat every week, and rowers say if they can come.",
+                       .newPractice(day))
+                GroupedDivider()
+                option(.stopwatch, "Land session", "An erg workout with pieces and target splits.", .newWorkoutOn(day))
+                GroupedDivider()
+                option(.boat, "Water session", "The plan, then crew the boats from who’s available.",
+                       .newWaterSession(WaterSessionSeed(day: day)))
+                GroupedDivider()
+                option(.flag, "Race or regatta", "Rowers say if they can race. Crew the boats when you know.", .newEvent(.race, day))
+                GroupedDivider()
+                option(.clock, "Other event", "A meeting, social or kit day. Shows in everyone’s calendar.", .newEvent(.event, day))
+            }
         }
         .padding(.horizontal, Tokens.Spacing.screen)
         .padding(.top, Tokens.Spacing.group)
@@ -56,7 +61,7 @@ struct CalendarAddSheet: View {
                 RPIconView(icon: symbol, size: Tokens.Icon.large)
                     .textStyle(Typography.cardTitle)
                     .foregroundStyle(Tokens.Accent.brand)
-                    .frame(width: Tokens.Schedule.iconTile, height: Tokens.Schedule.iconTile)
+                    .frame(width: Tokens.Size.rowIcon, height: Tokens.Size.rowIcon)
                     .background(RoundedRectangle(cornerRadius: Tokens.Schedule.iconTileRadius, style: .continuous).fill(Tokens.Accent.brandSoft))
                 VStack(alignment: .leading, spacing: 2) {
                     Text(title)
@@ -66,16 +71,17 @@ struct CalendarAddSheet: View {
                         .textStyle(Typography.statLabel)
                         .foregroundStyle(Tokens.Ink.secondary)
                         .multilineTextAlignment(.leading)
+                        .guidance()
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 RPIconView(icon: .chevronRight, size: Tokens.Icon.small)
                     .textStyle(Typography.pill)
                     .foregroundStyle(Tokens.Ink.secondary)
             }
-            .padding(Tokens.Spacing.loose)
-            .background(Self.rowShape.fill(Tokens.Surface.card))
-            .overlay { Self.rowShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
-            .contentShape(Self.rowShape)
+            .padding(.horizontal, Tokens.Grouped.rowPadding)
+            .padding(.vertical, Tokens.Spacing.tight)
+            .frame(minHeight: Tokens.Grouped.rowHeight)
+            .contentShape(Rectangle())
         }
         .buttonStyle(IconPressStyle())
     }

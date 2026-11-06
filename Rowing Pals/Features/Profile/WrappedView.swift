@@ -108,7 +108,7 @@ struct WrappedView: View {
                 Button("Cancel") { isChoosingDates = false }
                     .buttonStyle(.rpText)
             }
-            GroupedSection(footer: "Up to a year. Both days count.") {
+            GroupedSection(hint: "Up to a year. Both days count.") {
                 GroupedRow(label: "From") {
                     DatePicker("From", selection: $viewModel.customStart, in: ...Date(), displayedComponents: .date)
                         .labelsHidden()

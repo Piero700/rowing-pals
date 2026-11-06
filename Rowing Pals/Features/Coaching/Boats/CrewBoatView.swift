@@ -90,21 +90,24 @@ struct CrewBoatView: View {
             FormFootnote(viewModel.rigging == .custom
                 ? "Custom: tap ⇄ beside an oar to put it on the other side — for a bucket rig or any staggered setup."
                 : "Stroke-rigged: the stroke’s oar is on stroke side, then the seats alternate. Bow-rigged is the other way round.")
+                .guidance()
         }
 
         FormLabel("Colour").padding(.top, Tokens.Spacing.card)
         colourRow
         FormFootnote("Colour a boat to pick it out at a glance. Its crew see it on their Feed too.")
+            .guidance()
 
         FormSectionTitle("Crew")
         crewCard
         FormFootnote("Tap a seat, then a rower. Hold and drag a rower to swap seats. Rowers set their side in their profile.")
+            .guidance()
 
         picker
 
         if viewModel.isSessionBoat {
             GroupedSection {
-                GroupedToggleRow(label: "Keep in Saved boats", detail: "Add this crew to later sessions in a tap.", isOn: $viewModel.keepSaved)
+                GroupedToggleRow(label: "Keep in Saved boats", hint: "Add this crew to later sessions in a tap.", isOn: $viewModel.keepSaved)
             }
             .padding(.top, Tokens.Spacing.group)
         }
@@ -394,7 +397,7 @@ struct CrewBoatView: View {
                             .contentShape(Rectangle())
                     }
                     .buttonStyle(IconPressStyle())
-                    if !candidates.isEmpty { Rectangle().fill(Tokens.Surface.line).frame(height: 1) }
+                    if !candidates.isEmpty { Rectangle().fill(Tokens.Surface.line).frame(height: Tokens.Grouped.hairline) }
                 }
                 if candidates.isEmpty {
                     Text("Nobody to offer yet: rowers appear here once they say they can make it.")
@@ -404,7 +407,7 @@ struct CrewBoatView: View {
                         .padding(Tokens.Spacing.card)
                 }
                 ForEach(Array(candidates.enumerated()), id: \.element.id) { index, candidate in
-                    if index > 0 { Rectangle().fill(Tokens.Surface.line).frame(height: 1) }
+                    if index > 0 { Rectangle().fill(Tokens.Surface.line).frame(height: Tokens.Grouped.hairline) }
                     candidateRow(candidate)
                 }
             }

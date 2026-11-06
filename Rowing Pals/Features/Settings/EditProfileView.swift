@@ -38,44 +38,52 @@ struct EditProfileView: View {
                 photo
                     .frame(maxWidth: .infinity)
 
-                sectionTitle("Name")
-                    .padding(.top, Tokens.Spacing.screen)
-                TextField("Your name", text: $viewModel.displayName)
-                    .textStyle(Typography.bodyV3)
-                    .focused($focusedField, equals: .name)
-                    .padding(.horizontal, Tokens.Spacing.card)
-                    .frame(minHeight: Tokens.Size.input)
-                    .background(field.fill(Tokens.Surface.card))
-                    .overlay { field.strokeBorder(Tokens.Surface.line, lineWidth: Tokens.Grouped.hairline) }
-
-                // Shown as @username; you can sign in with it (decision 85).
-                sectionTitle("Username")
-                    .padding(.top, Tokens.Spacing.screen)
-                HStack(spacing: 2) {
-                    Text("@")
-                        .textStyle(Typography.bodyV3)
-                        .foregroundStyle(Tokens.Ink.secondary)
-                    TextField("username", text: $viewModel.username)
-                        .textStyle(Typography.bodyV3)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
-                        .textContentType(.username)
+                GroupedSection {
+                    GroupedRow(label: "Name") {
+                        TextField("Your name", text: $viewModel.displayName)
+                            .textStyle(Typography.detail)
+                            .multilineTextAlignment(.trailing)
+                            .focused($focusedField, equals: .name)
+                    }
+                    GroupedDivider()
+                    // Shown as @username; you can sign in with it (decision 85).
+                    GroupedRow(label: "Username") {
+                        HStack(spacing: 2) {
+                            Spacer(minLength: 0)
+                            Text("@")
+                                .textStyle(Typography.detail)
+                                .foregroundStyle(Tokens.Ink.secondary)
+                            // As wide as what's typed, so "@" stays beside it, against the right edge.
+                            Text(viewModel.username.isEmpty ? "username" : viewModel.username)
+                                .textStyle(Typography.detail)
+                                .hidden()
+                                .overlay {
+                                    TextField("username", text: $viewModel.username)
+                                        .textStyle(Typography.detail)
+                                        .textInputAutocapitalization(.never)
+                                        .autocorrectionDisabled()
+                                        .textContentType(.username)
+                                }
+                        }
+                    }
+                    .task(id: viewModel.username) {
+                        try? await Task.sleep(for: .milliseconds(400))
+                        guard !Task.isCancelled else { return }
+                        await viewModel.checkUsername()
+                    }
                 }
-                .padding(.horizontal, Tokens.Spacing.card)
-                .frame(minHeight: Tokens.Size.input)
-                .background(field.fill(Tokens.Surface.card))
-                .overlay { field.strokeBorder(Tokens.Surface.line, lineWidth: Tokens.Grouped.hairline) }
-                .task(id: viewModel.username) {
-                    try? await Task.sleep(for: .milliseconds(400))
-                    guard !Task.isCancelled else { return }
-                    await viewModel.checkUsername()
+                .padding(.top, Tokens.Spacing.loose)
+                if let note = viewModel.usernameNote {
+                    Text(note)
+                        .textStyle(Typography.statLabel)
+                        .foregroundStyle(viewModel.usernameIsFree ? Tokens.Accent.success : Tokens.System.error)
+                        .padding(.horizontal, Tokens.Grouped.rowPadding)
+                        .padding(.top, Tokens.Grouped.headerGap)
+                } else {
+                    GroupedNote(text: "People can find you by it, and you can sign in with it instead of your email.")
+                        .padding(.top, Tokens.Grouped.headerGap)
+                        .guidance()
                 }
-                Text(viewModel.usernameNote ?? "People can find you by it, and you can sign in with it instead of your email.")
-                    .textStyle(Typography.meta)
-                    .foregroundStyle(viewModel.usernameNote == nil ? Tokens.Ink.secondary
-                                     : (viewModel.usernameIsFree ? Tokens.Accent.success : Tokens.System.error))
-                    .padding(.horizontal, 4)
-                    .padding(.top, 6)
 
                 SettingsGroup(title: "Account type") {
                     stackedRow(title: "How you use Rowing Pals", subtitle: nil) {
@@ -97,14 +105,14 @@ struct EditProfileView: View {
                                 set: { viewModel.gender = $0 == 1 ? .female : .male }
                             ), compact: true)
                         }
-                        Rectangle().fill(Tokens.Surface.line).frame(height: 1)
+                        Rectangle().fill(Tokens.Surface.line).frame(height: Tokens.Grouped.hairline)
                         stackedRow(title: "Level", subtitle: "Novice means you’re in your first season.") {
                             PillSegmentedControl(options: ["Novice", "Senior"], selection: Binding(
                                 get: { viewModel.category == .senior ? 1 : 0 },
                                 set: { viewModel.category = $0 == 1 ? .senior : .novice }
                             ), compact: true)
                         }
-                        Rectangle().fill(Tokens.Surface.line).frame(height: 1)
+                        Rectangle().fill(Tokens.Surface.line).frame(height: Tokens.Grouped.hairline)
                         // Decision 67: coaches see it when they seat the rower in a boat.
                         stackedRow(title: "Side", subtitle: "The side you row on in sweep boats, or Cox if you cox. Your coach sees it when seating you.") {
                             PillSegmentedControl(options: RowingSide.allCases.map(\.label), selection: Binding(
@@ -118,34 +126,28 @@ struct EditProfileView: View {
                 // Date of birth, bodyweight and a weekly target only mean something for someone who
                 // rows; a coach-only account isn't asked (user, 2026-10-16).
                 if viewModel.isRower {
-                    sectionTitle("About you")
-                        .padding(.top, Tokens.Spacing.group)
-                    HStack(spacing: Tokens.Spacing.loose) {
-                        birthDateField
-                        weightField
+                    GroupedSection(header: "About you",
+                                   hint: "Visible to you and your club’s coaches. Bodyweight is used for watts per kilo. Any logged session counts towards your weekly target.") {
+                        GroupedRow(label: "Date of birth") { birthDateField }
+                        GroupedDivider()
+                        GroupedRow(label: "Weight") { weightField }
+                        GroupedDivider()
+                        GroupedRow(label: "Weekly target") {
+                            TextField("0", text: $viewModel.weeklyTargetText)
+                                .keyboardType(.decimalPad)
+                                .focused($focusedField, equals: .target)
+                                .multilineTextAlignment(.trailing)
+                                .textStyle(Typography.detail)
+                                .tabularNumerals()
+                            Text("km")
+                                .textStyle(Typography.detail)
+                                .foregroundStyle(Tokens.Ink.secondary)
+                        }
                     }
-                    footnote("Visible to you and your club’s coaches. Bodyweight is used for watts per kilo.")
+                    .padding(.top, Tokens.Spacing.group)
                     if let weightProblem = viewModel.weightProblem {
                         problem(weightProblem)
                     }
-
-                    sectionTitle("Weekly target")
-                        .padding(.top, Tokens.Spacing.group)
-                    HStack(spacing: Tokens.Spacing.tight) {
-                        TextField("0", text: $viewModel.weeklyTargetText)
-                            .keyboardType(.decimalPad)
-                            .focused($focusedField, equals: .target)
-                            .textStyle(Typography.bodyV3)
-                            .tabularNumerals()
-                        Text("km")
-                            .textStyle(Typography.detail)
-                            .foregroundStyle(Tokens.Ink.secondary)
-                    }
-                    .padding(.horizontal, Tokens.Spacing.card)
-                    .frame(minHeight: Tokens.Size.input)
-                    .background(field.fill(Tokens.Surface.card))
-                    .overlay { field.strokeBorder(Tokens.Surface.line, lineWidth: Tokens.Grouped.hairline) }
-                    footnote("Your weekly volume goal. Any logged session counts towards it.")
                     if let targetProblem = viewModel.weeklyTargetProblem {
                         problem(targetProblem)
                     }
@@ -154,30 +156,23 @@ struct EditProfileView: View {
                 if let saveError = viewModel.saveError {
                     problem(saveError)
                 }
-
-                Button {
-                    focusedField = nil
-                    Task {
-                        await viewModel.save()
-                        if viewModel.saveError == nil { dismiss() }
-                    }
-                } label: {
-                    if viewModel.isSaving {
-                        ProgressView().tint(Tokens.Ink.onBrand)
-                    } else {
-                        Text("Save")
-                    }
-                }
-                .buttonStyle(.rpPrimary)
-                .disabled(!viewModel.hasUnsavedChanges || viewModel.isSaving)
-                .padding(.top, Tokens.Spacing.group)
             }
             .padding(.horizontal, Tokens.Spacing.screen)
             .padding(.top, 4)
             .padding(.bottom, 40)
         }
         .scrollIndicators(.hidden)
-        .safeAreaInset(edge: .top, spacing: 0) { ScreenHeader(title: "Edit profile") { dismiss() } }
+        .safeAreaInset(edge: .top, spacing: 0) {
+            ScreenHeader(title: "Edit profile", onBack: { dismiss() }) {
+                HeaderSaveButton(title: "Save", isSaving: viewModel.isSaving, isDisabled: !viewModel.hasUnsavedChanges) {
+                    focusedField = nil
+                    Task {
+                        await viewModel.save()
+                        if viewModel.saveError == nil { dismiss() }
+                    }
+                }
+            }
+        }
         .background(Tokens.Base.ground)
         .toolbar(.hidden, for: .navigationBar)
         .dismissesKeyboardOnTap()
@@ -242,43 +237,36 @@ struct EditProfileView: View {
                     displayedComponents: .date
                 )
                 .labelsHidden()
-                Spacer(minLength: 0)
                 Button {
                     viewModel.birthDate = nil
                 } label: {
-                    RPIconView(icon: .clear)
-                        .foregroundStyle(Tokens.Ink.secondary)
-                        .frame(width: Tokens.Size.minTap, height: Tokens.Size.minTap)
+                    RPIconView(icon: .clear, size: Tokens.Icon.small)
+                        .foregroundStyle(Tokens.Ink.faint)
+                        .frame(width: Tokens.Size.iconButton, height: Tokens.Size.minTap)
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(IconPressStyle())
                 .accessibilityLabel("Remove date of birth")
             } else {
-                Button("Date of birth") { viewModel.birthDate = Self.suggestedBirthDate }
-                    .buttonStyle(.rpText)
-                Spacer(minLength: 0)
+                Button("Add") { viewModel.birthDate = Self.suggestedBirthDate }
+                    .textStyle(Typography.detail)
+                    .foregroundStyle(Tokens.Accent.brand)
             }
         }
-        .padding(.leading, Tokens.Spacing.card)
-        .frame(maxWidth: .infinity, minHeight: Tokens.Size.input)
-        .background(field.fill(Tokens.Surface.card))
-        .overlay { field.strokeBorder(Tokens.Surface.line, lineWidth: Tokens.Grouped.hairline) }
     }
 
     private var weightField: some View {
         HStack(spacing: Tokens.Spacing.tight) {
-            TextField("Weight", text: $viewModel.weightText)
+            TextField("0", text: $viewModel.weightText)
                 .keyboardType(.decimalPad)
                 .focused($focusedField, equals: .weight)
-                .textStyle(Typography.bodyV3)
+                .multilineTextAlignment(.trailing)
+                .textStyle(Typography.detail)
                 .tabularNumerals()
             Text("kg")
                 .textStyle(Typography.detail)
                 .foregroundStyle(Tokens.Ink.secondary)
         }
-        .padding(.horizontal, Tokens.Spacing.card)
-        .frame(maxWidth: .infinity, minHeight: Tokens.Size.input)
-        .background(field.fill(Tokens.Surface.card))
-        .overlay { field.strokeBorder(Tokens.Surface.line, lineWidth: Tokens.Grouped.hairline) }
     }
 
     /// Born 1900 or later, and at least 5 years old (the engine's own range).
@@ -295,28 +283,6 @@ struct EditProfileView: View {
     }
 
     // MARK: - Building blocks
-
-    private var field: RoundedRectangle {
-        RoundedRectangle(cornerRadius: Tokens.Radius.input, style: .continuous)
-    }
-
-    private func sectionTitle(_ text: String) -> some View {
-        Text(text)
-            .textStyle(Typography.sectionTitle)
-            .foregroundStyle(Tokens.Ink.secondary)
-            .padding(.horizontal, 4)
-            .padding(.bottom, Tokens.Spacing.tight)
-            .accessibilityAddTraits(.isHeader)
-    }
-
-    private func footnote(_ text: String) -> some View {
-        Text(text)
-            .textStyle(Typography.meta)
-            .foregroundStyle(Tokens.Ink.secondary)
-            .padding(.horizontal, 4)
-            .padding(.top, Tokens.Spacing.tight)
-            .fixedSize(horizontal: false, vertical: true)
-    }
 
     private func problem(_ text: String) -> some View {
         Text(text)

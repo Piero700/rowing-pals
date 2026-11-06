@@ -206,7 +206,7 @@ struct PredictionDetailView: View {
                 .padding(.horizontal, Tokens.Spacing.card)
                 .padding(.vertical, Tokens.Spacing.loose)
                 if index < lines.count - 1 {
-                    Rectangle().fill(Tokens.Surface.line).frame(height: 1)
+                    Rectangle().fill(Tokens.Surface.line).frame(height: Tokens.Grouped.hairline)
                 }
             }
         }

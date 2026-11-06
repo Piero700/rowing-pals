@@ -92,7 +92,7 @@ struct CrewTagPicker: View {
                             .padding(Tokens.Spacing.card)
                     }
                     ForEach(Array(shown.enumerated()), id: \.element.id) { index, person in
-                        if index > 0 { Rectangle().fill(Tokens.Surface.line).frame(height: 1) }
+                        if index > 0 { Rectangle().fill(Tokens.Surface.line).frame(height: Tokens.Grouped.hairline) }
                         row(person)
                     }
                 }

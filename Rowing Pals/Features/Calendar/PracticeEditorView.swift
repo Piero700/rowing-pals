@@ -116,7 +116,7 @@ struct PracticeEditorView: View {
             }
             .groupedFooter(viewModel.isSeries
                 ? "When you save, choose this practice only or the rest of the series. The day can only change for one practice at a time."
-                : nil)
+                : nil, isHint: true)
 
             GroupedSection(header: "Squads") {
                 GroupedChipsRow {
@@ -132,7 +132,7 @@ struct PracticeEditorView: View {
             GroupedSection(footer: viewModel.isNew
                 ? "\(viewModel.audienceCount) rower\(viewModel.audienceCount == 1 ? " is" : "s are") notified. Editing or cancelling this practice or its series notifies them again."
                 : "Everyone it’s for is notified when you save or cancel it.") {
-                GroupedToggleRow(label: "Remind rowers", detail: "2 hours before. Rowers can turn this off in Settings.",
+                GroupedToggleRow(label: "Remind rowers", hint: "2 hours before. Rowers can turn this off in Settings.",
                                  isOn: $viewModel.remind)
             }
 

@@ -222,7 +222,7 @@ struct CoachRowerView: View {
                             navigate(.pbHistory(StandardTest(key: test.key, label: test.label, target: target), detail.rower.id))
                         }
                     if index < detail.tests.count - 1 {
-                        Rectangle().fill(Tokens.Surface.line).frame(height: 1)
+                        Rectangle().fill(Tokens.Surface.line).frame(height: Tokens.Grouped.hairline)
                     }
                 }
             }

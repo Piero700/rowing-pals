@@ -27,11 +27,8 @@ struct TermsEditorView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: Tokens.Grouped.groupGap) {
-                Text("Attendance’s This term counts from the first day of the term holding today. Swipe a term left to delete it.")
-                    .textStyle(Typography.statLabel)
-                    .foregroundStyle(Tokens.Ink.secondary)
-                    .padding(.horizontal, Tokens.Grouped.rowPadding)
-                    .fixedSize(horizontal: false, vertical: true)
+                GroupedNote(text: "Attendance’s This term counts from the first day of the term holding today. Swipe a term left to delete it.")
+                    .guidance()
                 ForEach($drafts) { $draft in
                     let id = draft.id
                     termCard($draft)

@@ -101,7 +101,7 @@ struct PeopleListView: View {
             ForEach(Array(viewModel.people.enumerated()), id: \.element.id) { index, person in
                 row(person)
                 if index < viewModel.people.count - 1 {
-                    Rectangle().fill(Tokens.Surface.line).frame(height: 1)
+                    Rectangle().fill(Tokens.Surface.line).frame(height: Tokens.Grouped.hairline)
                 }
             }
         }

@@ -10,7 +10,10 @@ import SwiftUI
 /// left and values on the right. First used on setting a land session.
 struct GroupedSection<Content: View>: View {
     var header: String?
+    /// A fact under the group, always shown ("9 rowers get…").
     var footer: String?
+    /// An explanation under the group: helper text, which goes with the Settings switch (decision 98).
+    var hint: String?
     @ViewBuilder var content: () -> Content
 
     private static var shape: RoundedRectangle {
@@ -37,6 +40,9 @@ struct GroupedSection<Content: View>: View {
                     .foregroundStyle(Tokens.Ink.secondary)
                     .padding(.horizontal, Tokens.Grouped.rowPadding)
                     .fixedSize(horizontal: false, vertical: true)
+            }
+            if let hint {
+                GroupedNote(text: hint).guidance()
             }
         }
     }
@@ -133,6 +139,8 @@ struct GroupedNotesRow: View {
 struct GroupedToggleRow: View {
     let label: String
     var detail: String?
+    /// A line under the label that only explains: helper text (decision 98).
+    var hint: String?
     @Binding var isOn: Bool
 
     var body: some View {
@@ -148,6 +156,14 @@ struct GroupedToggleRow: View {
                         .foregroundStyle(Tokens.Ink.secondary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
+                if let hint {
+                    Text(hint)
+                        .textStyle(Typography.statLabel)
+                        .tabularNumerals()
+                        .foregroundStyle(Tokens.Ink.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .guidance()
+                }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             Toggle(label, isOn: $isOn)
@@ -155,7 +171,7 @@ struct GroupedToggleRow: View {
                 .tint(Tokens.Accent.brand)
         }
         .padding(.horizontal, Tokens.Grouped.rowPadding)
-        .padding(.vertical, detail == nil ? 0 : Tokens.Spacing.tight)
+        .padding(.vertical, detail == nil && hint == nil ? 0 : Tokens.Spacing.tight)
         .frame(minHeight: Tokens.Grouped.rowHeight)
     }
 }
@@ -226,16 +242,15 @@ struct GroupedError: View {
 extension View {
     /// A grey note under a group, for a footer that only sometimes shows.
     @ViewBuilder
-    func groupedFooter(_ text: String?) -> some View {
+    func groupedFooter(_ text: String?, isHint: Bool = false) -> some View {
         if let text {
             VStack(alignment: .leading, spacing: Tokens.Grouped.headerGap) {
                 self
-                Text(text)
-                    .textStyle(Typography.statLabel)
-                    .tabularNumerals()
-                    .foregroundStyle(Tokens.Ink.secondary)
-                    .padding(.horizontal, Tokens.Grouped.rowPadding)
-                    .fixedSize(horizontal: false, vertical: true)
+                if isHint {
+                    GroupedNote(text: text).guidance()
+                } else {
+                    GroupedNote(text: text)
+                }
             }
         } else {
             self
@@ -285,5 +300,22 @@ struct CardLinkRow: View {
             }
             .buttonStyle(IconPressStyle())
         }
+    }
+}
+
+/// A row that opens another screen: the title, an optional value, and a chevron.
+struct GroupedNavRow: View {
+    let title: String
+    var value: String?
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            GroupedRow(label: title) {
+                GroupedValue(text: value ?? "")
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(IconPressStyle())
     }
 }

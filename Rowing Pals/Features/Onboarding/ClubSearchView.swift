@@ -664,12 +664,7 @@ struct ClubSearchView: View {
         .padding(.top, Tokens.Spacing.loose)
         .padding(.bottom, Tokens.Spacing.screen)
         .background {
-            LinearGradient(
-                stops: [.init(color: Tokens.Base.ground, location: 0.72), .init(color: Tokens.Base.ground.opacity(0), location: 1)],
-                startPoint: .bottom,
-                endPoint: .top
-            )
-            .ignoresSafeArea(edges: .bottom)
+            Tokens.Base.ground.ignoresSafeArea(edges: .bottom)
         }
     }
 

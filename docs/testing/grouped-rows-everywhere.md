@@ -1,6 +1,6 @@
 # Grouped rows across the whole app: test checklist
 
-Decision 99 in `docs/design/v2-decisions.md`. Branch `t44-grouped-everywhere`. No migration needed.
+Decisions 99 and 100 in `docs/design/v2-decisions.md`. Branch `t44-grouped-everywhere`. No migration needed.
 Use **Coach_J** for sections 1–5 and **Piero** for section 6.
 
 ## 1. The look, everywhere
@@ -61,5 +61,33 @@ I could only check these as drawings, not on a rower's account, so please look c
 - [ ] **Season Wrapped:** **Your dates** shows From and To as rows.
 - [ ] **Profile** and **Log** read clearly, with nothing cut off or overlapping.
 
-## 7. Light mode
+## 7. Sign in, Edit profile, clubs and Review
+1. Log out (or use another phone) and look at **Sign in**.
+   - [ ] The fields are one card. **Forgot password?** is on the left. Apple and Google are at the bottom.
+   - [ ] **Create an account**: Display name, Username, Email and Password are one card, and the username check still appears.
+   - [ ] **Forgot password?**: sending the code and setting a new password still work.
+2. Profile → **Edit profile**.
+   - [ ] Name and @username are rows, and Save is top right, grey until you change something.
+   - [ ] As **Piero**: Date of birth (Add, then ✕ to remove), Weight and Weekly target are rows, and saving keeps them.
+3. **Clubs:**
+   - [ ] **Create a club** and **Edit club**: Club name, Location, Who can join, Club focus and the Description are rows, with Create or Save top right. A taken name shows in red.
+   - [ ] **Your crew**: Manage club is a row; Create your own club and a red Leave club are rows.
+   - [ ] **Manage club**: Edit club and Squads are rows; Hand over ownership and a red Delete club are rows. (Don't tap Delete unless you mean to.)
+   - [ ] **Rankings → Add test**: Distance or Time is a row.
+4. Log a session as **Piero**, as far as **Review session**.
+   - [ ] The pieces are one card. Everything else on Review reads clearly, and posting works.
+
+## 8. No gradients
+- [ ] Blue buttons are one flat colour, with no shine.
+- [ ] Today's workout card, a boat on the Feed and Next week's availability have a flat tint.
+- [ ] Rankings' hero card is flat, and avatars with initials are flat.
+- [ ] Above **Post** on Review there's no fade. An eight on the Feed has no fade at its edges.
+- [ ] Share a workout: the numbers sit on a solid panel at the foot of the image.
+- [ ] A new PB's post has a **solid lilac ring** with a soft glow, not moving rainbow colours.
+
+## 9. Helper text
+- [ ] Settings → **Helper text** off: the grey explanations under forms and the descriptions on the **+** sheets disappear, leaving no gaps. Facts like "9 rowers get…" and all errors stay.
+- [ ] Turn it back on: they return.
+
+## 10. Light mode
 - [ ] Settings → Appearance → Light: the card edges and the lines between rows are visible, on Workouts, a form and the Feed.

@@ -172,9 +172,13 @@ struct EventView: View {
             .overlay { Self.field.strokeBorder(Tokens.Surface.line, lineWidth: Tokens.Grouped.hairline) }
             .padding(.top, Tokens.Spacing.loose)
             FormFootnote("Only your club’s coaches see your reason.")
+                .guidance()
         }
-        FormFootnote(viewModel.canAnswer
-            ? "You can change your answer until the \(viewModel.isRace ? "race" : "event"). Your coaches see it straight away."
-            : "This has finished, so your answer can’t change now.")
+        if viewModel.canAnswer {
+            FormFootnote("You can change your answer until the \(viewModel.isRace ? "race" : "event"). Your coaches see it straight away.")
+                .guidance()
+        } else {
+            FormFootnote("This has finished, so your answer can’t change now.")
+        }
     }
 }

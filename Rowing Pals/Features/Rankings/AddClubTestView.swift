@@ -115,31 +115,30 @@ struct AddClubTestView: View {
         )
     }
 
-    /// The v3 field: card fill, 1 pt line, radius 24, 52 pt tall; a distance has "metres" on the
-    /// right, a time shows its colon as it's typed.
+    /// One grouped row: a distance has "m" on the right; a time shows its colon as it's typed.
     private var amountField: some View {
-        let shape = RoundedRectangle(cornerRadius: Tokens.Radius.input, style: .continuous)
-        return HStack {
-            if kind == .distance {
-                TextField("Distance", text: $amount)
-                    .keyboardType(.numberPad)
-                    .focused($focusedKind, equals: .distance)
-                    .tabularNumerals()
-                    .onChange(of: amount) { amount = String(amount.filter(\.isNumber).prefix(6)) }
-                Text("metres")
-                    .foregroundStyle(Tokens.Ink.secondary)
-            } else {
-                DurationTextField(placeholder: "20:00", text: $amount, focus: $focusedKind, field: .time)
-                    .tabularNumerals()
-                Spacer(minLength: 0)
+        GroupedSection {
+            GroupedRow(label: kind == .distance ? "Distance" : "Time") {
+                if kind == .distance {
+                    TextField("2000", text: $amount)
+                        .keyboardType(.numberPad)
+                        .focused($focusedKind, equals: .distance)
+                        .multilineTextAlignment(.trailing)
+                        .textStyle(Typography.detail)
+                        .tabularNumerals()
+                        .onChange(of: amount) { amount = String(amount.filter(\.isNumber).prefix(6)) }
+                    Text("m")
+                        .textStyle(Typography.detail)
+                        .foregroundStyle(Tokens.Ink.secondary)
+                } else {
+                    DurationTextField(placeholder: "20:00", text: $amount, focus: $focusedKind, field: .time,
+                                      alignment: .trailing)
+                        .textStyle(Typography.detail)
+                        .tabularNumerals()
+                        .frame(width: Tokens.Grouped.valueWidth, height: Tokens.Grouped.rowHeight)
+                }
             }
         }
-        .textStyle(Typography.bodyV3)
-        .foregroundStyle(Tokens.Ink.primary)
-        .padding(.horizontal, Tokens.Spacing.card)
-        .frame(maxWidth: .infinity, minHeight: Tokens.Size.input)
-        .background(shape.fill(Tokens.Surface.card))
-        .overlay { shape.strokeBorder(Tokens.Surface.line, lineWidth: Tokens.Grouped.hairline) }
     }
 
     private func save() async {

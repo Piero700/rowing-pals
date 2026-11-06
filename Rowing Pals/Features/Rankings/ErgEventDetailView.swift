@@ -123,7 +123,7 @@ struct ErgEventDetailView: View {
         } else {
             VStack(spacing: 0) {
                 ForEach(Array(viewModel.board.enumerated()), id: \.element.id) { index, result in
-                    if index > 0 { Rectangle().fill(Tokens.Surface.line).frame(height: 1) }
+                    if index > 0 { Rectangle().fill(Tokens.Surface.line).frame(height: Tokens.Grouped.hairline) }
                     row(place: index + 1, result: result, event: event)
                 }
             }

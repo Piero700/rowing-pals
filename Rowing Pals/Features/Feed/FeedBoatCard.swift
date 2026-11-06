@@ -55,8 +55,12 @@ struct FeedBoatCard: View {
             }
         }
         .padding(Tokens.Spacing.card)
-        .background(Self.cardShape.fill(LinearGradient(colors: [Tokens.Accent.brandSoft, Tokens.Surface.card],
-                                                       startPoint: .topLeading, endPoint: UnitPoint(x: 0.7, y: 0.7))))
+        .background {
+            ZStack {
+                Self.cardShape.fill(Tokens.Surface.card)
+                Self.cardShape.fill(Tokens.Accent.brandSoft)
+            }
+        }
         .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
     }
 

@@ -28,12 +28,6 @@ struct ShareCardView: View {
                     .frame(width: Tokens.Size.shareCardWidth, height: Tokens.Size.shareCardHeight)
                     .clipped()
             }
-            LinearGradient(
-                colors: [Tokens.Base.ground.opacity(0), Tokens.Base.ground.opacity(0.94)],
-                startPoint: UnitPoint(x: 0.5, y: 0.35),
-                endPoint: .bottom
-            )
-
             VStack(alignment: .leading, spacing: Tokens.Spacing.tight) {
                 Text(detail)
                     .textStyle(Typography.overline)
@@ -52,6 +46,9 @@ struct ShareCardView: View {
                 .padding(.top, 4)
             }
             .padding(Tokens.Spacing.sectionTop)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            // A solid panel, so the numbers read over any photo (no gradients, user 2026-11-06).
+            .background(Tokens.Base.ground)
         }
         .overlay(alignment: .topLeading) {
             Text("Rowing Pals")

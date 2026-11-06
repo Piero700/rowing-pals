@@ -108,7 +108,7 @@ struct CoachProfileView: View {
     }
 
     private var divider: some View {
-        Rectangle().fill(Tokens.Surface.line).frame(height: 1)
+        Rectangle().fill(Tokens.Surface.line).frame(height: Tokens.Grouped.hairline)
     }
 
     /// As Settings' rows: title 15 semibold, optional 13 description; 66 pt with one, 56 without.

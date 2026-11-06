@@ -427,7 +427,7 @@ struct PBHistoryView: View {
             ForEach(Array(rows.enumerated()), id: \.element.id) { index, point in
                 historyRow(point)
                 if index < rows.count - 1 {
-                    Rectangle().fill(Tokens.Surface.line).frame(height: 1)
+                    Rectangle().fill(Tokens.Surface.line).frame(height: Tokens.Grouped.hairline)
                 }
             }
         }

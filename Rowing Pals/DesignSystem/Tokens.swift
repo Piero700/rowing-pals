@@ -384,8 +384,6 @@ enum Tokens {
         static let sidewaysMarkFont: CGFloat = 9.5
         static let sidewaysNameTop: CGFloat = 140
         static let sidewaysHeight: CGFloat = 174
-        /// How far the edges fade where there's more boat to scroll to.
-        static let sidewaysFade: CGFloat = 22
         static let sidewaysBarHeight: CGFloat = 3
     }
 
@@ -502,18 +500,10 @@ enum Tokens {
         static let scoreTilesPerRow = 3
     }
 
-    /// The new-PB celebration (docs/design/v2-decisions.md #12): an RGB-LED style glow that
-    /// runs around a post when its test result beat the rower's previous best. Its own palette on
-    /// purpose — no accent role means "celebrate", and borrowing one would blur that role.
+    /// The new-PB highlight (decision 12): a solid ring in the records colour with a soft glow.
     enum Celebration {
-        static let glow: [Color] = [
-            Color(hex: 0xFF5F6D), Color(hex: 0xFFC371), Color(hex: 0x7CF5B0),
-            Color(hex: 0x5EC8FF), Color(hex: 0xB28BFF), Color(hex: 0xFF5F6D)
-        ]
         static let lineWidth: CGFloat = 2.5
         static let blur: CGFloat = 14
-        /// One full lap of the colours.
-        static let period: Double = 4
     }
 
     /// v3 motion. Callers skip animation when Reduce Motion is on.

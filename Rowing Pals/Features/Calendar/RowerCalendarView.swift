@@ -145,8 +145,12 @@ struct RowerCalendarView: View {
             }
         }
         .padding(Tokens.Spacing.card)
-        .background(Self.cardShape.fill(LinearGradient(colors: [Tokens.Accent.brandSoft, Tokens.Surface.card],
-                                                      startPoint: .topLeading, endPoint: .bottomTrailing)))
+        .background {
+            ZStack {
+                Self.cardShape.fill(Tokens.Surface.card)
+                Self.cardShape.fill(Tokens.Accent.brandSoft)
+            }
+        }
         .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
         .padding(.top, Tokens.Spacing.loose)
     }
@@ -208,7 +212,7 @@ struct RowerCalendarView: View {
         let calendar = viewModel.calendar
         let workouts = viewModel.workouts(during: practice)
         return VStack(alignment: .leading, spacing: 6) {
-            if !isFirst { Rectangle().fill(Tokens.Surface.line).frame(height: 1) }
+            if !isFirst { Rectangle().fill(Tokens.Surface.line).frame(height: Tokens.Grouped.hairline) }
             HStack(spacing: Tokens.Spacing.gap) {
                 Button {
                     navigate(.practice(practice.id))
@@ -265,7 +269,7 @@ struct RowerCalendarView: View {
     private func waterRow(_ row: RowerCalendarViewModel.WaterRow, isFirst: Bool) -> some View {
         let calendar = viewModel.calendar
         return VStack(alignment: .leading, spacing: 6) {
-            if !isFirst { Rectangle().fill(Tokens.Surface.line).frame(height: 1) }
+            if !isFirst { Rectangle().fill(Tokens.Surface.line).frame(height: Tokens.Grouped.hairline) }
             Button {
                 navigate(.rowerWaterSession(row.session.id))
             } label: {
@@ -300,7 +304,7 @@ struct RowerCalendarView: View {
 
     private func workoutRow(_ workout: CoachWorkout, isFirst: Bool) -> some View {
         VStack(alignment: .leading, spacing: 6) {
-            if !isFirst { Rectangle().fill(Tokens.Surface.line).frame(height: 1) }
+            if !isFirst { Rectangle().fill(Tokens.Surface.line).frame(height: Tokens.Grouped.hairline) }
             HStack(spacing: Tokens.Spacing.gap) {
                 Text(WorkoutRules.startDate(workout, calendar: viewModel.calendar).map { CalendarRules.time($0, calendar: viewModel.calendar) } ?? "")
                     .textStyle(Typography.rowTitle)

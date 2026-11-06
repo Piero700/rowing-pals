@@ -14,7 +14,6 @@ struct NewSessionSheet: View {
     @Environment(\.dismiss) private var dismiss
     @State private var contentHeight: CGFloat = 520
 
-    private static let rowShape = RoundedRectangle(cornerRadius: Tokens.Radius.panel, style: .continuous)
 
     var body: some View {
         VStack(alignment: .leading, spacing: Tokens.Spacing.tight) {
@@ -27,21 +26,27 @@ struct NewSessionSheet: View {
                     .buttonStyle(.rpText)
             }
             .padding(.bottom, 4)
-            option(.stopwatch, "Land session",
-                   "An erg workout: pieces, rates and target splits. It goes to your rowers’ Feeds and shows in Workouts.",
-                   .newWorkout)
-            option(.water, "Water session",
-                   "On the river: the plan, then crew the boats seat by seat. Each rower is told their boat and seat; it shows in Boats.",
-                   .newWaterSession(WaterSessionSeed()))
-            option(.megaphone, "Announcement",
-                   "A notice for every rower. Its heading sits at the top of their Feed; they tap it to read the rest.",
-                   .newAnnouncement)
-            option(.rankings, "Challenge",
-                   "A personal target, a club total or squad against squad, on erg metres between two days. It shows in Rankings and on rowers’ Feeds.",
-                   .newChallenge)
-            option(.flag, "Erg event",
-                   "A set piece rowed in a window, like a club 2k day. Everyone’s best goes on one board.",
-                   .newErgEvent)
+            GroupedSection {
+                option(.stopwatch, "Land session",
+                       "An erg workout: pieces, rates and target splits. It goes to your rowers’ Feeds and shows in Workouts.",
+                       .newWorkout)
+                GroupedDivider()
+                option(.water, "Water session",
+                       "On the river: the plan, then crew the boats seat by seat. Each rower is told their boat and seat; it shows in Boats.",
+                       .newWaterSession(WaterSessionSeed()))
+                GroupedDivider()
+                option(.megaphone, "Announcement",
+                       "A notice for every rower. Its heading sits at the top of their Feed; they tap it to read the rest.",
+                       .newAnnouncement)
+                GroupedDivider()
+                option(.rankings, "Challenge",
+                       "A personal target, a club total or squad against squad, on erg metres between two days. It shows in Rankings and on rowers’ Feeds.",
+                       .newChallenge)
+                GroupedDivider()
+                option(.flag, "Erg event",
+                       "A set piece rowed in a window, like a club 2k day. Everyone’s best goes on one board.",
+                       .newErgEvent)
+            }
             Text("Practices, races and other events are added from the Calendar. Announcements, challenges and erg events are kept in the Calendar too.")
                 .textStyle(Typography.meta)
                 .foregroundStyle(Tokens.Ink.secondary)
@@ -67,7 +72,7 @@ struct NewSessionSheet: View {
                 RPIconView(icon: symbol, size: Tokens.Icon.large)
                     .textStyle(Typography.cardTitle)
                     .foregroundStyle(Tokens.Accent.brand)
-                    .frame(width: Tokens.Schedule.iconTile, height: Tokens.Schedule.iconTile)
+                    .frame(width: Tokens.Size.rowIcon, height: Tokens.Size.rowIcon)
                     .background(RoundedRectangle(cornerRadius: Tokens.Schedule.iconTileRadius, style: .continuous).fill(Tokens.Accent.brandSoft))
                 VStack(alignment: .leading, spacing: 2) {
                     Text(title)
@@ -77,16 +82,17 @@ struct NewSessionSheet: View {
                         .textStyle(Typography.statLabel)
                         .foregroundStyle(Tokens.Ink.secondary)
                         .multilineTextAlignment(.leading)
+                        .guidance()
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 RPIconView(icon: .chevronRight, size: Tokens.Icon.small)
                     .textStyle(Typography.pill)
                     .foregroundStyle(Tokens.Ink.secondary)
             }
-            .padding(Tokens.Spacing.loose)
-            .background(Self.rowShape.fill(Tokens.Surface.card))
-            .overlay { Self.rowShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
-            .contentShape(Self.rowShape)
+            .padding(.horizontal, Tokens.Grouped.rowPadding)
+            .padding(.vertical, Tokens.Spacing.tight)
+            .frame(minHeight: Tokens.Grouped.rowHeight)
+            .contentShape(Rectangle())
         }
         .buttonStyle(IconPressStyle())
     }

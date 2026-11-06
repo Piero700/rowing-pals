@@ -132,13 +132,10 @@ struct MetresLeaderboardView: View {
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background {
-            shape.fill(
-                LinearGradient(
-                    stops: [.init(color: Tokens.Accent.recordsSoft, location: 0), .init(color: Tokens.Surface.card, location: 0.75)],
-                    startPoint: UnitPoint(x: 0.1, y: 0.2),
-                    endPoint: UnitPoint(x: 0.9, y: 0.8)
-                )
-            )
+            ZStack {
+                shape.fill(Tokens.Surface.card)
+                shape.fill(Tokens.Accent.recordsSoft)
+            }
         }
         .overlay { shape.strokeBorder(Tokens.Surface.line, lineWidth: Tokens.Grouped.hairline) }
         .accessibilityElement(children: .combine)
@@ -180,7 +177,7 @@ struct MetresLeaderboardView: View {
             ForEach(viewModel.rankedRows) { row in
                 leaderboardRow(row)
                 if row.id != viewModel.rankedRows.last?.id {
-                    Rectangle().fill(Tokens.Surface.line).frame(height: 1)
+                    Rectangle().fill(Tokens.Surface.line).frame(height: Tokens.Grouped.hairline)
                 }
             }
         }

@@ -112,7 +112,7 @@ struct EventEditorView: View {
                 ? "\(viewModel.audienceCount) rower\(viewModel.audienceCount == 1 ? "" : "s") \(viewModel.squadIds.isEmpty ? "in the club" : "in these squads") \(viewModel.audienceCount == 1 ? "is" : "are") told."
                 : nil) {
                 GroupedToggleRow(label: viewModel.isRace ? "Ask who can race" : "Ask who can come",
-                                 detail: "Rowers answer in their Calendar. You see the answers on the \(viewModel.isRace ? "race" : "event").",
+                                 hint: "Rowers answer in their Calendar. You see the answers on the \(viewModel.isRace ? "race" : "event").",
                                  isOn: $viewModel.asksAvailability)
                 GroupedDivider()
                 GroupedNotesRow(placeholder: "Note: entries close Mon 26 Oct. Boats leave at 07:30.", text: $viewModel.note)

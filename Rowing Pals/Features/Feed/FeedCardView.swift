@@ -374,7 +374,7 @@ struct FeedCardView: View {
         }
         .padding(.top, Tokens.Spacing.tight)
         .overlay(alignment: .top) {
-            Rectangle().fill(Tokens.Surface.line).frame(height: 1)
+            Rectangle().fill(Tokens.Surface.line).frame(height: Tokens.Grouped.hairline)
         }
         .sheet(isPresented: $isShowingShare) {
             ShareWorkoutSheet(post: post, photoURL: post.pages.first.flatMap { photoURL($0.path) })

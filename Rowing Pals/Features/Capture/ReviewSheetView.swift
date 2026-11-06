@@ -180,35 +180,29 @@ struct ReviewSheetView: View {
     /// v3 split rows: a badge (the Main piece wears the workout label in brand), "distance ·
     /// time", and the split — one per piece, in order.
     private var splitsSummary: some View {
-        VStack(spacing: Tokens.Spacing.tight) {
-            ForEach(viewModel.segments) { segment in
+        GroupedSection {
+            ForEach(Array(viewModel.segments.enumerated()), id: \.element.id) { index, segment in
+                if index > 0 { GroupedDivider() }
                 let isMain = segment.label == .main
-                let shape = RoundedRectangle(cornerRadius: Tokens.Radius.input, style: .continuous)
                 HStack(spacing: Tokens.Spacing.tight) {
                     Text(isMain ? (viewModel.sessionKind.testLabel ?? viewModel.zone.rawValue) : segment.label.rawValue.capitalized)
-                        .textStyle(Typography.fieldLabel)
+                        .textStyle(Typography.detail)
                         .tabularNumerals()
                         .foregroundStyle(isMain ? Tokens.Accent.brand : Tokens.Ink.secondary)
                         .lineLimit(1)
                         .minimumScaleFactor(0.8)
-                        .padding(.horizontal, Tokens.Spacing.tight)
-                        .frame(minWidth: 72, minHeight: 27)
-                        .background(Capsule().fill(isMain ? Tokens.Accent.brandSoft : Tokens.Surface.raised))
                     Text("\(segment.distanceM.formattedMetres) · \(segment.timeMs.formattedDurationMs)")
-                        .textStyle(Typography.meta)
+                        .textStyle(Typography.statLabel)
                         .tabularNumerals()
                         .foregroundStyle(Tokens.Ink.secondary)
                     Spacer(minLength: 0)
                     Text(segment.splitMs > 0 ? segment.splitMs.formattedPace(display: paceDisplay) : "—")
-                        .textStyle(Typography.pill)
+                        .textStyle(Typography.detail)
                         .tabularNumerals()
                         .foregroundStyle(Tokens.Ink.primary)
                 }
-                .padding(.horizontal, Tokens.Spacing.gap)
-                .padding(.vertical, Tokens.Spacing.tight)
-                .frame(minHeight: 62)
-                .background(shape.fill(Tokens.Surface.card))
-                .overlay { shape.strokeBorder(Tokens.Surface.line, lineWidth: Tokens.Grouped.hairline) }
+                .padding(.horizontal, Tokens.Grouped.rowPadding)
+                .frame(minHeight: Tokens.Grouped.rowHeight)
                 .accessibilityElement(children: .combine)
             }
         }
@@ -305,13 +299,6 @@ struct ReviewSheetView: View {
         .padding(.top, Tokens.Spacing.gap)
         .padding(.bottom, Tokens.Spacing.tight)
         .background(Tokens.Base.ground.ignoresSafeArea())
-        // Content fades out just above the bar rather than stopping at a hard edge.
-        .overlay(alignment: .top) {
-            LinearGradient(colors: [Tokens.Base.ground.opacity(0), Tokens.Base.ground], startPoint: .top, endPoint: .bottom)
-                .frame(height: 24)
-                .offset(y: -24)
-                .allowsHitTesting(false)
-        }
     }
 
     // MARK: - Zone and effort
@@ -651,7 +638,7 @@ struct ReviewSheetView: View {
                     }
             }
         }
-        .padding(14)
+        .padding(Tokens.Spacing.loose)
         .background {
             RoundedRectangle(cornerRadius: Tokens.Radius.card, style: .continuous)
                 .fill(Tokens.Accent.brand.opacity(0.14))

@@ -372,7 +372,7 @@ struct SettingsView: View {
     }
 
     private var divider: some View {
-        Rectangle().fill(Tokens.Surface.line).frame(height: 1)
+        Rectangle().fill(Tokens.Surface.line).frame(height: Tokens.Grouped.hairline)
     }
 
     /// v4 row: title 15 semibold, optional 13 description, trailing control; 66 pt tall with a

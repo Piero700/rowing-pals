@@ -254,7 +254,7 @@ struct ChallengeDetailView: View {
     }
 
     private var divider: some View {
-        Rectangle().fill(Tokens.Surface.line).frame(height: 1)
+        Rectangle().fill(Tokens.Surface.line).frame(height: Tokens.Grouped.hairline)
     }
 
     private func listCard<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
