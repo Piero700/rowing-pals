@@ -21,7 +21,7 @@ That also refreshes `website/assets/og.png` (the link preview image).
 
 Before launch:
 - When the app is live, add Apple's official "Download on the App Store" badge with the real link.
-- `website/privacy/` and `website/terms/` copy the app's `PrivacyPolicyView.swift` and `TermsOfServiceView.swift` word for word, plus an email line under Contact. When one changes, change the other. Use `https://rowingpals.com/privacy` and `https://rowingpals.com/support` in App Store Connect.
+- `website/privacy/` and `website/terms/` copy the app's `PrivacyPolicyView.swift` and `TermsOfServiceView.swift` word for word. When one changes, change the other. Use `https://rowingpals.com/privacy` and `https://rowingpals.com/support` in App Store Connect.
 - The emails load the logo from `https://rowingpals.com/assets/icon-256.png`, so deploy the site first.
 - Mockup names, clubs and numbers are fictional sample data. The mockups follow the app as of 2026-11-06.
 - The App Store art in `app-store/export/` predates the 2026-11-06 site update. Re-running `render.sh` uses the new mockups but `artwork.html` still needs its own restyle (gradient headlines, the coach promo's boat).

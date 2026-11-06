@@ -24,7 +24,7 @@ struct SettingsView: View {
     @AppStorage(DistanceUnit.storageKey) private var distanceUnit: DistanceUnit = .metres
     @AppStorage(PaceDisplay.storageKey) private var paceDisplay: PaceDisplay = .split
 
-    private static let supportEmail = "support@rowingpals.app"
+    private static let supportEmail = "support@rowingpals.com"
     private static let supportMailtoURL = URL(string: "mailto:\(supportEmail)")
 
     @AppStorage(Appearance.storageKey) private var appearance: Appearance = .dark

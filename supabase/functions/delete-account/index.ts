@@ -11,6 +11,29 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
 
+const PAGE = 1000
+
+// Reads every row, not just the first page PostgREST returns.
+async function readAll<T>(
+  page: (from: number, to: number) => PromiseLike<{ data: unknown[] | null; error: unknown }>,
+): Promise<T[]> {
+  const rows: T[] = []
+  for (let from = 0; ; from += PAGE) {
+    const { data, error } = await page(from, from + PAGE - 1)
+    if (error) throw error
+    rows.push(...((data ?? []) as T[]))
+    if ((data ?? []).length < PAGE) return rows
+  }
+}
+
+// deno-lint-ignore no-explicit-any
+async function removeAll(admin: any, bucket: string, paths: string[]) {
+  for (let i = 0; i < paths.length; i += PAGE) {
+    const { error } = await admin.storage.from(bucket).remove(paths.slice(i, i + PAGE))
+    if (error) throw error
+  }
+}
+
 Deno.serve(async (req) => {
   const authHeader = req.headers.get("Authorization")
   if (!authHeader) {
@@ -36,23 +59,50 @@ Deno.serve(async (req) => {
 
   const admin = createClient(supabaseUrl, serviceRoleKey)
 
-  // Storage objects aren't reachable by a DB foreign key, so they're not
-  // touched by auth.admin.deleteUser()'s cascade below — clear them first,
-  // using the exact paths StorageService.swift already writes (never a
-  // recursive folder walk, since the DB already knows every path).
-  const { data: segments } = await admin
-    .from("segments")
-    .select("monitor_photo_path, sessions!inner(user_id)")
-    .eq("sessions.user_id", user.id)
-  const monitorPaths = (segments ?? []).map((s: { monitor_photo_path: string }) => s.monitor_photo_path)
-  if (monitorPaths.length > 0) {
-    await admin.storage.from("monitors").remove(monitorPaths)
-  }
+  try {
+    // Storage objects aren't reachable by a DB foreign key, so they're not
+    // touched by auth.admin.deleteUser()'s cascade below — clear them first,
+    // using the exact paths the app wrote (never a recursive folder walk, since
+    // the DB already knows every path). Any failure stops here, before the
+    // account goes: afterwards nothing would record which files were left, and
+    // trying again is safe because removing a missing file is not an error.
+    const uid = user.id
+    const sessions = await readAll<{ id: string }>((from, to) =>
+      admin.from("sessions").select("id").eq("user_id", uid).order("id").range(from, to)
+    )
+    const segments = await readAll<{ monitor_photo_path: string | null }>((from, to) =>
+      admin
+        .from("segments")
+        .select("id, monitor_photo_path, sessions!inner(user_id)")
+        .eq("sessions.user_id", uid)
+        .order("id")
+        .range(from, to)
+    )
+    const galleryPhotos = await readAll<{ path: string }>((from, to) =>
+      admin
+        .from("session_photos")
+        .select("id, path, sessions!inner(user_id)")
+        .eq("sessions.user_id", uid)
+        .order("id")
+        .range(from, to)
+    )
+    const { data: profile, error: profileError } = await admin
+      .from("profiles")
+      .select("avatar_path")
+      .eq("id", uid)
+      .maybeSingle()
+    if (profileError) throw profileError
 
-  const { data: sessions } = await admin.from("sessions").select("id").eq("user_id", user.id)
-  const selfiePaths = (sessions ?? []).map((s: { id: string }) => `${user.id}/${s.id}.jpg`)
-  if (selfiePaths.length > 0) {
-    await admin.storage.from("selfies").remove(selfiePaths)
+    await removeAll(admin, "monitors", [
+      ...segments.map((s) => s.monitor_photo_path).filter((p): p is string => !!p),
+      ...galleryPhotos.map((p) => p.path),
+    ])
+    await removeAll(admin, "selfies", sessions.map((s) => `${uid}/${s.id}.jpg`))
+    await removeAll(admin, "avatars", profile?.avatar_path ? [profile.avatar_path] : [])
+
+  } catch (error) {
+    const message = error instanceof Error ? error.message : (error as { message?: string }).message
+    return new Response(JSON.stringify({ error: message ?? "Could not remove your photos" }), { status: 500 })
   }
 
   // Cascades profiles, sessions, segments, test_results, reactions,
