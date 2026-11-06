@@ -43,7 +43,7 @@
     .brand-row { display: flex; align-items: center; gap: 22px; font: 800 44px "Inter Tight", sans-serif; letter-spacing: -.02em; margin-bottom: 50px; }
     .brand-row img { width: 96px; height: 96px; border-radius: 24px; box-shadow: 0 16px 40px rgba(0,0,0,.5); }
     .feature h1 { margin: 0 0 30px; font: 900 136px/.92 "Inter Tight", sans-serif; letter-spacing: -.05em; }
-    .feature p { margin: 0; font: 500 36px/1.4 "Inter", sans-serif; color: var(--ink2); max-width: 760px; }
+    .feature .copy p { margin: 0; font: 500 36px/1.4 "Inter", sans-serif; color: var(--ink2); max-width: 760px; }
     .feature .devs { position: absolute; right: 90px; top: 90px; display: flex; gap: 40px; z-index: 2; }
     .feature .devs .phone { zoom: 1.1; }
     .feature .devs .phone:first-child { margin-top: 120px; }
@@ -54,7 +54,8 @@
     .og .brand-row { font-size: 32px; margin-bottom: 34px; gap: 16px; }
     .og .brand-row img { width: 68px; height: 68px; border-radius: 17px; }
     .og h1 { margin: 0 0 22px; font: 900 92px/.92 "Inter Tight", sans-serif; letter-spacing: -.05em; }
-    .og p { margin: 0; font: 600 26px "Inter", sans-serif; color: var(--ink2); }
+    .og .copy p { margin: 0; font: 600 26px "Inter", sans-serif; color: var(--ink2); }
+    .og .hl { background: none; color: var(--brand); }
     .og .dev { position: absolute; right: 70px; top: 60px; zoom: .95; z-index: 2; }
 
     /* ---------- coach subscription promo 1024 × 1024 ---------- */
@@ -127,7 +128,7 @@
         <p>Snap the erg monitor and yourself in one shot. We read the numbers and put you on the leaderboard.</p></div>
       <div class="devs">${phone('capture')}${phone('feed')}</div><div class="grain"></div></div>` },
     'banner-social-1200x630': { w: 1200, h: 630, html: () => `<div class="art og">
-      ${glow(600, -300, 900, BLUE)}${glow(-200, 300, 700, LILAC)}${waves(1200, 380)}
+      ${waves(1200, 380)}
       <div class="copy"><div class="brand-row"><img src="${ICON}">Rowing Pals</div>
         <h1>Every metre.<br><span class="hl">Proven.</span></h1>
         <p>The social training app for rowers.</p></div>
