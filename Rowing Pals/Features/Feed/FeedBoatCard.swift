@@ -17,7 +17,7 @@ struct FeedBoatCard: View {
     let coachName: String?
     let mySeat: Int?
 
-    private static let cardShape = RoundedRectangle(cornerRadius: Tokens.Radius.card, style: .continuous)
+    private static let cardShape = RoundedRectangle(cornerRadius: Tokens.Feed.card, style: .continuous)
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {

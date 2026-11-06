@@ -12,7 +12,7 @@ struct TodaysWorkoutCard: View {
     let today: TodaysWorkout
     let onLog: () -> Void
 
-    private static let cardShape = RoundedRectangle(cornerRadius: Tokens.Radius.card, style: .continuous)
+    private static let cardShape = RoundedRectangle(cornerRadius: Tokens.Feed.card, style: .continuous)
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {

@@ -16,7 +16,7 @@ struct FeedAnnouncementCard: View {
     let onToggle: () -> Void
     let onEdit: () -> Void
 
-    private static let shape = RoundedRectangle(cornerRadius: Tokens.Radius.panel, style: .continuous)
+    private static let shape = RoundedRectangle(cornerRadius: Tokens.Feed.inner, style: .continuous)
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -26,7 +26,7 @@ struct FeedAnnouncementCard: View {
                         .textStyle(Typography.rowTitle)
                         .foregroundStyle(Tokens.Accent.brand)
                         .frame(width: Tokens.Size.rowIcon, height: Tokens.Size.rowIcon)
-                        .background(RoundedRectangle(cornerRadius: Tokens.Schedule.iconTileRadius, style: .continuous).fill(Tokens.Accent.brandSoft))
+                        .background(RoundedRectangle(cornerRadius: Tokens.Feed.inner, style: .continuous).fill(Tokens.Accent.brandSoft))
                     VStack(alignment: .leading, spacing: 1) {
                         Text(announcement.heading)
                             .textStyle(Typography.rowTitle)

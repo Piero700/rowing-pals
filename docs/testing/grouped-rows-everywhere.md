@@ -85,6 +85,11 @@ I could only check these as drawings, not on a rower's account, so please look c
 - [ ] Share a workout: the numbers sit on a solid panel at the foot of the image.
 - [ ] A new PB's post has a **solid lilac ring** with a soft glow, not moving rainbow colours.
 
+## 8b. Feed corners (Piero)
+- [ ] On the **Feed**, cards, post photos and the Following | Club switch are visibly rounder than on other tabs.
+- [ ] A post's own page, Rankings and Profile keep the smaller corners.
+- [ ] The tab bar looks the same as before.
+
 ## 9. Helper text
 - [ ] Settings → **Helper text** off: the grey explanations under forms and the descriptions on the **+** sheets disappear, leaving no gaps. Facts like "9 rowers get…" and all errors stay.
 - [ ] Turn it back on: they return.

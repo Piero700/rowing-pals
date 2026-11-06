@@ -16,6 +16,9 @@ struct PillSegmentedControl: View {
     @Binding var selection: Int
     /// v3's settings-row variant: 38 pt segments, 3 pt padding, 13 pt labels.
     var compact = false
+    /// The track's and chosen segment's corners; the Feed's are rounder (decision 101).
+    var trackRadius: CGFloat = Tokens.Radius.segmentTrack
+    var segmentRadius: CGFloat = Tokens.Radius.segment
 
     @Namespace private var thumb
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -28,7 +31,7 @@ struct PillSegmentedControl: View {
             }
         }
         .padding(2)
-        .glassSurface(in: RoundedRectangle(cornerRadius: Tokens.Radius.segmentTrack, style: .continuous))
+        .glassSurface(in: RoundedRectangle(cornerRadius: trackRadius, style: .continuous))
     }
 
     private func segment(_ index: Int) -> some View {
@@ -52,7 +55,7 @@ struct PillSegmentedControl: View {
                 .background {
                     if isSelected {
                         Color.clear
-                            .glassSurface(in: RoundedRectangle(cornerRadius: Tokens.Radius.segment, style: .continuous),
+                            .glassSurface(in: RoundedRectangle(cornerRadius: segmentRadius, style: .continuous),
                                           isSelected: true, usesNativeGlass: false)
                             .matchedGeometryEffect(id: "thumb", in: thumb)
                     }

@@ -14,8 +14,8 @@ struct CoachScoresCard: View {
     let card: CoachNotedScores
     let onLog: () -> Void
 
-    private static let cardShape = RoundedRectangle(cornerRadius: Tokens.Radius.card, style: .continuous)
-    private static let tileShape = RoundedRectangle(cornerRadius: Tokens.Notepad.scoreTileRadius, style: .continuous)
+    private static let cardShape = RoundedRectangle(cornerRadius: Tokens.Feed.card, style: .continuous)
+    private static let tileShape = RoundedRectangle(cornerRadius: Tokens.Feed.inner, style: .continuous)
 
     private var reps: [WorkoutPiece?] {
         NotepadRules.reps(NotepadRules.pieces(set: card.pieces, title: card.title, testKey: card.testKey))
@@ -53,6 +53,8 @@ struct CoachScoresCard: View {
                     .textStyle(Typography.meta)
                     .foregroundStyle(Tokens.Ink.secondary)
                 CardLinkRow(icon: .plus, title: "Log your session", action: onLog)
+                    // The row's own height is the room under it.
+                    .padding(.bottom, -Tokens.Spacing.card)
             }
         }
         .padding(Tokens.Spacing.card)

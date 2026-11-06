@@ -11,7 +11,7 @@ struct FeedWrappedCard: View {
     let period: WrappedPeriod
     let onOpen: () -> Void
 
-    private static let cardShape = RoundedRectangle(cornerRadius: Tokens.Radius.card, style: .continuous)
+    private static let cardShape = RoundedRectangle(cornerRadius: Tokens.Feed.card, style: .continuous)
 
     var body: some View {
         Button(action: onOpen) {
@@ -20,7 +20,7 @@ struct FeedWrappedCard: View {
                     .textStyle(Typography.cardTitle)
                     .foregroundStyle(Tokens.Accent.brand)
                     .frame(width: Tokens.Schedule.iconTile, height: Tokens.Schedule.iconTile)
-                    .background(RoundedRectangle(cornerRadius: Tokens.Schedule.iconTileRadius, style: .continuous).fill(Tokens.Accent.brandSoft))
+                    .background(RoundedRectangle(cornerRadius: Tokens.Feed.inner, style: .continuous).fill(Tokens.Accent.brandSoft))
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Season Wrapped")
                         .textStyle(Typography.kicker)

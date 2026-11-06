@@ -413,6 +413,20 @@ enum Tokens {
     /// The compact grouped-rows style (user, 2026-11-05; on setting a land session first, to spread
     /// through the app if liked): one card per group, rows divided by hairlines, labels left and
     /// values right, small corners instead of pills.
+    /// The Feed page's corners (decision 101, user 2026-11-06): rounder than the rest of the app.
+    /// Nothing outside the Feed page uses these; the tab bar keeps its own shape.
+    enum Feed {
+        /// Cards and post photos.
+        static let card: CGFloat = 18
+        /// Announcements, the boxes inside a card, score tiles, icon tiles.
+        static let inner: CGFloat = 15
+        /// The selfie inset on a post's photo.
+        static let photoInset: CGFloat = 12
+        /// The Following | Club switch: its track and the chosen segment.
+        static let segmentTrack: CGFloat = 15
+        static let segment: CGFloat = 12
+    }
+
     enum Grouped {
         static let radius: CGFloat = 12
         static let rowHeight: CGFloat = 44

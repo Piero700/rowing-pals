@@ -82,6 +82,7 @@ Structure that should survive any redesign:
   rows with the label left and the value right, Save top right, destructive actions as red rows, and an action at the
   foot of a card as a thin `CardLinkRow`. Build new forms and lists from `DesignSystem/GroupedForm.swift` and
   `Tokens.Grouped`, not label-above-box fields or a card per row.
+- **The Feed page's corners (decision 101)** are rounder than the rest of the app: use `Tokens.Feed` there and nowhere else.
 - **No gradients (decision 100):** solid colours only, for fills, buttons, cards and fades. The one exception, kept by the
   user, is the glass rim in `GlassSurface`.
 - **Helper text is marked, not hard-coded (decision 98):** explanatory notes and hints use `.guidance()` (or

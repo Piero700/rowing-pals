@@ -65,7 +65,8 @@ struct FeedView: View {
         // The scroll view stays the tab's root view so the floating bar can track it.
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 0) {
-                PillSegmentedControl(options: ["Following", "Club"], selection: scopeSelection)
+                PillSegmentedControl(options: ["Following", "Club"], selection: scopeSelection,
+                                     trackRadius: Tokens.Feed.segmentTrack, segmentRadius: Tokens.Feed.segment)
 
                 Text(scopeCaption)
                     .textStyle(Typography.meta)
@@ -321,10 +322,10 @@ struct FeedView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(Tokens.Spacing.card)
         .background {
-            RoundedRectangle(cornerRadius: Tokens.Radius.card, style: .continuous).fill(Tokens.Surface.card)
+            RoundedRectangle(cornerRadius: Tokens.Feed.card, style: .continuous).fill(Tokens.Surface.card)
         }
         .overlay {
-            RoundedRectangle(cornerRadius: Tokens.Radius.card, style: .continuous)
+            RoundedRectangle(cornerRadius: Tokens.Feed.card, style: .continuous)
                 .strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline)
         }
     }

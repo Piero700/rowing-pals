@@ -37,8 +37,8 @@ struct FeedCardView: View {
     /// Redesign phase B — per-device pace display preference.
     @AppStorage(PaceDisplay.storageKey) private var paceDisplay: PaceDisplay = .split
 
-    private static let cardShape = RoundedRectangle(cornerRadius: Tokens.Radius.card, style: .continuous)
-    private static let photoShape = RoundedRectangle(cornerRadius: Tokens.Radius.photo, style: .continuous)
+    private static let cardShape = RoundedRectangle(cornerRadius: Tokens.Feed.card, style: .continuous)
+    private static let photoShape = RoundedRectangle(cornerRadius: Tokens.Feed.card, style: .continuous)
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -112,7 +112,7 @@ struct FeedCardView: View {
         return ZStack(alignment: .bottom) {
             if pages.isEmpty {
                 Button(action: onOpen) {
-                    PhotoPlaceholder(cornerRadius: Tokens.Radius.photo, caption: "MANUAL ENTRY")
+                    PhotoPlaceholder(cornerRadius: Tokens.Feed.card, caption: "MANUAL ENTRY")
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
@@ -161,13 +161,13 @@ struct FeedCardView: View {
                         withAnimation(.snappy) { isSelfiePrimary.toggle() }
                     } label: {
                         CachedAsyncImage(url: insetURL) {
-                            PhotoPlaceholder(cornerRadius: Tokens.Radius.photoInset, caption: nil)
+                            PhotoPlaceholder(cornerRadius: Tokens.Feed.photoInset, caption: nil)
                         }
                         .aspectRatio(contentMode: .fill)
                         .frame(width: geometry.size.width * 0.27, height: geometry.size.height * 0.37)
-                        .clipShape(RoundedRectangle(cornerRadius: Tokens.Radius.photoInset, style: .continuous))
+                        .clipShape(RoundedRectangle(cornerRadius: Tokens.Feed.photoInset, style: .continuous))
                         .overlay {
-                            RoundedRectangle(cornerRadius: Tokens.Radius.photoInset, style: .continuous)
+                            RoundedRectangle(cornerRadius: Tokens.Feed.photoInset, style: .continuous)
                                 .strokeBorder(Tokens.Surface.card, lineWidth: 2)
                         }
                         .shadow(color: .black.opacity(0.33), radius: 7, y: 5)
@@ -260,14 +260,14 @@ struct FeedCardView: View {
             .padding(Tokens.Spacing.card)
             .frame(maxWidth: .infinity, minHeight: 68, alignment: .leading)
             .background {
-                RoundedRectangle(cornerRadius: Tokens.Radius.workoutLink, style: .continuous)
+                RoundedRectangle(cornerRadius: Tokens.Feed.inner, style: .continuous)
                     .fill(Tokens.Surface.raised)
             }
             .overlay {
-                RoundedRectangle(cornerRadius: Tokens.Radius.workoutLink, style: .continuous)
+                RoundedRectangle(cornerRadius: Tokens.Feed.inner, style: .continuous)
                     .strokeBorder(Tokens.Surface.line, lineWidth: Tokens.Grouped.hairline)
             }
-            .contentShape(RoundedRectangle(cornerRadius: Tokens.Radius.workoutLink, style: .continuous))
+            .contentShape(RoundedRectangle(cornerRadius: Tokens.Feed.inner, style: .continuous))
         }
         .buttonStyle(IconPressStyle())
     }
@@ -320,10 +320,10 @@ struct FeedCardView: View {
                             .font(.system(size: 26))
                             .frame(maxWidth: .infinity, minHeight: 52)
                             .background {
-                                RoundedRectangle(cornerRadius: Tokens.Radius.input, style: .continuous)
+                                RoundedRectangle(cornerRadius: Tokens.Feed.inner, style: .continuous)
                                     .fill(isMine ? Tokens.Accent.brandSoft : Tokens.Surface.raised)
                             }
-                            .contentShape(RoundedRectangle(cornerRadius: Tokens.Radius.input, style: .continuous))
+                            .contentShape(RoundedRectangle(cornerRadius: Tokens.Feed.inner, style: .continuous))
                     }
                     .buttonStyle(IconPressStyle())
                     .accessibilityLabel(kind.name)
