@@ -159,7 +159,7 @@ struct ScanMonitorView: View {
     private var shutter: some View {
         Button {
             Task {
-                guard let photo = await camera.captureMonitorPhoto() else { return }
+                guard let photo = await camera.captureSinglePhoto() else { return }
                 await viewModel.read(photo)
                 camera.phase = .ready
             }
