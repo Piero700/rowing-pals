@@ -25,8 +25,8 @@
     </span></div>`;
 
   const tabBar = (set, active) => `<div class="rp-tabs"><div class="rp-tabpill rp-glass">${set.map(([k, l]) =>
-    `<div class="rp-tab ${k === active ? 'on' : ''}">${icon[k]}${l}</div>`).join('')}</div>
-    <div class="rp-log">${icon.plus}</div></div>`;
+    `<div class="rp-tab ${k === active ? 'on' : ''}" data-tab="${k}">${icon[k]}${l}</div>`).join('')}</div>
+    <div class="rp-log" data-act="log">${icon.plus}</div></div>`;
   const tabs = (a) => tabBar([['feed', 'Feed'], ['rank', 'Rankings'], ['cal', 'Calendar'], ['prof', 'Profile']], a);
   const coachTabs = (a) => tabBar([['rowers', 'Rowers'], ['work', 'Workouts'], ['boat', 'Boats'], ['cal', 'Calendar']], a);
 
@@ -47,7 +47,7 @@
 
   const selfie = () => `<div class="rp-selfie" style="background-image:url(${RPUI.base}icon-256.png)"></div>`;
 
-  const ALICE_PM5 = { time: '7:04.1', metres: '2000', split: '1:46.0', rate: '34',
+  const ALICE_PM5 = RPUI.alicePm5 = { time: '7:04.1', metres: '2000', split: '1:46.0', rate: '34',
     rows: [['500', '1:44.2', '36'], ['1000', '1:46.9', '33'], ['1500', '1:47.3', '33'], ['2000', '1:45.6', '35']] };
 
   RPUI.feedCard = (o = {}) => {
@@ -76,32 +76,32 @@
 
   const screens = {};
 
-  screens.feed = () => `${statusBar()}<div class="rp-body">
+  screens.feed = (o = {}) => `${statusBar()}<div class="rp-body">
     <div class="rp-large-title">Feed</div>
-    <div class="rp-pill-seg" style="margin-bottom:14px"><span class="on">Following</span><span>My club</span></div>
-    ${RPUI.feedCard()}
+    <div class="rp-pill-seg" style="margin-bottom:14px"><span class="on" data-seg="following">Following</span><span data-seg="club">My club</span></div>
+    ${o.top || ''}${RPUI.feedCard()}
     ${RPUI.feedCard({ name: 'Alice Whitfield', avc: 'b', club: 'Durham University BC', ago: '1h', chip: 'Senior · W', total: '2,000', time: '7:04.1', split: '1:46.0', rate: '34', pb: true, segs: ['Main 2,000m', '2k test'], pm5: ALICE_PM5 })}
   </div>${tabs('feed')}`;
 
-  screens.pb = () => `${statusBar()}<div class="rp-body">
+  screens.pb = (o = {}) => `${statusBar()}<div class="rp-body">
     <div class="rp-large-title">Feed</div>
-    <div class="rp-pill-seg" style="margin-bottom:14px"><span>Following</span><span class="on">My club</span></div>
-    ${RPUI.feedCard({ name: 'Alice Whitfield', avc: 'b', club: 'Durham University BC', ago: 'just now', chip: 'Senior · W', total: '2,000', time: '7:04.1', split: '1:46.0', rate: '34', pb: true, segs: ['Main 2,000m', '2k test'], reacts: ['🔥 24', '👏 17', '💪 9'], comments: 11, pm5: ALICE_PM5 })}
+    <div class="rp-pill-seg" style="margin-bottom:14px"><span data-seg="following">Following</span><span class="on" data-seg="club">My club</span></div>
+    ${o.top || ''}${RPUI.feedCard({ name: 'Alice Whitfield', avc: 'b', club: 'Durham University BC', ago: 'just now', chip: 'Senior · W', total: '2,000', time: '7:04.1', split: '1:46.0', rate: '34', pb: true, segs: ['Main 2,000m', '2k test'], reacts: ['🔥 24', '👏 17', '💪 9'], comments: 11, pm5: ALICE_PM5 })}
     ${RPUI.feedCard({ name: 'Sam Okonkwo', avc: 'g', club: 'UEA Boat Club', ago: '2h', chip: 'Novice · M', total: '6,000', time: '22:41.6', split: '1:53.4', rate: '24', segs: ['Main 6,000m'], pm5: { time: '22:41.6', metres: '6000', split: '1:53.4', rate: '24' } })}
   </div>${tabs('feed')}`;
 
-  screens.capture = () => `<div class="rp-capture">${statusBar()}
-    <div class="rp-viewfinder"><div class="gym"></div>${RPUI.pm5()}
+  screens.capture = (o = {}) => `<div class="rp-capture">${statusBar()}
+    <div class="rp-viewfinder"><div class="gym"></div>${RPUI.pm5(o.pm5)}
       <div class="rp-corners"><i></i><i></i><i></i><i></i></div></div>
-    <div class="rp-close rp-glass">${icon.x}</div>
+    <div class="rp-close rp-glass" data-act="close">${icon.x}</div>
     ${selfie()}
-    <div class="rp-shutter-wrap"><div class="rp-shutter rp-glass"><i></i></div><div class="hint">Both cameras fire at once</div></div>
+    <div class="rp-shutter-wrap"><div class="rp-shutter rp-glass" data-act="shutter"><i></i></div><div class="hint">${o.hint || 'Both cameras fire at once'}</div></div>
   </div>`;
 
-  const TEST_PM5 = { time: '6:18.9', metres: '2000', split: '1:34.7', rate: '35',
+  const TEST_PM5 = RPUI.testPm5 = { time: '6:18.9', metres: '2000', split: '1:34.7', rate: '35',
     rows: [['500', '1:33.1', '37'], ['1000', '1:35.4', '34'], ['1500', '1:35.9', '34'], ['2000', '1:34.4', '36']] };
 
-  screens.review = () => `<div class="rp-capture"><div class="rp-viewfinder" style="opacity:.35"><div class="gym"></div>${RPUI.pm5(TEST_PM5)}</div>
+  screens.review = (o = {}) => `<div class="rp-capture"><div class="rp-viewfinder" style="opacity:.35"><div class="gym"></div>${RPUI.pm5(TEST_PM5)}</div>
     ${statusBar()}
     <div class="rp-sheet"><div class="rp-grabber"></div>
       <h3>Check your numbers</h3>
@@ -115,10 +115,11 @@
           <div class="rp-field"><i>Split</i>${s[3]}</div>
           <div class="rp-field"><i>Rate</i>${s[4]}</div>
         </div></div></div>`).join('')}
-      <div class="rp-detect"><p><b>This looks like a 2k test.</b> Add it to the 2k leaderboard?</p>
-        <div class="btns"><div class="rp-btn">No</div><div class="rp-btn primary">Yes</div></div></div>
-      <div class="rp-switch-row">Include on leaderboards<span class="rp-switch"></span></div>
-      <div class="rp-btn primary" style="display:block;margin-top:6px">Post</div>
+      <div class="rp-detect">${o.test === 'yes' ? '<p style="margin:0"><b>Added to the 2k leaderboard.</b></p>'
+        : o.test === 'no' ? '<p style="margin:0"><b>Not a test.</b> It counts for your metres only.</p>'
+        : '<p><b>This looks like a 2k test.</b> Add it to the 2k leaderboard?</p><div class="btns"><div class="rp-btn" data-act="test-no">No</div><div class="rp-btn primary" data-act="test-yes">Yes</div></div>'}</div>
+      <div class="rp-switch-row">Include on leaderboards<span class="rp-switch ${o.include === false ? 'off' : ''}" data-act="include"></span></div>
+      <div class="rp-btn primary" style="display:block;margin-top:6px" data-act="post">Post</div>
     </div></div>`;
 
   const rankRow = (r, i, val, sub) => `<div class="rp-row ${i === 0 ? 'first' : ''}" ${r.me ? 'style="background:var(--card)"' : ''}>
@@ -134,22 +135,35 @@
     { n: 'Sam Okonkwo', club: 'UEA Boat Club', c: 'b', m: '41,300' }
   ];
 
-  screens.rankings = () => `${statusBar()}<div class="rp-body">
+  screens.rankings = (o = {}) => {
+    const period = o.period || 'week';
+    const hero = o.hero || { pos: '3rd', label: 'You this week', line: '116,250m · 5,650m to 2nd' };
+    return `${statusBar()}<div class="rp-body">
     <div class="rp-large-title">Rankings</div>
-    <div class="rp-pill-seg"><span class="on">Volume</span><span>Test results</span></div>
-    <div class="rp-rank-hero"><div class="big num">3rd</div><div><div style="font-weight:600">You this week</div>
-      <div class="num" style="font-size:13px;color:var(--ink2)">116,250m · 5,650m to 2nd</div></div></div>
-    <div class="rp-pill-seg" style="margin-bottom:10px"><span class="on">Week</span><span>Month</span><span>Year</span></div>
-    ${RPUI.volumeRows.map((r, i) => rankRow(r, i, r.m, `${r.mv ? `<em class="rp-move">${r.mv}</em> ` : ''}metres`)).join('')}
+    <div class="rp-pill-seg"><span class="on" data-seg="volume">Volume</span><span data-seg="tests">Test results</span></div>
+    <div class="rp-rank-hero"><div class="big num">${hero.pos}</div><div><div style="font-weight:600">${hero.label}</div>
+      <div class="num" style="font-size:13px;color:var(--ink2)">${hero.line}</div></div></div>
+    <div class="rp-pill-seg" style="margin-bottom:10px">${[['week', 'Week'], ['month', 'Month'], ['year', 'Year']].map(([k, l]) =>
+      `<span class="${k === period ? 'on' : ''}" data-period="${k}">${l}</span>`).join('')}</div>
+    ${(o.rows || RPUI.volumeRows).map((r, i) => rankRow(r, i, r.m, `${r.mv ? `<em class="rp-move">${r.mv}</em> ` : ''}metres`)).join('')}
   </div>${tabs('rank')}`;
+  };
 
-  screens.tests = () => `${statusBar()}<div class="rp-body">
+  RPUI.testRows = [['Tom Ashworth', 'Newcastle Uni BC', '6:04.2', '1:31.0', 'a', 'senior'], ['Jack Fenwick', 'Durham Uni BC', '6:11.7', '1:32.9', 'b', 'senior'], ['Piero Ciobanu', 'UEA Boat Club', '6:18.9', '1:34.7', '', 'senior'], ['Marcus Reilly', 'UEA Boat Club', '6:31.5', '1:37.9', 's', 'senior'], ['Sam Okonkwo', 'UEA Boat Club', '6:52.4', '1:43.1', 'g', 'novice'], ['Ollie Grant', 'UEA Boat Club', '7:05.2', '1:46.3', 'b', 'novice']];
+
+  screens.tests = (o = {}) => {
+    const sex = o.sex || 'men', level = o.level || 'all';
+    const seg = (set, cur, attr) => set.map(([k, l]) => `<span class="${k === cur ? 'on' : ''}" ${attr}="${k}">${l}</span>`).join('');
+    const rows = (o.rows || RPUI.testRows).filter(r => level === 'all' || r[5] === level);
+    return `${statusBar()}<div class="rp-body">
     <div class="rp-large-title">2k test</div>
-    <div class="rp-pill-seg" style="margin-bottom:8px"><span class="on">Men</span><span>Women</span></div>
-    <div class="rp-pill-seg" style="margin-bottom:12px"><span class="on">All</span><span>Novice</span><span>Senior</span></div>
-    ${[['Tom Ashworth', 'Newcastle Uni BC', '6:04.2', '1:31.0', 'a'], ['Jack Fenwick', 'Durham Uni BC', '6:11.7', '1:32.9', 'b'], ['Piero Ciobanu', 'UEA Boat Club', '6:18.9', '1:34.7', ''], ['Marcus Reilly', 'UEA Boat Club', '6:31.5', '1:37.9', 's'], ['Sam Okonkwo', 'UEA Boat Club', '6:52.4', '1:43.1', 'g'], ['Ollie Grant', 'UEA Boat Club', '7:05.2', '1:46.3', 'b']]
+    ${o.back ? '<div class="rp-pill-seg" style="margin-bottom:8px"><span data-seg="volume">Volume</span><span class="on" data-seg="tests">Test results</span></div>' : ''}
+    <div class="rp-pill-seg" style="margin-bottom:8px">${seg([['men', 'Men'], ['women', 'Women']], sex, 'data-sex')}</div>
+    <div class="rp-pill-seg" style="margin-bottom:12px">${seg([['all', 'All'], ['novice', 'Novice'], ['senior', 'Senior']], level, 'data-level')}</div>
+    ${rows
       .map((r, i) => rankRow({ n: r[0], club: r[1], c: r[4] }, i, r[2], `${r[3]} /500m`)).join('')}
   </div>${tabs('rank')}`;
+  };
 
   screens.profile = () => `${statusBar()}<div class="rp-body">
     <div class="rp-prof-head"><div class="rp-av">PC</div><div><div style="font-size:22px;font-weight:700">Piero Ciobanu</div>
@@ -166,6 +180,29 @@
       <path d="M0 20 L50 32 L100 38 L150 55 L200 60 L250 74 L300 86" fill="none" stroke="#C6ADFF" stroke-width="3" stroke-linejoin="round"/>
       <circle cx="296" cy="86" r="5" fill="#C6ADFF"/></svg></div>
   </div>${tabs('prof')}`;
+
+  // The rower's Calendar: what the coach has set, and whether you can make it.
+  screens.rowerCal = (o = {}) => {
+    const reply = o.reply || '';
+    const answer = reply === 'yes' ? '<span class="rp-chip success">Going</span>'
+      : reply === 'no' ? '<span class="rp-chip">Can’t make it</span>' : '';
+    return `${statusBar()}<div class="rp-body">
+    <div class="rp-large-title">Calendar</div>
+    <div class="rp-section">Next up</div>
+    <div class="rp-practice" style="margin-top:0"><div style="display:flex;justify-content:space-between;align-items:center"><div class="t">Morning outing · 1st VIII</div>${answer}</div>
+      <div class="m num">Tomorrow · 06:30–08:30 · Boathouse</div>
+      <div style="display:flex;gap:6px;margin-bottom:12px"><span class="rp-chip brand num">Seat 8 · Stroke</span><span class="rp-chip">1st VIII</span></div>
+      ${reply ? '<div style="font-size:13px;color:var(--ink3)">Your coach can see your answer.</div>'
+        : '<div style="font-size:14px;margin-bottom:8px">Can you make it?</div><div style="display:flex;gap:8px"><div class="rp-btn" data-act="reply-no">No</div><div class="rp-btn primary" data-act="reply-yes">Yes</div></div>'}
+    </div>
+    <div class="rp-section">From your coach</div>
+    <div class="rp-wk"><div style="display:flex;justify-content:space-between;align-items:center"><div class="t">3 × 2k @ r24</div><span class="rp-chip">UT1</span></div>
+      <div class="m num">Thursday · Target split 1:52.0</div>
+      <div class="rp-btn primary" data-act="log">Log it</div></div>
+    <div class="rp-wk"><div style="display:flex;justify-content:space-between;align-items:center"><div class="t" style="font-size:16px">Head of the River Fours</div><span class="rp-chip">Race</span></div>
+      <div class="m num" style="margin-bottom:0">Saturday · Race day</div></div>
+  </div>${tabs('cal')}`;
+  };
 
   screens.coachRowers = () => `${statusBar()}<div class="rp-body">
     <div class="rp-header-row"><div class="rp-large-title">Rowers</div><div class="rp-av a" style="margin-right:4px">JM</div></div>
@@ -217,7 +254,7 @@
     <div style="text-align:center;font-size:13px;color:var(--ink3);margin-top:10px">Each rower is told their boat and seat</div>
   </div>${coachTabs('boat')}`;
 
-  screens.coachCal = () => {
+  screens.coachCal = (o = {}) => {
     const days = [];
     const dots = { 1: 'p', 3: 'pp', 6: 'p', 8: 'pr', 10: 'p', 13: 'p', 15: 'pp', 16: 'p', 18: 'r', 20: 'p', 22: 'pp', 25: 'r', 27: 'p', 29: 'p' };
     days.push('<div class="d mute num">29</div><div class="d mute num">30</div>');
@@ -230,9 +267,9 @@
       <div class="rp-header-row"><div class="rp-large-title">Calendar</div><span class="rp-chip brand" style="margin-right:4px">Who's available</span></div>
       <div class="rp-cal"><div style="display:flex;justify-content:space-between;font-weight:600;margin-bottom:10px"><span>October</span><span style="color:var(--ink3)">‹ ›</span></div>
         <div class="rp-cal-grid">${['M', 'T', 'W', 'T', 'F', 'S', 'S'].map(h => `<div class="h">${h}</div>`).join('')}${days.join('')}</div></div>
-      <div class="rp-practice"><div class="t">Morning outing · 1st VIII</div><div class="m num">Today · 06:30–08:30 · Boathouse</div>
+      ${o.top || ''}<div class="rp-practice"><div class="t">Morning outing · 1st VIII</div><div class="m num">Today · 06:30–08:30 · Boathouse</div>
         <div class="rp-counts num"><div><b style="color:var(--success)">14</b><span>Present</span></div><div><b>2</b><span>Excused</span></div><div><b style="color:var(--error)">1</b><span>Absent</span></div></div>
-        <div class="rp-btn primary" style="margin-top:10px">Take register</div></div>
+        ${o.registerDone ? '<div class="rp-btn" style="margin-top:10px;color:var(--success)">Register saved</div>' : '<div class="rp-btn primary" style="margin-top:10px" data-act="register">Take register</div>'}</div>
       <div class="rp-practice" style="padding:4px 14px">
         ${[['Piero Ciobanu', 'Checked in', 'Present', 'success'], ['Ollie Grant', 'Can’t make it — exam', 'Excused', '']].map(r =>
           `<div class="rp-reg"><div class="who">${r[0]}<span>${r[1]}</span></div><span class="rp-chip ${r[3]}">${r[2]}</span></div>`).join('')}

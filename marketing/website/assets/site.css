@@ -1,7 +1,7 @@
 /* rowingpals.com — page styles. Phone mockups live in ui.css. */
 
 *, *::before, *::after { box-sizing: border-box; }
-html { scroll-behavior: smooth; }
+html { scroll-behavior: smooth; overflow-x: clip; }
 body {
   margin: 0;
   background: #0a0b0d;
@@ -80,11 +80,11 @@ section { position: relative; }
   display: flex; align-items: center; gap: 8px; padding: 0 10px 0 14px;
   transition: width .5s cubic-bezier(.2, .8, .2, 1), height .4s, top .4s;
 }
-.nav.small { width: min(780px, calc(100% - 32px)); height: 56px; top: 10px; }
+.nav.small { width: min(860px, calc(100% - 32px)); height: 56px; top: 10px; }
 .logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 18px; letter-spacing: -.02em; }
 .logo img { width: 36px; height: 36px; border-radius: 10px; }
 .nav-links { display: flex; gap: 4px; margin: 0 auto; }
-.nav-links a { padding: 8px 14px; border-radius: 999px; font-size: 15px; color: var(--ink2); transition: color .2s, background .2s; }
+.nav-links a { white-space: nowrap; padding: 8px 14px; border-radius: 999px; font-size: 15px; color: var(--ink2); transition: color .2s, background .2s; }
 .nav-links a:hover { color: var(--ink); background: rgba(255, 255, 255, .06); }
 .nav .btn { height: 44px; padding: 0 18px; font-size: 15px; }
 
@@ -400,6 +400,87 @@ footer { position: relative; z-index: 1; border-top: 1px solid rgba(255, 255, 25
 [data-reveal].in { opacity: 1; transform: none; filter: none; }
 
 /* ---------- Responsive ---------- */
+/* ---------- Demo: the app, tappable ---------- */
+.demo { padding: 120px 0; }
+.demo-grid { display: grid; grid-template-columns: 1fr auto; grid-template-areas: "head stage" "controls stage"; column-gap: 80px; row-gap: 30px; align-items: end; }
+.demo-head { grid-area: head; }
+.demo-controls { grid-area: controls; align-self: start; }
+.demo-stage { grid-area: stage; align-self: center; }
+.demo-mode { margin: 0 auto 22px; }
+.demo-todo { list-style: none; padding: 0; margin: 0 0 18px; display: grid; gap: 10px; counter-reset: todo; max-width: 460px; }
+.demo-todo li {
+  counter-increment: todo; display: flex; gap: 14px; align-items: center; padding: 12px 16px; border-radius: 16px;
+  background: rgba(255, 255, 255, .03); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .07); color: var(--ink2);
+  transition: background .3s, color .3s, box-shadow .3s;
+}
+.demo-todo li::before {
+  content: counter(todo); flex: none; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center;
+  font: 700 13px "Inter", sans-serif; font-variant-numeric: tabular-nums; background: var(--raised); color: var(--ink);
+  transition: background .3s, color .3s;
+}
+.demo-todo li.next { color: var(--ink); box-shadow: inset 0 0 0 1px rgba(145, 184, 255, .45); background: rgba(145, 184, 255, .07); }
+.demo-todo li.done { color: var(--ink3); }
+.demo-todo li.done::before { content: "✓"; background: var(--success); color: #0b2a1d; }
+.demo-note { min-height: 4.4em; color: var(--ink3); font-size: 15px; max-width: 460px; margin: 0 0 18px; }
+.demo-restart { font-size: 14px; padding: 10px 18px; }
+.demo-stage { text-align: center; }
+.demo-phone { zoom: .86; margin: 0 auto; }
+.demo-fine { font-size: 13px; color: var(--ink3); margin: 14px 0 0; }
+
+/* inside the demo phone: things you can tap, scrolling, and moving between screens */
+.demo-phone [data-tab], .demo-phone [data-act], .demo-phone [data-seg], .demo-phone [data-period],
+.demo-phone [data-sex], .demo-phone [data-level], .demo-phone .rp-react span:not(.cm) { cursor: pointer; }
+.demo-phone .rp-log, .demo-phone .rp-btn, .demo-phone .rp-react span:not(.cm), .demo-phone .rp-shutter { transition: transform .15s; }
+.demo-phone .rp-log:active, .demo-phone .rp-btn:active, .demo-phone .rp-react span:active, .demo-phone .rp-shutter:active { transform: scale(.92); }
+.demo-phone .rp-body, .demo-phone .rp-sheet { overflow-y: auto; scrollbar-width: none; overscroll-behavior: contain; }
+.demo-phone .rp-body::-webkit-scrollbar, .demo-phone .rp-sheet::-webkit-scrollbar { display: none; }
+.demo-phone .rp-react span.mine { background: rgba(145, 184, 255, .2); color: var(--brand); }
+.demo-phone .rp-log.pulse { animation: logPulse 1.8s ease-in-out infinite; }
+@keyframes logPulse { 50% { box-shadow: 0 0 0 10px rgba(145, 184, 255, .22), 0 0 30px rgba(145, 184, 255, .5); } }
+.demo-phone .rp-screen.enter { animation: demoIn .35s cubic-bezier(.2, .8, .2, 1); }
+.demo-phone .rp-screen.up .rp-sheet { animation: sheetUp .45s cubic-bezier(.2, .9, .25, 1); }
+@keyframes demoIn { from { opacity: .4; transform: scale(.985); } }
+@keyframes sheetUp { from { transform: translateY(100%); } }
+.demo-phone .flash { position: absolute; inset: 0; background: #fff; z-index: 40; pointer-events: none; animation: flash .45s ease-out forwards; }
+@keyframes flash { from { opacity: .9; } to { opacity: 0; } }
+.demo-phone .rp-viewfinder.scanning .scan { animation: scan 1.4s cubic-bezier(.5, 0, .5, 1) forwards; }
+.demo-phone .new-post { animation: postIn .6s cubic-bezier(.2, 1.1, .4, 1); }
+@keyframes postIn { from { opacity: 0; transform: translateY(-30px) scale(.96); } }
+.demo-toast {
+  position: absolute; left: 50%; bottom: 112px; transform: translateX(-50%); z-index: 35; white-space: nowrap;
+  padding: 10px 16px; border-radius: 999px; font-size: 14px; font-weight: 600; color: var(--ink);
+  animation: toast 2.6s ease forwards; pointer-events: none;
+}
+.demo-toast b { color: var(--success); margin-right: 6px; }
+@keyframes toast { 0% { opacity: 0; transform: translate(-50%, 12px); } 12%, 82% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; transform: translate(-50%, 8px); } }
+.demo-dim { position: absolute; inset: 0; background: rgba(0, 0, 0, .5); z-index: 30; animation: fadeIn .3s both; }
+@keyframes fadeIn { from { opacity: 0; } }
+.demo-phone .rp-sheet.short { inset: auto 0 0; padding-bottom: 40px; z-index: 31; }
+.demo-choice { display: flex; gap: 12px; align-items: center; padding: 14px; border-radius: 18px; background: var(--card); margin-top: 10px; }
+.demo-choice b { display: block; font-size: 16px; }
+.demo-choice span { font-size: 13px; color: var(--ink3); }
+.demo-choice i { font-style: normal; width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; background: rgba(145, 184, 255, .14); color: var(--brand); font-size: 18px; flex: none; }
+.demo-field { background: var(--card); border-radius: 14px; padding: 10px 14px; margin-top: 8px; }
+.demo-field i { display: block; font-style: normal; font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--ink3); margin-bottom: 2px; }
+.demo-news { border-radius: 22px; padding: 14px; margin-top: 10px; background: linear-gradient(135deg, rgba(145, 184, 255, .16), rgba(145, 184, 255, .04)), var(--card); box-shadow: inset 0 0 0 1px rgba(145, 184, 255, .3); }
+.demo-news .t { font-weight: 600; }
+.demo-news .m { font-size: 13px; color: var(--ink3); margin-top: 2px; }
+
+@media (max-width: 1000px) {
+  .demo-grid { grid-template-columns: 1fr; grid-template-areas: "head" "stage" "controls"; row-gap: 36px; }
+  .demo-head, .demo-controls { text-align: center; }
+  .demo-head .lead, .demo-todo, .demo-note { margin-left: auto; margin-right: auto; }
+  .demo-todo li { text-align: left; }
+  .demo-phone { zoom: .8; }
+}
+@media (max-width: 640px) {
+  .demo { padding: 80px 0; }
+  .demo-phone { zoom: .74; }
+}
+@media (max-width: 380px) {
+  .demo-phone { zoom: .68; }
+}
+
 @media (max-width: 1000px) {
   .nav-links { display: none; }
   .nav .btn { margin-left: auto; }

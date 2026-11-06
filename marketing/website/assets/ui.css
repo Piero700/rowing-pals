@@ -268,7 +268,9 @@
 .rp-btn.primary { background: var(--brand); color: #0b1a35; }
 .rp-switch-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 4px; font-size: 15px; }
 .rp-switch { width: 51px; height: 31px; border-radius: 16px; background: var(--success); position: relative; flex: none; }
-.rp-switch::after { content: ""; position: absolute; right: 2px; top: 2px; width: 27px; height: 27px; border-radius: 50%; background: #fff; }
+.rp-switch::after { content: ""; position: absolute; right: 2px; top: 2px; width: 27px; height: 27px; border-radius: 50%; background: #fff; transition: right .2s; }
+.rp-switch.off { background: var(--raised); }
+.rp-switch.off::after { right: 22px; }
 
 /* ---------- Profile / streak ---------- */
 .rp-prof-head { display: flex; align-items: center; gap: 14px; margin: 14px 4px 16px; }

@@ -26,6 +26,7 @@
   <a href="#top" class="logo"><img src="assets/icon-256.png" alt=""><span>Rowing Pals</span></a>
   <nav class="nav-links">
     <a href="#how">How it works</a>
+    <a href="#demo">Try it</a>
     <a href="#rankings">Rankings</a>
     <a href="#coaches">For coaches</a>
     <a href="#pricing">Pricing</a>
@@ -110,6 +111,27 @@
             <div class="phone" data-screen="rankings"></div>
           </div>
         </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Demo: the app, tappable, with sample data -->
+  <section class="demo" id="demo">
+    <div class="wrap demo-grid">
+      <div class="demo-head" data-reveal>
+        <span class="eyebrow">Try it</span>
+        <h2 class="h2">Have a go.<br><span class="grad">Right here.</span></h2>
+        <p class="lead">Tap the phone. Log a piece, watch it go up the rankings, then switch to Coach and run the squad.</p>
+      </div>
+      <div class="demo-stage" data-reveal style="--delay:.15s">
+        <div class="seg demo-mode" id="demoMode"><span class="thumb"></span><button class="on" data-m="rower">Rower</button><button data-m="coach">Coach</button></div>
+        <div class="phone demo-phone" id="demoPhone" aria-label="Rowing Pals demo with sample data"></div>
+        <p class="demo-fine">Sample data. Nothing you tap here is saved.</p>
+      </div>
+      <div class="demo-controls" data-reveal>
+        <ol class="demo-todo" id="demoTodo"></ol>
+        <p class="demo-note" id="demoNote" aria-live="polite"></p>
+        <button class="btn btn-ghost demo-restart" id="demoRestart" type="button">Start again</button>
       </div>
     </div>
   </section>
@@ -307,5 +329,6 @@
 
 <script src="assets/ui.js"></script>
 <script src="assets/site.js"></script>
+<script src="assets/demo.js"></script>
 </body>
 </html>
