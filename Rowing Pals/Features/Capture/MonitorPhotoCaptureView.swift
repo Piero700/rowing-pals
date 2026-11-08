@@ -72,7 +72,7 @@ struct MonitorPhotoCaptureView: View {
     private var shutterButton: some View {
         Button {
             Task {
-                if let data = await viewModel.captureMonitorPhoto() {
+                if let data = await viewModel.captureSinglePhoto() {
                     onCaptured(data)
                     dismiss()
                 }
