@@ -2,7 +2,7 @@
 
 | Folder | What it is | Where it goes |
 |---|---|---|
-| `website/` | rowingpals.com — one static page, no build step | Upload the folder as the site root (Netlify, Vercel, GitHub Pages, Cloudflare Pages…) |
+| `website/` | rowingpals.com — static pages (home, `/privacy`, `/terms`, `/support`), no build step | Upload the folder as the site root (Netlify, Vercel, GitHub Pages, Cloudflare Pages…) |
 | `emails/` | Confirm signup + Reset password | Supabase → Authentication → Email Templates (subject lines are in each file's top comment) |
 | `app-store/` | 10 screenshots (1290×2796) + 3 banners | App Store Connect; `export/` holds the PNGs |
 
@@ -21,7 +21,7 @@ That also refreshes `website/assets/og.png` (the link preview image).
 
 Before launch:
 - When the app is live, add Apple's official "Download on the App Store" badge with the real link.
-- `/privacy` and `/terms` in the footer need real pages (the App Store requires a public privacy policy URL).
+- `website/privacy/` and `website/terms/` copy the app's `PrivacyPolicyView.swift` and `TermsOfServiceView.swift` word for word. When one changes, change the other. Use `https://rowingpals.com/privacy` and `https://rowingpals.com/support` in App Store Connect.
 - The emails load the logo from `https://rowingpals.com/assets/icon-256.png`, so deploy the site first.
 - Mockup names, clubs and numbers are fictional sample data. The mockups follow the app as of 2026-11-06.
 - The App Store art in `app-store/export/` predates the 2026-11-06 site update. Re-running `render.sh` uses the new mockups but `artwork.html` still needs its own restyle (gradient headlines, the coach promo's boat).

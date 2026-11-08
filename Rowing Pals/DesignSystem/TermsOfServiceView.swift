@@ -24,13 +24,12 @@ struct TermsOfServiceView: View {
                 VStack(alignment: .leading, spacing: 16) {
                     section("Zero tolerance for abusive content and conduct") {
                         "Rowing Pals has zero tolerance for objectionable content or abusive " +
-                        "behaviour of any kind — harassment, hate speech, nudity or sexual " +
-                        "content, and anything illegal. Every photo you post is screened before " +
-                        "it becomes visible, and every caption and comment is checked against a " +
-                        "filter, but you're responsible for what you post regardless. Content or " +
-                        "accounts reported by other users are reviewed, and a violation results " +
-                        "in the content being removed and the account being blocked or deleted, " +
-                        "at our discretion, without notice."
+                        "behaviour of any kind — harassment, hate speech, nudity or sexual content, " +
+                        "and anything illegal. Every caption and comment is checked against a filter, " +
+                        "but you're responsible for what you post regardless. Content or accounts " +
+                        "reported by other users are reviewed, and a violation results in the content " +
+                        "being removed and the account being blocked or deleted, at our discretion, " +
+                        "without notice."
                     }
                     section("Reporting and blocking") {
                         "Every post and comment has a Report control. Reporting sends it for " +
@@ -44,18 +43,19 @@ struct TermsOfServiceView: View {
                         "users of the app, for as long as your account exists."
                     }
                     section("Your data") {
-                        "Your training data — session times, splits, rates and distances — is " +
-                        "visible to other users according to the visibility features of the app " +
-                        "(feed, leaderboards, your profile). Deleting your account deletes this " +
-                        "data. See Settings for account deletion."
+                        "Your training data — session times, splits, rates and distances — is visible " +
+                        "to other users according to the visibility features of the app (feed, " +
+                        "leaderboards, your profile). Your club's coaches can see all your training " +
+                        "in that club, even on a private account; the Privacy Policy explains this. " +
+                        "Deleting your account deletes this data. See Settings for account deletion."
                     }
                     section("Account standing") {
                         "We can suspend or terminate an account that violates these terms, " +
                         "including the zero-tolerance clause above, at our discretion."
                     }
                     section("Contact") {
-                        "Questions or reports outside the in-app tools: use the support email " +
-                        "link in Settings."
+                        "Questions or reports outside the in-app tools: use the support email link in " +
+                        "Settings or email support@rowingpals.com."
                     }
                 }
                 .padding(20)
