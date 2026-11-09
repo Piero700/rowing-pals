@@ -13,6 +13,12 @@ Everything not yet on `main`, in one build, so you can test it together:
 Work through the detailed checklists in the order above, then sections 3 and 4 here.
 
 ## 0. Put the build on your iPhone
+**Easiest: TestFlight.** This branch was uploaded as **RP Beta 1.0 (3)** on 9 Nov 2026. Once App Store Connect has
+processed it (it emails you, usually within half an hour), open the **TestFlight** app on your iPhone, tap
+**Rowing Pals Beta**, check it says **1.0 (3)**, and tap **Update** (or **Install**). If it shows **Missing Compliance**
+in App Store Connect, click the build and choose **None of the algorithms mentioned above**, then save.
+
+**Or from Xcode:**
 1. Plug in your iPhone and unlock it.
 2. In Xcode, click **File › Open**, go to the `Rowing Pals` folder, click `Rowing Pals.xcodeproj`, then click **Open**.
 3. Check the branch: at the top left of the Xcode window, next to the project name, it should say **t45-combined-test**.
