@@ -25,7 +25,8 @@ In Supabase (staging project) → **SQL Editor** → **New query**, paste each f
 2. `docs/migrations/2026-11-05-clubs-open-and-verified.sql`
 
 ## 2. Deploy the new delete-account function (staging)
-The copy on staging dates from September, so the new delete-account code isn't live yet. Ask Claude to deploy it, or in Terminal, in the `Rowing Pals` folder, run:
+**Done 9 Nov 2026:** the new delete-account code is deployed to staging (version 5). Nothing to do here. If it ever
+needs redeploying, run this in Terminal in the `Rowing Pals` folder:
 
 ```
 supabase functions deploy delete-account

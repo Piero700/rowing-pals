@@ -171,8 +171,8 @@ After any change:
 **Next: the combined test build** on branch `t45-combined-test` (2026-11-08): everything not yet on `main` in one
 branch — grouped rows and no gradients (decisions 99–101) with helper text, open clubs and the optional selfie (98),
 the legal wording and full delete account (102), one-at-a-time photos (103), the website's Privacy/Terms/Support pages
-and the App Store art. Waiting on the phone tests in `docs/testing/combined-t45.md`; the new `delete-account` function
-is not deployed to staging yet. Earlier:
+and the App Store art. Uploaded as TestFlight RP Beta 1.0 (3) on 2026-11-09, with `delete-account` v5 deployed to
+staging; waiting on the phone tests in `docs/testing/combined-t45.md`. Earlier:
 
 **The coach notepad** (decision 96): phases NP1–NP4 and editing land sessions (decision 97) passed the phone tests
 and are merged into `main` (2026-11-05); general checklist `docs/testing/note-taking.md`. Canvas boards `CoachNotepad…`, `CoachNotebook…` and
