@@ -172,6 +172,30 @@ final class CaptureViewModel: NSObject {
         }
     }
 
+    /// Set on the session queue by `shutDown()`, so a setup still waiting in the queue doesn't
+    /// start this session again afterwards.
+    @ObservationIgnored
+    nonisolated(unsafe) private var isShutDown = false
+
+    /// Stops the session and lets go of its cameras, returning only once that's finished. Log
+    /// replaces its session when the selfie or Together | One at a time changes; the next session
+    /// can't run until this one has released the cameras (a two-camera session started while a
+    /// one-camera session still holds the back camera never runs: no preview, and the shutter fails
+    /// with "Cannot Record").
+    func shutDown() async {
+        await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+            sessionQueue.async { [weak self, session] in
+                self?.isShutDown = true
+                if session.isRunning { session.stopRunning() }
+                session.beginConfiguration()
+                session.inputs.forEach { session.removeInput($0) }
+                session.outputs.forEach { session.removeOutput($0) }
+                session.commitConfiguration()
+                continuation.resume()
+            }
+        }
+    }
+
     private func requestCameraAccess() async -> Bool {
         switch AVCaptureDevice.authorizationStatus(for: .video) {
         case .authorized:
@@ -200,7 +224,7 @@ final class CaptureViewModel: NSObject {
         guard let multiCamSession = session as? AVCaptureMultiCamSession else { return }
 
         sessionQueue.async { [weak self] in
-            guard let self else { return }
+            guard let self, !isShutDown else { return }
 
             multiCamSession.beginConfiguration()
 
@@ -273,7 +297,7 @@ final class CaptureViewModel: NSObject {
 
     private func configureSequentialRear() {
         sessionQueue.async { [weak self] in
-            guard let self else { return }
+            guard let self, !isShutDown else { return }
 
             session.beginConfiguration()
             session.sessionPreset = .photo

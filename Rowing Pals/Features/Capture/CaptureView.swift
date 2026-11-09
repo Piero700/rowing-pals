@@ -263,13 +263,23 @@ struct CaptureView: View {
     }
 
     /// Restarts the camera with or without the front camera, so it's only ever on when this screen
-    /// is taking both photos together.
+    /// is taking both photos together. The new session starts only after the old one has released
+    /// the cameras, and switches made in quick succession run in order.
     private func restartCamera() {
         if !showsBothCameras { isFrontPrimary = false }
-        viewModel.stop()
-        viewModel = CaptureViewModel(rearOnly: !showsBothCameras)
-        viewModel.start()
+        let previousRestart = cameraRestart
+        let old = viewModel
+        let next = CaptureViewModel(rearOnly: !showsBothCameras)
+        viewModel = next
+        cameraRestart = Task {
+            await previousRestart?.value
+            await old.shutDown()
+            next.start()
+        }
     }
+
+    /// The camera switch in progress, so the next one waits for it.
+    @State private var cameraRestart: Task<Void, Never>?
 
     @ViewBuilder
     private var insetPreview: some View {
