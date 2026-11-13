@@ -185,9 +185,12 @@ enum PredictionService {
     /// the rower's own sessions and uses demographics only for the cold-start estimate.
     private static func loadAthlete(userId: UUID, asOf: Date, calendar: Calendar) async throws -> AthleteProfile? {
         struct ProfileRow: Decodable { let gender: RowerGender? }
-        let profile: ProfileRow? = try? await SupabaseService.shared
+        // Both at once.
+        async let profileRequest: ProfileRow? = try? await SupabaseService.shared
             .from("profiles").select("gender").eq("id", value: userId).single().execute().value
-        let details = (try? await AthletePrivateService.mine()) ?? AthletePrivateService.Details()
+        async let detailsRequest = try? await AthletePrivateService.mine()
+        let (profile, found) = await (profileRequest, detailsRequest)
+        let details = found ?? AthletePrivateService.Details()
 
         return athlete(gender: profile?.gender, details: details, asOf: asOf, calendar: calendar)
     }

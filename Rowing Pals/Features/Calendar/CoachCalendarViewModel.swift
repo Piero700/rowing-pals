@@ -168,37 +168,48 @@ final class CoachCalendarViewModel {
         let nextWeekEnd = calendar.date(byAdding: .day, value: 7, to: nextWeekStart) ?? nextWeekStart
         do {
             let viewer = try await ViewerContext.shared.current()
+            // Round 1, all at once: the month's and next week's practices, workouts, events,
+            // squads, announcements, members and water sessions.
+            let twoWeeksAgo = Date().addingTimeInterval(-14 * 24 * 60 * 60)
             async let monthPractices = CalendarService.clubPractices(from: first, to: end)
             async let weekPractices = CalendarService.clubPractices(from: nextWeekStart, to: nextWeekEnd)
             async let clubWorkouts = WorkoutService.clubWorkouts()
             async let clubEvents = CalendarService.clubEvents(fromDay: WorkoutRules.dayText(min(first, Date()), calendar: calendar))
+            async let squadRows = Self.squads(ofClub: viewer.clubId)
+            // Announcements are extra too: before their migration the calendar still shows.
+            async let announcementRows = (try? await AnnouncementService.club(since: twoWeeksAgo)) ?? []
+            async let memberRows = try? await CalendarService.members()
+            // Water sessions are extra: before the boats migration the calendar still shows.
+            async let waterRows = (try? await BoatService.sessions(from: first, to: end)) ?? []
             let (monthRows, weekRows, workoutRows, eventRows) = try await (monthPractices, weekPractices, clubWorkouts, clubEvents)
-            if let clubId = viewer.clubId { squads = try await CoachingService.squads(of: clubId) }
+            if let loadedSquads = try await squadRows { squads = loadedSquads }
             practices = monthRows
             nextWeekPractices = weekRows
             let firstText = WorkoutRules.dayText(first, calendar: calendar)
             let lastText = WorkoutRules.dayText(last, calendar: calendar)
             workouts = workoutRows.filter { $0.workoutDate >= firstText && $0.workoutDate <= lastText }
             events = eventRows
-            // Announcements are extra too: before their migration the calendar still shows.
-            let twoWeeksAgo = Date().addingTimeInterval(-14 * 24 * 60 * 60)
-            announcements = (try? await AnnouncementService.club(since: twoWeeksAgo)) ?? []
-            if let members = try? await CalendarService.members() {
+            announcements = await announcementRows
+            if let members = await memberRows {
                 authorNames = Dictionary(members.map { ($0.id, $0.displayName) }, uniquingKeysWith: { first, _ in first })
             }
-            let unknownAuthors = Set(announcements.compactMap(\.createdBy).filter { authorNames[$0] == nil })
-            if let found = try? await CalendarService.displayNames(of: unknownAuthors) {
-                authorNames.merge(found) { _, new in new }
-            }
-            // Water sessions are extra: before the boats migration the calendar still shows.
-            let water = (try? await BoatService.sessions(from: first, to: end)) ?? []
+            let water = await waterRows
             waterSessions = water
-            waterBoats = Dictionary(grouping: (try? await BoatService.boats(ofSessions: water.map(\.id))) ?? [], by: \.sessionId)
+
+            // Round 2, all at once: names of authors who aren't members, the water sessions'
+            // boats, and who each practice and event is for and who answered.
+            let unknownAuthors = Set(announcements.compactMap(\.createdBy).filter { authorNames[$0] == nil })
+            async let foundNames = try? await CalendarService.displayNames(of: unknownAuthors)
+            async let boatRows = (try? await BoatService.boats(ofSessions: water.map(\.id))) ?? []
             let practiceIds = Array(Set((monthRows + weekRows).map(\.id)))
             async let audienceRows = CalendarService.audiences(ofPractices: practiceIds)
             async let responseRows = CalendarService.responses(toPractices: practiceIds)
             async let eventAudienceRows = CalendarService.audiences(ofEvents: eventRows.map(\.id))
             async let eventResponseRows = CalendarService.eventResponses(eventRows.map(\.id))
+            if let found = await foundNames {
+                authorNames.merge(found) { _, new in new }
+            }
+            waterBoats = Dictionary(grouping: await boatRows, by: \.sessionId)
             let (audiences, answers, eventAudienceMap, eventAnswers) = try await (audienceRows, responseRows, eventAudienceRows, eventResponseRows)
             practiceAudiences = audiences
             responses = Dictionary(grouping: answers, by: \.practiceId)
@@ -209,5 +220,11 @@ final class CoachCalendarViewModel {
             errorMessage = "Couldn’t load the calendar. \(error.localizedDescription)"
         }
         hasLoaded = true
+    }
+
+    /// The club's squads; nil without a club, so the ones shown stay.
+    private static func squads(ofClub clubId: UUID?) async throws -> [Squad]? {
+        guard let clubId else { return nil }
+        return try await CoachingService.squads(of: clubId)
     }
 }

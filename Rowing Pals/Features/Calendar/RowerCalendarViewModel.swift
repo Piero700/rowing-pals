@@ -103,6 +103,8 @@ final class RowerCalendarViewModel {
             async let practiceRows = CalendarService.myPractices(from: first, to: end)
             async let workoutRows = WorkoutService.mine(from: first, to: calendar.date(byAdding: .day, value: 6, to: first) ?? first, calendar: calendar)
             async let eventRows = CalendarService.myEvents(fromDay: WorkoutRules.dayText(Date(), calendar: calendar))
+            // Before the boats migration there are none; the rest of the Calendar carries on.
+            async let waterRows = (try? await loadWater(from: first, to: end)) ?? []
             let (loadedPractices, loadedWorkouts, loadedEvents) = try await (practiceRows, workoutRows, eventRows)
             practices = loadedPractices.filter { !$0.cancelled }
             workouts = loadedWorkouts
@@ -117,8 +119,7 @@ final class RowerCalendarViewModel {
                                  uniquingKeysWith: { first, _ in first })
             eventAnswers = Dictionary(eventResponses.filter { $0.userId == me }.map { ($0.eventId, $0.canCome) },
                                       uniquingKeysWith: { first, _ in first })
-            // Before the boats migration there are none; the rest of the Calendar carries on.
-            water = (try? await loadWater(from: first, to: end)) ?? []
+            water = await waterRows
             errorMessage = nil
         } catch {
             errorMessage = "Couldn’t load your calendar. \(error.localizedDescription)"

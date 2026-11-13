@@ -111,13 +111,12 @@ final class SettingsViewModel {
         do {
             let id = try await SupabaseService.shared.auth.session.user.id
             userId = id
-            let profile: Profile = try await SupabaseService.shared
-                .from("profiles")
-                .select()
-                .eq("id", value: id)
-                .single()
-                .execute()
-                .value
+            // The profile, the private details and the notification settings at once.
+            async let profileRequest = Self.profile(id)
+            // Before docs/migrations/2026-10-05-pace-engine-inputs.sql has run, there's nothing yet.
+            async let detailsRequest = try? await AthletePrivateService.mine()
+            async let notificationsRequest = Self.notificationRows(userId: id)
+            let profile = try await profileRequest
             displayName = profile.displayName
             username = profile.username ?? ""
             originalUsername = username
@@ -129,20 +128,28 @@ final class SettingsViewModel {
             side = profile.side
             isPrivate = profile.isPrivate
             original = (profile.displayName, gender, profile.category, profile.weeklyTargetM, profile.isRower, profile.side)
-            // Before docs/migrations/2026-10-05-pace-engine-inputs.sql has run, there's nothing yet.
-            let details = (try? await AthletePrivateService.mine()) ?? AthletePrivateService.Details()
+            let details = await detailsRequest ?? AthletePrivateService.Details()
             originalPrivate = details
             birthDate = details.birthDate
             weightText = details.weightKg.map(Self.weightString) ?? ""
-            await loadNotifications(userId: id, clubId: profile.clubId)
+            await loadNotifications(await notificationsRequest, userId: id, clubId: profile.clubId)
         } catch {
             saveError = error.localizedDescription
         }
     }
 
-    /// The rower's row, or the defaults when they've never changed anything.
-    @MainActor
-    private func loadNotifications(userId: UUID, clubId: UUID?) async {
+    private static func profile(_ id: UUID) async throws -> Profile {
+        try await SupabaseService.shared
+            .from("profiles")
+            .select()
+            .eq("id", value: id)
+            .single()
+            .execute()
+            .value
+    }
+
+    /// The rower's notification settings row(s), or why they couldn't be read.
+    private static func notificationRows(userId: UUID) async -> Result<[NotificationSettings], Error> {
         do {
             let rows: [NotificationSettings] = try await SupabaseService.shared
                 .from("notification_settings")
@@ -150,22 +157,38 @@ final class SettingsViewModel {
                 .eq("user_id", value: userId)
                 .execute()
                 .value
-            notificationSettings = rows.first ?? .defaults(for: userId)
+            return .success(rows)
         } catch {
+            return .failure(error)
+        }
+    }
+
+    /// The rower's row, or the defaults when they've never changed anything; then the club's
+    /// name and whether iOS allows alerts, together.
+    @MainActor
+    private func loadNotifications(_ rows: Result<[NotificationSettings], Error>, userId: UUID, clubId: UUID?) async {
+        switch rows {
+        case .success(let rows):
+            notificationSettings = rows.first ?? .defaults(for: userId)
+        case .failure(let error):
             notificationSettings = .defaults(for: userId)
             notificationError = "Couldn't load your notification settings. \(error.localizedDescription)"
         }
-        if let clubId {
-            let club: Club? = try? await SupabaseService.shared
-                .from("clubs")
-                .select()
-                .eq("id", value: clubId)
-                .single()
-                .execute()
-                .value
-            clubName = club?.name
-        }
-        await PushNotificationService.shared.refreshAuthorizationStatus()
+        async let club = Self.club(clubId)
+        async let authorization: Void = PushNotificationService.shared.refreshAuthorizationStatus()
+        let (loadedClub, _) = await (club, authorization)
+        if clubId != nil { clubName = loadedClub?.name }
+    }
+
+    private static func club(_ clubId: UUID?) async -> Club? {
+        guard let clubId else { return nil }
+        return try? await SupabaseService.shared
+            .from("clubs")
+            .select()
+            .eq("id", value: clubId)
+            .single()
+            .execute()
+            .value
     }
 
     /// Applies one change at once and saves the whole row. Reverts if the save fails, so a

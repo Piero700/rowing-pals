@@ -267,15 +267,17 @@ final class FeedViewModel {
             let (page, pendingName) = try await (pageRequest, pending)
 
             posts = replacing ? page : posts + page
-            let readOnly = await CoachingService.readOnlyPosts(among: page.map(\.id))
-            readOnlyPostIds = replacing ? readOnly : readOnlyPostIds.union(readOnly)
             pendingClubName = pendingName
             hasMorePages = page.count == Self.pageSize
             errorMessage = nil
-            // Photo links, streak badges and tags don't depend on each other: fetch them at once.
+            // Which posts a coach can't react to, photo links, streak badges and tags don't
+            // depend on each other: fetch them at once.
+            async let readOnlyRequest = CoachingService.readOnlyPosts(among: page.map(\.id))
             async let urls: Void = fetchSignedURLs(for: page)
             async let streakBadges: Void = fetchStreaks(for: page)
             async let pageTags: Void = fetchTags(for: page, replacing: replacing)
+            let readOnly = await readOnlyRequest
+            readOnlyPostIds = replacing ? readOnly : readOnlyPostIds.union(readOnly)
             _ = await (urls, streakBadges, pageTags)
         } catch {
             // Per task 12: "Feed blanks after a few pages -> pagination

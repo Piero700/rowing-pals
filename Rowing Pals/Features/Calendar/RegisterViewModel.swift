@@ -69,26 +69,29 @@ final class RegisterViewModel {
             self.practice = practice
 
             let viewer = try await ViewerContext.shared.current()
-            if practice.squadIds.isEmpty {
-                squadText = "Whole club"
-            } else if let clubId = viewer.clubId {
-                let squads = try await CoachingService.squads(of: clubId)
-                squadText = squads.filter { practice.squadIds.contains($0.id) }.map(\.name).joined(separator: ", ")
-            }
-
             let audience = audiences[practiceId] ?? []
             // Anyone marked before they left the squad stays on the register.
             let everyone = audience.union(saved.map(\.userId))
             let shown = members.filter { everyone.contains($0.id) }
-            let posted = try await CalendarService.postedSessions(onDay: practice.startsAt, among: shown.map(\.id))
-            let byUser = Dictionary(responses.map { ($0.userId, $0) }, uniquingKeysWith: { first, _ in first })
-            let savedByUser = Dictionary(saved.map { ($0.userId, $0.mark) }, uniquingKeysWith: { first, _ in first })
             let logByUser = Dictionary(grouping: log, by: \.userId)
-
-            // Whoever last changed a mark, all in one query: "Sarah changed …".
+            // Whoever last changed a mark: "Sarah changed …".
             let setterIds = Set(shown.compactMap { CalendarRules.lastChange(logByUser[$0.id] ?? [])?.to.setBy })
                 .subtracting([viewer.userId])
-            var names: [UUID: String] = (try? await CalendarService.displayNames(of: setterIds)) ?? [:]
+            // The squads' names, who posted that day and the setters' names, all at once.
+            let squadClub = practice.squadIds.isEmpty ? nil : viewer.clubId
+            async let squadsTask = Self.squads(ofClub: squadClub)
+            async let postedTask = CalendarService.postedSessions(onDay: practice.startsAt, among: shown.map(\.id))
+            async let namesTask = (try? await CalendarService.displayNames(of: setterIds)) ?? [:]
+            if practice.squadIds.isEmpty {
+                squadText = "Whole club"
+            } else if let squads = try await squadsTask {
+                squadText = squads.filter { practice.squadIds.contains($0.id) }.map(\.name).joined(separator: ", ")
+            }
+            let posted = try await postedTask
+            let byUser = Dictionary(responses.map { ($0.userId, $0) }, uniquingKeysWith: { first, _ in first })
+            let savedByUser = Dictionary(saved.map { ($0.userId, $0.mark) }, uniquingKeysWith: { first, _ in first })
+
+            var names = await namesTask
             names[viewer.userId] = "You"
             var starting: [UUID: RegisterMark] = [:]
             var built: [Row] = []
@@ -117,6 +120,12 @@ final class RegisterViewModel {
         } catch {
             errorMessage = "Couldn’t load the register. \(error.localizedDescription)"
         }
+    }
+
+    /// The club's squads; nil without a club or when the practice is for the whole club.
+    private static func squads(ofClub clubId: UUID?) async throws -> [Squad]? {
+        guard let clubId else { return nil }
+        return try await CoachingService.squads(of: clubId)
     }
 
     func set(_ mark: RegisterMark, for userId: UUID) {
