@@ -207,33 +207,14 @@ final class CaptureViewModel: NSObject {
         }
     }
 
-    /// TEMPORARY camera diagnostics (2026-11-13, debugging Together on the phone): remove once fixed.
-    nonisolated static func debugLog(_ message: String) {
-        print("[RP camera] \(message)")
-    }
-
     private func observeRuntimeErrors() {
-        let kind = isMultiCam ? "multi-cam" : (rearOnly ? "rear-only" : "single")
-        Self.debugLog("session created: \(kind)")
         runtimeErrorObserver = NotificationCenter.default.addObserver(
             forName: AVCaptureSession.runtimeErrorNotification,
             object: session,
             queue: .main
         ) { [weak self] notification in
-            let error = notification.userInfo?[AVCaptureSessionErrorKey] as? NSError
-            Self.debugLog("RUNTIME ERROR (\(kind)): domain=\(error?.domain ?? "-") code=\(error?.code ?? 0) \(error?.localizedDescription ?? "unknown") userInfo=\(error?.userInfo ?? [:])")
-            let reason = error?.localizedDescription ?? "unknown"
+            let reason = (notification.userInfo?[AVCaptureSessionErrorKey] as? Error)?.localizedDescription ?? "unknown"
             self?.phase = .failed(CaptureError.runtimeError(reason).localizedDescription)
-        }
-        NotificationCenter.default.addObserver(forName: AVCaptureSession.wasInterruptedNotification, object: session, queue: .main) { notification in
-            let reason = notification.userInfo?[AVCaptureSessionInterruptionReasonKey] as? Int ?? -1
-            Self.debugLog("INTERRUPTED (\(kind)): reason=\(reason)")
-        }
-        NotificationCenter.default.addObserver(forName: AVCaptureSession.didStartRunningNotification, object: session, queue: .main) { _ in
-            Self.debugLog("did start running (\(kind))")
-        }
-        NotificationCenter.default.addObserver(forName: AVCaptureSession.didStopRunningNotification, object: session, queue: .main) { _ in
-            Self.debugLog("did stop running (\(kind))")
         }
     }
 
@@ -313,9 +294,7 @@ final class CaptureViewModel: NSObject {
             // startRunning() must come strictly after commitConfiguration()
             // returns — see the note task 07 left about this exact ordering.
             multiCamSession.commitConfiguration()
-            Self.debugLog("multi-cam configured: hardwareCost=\(multiCamSession.hardwareCost) systemPressureCost=\(multiCamSession.systemPressureCost) rear=\(rearDevice.activeFormat.formatDescription.dimensions) multiCamOK=\(rearDevice.activeFormat.isMultiCamSupported) front=\(frontDevice.activeFormat.formatDescription.dimensions) multiCamOK=\(frontDevice.activeFormat.isMultiCamSupported) frontType=\(frontDevice.deviceType.rawValue)")
             multiCamSession.startRunning()
-            Self.debugLog("multi-cam startRunning returned, isRunning=\(multiCamSession.isRunning)")
 
             DispatchQueue.main.async {
                 self.rearPreviewLayer = rearLayer
@@ -344,7 +323,6 @@ final class CaptureViewModel: NSObject {
             try device.lockForConfiguration()
             device.activeFormat = best
             device.unlockForConfiguration()
-            debugLog("moved \(device.position == .back ? "back" : "front") camera to multi-cam format \(best.formatDescription.dimensions)")
             return true
         } catch {
             return false
@@ -467,8 +445,7 @@ final class CaptureViewModel: NSObject {
         }
     }
 
-    private func fail(_ error: CaptureError, line: Int = #line) {
-        Self.debugLog("setup FAILED at CaptureViewModel.swift:\(line): \(error.localizedDescription)")
+    private func fail(_ error: CaptureError) {
         DispatchQueue.main.async { self.phase = .failed(error.localizedDescription) }
     }
 
@@ -505,8 +482,6 @@ final class CaptureViewModel: NSObject {
             phase = .done
             return (rearJPEG, frontJPEG)
         } catch {
-            let nsError = error as NSError
-            Self.debugLog("captureInitialPair FAILED: domain=\(nsError.domain) code=\(nsError.code) \(nsError.localizedDescription) isRunning=\(session.isRunning) userInfo=\(nsError.userInfo)")
             phase = .failed(error.localizedDescription)
             return nil
         }
@@ -522,8 +497,6 @@ final class CaptureViewModel: NSObject {
             phase = .done
             return jpeg
         } catch {
-            let nsError = error as NSError
-            Self.debugLog("captureSinglePhoto FAILED (front=\(isFacingFront)): domain=\(nsError.domain) code=\(nsError.code) \(nsError.localizedDescription) isRunning=\(session.isRunning) userInfo=\(nsError.userInfo)")
             phase = .failed(error.localizedDescription)
             return nil
         }
