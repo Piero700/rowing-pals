@@ -3,6 +3,9 @@
 Decision 104 in `docs/design/v2-decisions.md`, on branch `t45-combined-test`. Use your own account (**Piero**).
 
 ## 1. Run the database change (staging), before installing the build
+
+**Done 13 Nov 2026 (by Claude):** run on staging; it ranked 10 past posts (15 results, 8 new PBs), and a second run added nothing. Your 30 minutes from 3 Nov is on the 30min board as a PB (7,929 m). Skip to section 2. The steps below are for production later.
+
 1. Go to **supabase.com**, sign in, and open the **staging** project (the one the TestFlight and Xcode builds use).
 2. Click **SQL Editor** in the left bar, then **+ New query**.
 3. In Finder, open `Rowing Pals/docs/migrations/2026-11-13-automatic-leaderboards.sql`, select everything (**⌘A**), copy (**⌘C**), and paste it into the query box (**⌘V**).
