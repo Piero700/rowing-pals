@@ -21,42 +21,43 @@ func diagnoseHistory(
     config: EngineConfig
 ) -> Prediction.Diagnostics {
     var warnings: [String] = []
-    let sessions = history.enumerated().compactMap { index, raw in
+    // v1.7: volume-only rows never carry pace; the rower's own Paul's Law reads every all-out
+    // piece up to today, not just the window (§5.21).
+    let parsed = history.enumerated().compactMap { index, raw in
         normaliseSession(raw, index: index, day: days[index], config: config, warnings: &warnings)
     }
-    .filter { asOfDay - config.windowDays <= $0.day && $0.day <= asOfDay }
+    .filter { $0.day <= asOfDay && !$0.volumeOnly }
+    let sessions = parsed.filter { $0.day >= asOfDay - config.windowDays }
+    let paul = PersonalPaul.fit(parsed, asOfDay: asOfDay, config: config).secondsPerDoubling
 
     var estimates: [(tag: Tier.Name, value: Double)] = []
     for tier in Tier.all {
         let candidates = sessions.filter { $0.tag == tier.name }
         if candidates.isEmpty { continue }
 
-        let split: Double
-        let distance: Double
-        let rpe: Double?
-        let rpeMismatch: Bool
-        let coverage: Double
+        let reference: Double
         if tier.isMaximal {
             // Best effort represents the tier; a slow rep set is not evidence of a ceiling.
             guard let representative = Py.firstMin(candidates, by: { $0.splitS < $1.splitS }) else { continue }
-            split = representative.splitS
-            distance = representative.effectiveDistanceM
-            rpe = representative.rpe
-            rpeMismatch = representative.rpeMismatch
-            coverage = 1.0
+            reference = normaliseToReference(split: representative.splitS,
+                                             effectiveDistanceM: representative.effectiveDistanceM,
+                                             tier: tier, config: config, paul: paul).s2k
+                + rpeOffsetCorrection(rpe: representative.rpe, tier: tier,
+                                      rpeMismatch: representative.rpeMismatch, config: config)
         } else {
-            split = weightedMedian(candidates.map { ($0.splitS, $0.durationMinutes) })
-            distance = weightedMedian(candidates.map { ($0.effectiveDistanceM, $0.durationMinutes) })
-            let effort = tierRPE(candidates)
-            rpe = effort.rpe
-            rpeMismatch = effort.mismatch
-            coverage = effort.coverage
+            // v1.7: each piece's own 2k equivalent (RPE scaled by the zone's rated coverage,
+            // rate corrected), then the duration-weighted median — the prediction path's model.
+            let coverage = tierRPE(candidates).coverage
+            reference = weightedMedian(candidates.map { session in
+                let s2k = normaliseToReference(split: session.splitS,
+                                               effectiveDistanceM: session.effectiveDistanceM,
+                                               tier: tier, config: config).s2k
+                let rpe = rpeOffsetCorrection(rpe: session.rpe, tier: tier,
+                                              rpeMismatch: session.rpeMismatch, config: config) * coverage
+                let rate = rateCorrection(rate: session.strokeRate, tier: tier, config: config)
+                return (s2k + rpe + rate, session.durationMinutes)
+            })
         }
-        var reference = normaliseToReference(split: split, effectiveDistanceM: distance,
-                                              tier: tier, config: config).s2k
-        // Same RPE correction as the prediction path.
-        reference += rpeOffsetCorrection(rpe: rpe, tier: tier, rpeMismatch: rpeMismatch,
-                                         config: config) * coverage
         estimates.append((tier.name, Py.round(reference, 2)))
     }
 

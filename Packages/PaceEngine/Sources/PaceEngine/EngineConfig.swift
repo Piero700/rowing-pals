@@ -23,7 +23,10 @@ public struct EngineConfig: Sendable {
 
     /// `submaximal_anchor_method`.
     public enum SubmaximalAnchorMethod: String, Sendable {
-        /// Duration-weighted median across the tier (default, robust).
+        /// v1.7 (default, §5.17): every steady zone together, weighted median of each piece's
+        /// own 2k equivalent.
+        case blend
+        /// v1.6: duration-weighted median across the best-ranked tier.
         case median
         /// v1.0 parity: the longest qualifying row.
         case singleSession = "single_session"
@@ -66,7 +69,7 @@ public struct EngineConfig: Sendable {
     /// Reconciliation tolerance between a supplied split and one derived from time/distance.
     public var splitMismatchTolerance: Double = 0.02
 
-    public var submaximalAnchorMethod: SubmaximalAnchorMethod = .median
+    public var submaximalAnchorMethod: SubmaximalAnchorMethod = .blend
 
     /// v1.6 (SPEC.md §5.3): how AN/TR anchors are chosen.
     public enum MaximalAnchorMethod: String, Sendable {
@@ -84,6 +87,49 @@ public struct EngineConfig: Sendable {
     public var heldSplitFloor: Bool = true
     /// v1.6 (§5.16): confidence lost when the anchor is a best the rower typed in.
     public var declaredAnchorPenalty: Int = 10
+
+    // --- v1.7: every erg post counts (SPEC.md §5.17–5.21). SEED VALUES, set before cohort
+    // data existed at the user's request (2026-11-09); tune like every other constant. ----
+
+    /// §5.17: a steady piece's weight in the zone blend halves every this many days.
+    public var submaximalBlendHalfLifeDays: Double = 14.0
+    /// §5.18: seconds per stroke away from the middle of the zone's rate range, steady zones only.
+    public var rateSensitivityS: Double = 1.5
+    public var rateMaxCorrectionS: Double = 4.5
+    /// §5.19: steady rows since the newest all-out piece.
+    public var steadyTrend: Bool = true
+    public var steadyTransferAtReference: Double = 0.5
+    public var steadyTransferPerDoubling: Double = 0.1
+    public var steadyTransferMin: Double = 0.3
+    public var steadyTransferMax: Double = 0.7
+    public var steadyGainCapS: Double = 3.0
+    /// Steady pieces needed on each side of the measurement, in all.
+    public var steadyTrendMinPieces: Int = 2
+    /// Say so when steady rows got this much slower (after transfer).
+    public var steadySlowerFlagS: Double = 0.5
+
+    /// §5.20: the volume modifier's shape above maintenance.
+    public enum VolumeCurve: String, Sendable {
+        /// v1.7 default: a gain per doubling of the 30-day load, capped.
+        case perDoubling = "per_doubling"
+        /// v1.6 parity: `loadKnots` throughout (flat from 600 to 1,800).
+        case knots
+    }
+    public var volumeCurve: VolumeCurve = .perDoubling
+    public var loadGainFrom: Double = 600.0
+    public var loadGainPerDoublingS: Double = 0.75
+    public var loadGainCapS: Double = 2.5
+    /// With an all-out anchor, only training after the newest all-out piece can make it faster.
+    public var volumeAfterMeasurement: Bool = true
+
+    /// §5.21: the rower's own seconds per doubling from their continuous all-out pieces.
+    public var personalPaul: Bool = true
+    public var personalPaulWindowDays: Int = 90
+    public var personalPaulHalfLifeDays: Double = 60.0
+    /// The prior's weight, in units of the pieces' distance spread (doublings²).
+    public var personalPaulPriorStrength: Double = 1.0
+    public var personalPaulMin: Double = 2.5
+    public var personalPaulMax: Double = 8.0
 
     // Perceived effort (RPE)
     public var rpeSensitivity: Double = 1.2
@@ -133,6 +179,10 @@ public struct EngineConfig: Sendable {
     public var rangeIntervalAmbiguousS: Double = 3.0
     /// Each of: the anchor's rate, the anchor's RPE contradicting its tag.
     public var rangeTagMismatchS: Double = 1.0
+    /// v1.7: each nudge that makes the prediction faster carries this share of itself as doubt.
+    public var rangeGainShare: Double = 0.5
+    /// v1.7: a stale anchor's doubt is scaled by this when steady rows since it were measured.
+    public var rangeStaleShareWhenTracked: Double = 0.5
 
     /// Reproduce the original v1.0 Step 3 arithmetic, for A/B measurement only.
     public var legacyV1Formula: Bool = false

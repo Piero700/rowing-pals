@@ -33,7 +33,7 @@ def coherent_history(s2k: float = 105.0) -> list[dict]:
             ("AT", 8000, 26), ("UT2", 18000, 18)]
     for week in range(4):
         for offset, (tag, dist, rate) in enumerate(plan):
-            split = round(pe._pace_for(tag, dist, s2k), 1)
+            split = round(pe._pace_for(tag, dist, s2k, stroke_rate=rate), 1)
             rows.append({"id": f"w{week}-{offset}", "date": day(week * 7 + offset),
                          "distance_m": dist, "split_s": split,
                          "time_s": round(split * dist / 500.0, 1),
@@ -69,6 +69,38 @@ def tired(rows: list[dict]) -> list[dict]:
     return out
 
 
+def piece(pid: str, days: int, metres: float, split: float, tag: str,
+          rate: float | None = None, **extra) -> dict:
+    out = {"id": pid, "date": day(days), "distance_m": metres, "split_s": split, "tag": tag}
+    if rate is not None:
+        out["stroke_rate"] = rate
+    out.update(extra)
+    return out
+
+
+def since_test(after_split: float) -> list[dict]:
+    """v1.7: an all-out 2k 20 days ago at 1:45.0; UT2 at 2:07.0 before it, after_split since."""
+    return ([piece("an", 20, 2000, 105.0, "AN", 32)]
+            + [piece(f"b{d}", d, 16000, 127.0, "UT2", 18) for d in (21, 22, 23, 24, 25)]
+            + [piece(f"a{d}", d, 16000, after_split, "UT2", 18) for d in (2, 5, 8, 11, 14, 17)])
+
+
+def zones_together(ut2_split: float) -> list[dict]:
+    """v1.7: threshold work at a 1:45.0 rower's pace, UT2 at `ut2_split`."""
+    at = round(pe._pace_for("AT", 8000, 105.0, stroke_rate=25), 2)
+    return ([piece(f"at{d}", d, 8000, at, "AT", 25) for d in (1, 4, 7, 10)]
+            + [piece(f"ut{d}", d, 16000, ut2_split, "UT2", 18)
+               for d in (2, 3, 5, 6, 8, 9, 11, 12)])
+
+
+def fade_pair(per_doubling: float) -> list[dict]:
+    """v1.7: a 2k at 1:45.0 and a continuous 6k fading `per_doubling` s/500m per doubling."""
+    import math
+    return [piece("2k", 10, 2000, 105.0, "AN", 32),
+            piece("6k", 10, 6000, round(105.0 + per_doubling * math.log2(3), 2), "AN", 30,
+                  rep_distance_m=6000)]
+
+
 coherent = coherent_history()
 
 CASES: list[dict] = [
@@ -84,7 +116,7 @@ CASES: list[dict] = [
                   "stroke_rate": 34, "tag": "AN"}]},
     {"name": "ut1_only", "target": 2000,
      "history": [{"id": f"a{i}", "date": day(i), "distance_m": 12000,
-                  "split_s": round(pe._pace_for("UT1", 12000, 105.0), 1),
+                  "split_s": round(pe._pace_for("UT1", 12000, 105.0, stroke_rate=22), 1),
                   "stroke_rate": 22, "tag": "UT1"} for i in range(1, 8)]},
     {"name": "mistagged_6k_tier_disagreement", "target": 2000,
      "history": [r for r in coherent if r["id"] != "6k-tr"] + [
@@ -207,14 +239,66 @@ CASES: list[dict] = [
                   "tag": "AN", "declared": True}]
                 + [{"id": f"u{i}", "date": day(i + 1), "distance_m": 12000, "split_s": 125.0,
                     "tag": "UT2", "stroke_rate": 19} for i in range(5)]},
+
+    # --- v1.7: every erg post counts; personal Paul's Law -------------------------------
+    {"name": "steady_faster_since_test_2k", "target": 2000, "history": since_test(125.0)},
+    {"name": "steady_faster_since_test_5k", "target": 5000, "history": since_test(125.0)},
+    {"name": "steady_slower_never_drags", "target": 2000, "history": since_test(129.0)},
+    {"name": "steady_trend_off", "target": 2000, "history": since_test(125.0),
+     "config_overrides": {"steady_trend": False}},
+    {"name": "steady_mixed_zones_since_test", "target": 2000,
+     "history": since_test(125.0)
+                + [piece(f"at-b{d}", d, 8000, 118.0, "AT", 25) for d in (21, 23)]
+                + [piece(f"at-a{d}", d, 8000, 117.0, "AT", 25) for d in (3, 9)]},
+    {"name": "volume_before_fresh_test", "target": 2000,
+     "history": [piece("an", 1, 2000, 105.0, "AN", 32)]
+                + [piece(f"u{d}", d, 16000, 127.0, "UT2", 18) for d in range(2, 30)]},
+    {"name": "volume_after_older_test", "target": 2000,
+     "history": [piece("an", 25, 2000, 105.0, "AN", 32)]
+                + [piece(f"u{d}", d, 16000, 127.0, "UT2", 18) for d in range(1, 25)]},
+    {"name": "volume_knots_parity", "target": 2000,
+     "config_overrides": {"volume_curve": "knots", "volume_after_measurement": False},
+     "history": [piece("an", 25, 2000, 105.0, "AN", 32)]
+                + [piece(f"u{d}", d, 16000, 127.0, "UT2", 18) for d in range(1, 25)]},
+    {"name": "volume_only_rows", "target": 2000,
+     "history": [piece(f"u{d}", d, 16000, 127.0, "UT2", 18) for d in range(1, 9)]
+                + [piece(f"wu{d}", d, 2000, 150.0, "UT2", volume_only=True)
+                   for d in range(1, 9)]},
+    {"name": "volume_only_alone", "target": 2000,
+     "history": [piece("wu", 1, 2000, 150.0, "UT2", volume_only=True)]},
+    {"name": "steady_zones_together", "target": 2000, "history": zones_together(129.0)},
+    {"name": "steady_zones_best_only_parity", "target": 2000,
+     "config_overrides": {"submaximal_anchor_method": "median"},
+     "history": zones_together(129.0)},
+    {"name": "rate_corrected_ut2", "target": 2000,
+     "history": [piece("r20", 1, 16000, 124.0, "UT2", 20),
+                 piece("r24", 2, 16000, 118.0, "UT2", 24)]},
+    {"name": "rate_correction_off", "target": 2000,
+     "config_overrides": {"rate_sensitivity_s": 0.0},
+     "history": [piece("r20", 1, 16000, 124.0, "UT2", 20)]},
+    {"name": "personal_paul_fade_5k", "target": 5000, "history": fade_pair(7.0)},
+    {"name": "personal_paul_fade_2k", "target": 2000, "history": fade_pair(7.0)},
+    {"name": "personal_paul_strong_fade_capped", "target": 5000,
+     "config_overrides": {"personal_paul_prior_strength": 0.01},
+     "history": fade_pair(12.0)},
+    {"name": "personal_paul_off", "target": 5000, "history": fade_pair(7.0),
+     "config_overrides": {"personal_paul": False}},
+    {"name": "personal_paul_from_older_pieces", "target": 5000,
+     "history": [piece("old-2k", 50, 2000, 106.0, "AN", 32),
+                 piece("old-6k", 70, 6000, 115.0, "AN", 30, rep_distance_m=6000),
+                 piece("new-2k", 3, 2000, 105.0, "AN", 32)]},
+    {"name": "personal_paul_ignores_reps", "target": 5000,
+     "history": [piece("2k", 3, 2000, 105.0, "AN", 32),
+                 piece("reps", 5, 4000, 96.0, "AN", 34, rep_distance_m=500)]},
 ]
 
 # Fields the Swift port must match. Numbers compare within tolerance; flags compare as a
 # set; strings exactly. Warnings and recommendation TEXT are deliberately excluded —
 # the app owns its copy, and the flags carry the meaning.
 NUMERIC_COMPONENTS = ("anchor_split", "paul_adjustment", "intensity_offset",
-                      "rpe_correction", "two_k_equivalent", "projection_to_target",
-                      "weight_trend_correction", "volume_modifier", "held_split_adjustment",
+                      "rpe_correction", "rate_correction", "two_k_equivalent",
+                      "projection_to_target", "weight_trend_correction",
+                      "steady_change_adjustment", "volume_modifier", "held_split_adjustment",
                       "clamp_adjustment",
                       "population_2k_seconds")
 
@@ -239,6 +323,11 @@ def expected_view(result: dict) -> dict:
                        if k in NUMERIC_COMPONENTS and v is not None},
         "load_trimp_lite": result["load"]["trimp_lite"],
         "load_modifier_seconds": result["load"]["modifier_seconds"],
+        "load_after_measurement_share": result["load"]["after_measurement_share"],
+        "load_session_count": result["load"]["session_count"],
+        "personal_paul_seconds": (result["personal_paul"] or {}).get("seconds_per_doubling"),
+        "personal_paul_fitted": (result["personal_paul"] or {}).get("fitted"),
+        "steady_change_seconds": (result["steady"] or {}).get("change_seconds"),
         "spread_seconds": result["diagnostics"]["spread_seconds"],
         "two_k_equivalent_by_tier": result["diagnostics"]["two_k_equivalent_by_tier"],
         "weight_adjusted_total_seconds": wa["total_time_seconds"] if wa else None,

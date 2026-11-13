@@ -198,12 +198,37 @@ no background work.
 
 The Python file stays the source of truth. To change a constant or rule:
 
-1. Change `pace_engine.py` and run `python3 pace_engine.py` (88 checks must pass).
+1. Change `pace_engine.py` and run `python3 pace_engine.py` (every check must pass; 124 at v1.7).
 2. Run `python3 make_golden_vectors.py`.
 3. Copy the new `golden_vectors.json` into the Swift test resources.
 4. Port the change and get `swift test` green.
 
 Never edit the Swift side alone; the two will drift and the vectors stop meaning anything.
+
+## v1.7 (2026-11-13): every erg post counts, personal Paul's Law (app decision 104)
+
+The user asked for this before cohort data existed, overriding ground rule 1's "don't re-tune":
+every new constant is a seed (SPEC §7.10).
+
+- **Steady zones together** (SPEC §5.17): with no AN/TR piece, every AT/UT1/UT2 piece's own 2k
+  equivalent, weighted median (`method: "zone_blend"`). Config `submaximal_anchor_method` ("blend" |
+  "median" | "single_session"), `submaximal_blend_half_life_days` (14).
+- **Rate** (§5.18): `rate_sensitivity_s` (1.5), `rate_max_correction_s` (4.5); output
+  `components.rate_correction`.
+- **Steady rows since the test** (§5.19): `steady_trend`, `steady_transfer_*`, `steady_gain_cap_s`
+  (3.0), `steady_trend_min_pieces` (2), `steady_slower_flag_s` (0.5). Output
+  `components.steady_change_adjustment`, `steady` block, flags `steady_change_applied`,
+  `steady_pace_slower`. Never positive.
+- **Volume** (§5.20): input `volume_only: true`; `volume_curve` ("per_doubling" | "knots"),
+  `load_gain_from` (600), `load_gain_per_doubling_s` (0.75), `load_gain_cap_s` (2.5),
+  `volume_after_measurement`. Output `load.after_measurement_share`.
+- **Personal Paul's Law** (§5.21): `personal_paul`, `personal_paul_window_days` (90),
+  `personal_paul_half_life_days` (60), `personal_paul_prior_strength` (1.0), bounds 2.5–8.0. Output
+  `personal_paul` block, flag `personal_paul_law`. Swift: `PersonalPaul.swift`, `SteadyChange.swift`.
+- **Range** (§5.13): `range_gain_share` (0.5), `range_stale_share_when_tracked` (0.5).
+- App side: warm-ups, cool-downs, extra pieces and zone-less posts go in as volume-only UT2 rows;
+  sessions are read 90 days back (`PredictionService.historyDays`, also used by Coaching).
+- Python self-test section 14 (124 checks); golden vectors 66 cases; Swift port passes all of them.
 
 ## v1.6 (2026-10-15): every all-out piece counts, the held-split floor, typed-in bests
 

@@ -18,15 +18,28 @@ func predictionRange(
     tiersRepresented: Int,
     loadConfidence: Double,
     asOfDay: Int,
-    config: EngineConfig
+    config: EngineConfig,
+    paulDoubtShare: Double = 1.0,
+    steadyTracked: Bool = false,
+    steadyGain: Double = 0.0,
+    volumeGain: Double = 0.0
 ) -> Double {
+    // v1.7: a steady-zone blend's base is weighted across its zones; a fitted personal Paul's
+    // Law leaves less doubt per doubling; steady rows measured since a stale test shrink its
+    // staleness doubt; each nudge that makes the prediction faster carries part of itself.
     let daysAgo = asOfDay - anchor.day
     let projectionFrom = anchor.tier.isMaximal ? anchor.effectiveDistanceM : config.referenceDistanceM
     let doublings = abs(log2(targetDistance / Py.max(projectionFrom, 1e-9)))
+    var stale = Double(Swift.max(0, daysAgo - config.recentAnchorDays)) * config.rangePerStaleDayS
+    if steadyTracked {
+        stale *= config.rangeStaleShareWhenTracked
+    }
     let terms: [Double] = [
-        config.rangeBaseSplitS[anchor.tag] ?? 0.0,
-        Double(Swift.max(0, daysAgo - config.recentAnchorDays)) * config.rangePerStaleDayS,
-        doublings * config.rangePerDoublingS,
+        anchor.rangeBase ?? config.rangeBaseSplitS[anchor.tag] ?? 0.0,
+        stale,
+        doublings * config.rangePerDoublingS * paulDoubtShare,
+        config.rangeGainShare * abs(steadyGain),
+        config.rangeGainShare * abs(Py.min(0.0, volumeGain)),
         tiersRepresented >= 2 ? spreadS * config.rangeSpreadShare : 0.0,
         (1.0 - loadConfidence) * config.rangeThinHistoryS,
         anchor.intervalAmbiguous ? config.rangeIntervalAmbiguousS : 0.0,

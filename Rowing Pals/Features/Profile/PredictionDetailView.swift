@@ -93,7 +93,7 @@ struct PredictionDetailView: View {
                     .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
                 }
 
-                Text("Worked out on your phone from your erg sessions in the last 30 days.")
+                Text("Worked out on your phone from every erg session in the last 30 days, and your all-out pieces from the last 90.")
                     .textStyle(Typography.meta)
                     .foregroundStyle(Tokens.Ink.secondary)
                     .padding(.top, Tokens.Spacing.loose)
@@ -103,7 +103,7 @@ struct PredictionDetailView: View {
     }
 
     /// What the engine does, for the sheet with no prediction to explain yet.
-    static let howItWorks = "Your predicted times come from your erg sessions in the last 30 days, worked out on your phone. Every all-out piece counts, closer distances and newer pieces most; without one, your steady rows' typical split is used. That 2k split is taken out to the distance with Paul's Law and adjusted for how much you've trained. A prediction is never slower than a split you've already held for longer."
+    static let howItWorks = "Your predicted times come from every erg session in the last 30 days, worked out on your phone. Every all-out piece counts, closer distances and newer pieces most; without one, all your steady rows count together, read at their zone's usual rate. Steady rows that have got faster since your last all-out piece take part of that off, and so does training volume rowed since it. That 2k split is taken out to the distance with Paul's Law, using how much you slow per doubling of distance once your all-out pieces from the last 90 days show it. A prediction is never slower than a split you've already held for longer."
 
     private func headline(_ prediction: Prediction) -> some View {
         VStack(alignment: .leading, spacing: 2) {
@@ -136,14 +136,20 @@ struct PredictionDetailView: View {
         if let value = parts.rpeCorrection, value != 0 {
             lines.append(.init(label: "How hard it felt", value: Self.signed(value)))
         }
+        if let value = parts.rateCorrection, value != 0 {
+            lines.append(.init(label: "Stroke rate, read at the zone's usual rate", value: Self.signed(value)))
+        }
         if let value = parts.twoKEquivalent {
             lines.append(.init(label: "Your 2k split", value: Self.split(value), isResult: true))
         }
         if let value = parts.projectionToTarget, value != 0 {
-            lines.append(.init(label: "Paul's Law out to \(title)", value: Self.signed(value)))
+            lines.append(.init(label: Self.projectionLabel(title, prediction.personalPaul), value: Self.signed(value)))
         }
         if let value = parts.weightTrendCorrection, value != 0 {
             lines.append(.init(label: "Bodyweight change", value: Self.signed(value)))
+        }
+        if let value = parts.steadyChangeAdjustment, value != 0 {
+            lines.append(.init(label: "Your steady rows since your last all-out piece", value: Self.signed(value)))
         }
         if let value = parts.volumeModifier {
             lines.append(.init(label: "Training volume, last 30 days", value: Self.signed(value)))
@@ -179,9 +185,22 @@ struct PredictionDetailView: View {
         return advice.filter { !PredictionCard.isHeldSplitNote($0) }
     }
 
+    /// "Paul's Law out to 5k", naming the rower's own rate when their all-out pieces set one
+    /// (engine v1.7, §5.21).
+    private static func projectionLabel(_ title: String, _ paul: Prediction.PersonalPaulSummary?) -> String {
+        guard let paul, paul.fitted else { return "Paul's Law out to \(title)" }
+        return "Paul's Law out to \(title) (yours: \(String(format: "%.1f", paul.secondsPerDoubling)) s per doubling)"
+    }
+
     /// Which session(s) the prediction rests on.
     private func anchorLabel(_ anchor: Prediction.AnchorSummary) -> String {
         let zone = anchor.tier.rawValue
+        if anchor.method == "zone_blend" {
+            // Every steady piece together (v1.7, §5.17); the middle one is shown.
+            let count = anchor.sessionIds.count
+            let distance = Int(anchor.effectiveDistanceM).formattedWithGrouping
+            return "Your steady rows (\(count) piece\(count == 1 ? "" : "s")), middle one: \(zone) \(distance)m"
+        }
         if anchor.method == "duration_weighted_median" {
             let count = anchor.sessionIds.count
             return "Your \(zone) rows (\(count) session\(count == 1 ? "" : "s")), typical split"
@@ -196,6 +215,7 @@ struct PredictionDetailView: View {
                 HStack(alignment: .firstTextBaseline, spacing: Tokens.Spacing.gap) {
                     Text(line.label)
                         .textStyle(line.isResult ? Typography.rowTitle : Typography.detail)
+                        .tabularNumerals()
                         .foregroundStyle(line.isResult ? Tokens.Ink.primary : Tokens.Ink.secondary)
                     Spacer(minLength: 0)
                     Text(line.value)

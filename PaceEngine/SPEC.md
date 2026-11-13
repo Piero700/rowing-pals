@@ -1,8 +1,10 @@
-# Anchor & Impulse Pace Engine — Technical Specification v1.6
+# Anchor & Impulse Pace Engine — Technical Specification v1.7
 
 **Status:** Ready for implementation
-**Supersedes:** v1.5 (every all-out piece counts — §5.3; the held-split floor — §5.15; bests the
-rower typed in — §5.16; §8.12). v1.5 added the prediction range (§5.13, §8.11). v1.3.1: audit fixes — §8.9. v1.3 added perceived effort, age, sex and bodyweight (§2.1, §5.9–5.12)
+**Supersedes:** v1.6 (every erg post counts: steady zones together — §5.17; rate — §5.18;
+steady rows since the test — §5.19; volume that keeps paying — §5.20; personal Paul's Law —
+§5.21; §8.13). v1.6: every all-out piece counts — §5.3; the held-split floor — §5.15; bests the
+rower typed in — §5.16; §8.12. v1.5 added the prediction range (§5.13, §8.11). v1.3.1: audit fixes — §8.9. v1.3 added perceived effort, age, sex and bodyweight (§2.1, §5.9–5.12)
 **Constraints honoured:** no ML, session-summary data only, user-supplied intensity tags
 
 ---
@@ -162,9 +164,11 @@ Choose the best available tier by rank, then select within it:
   the heaviest piece (`method: "weighted_blend"`; one piece alone is `"closest_distance"`).
   `maximal_anchor_method: "closest_distance"` restores v1.5: the single session minimising
   `|log2(effective_distance / target)|`, tie-broken on recency.
-- **AT / UT1 / UT2 (submaximal tiers):** the **duration-weighted median split** across all
-  qualifying sessions in the window. A single steady-state row is a noisy estimate of a
-  physiological ceiling; the median is what the tier is actually evidence of.
+- **AT / UT1 / UT2 (submaximal tiers), v1.7:** with no AN or TR piece, **every steady zone
+  together** (§5.17), not just the best-ranked one. `submaximal_anchor_method: "median"` restores
+  v1.6: the **duration-weighted median split** across the best-ranked zone's sessions. A single
+  steady-state row is a noisy estimate of a physiological ceiling; a median is what the zone is
+  actually evidence of.
 
 `single_session` mode is available via config for parity testing against v1.0.
 
@@ -188,6 +192,10 @@ Continuous piecewise-linear interpolation between knots, flat beyond the ends:
 
 A step function was rejected: one extra 60-minute row must not flip a displayed
 prediction by 2.5 seconds.
+
+**v1.7 (§5.20):** above 600 the flat plateau is replaced by a gain per doubling, and every minute
+of every erg post counts towards `load`, warm-ups and cool-downs included. The table above is
+`volume_curve: "knots"`.
 
 The modifier is then **damped by how much history the load figure rests on**:
 
@@ -398,6 +406,19 @@ source of doubt, added in quadrature, in seconds per 500m:
 | Possible intervals | 3.0 when `interval_structure_ambiguous` |
 | Tag contradicted | 1.0 each for the anchor's rate and its RPE contradicting its tag |
 
+v1.7 changes three terms and adds two:
+
+| Term | Value |
+|---|---|
+| Anchor zone (base), steady-zone blend (§5.17) | weighted between the zones present: `sqrt(Σ minutes / Σ(minutes / base²))`, minutes recency-weighted |
+| Stale anchor | **halved** (`range_stale_share_when_tracked`) when steady rows since the anchor were measured (§5.19): they track what happened after the test |
+| Projection | × `sqrt(prior / (spread + prior))` when a personal Paul's Law is fitted (§5.21): the rower's own fade leaves less doubt per doubling |
+| Steady change | half (`range_gain_share`) of the steady-change adjustment (§5.19) |
+| Volume gain | half of the volume modifier when it makes the prediction faster (§5.20) |
+
+So steady rows and volume narrow the range where they remove doubt (drift since a stale test,
+an unknown fade) and widen it by part of any nudge they make.
+
 ```
 split_range = sqrt(sum(term²))
 total_range = split_range × target / 500
@@ -437,6 +458,122 @@ floor, dated the day it was entered, but it is **not training**: it never counts
 `load.session_count`, the session-count confidence penalty or recent effort. When the heaviest
 anchor piece is declared, confidence loses `declared_anchor_penalty` (10) and the anchor reports
 `declared: true`.
+
+### v1.7 — every erg post counts
+
+User request (2026-11-09): "performance tends to improve if you do loads of UT2 volume. The
+predictions should take into account all the erg posts, not only the hardest ones." Until v1.6
+one all-out piece in the window made every steady row irrelevant to the number, and volume was
+flat from 600 to 1,800 (most club rowers). The five parts below rest on four points of
+physiology:
+
+1. **A 2k is mostly aerobic** (laboratory studies put 2,000 m ergometer racing at roughly
+   70–85 % aerobic; a 5k higher still). The engine that UT2, UT1 and threshold work trains is most
+   of the engine a test uses.
+2. **Steady split at a fixed effort and rate tracks aerobic fitness** within one rower — why
+   coaches watch "split at rate 20".
+3. **The zones' generic gaps don't fit everyone, but they cancel within one rower.** "UT2 is 2k +
+   22" is an average; a rower's own gap changes little week to week, so the *change* in their
+   steady split since a test is good evidence of the change in their 2k, even where its *level*
+   isn't.
+4. **A test is a measurement.** Training rowed before it is already inside its time; only
+   training after it can have moved the rower on.
+
+Every new constant is a **seed**, set before cohort data existed (the user's request overrides
+§7.2's plan to tune first); §7.10.
+
+### 5.17 Steady zones together (v1.7)
+With no AN or TR piece in the window, every AT, UT1 and UT2 piece gives its own 2k equivalent —
+the §2 inversion, its RPE correction (§5.9, scaled by its zone's rated coverage, the v1.3.1
+audit fix) and its rate correction (§5.18) — and the **weighted median** is taken:
+
+```
+weight = minutes × 0.5^(age_days / submaximal_blend_half_life_days) × 1 / range_base²
+```
+
+(half-life 14 days; zone trust AT 0.44, UT1 0.25, UT2 0.20). Threshold work counts most per
+minute because its gap to all-out is smallest; a big month of UT2 still counts through its
+minutes. A rower whose zones agree gets the same 2k as v1.6; one whose zones disagree gets the
+weighted middle rather than whichever single zone ranked highest. The anchor reported is the
+median piece itself (`method: "zone_blend"`, `session_ids` every steady piece), so
+`components` reads as exact arithmetic for that piece, with `rate_correction` beside
+`rpe_correction`.
+
+### 5.18 Rate (v1.7)
+At a given effort a higher rate gives a faster split, so a steady piece's 2k equivalent is read
+back to its zone's usual rate (the middle of its §4 rate range: AT 25, UT1 22, UT2 18):
+
+```
+rate_correction = clamp(1.5 × (rate − zone_rate_mid), −4.5, +4.5)     # added to its 2k equivalent
+```
+
+Steady zones only: an all-out piece's rate is part of the measurement. A UT2 16k at 2:04.0 and
+rate 20 reads as a 2k of 1:45.0, like a UT2 16k at 2:07.0 and rate 18. The forward model used by
+the fixtures applies it in reverse. `zone_target_split` (§5.14) assumes the zone's usual rate.
+
+### 5.19 Steady rows since the test (v1.7)
+With an all-out anchor (AN, else TR), every piece in a lower-ranked zone is a **supporting
+piece** with its own 2k equivalent (§2 + RPE + rate). Zone by zone they are split at the
+**measurement day** — the newest day among the anchor's pieces:
+
+```
+change_z      = median(after) − median(before)          # duration-weighted, within zone z
+steady_change = Σ minutes_z × change_z / Σ minutes_z    # zones with pieces on both sides
+transfer      = clamp(0.5 + 0.1 × log2(target / 2000), 0.3, 0.7)   # 2k 0.50, 5k 0.63
+adjustment    = clamp(transfer × steady_change, −3.0, 0.0)
+```
+
+It needs at least 2 pieces on each side in all, else nothing is measured (`steady: null`).
+Comparing within a zone is what makes the rower's personal gap cancel; `transfer` is below 1
+because a steady split shows only the aerobic part of a test, and rises with the target because a
+5k is more aerobic. **It can only make the prediction faster** — an easy piece never drags it
+slower than what the rower has held all-out (the app's decision 65). Steady rows that got slower
+(by ≥ 0.5 s after transfer) leave the number alone and raise `steady_pace_slower` with advice
+that a test now may come in slow; one that helped raises `steady_change_applied`.
+
+An all-out 2k 20 days ago at 7:00.0, UT2 rows at 2:07.0 before it and 2:05.0 since, same rate:
+`steady_change` −2.0, adjustment −1.0 s/500m → **6:56.0** (5k: −1.26 s/500m).
+
+### 5.20 Volume that keeps paying (v1.7)
+**Every erg post counts towards load.** An input row with `volume_only: true` — a warm-up,
+cool-down, extra piece, or a post with no zone (the app sends them as UT2) — adds its minutes to
+the 30-day load and nothing else: never pace, the anchor, the floor, `load.session_count`, the
+session-count penalty or recent effort.
+
+**Diminishing returns, not a plateau.** Up to 600 the §5.5 knots apply (+3.0 at 0, detraining);
+above it:
+
+```
+raw_modifier = −min(2.5, 0.75 × log2(load / 600))       # 1,200 → −0.75, 2,400 → −1.5, 4,800 → −2.25
+```
+
+**Only training after the measurement can beat it.** With an all-out anchor, a faster modifier
+is multiplied by the share of the load rowed after the measurement day
+(`load.after_measurement_share`): a test yesterday after a month of volume stays the test; a test
+three weeks ago with training since moves about two thirds of the way. When §5.19 measured a
+steady change, that measured change **replaces** the faster side (share 0): both read the same
+improvement, and counting it twice would overstate it. With steady rows only, the faster side
+applies in full. The slower side (below 600) applies as before. Damping by `load_confidence`
+(§5.5) is unchanged.
+
+### 5.21 Personal Paul's Law (v1.7)
+Paul's Law's 5 s per doubling is an average; rowers fade more or less than that. The engine fits
+the rower's own from their **continuous all-out pieces** (AN, no shorter rep distance, not
+`interval_structure_ambiguous`; typed-in bests included) over the last 90 days — longer than the
+window, because how a rower fades changes slowly:
+
+```
+x = log2(effective_distance / 2000),   y = split,   w = 0.5^(age_days / 60)
+k = (Σ w(x−x̄)(y−ȳ) + prior × 5) / (Σ w(x−x̄)² + prior),   prior = 1.0,   k ∈ [2.5, 8.0]
+```
+
+A Bayesian slope: with one doubling of spread at equal weight the fit moves about half way from
+5 towards the rower's own. Pieces at one distance only (or fewer than two) can't show a fade, and
+the seed stands. `k` replaces 5 in the all-out zones' distance terms (AN, TR at w_T × k) and in
+the projection to the target; the steady zones keep the seed's shape (their w_T describe a
+lactate ceiling, not a fade). A 2k at 1:45.0 and a 6k fading 7 s per doubling, both 10 days old,
+give k = 6.05. Output: `personal_paul` {seconds_per_doubling, fitted, pieces} and the flag
+`personal_paul_law`; the clamps keep the seed. `personal_paul: false` restores v1.6.
 
 ## 6. Output contract
 
@@ -484,8 +621,18 @@ anchor piece is declared, confidence loses `declared_anchor_penalty` (10) and th
 }
 ```
 
-`components` reads top to bottom as the arithmetic, so the UI can render a "how we got
-this" panel. `athlete.used_in_prediction` is `false` unless the weight-trend term fired —
+v1.7 (schema `anchor-impulse/1.7`) adds `components.rate_correction` (§5.18) and
+`components.steady_change_adjustment` (§5.19), `load.after_measurement_share` (§5.20), and two
+blocks: `personal_paul` {seconds_per_doubling, fitted, pieces} (§5.21) and `steady`
+{change_seconds, transfer, pieces_before, pieces_after, zones, measured_on}, null when not
+measured (§5.19). Both blocks are null on population estimates and empty results.
+
+`components` reads top to bottom as the arithmetic — anchor split + Paul's Law + zone offset +
+how hard it felt + rate = 2k split; + projection (the rower's own Paul's Law when fitted) +
+bodyweight + steady rows since the test + volume + held split + clamp = predicted split — so the
+UI can render a "how we got this" panel. The app's panel names each line in that order: "Your
+steady rows since your last all-out piece", "Stroke rate, read at the zone's usual rate", and
+"Paul's Law out to 5k (yours: 6.1 s per doubling)" when the rower's own is used. `athlete.used_in_prediction` is `false` unless the weight-trend term fired —
 the UI should not imply that age or sex shaped the number. `recommendations` exists so a
 Low confidence score is actionable rather than merely discouraging.
 
@@ -559,6 +706,15 @@ store it with the value rather than inferring it.
 coaching experience (a fresh test pins a 2k to a few seconds; easy mileage alone, to about
 ten), not fitted. After launch, compare each prediction with the test the rower then posts
 and tune the terms until about two thirds of results land inside the range.
+
+**7.10 v1.7's constants were set before any data.** The steady transfer (0.5 at 2k, +0.1 per
+doubling), the −3 s cap, 1.5 s per stroke of rate, 0.75 s per doubling of volume, the 90-day
+look-back and the personal Paul prior strength are seeds chosen from the physiology in "v1.7 —
+every erg post counts", at the user's request ahead of the cohort tuning §7.2 planned. Two biases
+to watch when the data arrives: steady rows can only make a prediction faster (decision 65), so
+predictions lean optimistic; and zones are self-tagged, with no heart rate, so "same effort" rests
+on zone, rate and RPE alone. Compare predictions with the tests rowers then post (§7.9) and
+tune `steady_transfer_*` and `load_gain_per_doubling_s` first.
 
 ---
 
@@ -667,7 +823,22 @@ bests the rower typed in as a starting point (§5.16). The app also now tells th
 piece is continuous (rep distance = its distance), so a 5k or 20-minute test is no longer held
 back as possible intervals. Schema `anchor-impulse/1.6`; 8 new golden cases (46 in all).
 
+### 8.13 v1.7: every erg post counts; personal Paul's Law
+User request (2026-11-09) and follow-up (2026-11-13, "Add personal Paul's Law"): predictions learn
+from every erg post, not just the hardest. §5.17–5.21. Rowers with consistent zones and no steady
+rows since their test see the same number as v1.6 (the coherent athlete still gives 7:00.0).
+Fixtures now generate steady splits at their own rate (§5.18), so a hand-written UT2 at rate 19
+reads 1.5 s slower than before. Schema `anchor-impulse/1.7`; 20 new golden cases (66 in all).
+
 ## 9. Test coverage
+
+v1.7 adds 15 checks: steady rows 2 s faster since a test take 1.0 s off a 2k and 1.26 off a 5k;
+a measured change replaces volume's faster side; slower steady rows never drag a prediction
+slower than the test (and are flagged); tracked rows halve a stale test's doubt and the nudge adds
+half of itself; volume before a fresh test can't beat it; the per-doubling volume curve and its
+cap; every steady zone counts together and disagreeing zones give a middle; rate read back to the
+zone's usual rate; a warm-up counts as volume but never pace; personal Paul's Law moves part way
+to the rower's fade, stays at 5 with one distance, ignores interval reps, and narrows the range.
 
 v1.5 adds 6 checks for the range (±3 s from a fresh all-out 2k, ±9 s from UT2 alone, wider
 when projecting further, with a thin history and with contradictory tags, and no range on a

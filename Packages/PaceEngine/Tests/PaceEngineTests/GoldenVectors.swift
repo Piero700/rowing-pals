@@ -46,9 +46,11 @@ struct GoldenCase: Decodable, Sendable, CustomTestStringConvertible {
         let rpe: Double?
         let bodyweightKg: Double?
         let declared: Bool?
+        let volumeOnly: Bool?
 
         enum CodingKeys: String, CodingKey {
             case id, date, tag, rpe, declared
+            case volumeOnly = "volume_only"
             case distanceM = "distance_m"
             case timeS = "time_s"
             case splitS = "split_s"
@@ -84,6 +86,11 @@ struct GoldenCase: Decodable, Sendable, CustomTestStringConvertible {
         let components: [String: Double]
         let loadTrimpLite: Double
         let loadModifierSeconds: Double
+        let loadAfterMeasurementShare: Double
+        let loadSessionCount: Int
+        let personalPaulSeconds: Double?
+        let personalPaulFitted: Bool?
+        let steadyChangeSeconds: Double?
         let spreadSeconds: Double
         let twoKEquivalentByTier: [String: Double]
         let weightAdjustedTotalSeconds: Double?
@@ -105,6 +112,11 @@ struct GoldenCase: Decodable, Sendable, CustomTestStringConvertible {
             case anchorSessionIds = "anchor_session_ids"
             case loadTrimpLite = "load_trimp_lite"
             case loadModifierSeconds = "load_modifier_seconds"
+            case loadAfterMeasurementShare = "load_after_measurement_share"
+            case loadSessionCount = "load_session_count"
+            case personalPaulSeconds = "personal_paul_seconds"
+            case personalPaulFitted = "personal_paul_fitted"
+            case steadyChangeSeconds = "steady_change_seconds"
             case spreadSeconds = "spread_seconds"
             case twoKEquivalentByTier = "two_k_equivalent_by_tier"
             case weightAdjustedTotalSeconds = "weight_adjusted_total_seconds"
@@ -233,6 +245,29 @@ enum GoldenSupport {
                 config.heldSplitFloor = flag
                 continue
             }
+            // v1.7 switches and choices.
+            if key == "steady_trend", let flag = override.flag {
+                config.steadyTrend = flag
+                continue
+            }
+            if key == "volume_after_measurement", let flag = override.flag {
+                config.volumeAfterMeasurement = flag
+                continue
+            }
+            if key == "personal_paul", let flag = override.flag {
+                config.personalPaul = flag
+                continue
+            }
+            if key == "volume_curve", let text = override.text,
+               let curve = EngineConfig.VolumeCurve(rawValue: text) {
+                config.volumeCurve = curve
+                continue
+            }
+            if key == "submaximal_anchor_method", let text = override.text,
+               let method = EngineConfig.SubmaximalAnchorMethod(rawValue: text) {
+                config.submaximalAnchorMethod = method
+                continue
+            }
             guard let value = override.number else {
                 unmapped.append(key)
                 continue
@@ -247,6 +282,8 @@ enum GoldenSupport {
             case "paul_constant": config.paulConstant = value
             case "tier_spread_tolerance_s": config.tierSpreadToleranceS = value
             case "split_mismatch_tolerance": config.splitMismatchTolerance = value
+            case "rate_sensitivity_s": config.rateSensitivityS = value
+            case "personal_paul_prior_strength": config.personalPaulPriorStrength = value
             default: unmapped.append(key)
             }
         }
@@ -266,7 +303,8 @@ enum GoldenSupport {
                 repDistanceM: row.repDistanceM,
                 rpe: row.rpe,
                 bodyweightKg: row.bodyweightKg,
-                declared: row.declared ?? false
+                declared: row.declared ?? false,
+                volumeOnly: row.volumeOnly ?? false
             )
         }
     }
