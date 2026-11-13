@@ -168,11 +168,13 @@ After any change:
 
 ## Current focus
 
-**Next: the combined test build** on branch `t45-combined-test` (2026-11-08): everything not yet on `main` in one
-branch — grouped rows and no gradients (decisions 99–101) with helper text, open clubs and the optional selfie (98),
+**Merged into `main` and pushed (2026-11-13): the combined build** (was branch `t45-combined-test`). Also in it: automatic
+leaderboards (decision 104, migration run on staging), Pace Engine v1.7 predictions from every erg post (105) and the Log
+camera fix (Together after a one-camera session, tested on the phone). Phone checklists still open:
+`docs/testing/automatic-leaderboards.md`, `docs/testing/predictions-every-post.md`. The build holds — grouped rows and no gradients (decisions 99–101) with helper text, open clubs and the optional selfie (98),
 the legal wording and full delete account (102), one-at-a-time photos (103), the website's Privacy/Terms/Support pages
 and the App Store art. Uploaded as TestFlight RP Beta 1.0 (3) on 2026-11-09, with `delete-account` v5 deployed to
-staging; waiting on the phone tests in `docs/testing/combined-t45.md`. Earlier:
+staging; phone tests in `docs/testing/combined-t45.md`. Earlier:
 
 **The coach notepad** (decision 96): phases NP1–NP4 and editing land sessions (decision 97) passed the phone tests
 and are merged into `main` (2026-11-05); general checklist `docs/testing/note-taking.md`. Canvas boards `CoachNotepad…`, `CoachNotebook…` and
