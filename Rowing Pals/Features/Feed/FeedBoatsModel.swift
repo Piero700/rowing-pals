@@ -36,14 +36,13 @@ final class FeedBoatsModel {
             }
             let members = try await CalendarService.members()
             var names = Dictionary(members.map { ($0.id, $0.displayName) }, uniquingKeysWith: { first, _ in first })
-            // A cox who doesn't row isn't in the members list; ask for their name on its own.
-            for seat in mine.flatMap(\.boat.seats) where names[seat.userId] == nil {
-                names[seat.userId] = try? await CalendarService.displayName(of: seat.userId)
-            }
-            var coaches: [UUID: String] = [:]
-            for id in Set(mine.compactMap(\.session.createdBy)) {
-                coaches[id] = try? await CalendarService.displayName(of: id)
-            }
+            // A cox who doesn't row isn't in the members list; their names and the coaches' come
+            // from one query together.
+            let missing = Set(mine.flatMap(\.boat.seats).map(\.userId).filter { names[$0] == nil })
+            let coachIds = Set(mine.compactMap(\.session.createdBy))
+            let looked = (try? await CalendarService.displayNames(of: missing.union(coachIds))) ?? [:]
+            for id in missing { names[id] = looked[id] }
+            let coaches = looked.filter { coachIds.contains($0.key) }
             self.names = names
             items = mine.map { pair in
                 Item(boat: pair.boat, session: pair.session,

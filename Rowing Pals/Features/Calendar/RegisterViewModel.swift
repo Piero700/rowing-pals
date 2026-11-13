@@ -85,7 +85,11 @@ final class RegisterViewModel {
             let savedByUser = Dictionary(saved.map { ($0.userId, $0.mark) }, uniquingKeysWith: { first, _ in first })
             let logByUser = Dictionary(grouping: log, by: \.userId)
 
-            var names: [UUID: String] = [viewer.userId: "You"]
+            // Whoever last changed a mark, all in one query: "Sarah changed …".
+            let setterIds = Set(shown.compactMap { CalendarRules.lastChange(logByUser[$0.id] ?? [])?.to.setBy })
+                .subtracting([viewer.userId])
+            var names: [UUID: String] = (try? await CalendarService.displayNames(of: setterIds)) ?? [:]
+            names[viewer.userId] = "You"
             var starting: [UUID: RegisterMark] = [:]
             var built: [Row] = []
             for member in shown {
@@ -95,7 +99,7 @@ final class RegisterViewModel {
                 if let mark = savedByUser[member.id] ?? start.mark { starting[member.id] = mark }
                 var changeLine: String?
                 if let change = CalendarRules.lastChange(logByUser[member.id] ?? []) {
-                    let setter = await name(of: change.to.setBy, cache: &names)
+                    let setter = change.to.setBy.flatMap { names[$0] } ?? "A coach"
                     changeLine = "\(setter) changed \(change.from.label) → \(change.to.mark.label) at \(CalendarRules.time(change.to.setAt, calendar: calendar))"
                 }
                 built.append(Row(
@@ -141,13 +145,5 @@ final class RegisterViewModel {
             errorMessage = "Couldn’t save the register. \(error.localizedDescription)"
             return false
         }
-    }
-
-    private func name(of userId: UUID?, cache: inout [UUID: String]) async -> String {
-        guard let userId else { return "A coach" }
-        if let known = cache[userId] { return known }
-        let name = (try? await CalendarService.displayName(of: userId)) ?? "A coach"
-        cache[userId] = name
-        return name
     }
 }

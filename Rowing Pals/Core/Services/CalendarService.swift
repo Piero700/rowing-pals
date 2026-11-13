@@ -462,6 +462,23 @@ enum CalendarService {
         return row.displayName
     }
 
+    /// Several people's display names in one query, instead of one query each; anyone whose
+    /// profile can't be read is left out.
+    static func displayNames(of userIds: Set<UUID>) async throws -> [UUID: String] {
+        guard !userIds.isEmpty else { return [:] }
+        nonisolated struct Row: Decodable {
+            let id: UUID
+            let displayName: String
+            enum CodingKeys: String, CodingKey {
+                case id
+                case displayName = "display_name"
+            }
+        }
+        let rows: [Row] = try await SupabaseService.shared
+            .from("profiles").select("id, display_name").in("id", values: Array(userIds)).execute().value
+        return Dictionary(rows.map { ($0.id, $0.displayName) }, uniquingKeysWith: { first, _ in first })
+    }
+
     /// An instant as the database takes it, e.g. "2026-10-20T05:30:00Z".
     static func iso(_ date: Date) -> String {
         ISO8601DateFormatter().string(from: date)

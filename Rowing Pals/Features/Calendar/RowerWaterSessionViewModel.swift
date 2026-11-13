@@ -46,12 +46,13 @@ final class RowerWaterSessionViewModel {
             async let membersTask = CalendarService.members()
             let (session, boats, members) = try await (sessionTask, boatsTask, membersTask)
             var names = Dictionary(members.map { ($0.id, $0.displayName) }, uniquingKeysWith: { first, _ in first })
-            // A cox who doesn't row isn't in the members list; ask for their name on its own.
-            for seat in boats.flatMap(\.seats) where names[seat.userId] == nil {
-                names[seat.userId] = try? await CalendarService.displayName(of: seat.userId)
-            }
+            // A cox who doesn't row isn't in the members list; their names and the coach's come
+            // from one query together.
+            let missing = Set(boats.flatMap(\.seats).map(\.userId).filter { names[$0] == nil })
+            let looked = (try? await CalendarService.displayNames(of: missing.union(session.createdBy.map { [$0] } ?? []))) ?? [:]
+            for id in missing { names[id] = looked[id] }
             if let coach = session.createdBy {
-                setByName = try? await CalendarService.displayName(of: coach)
+                setByName = looked[coach]
             }
             self.names = names
             self.boats = boats

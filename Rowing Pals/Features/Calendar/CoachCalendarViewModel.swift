@@ -186,8 +186,9 @@ final class CoachCalendarViewModel {
             if let members = try? await CalendarService.members() {
                 authorNames = Dictionary(members.map { ($0.id, $0.displayName) }, uniquingKeysWith: { first, _ in first })
             }
-            for author in Set(announcements.compactMap(\.createdBy)) where authorNames[author] == nil {
-                authorNames[author] = try? await CalendarService.displayName(of: author)
+            let unknownAuthors = Set(announcements.compactMap(\.createdBy).filter { authorNames[$0] == nil })
+            if let found = try? await CalendarService.displayNames(of: unknownAuthors) {
+                authorNames.merge(found) { _, new in new }
             }
             // Water sessions are extra: before the boats migration the calendar still shows.
             let water = (try? await BoatService.sessions(from: first, to: end)) ?? []

@@ -20,8 +20,9 @@ final class FeedAnnouncementsModel {
             guard viewer.clubId != nil else { announcements = []; return }
             canManage = AnnouncementRules.canManage(isCoach: viewer.isCoach, role: viewer.clubRole)
             let live = try await AnnouncementService.live()
-            for author in Set(live.compactMap(\.createdBy)) where authorNames[author] == nil {
-                authorNames[author] = try? await CalendarService.displayName(of: author)
+            let unknown = Set(live.compactMap(\.createdBy).filter { authorNames[$0] == nil })
+            if let found = try? await CalendarService.displayNames(of: unknown) {
+                authorNames.merge(found) { _, new in new }
             }
             announcements = live
         } catch {
