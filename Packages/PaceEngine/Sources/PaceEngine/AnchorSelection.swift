@@ -25,6 +25,13 @@ struct Anchor {
     var rpeCoverage = 1.0
     /// The piece that weighs most is a best the rower typed in (v1.6).
     var declared = false
+    /// v1.7: the newest day of an all-out anchor's pieces — the last measurement (§5.19, §5.20).
+    var measuredDay: Int?
+    /// v1.7 steady-zone blend (§5.17): the median piece's corrections, worked out already, and
+    /// the range base weighted across the zones present.
+    var rpeCorrection: Double?
+    var rateCorrection = 0.0
+    var rangeBase: Double?
 
     var tier: Tier { Tier.named(tag) }
 }
@@ -88,7 +95,7 @@ func blendWeight(_ session: Session, targetDistance: Double, asOfDay: Int, confi
 /// geometric-mean distance whose split normalises back to exactly that 2k. One piece on its own
 /// is the v1.5 closest-distance anchor.
 func blendedAnchor(_ candidates: [Session], tag: Tier.Name, targetDistance: Double,
-                   asOfDay: Int, config: EngineConfig) -> Anchor? {
+                   asOfDay: Int, config: EngineConfig, paul: Double? = nil) -> Anchor? {
     let tier = Tier.named(tag)
     typealias Weighted = (weight: Double, session: Session)
     let pairs: [Weighted] = candidates.map { session in
@@ -113,7 +120,7 @@ func blendedAnchor(_ candidates: [Session], tag: Tier.Name, targetDistance: Doub
         let twoKTerms: [Double] = weighted.map { (pair: Weighted) -> Double in
             let s2k = normaliseToReference(split: pair.session.splitS,
                                            effectiveDistanceM: pair.session.effectiveDistanceM,
-                                           tier: tier, config: config).s2k
+                                           tier: tier, config: config, paul: paul).s2k
             return pair.weight * s2k
         }
         let twoK = Py.sum(twoKTerms) / total
@@ -121,7 +128,8 @@ func blendedAnchor(_ candidates: [Session], tag: Tier.Name, targetDistance: Doub
             pair.weight * log2(pair.session.effectiveDistanceM)
         }
         distance = pow(2.0, Py.sum(logTerms) / total)
-        let projection: Double = tier.paulWeight * config.paulConstant * log2(distance / tier.refDistanceM)
+        let projection: Double = tier.paulWeight * paulFor(tier, config: config, paul: paul)
+            * log2(distance / tier.refDistanceM)
         splitS = twoK + projection + tier.offset
         method = "weighted_blend"
     }
@@ -137,7 +145,81 @@ func blendedAnchor(_ candidates: [Session], tag: Tier.Name, targetDistance: Doub
         rateMismatch: dominant.rateMismatch,
         rpe: dominant.rpe,
         rpeMismatch: dominant.rpeMismatch,
-        declared: dominant.declared
+        declared: dominant.declared,
+        measuredDay: weighted.map { (pair: Weighted) -> Int in pair.session.day }.max()
+    )
+}
+
+/// `_steady_blend_anchor` (v1.7, §5.17): every steady piece together. Each gives its own 2k
+/// equivalent — inversion, RPE correction scaled by its zone's rated coverage, rate correction
+/// — and the weighted median is taken, weight = minutes × recency × zone trust (1 / base²).
+/// The anchor reported is the median piece itself, so the arithmetic shown is exact.
+func steadyBlendAnchor(_ candidates: [Session], asOfDay: Int, config: EngineConfig) -> Anchor? {
+    var coverage: [Tier.Name: Double] = [:]
+    for tier in Tier.all where candidates.contains(where: { $0.tag == tier.name }) {
+        coverage[tier.name] = tierRPE(candidates.filter { $0.tag == tier.name }).coverage
+    }
+    typealias Entry = (value: Double, weight: Double, minutes: Double, session: Session,
+                       rpe: Double, rate: Double)
+    let entries: [Entry] = candidates.map { session in
+        let tier = session.tier
+        let reference = normaliseToReference(split: session.splitS,
+                                             effectiveDistanceM: session.effectiveDistanceM,
+                                             tier: tier, config: config).s2k
+        let rpe = rpeOffsetCorrection(rpe: session.rpe, tier: tier, rpeMismatch: session.rpeMismatch,
+                                      config: config) * (coverage[session.tag] ?? 0.0)
+        let rate = rateCorrection(rate: session.strokeRate, tier: tier, config: config)
+        let ageDays = Double(Swift.max(0, asOfDay - session.day))
+        let recency = pow(0.5, ageDays / config.submaximalBlendHalfLifeDays)
+        let base = config.rangeBaseSplitS[session.tag] ?? 1.0
+        let minutes = session.durationMinutes * recency
+        return (reference + rpe + rate, minutes / (base * base), minutes, session, rpe, rate)
+    }
+    // sorted(key=(value, -day)): lowest 2k first, newest first on a tie; stable.
+    let ordered = Py.stableSorted(entries) { (lhs: Entry, rhs: Entry) -> Bool in
+        if lhs.value != rhs.value { return lhs.value < rhs.value }
+        return lhs.session.day > rhs.session.day
+    }
+    guard !ordered.isEmpty else { return nil }
+    let total = Py.sum(ordered.map { (entry: Entry) -> Double in entry.weight })
+    var median = ordered[ordered.count / 2]
+    if total > 0 {
+        var running = 0.0
+        for entry in ordered {
+            running += entry.weight
+            if running >= total / 2.0 {
+                median = entry
+                break
+            }
+        }
+    }
+    let piece = median.session
+    let minutes = Py.sum(entries.map { (entry: Entry) -> Double in entry.minutes })
+    let trust = Py.sum(entries.map { (entry: Entry) -> Double in
+        let base = config.rangeBaseSplitS[entry.session.tag] ?? 1.0
+        return entry.minutes / (base * base)
+    })
+    let rangeBase = trust > 0 ? (minutes / trust).squareRoot() : config.rangeBaseSplitS[piece.tag]
+    guard let newest = candidates.map(\.day).max(),
+          let newestDate = Py.firstMax(candidates, by: { $0.day < $1.day })?.date else { return nil }
+    let rateMismatches = candidates.filter(\.rateMismatch).count
+    let rpeMismatches = candidates.filter(\.rpeMismatch).count
+    return Anchor(
+        tag: piece.tag,
+        splitS: piece.splitS,
+        effectiveDistanceM: piece.effectiveDistanceM,
+        day: newest,
+        date: newestDate,
+        sessionIds: candidates.map(\.id),
+        method: "zone_blend",
+        intervalAmbiguous: candidates.contains(where: \.intervalAmbiguous),
+        rateMismatch: Double(rateMismatches) > Double(candidates.count) / 2.0,
+        rpe: piece.rpe,
+        rpeMismatch: Double(rpeMismatches) > Double(candidates.count) / 2.0,
+        rpeCoverage: coverage[piece.tag] ?? 0.0,
+        rpeCorrection: median.rpe,
+        rateCorrection: median.rate,
+        rangeBase: rangeBase
     )
 }
 
@@ -145,7 +227,7 @@ func blendedAnchor(_ candidates: [Session], tag: Tier.Name, targetDistance: Doub
 /// (v1.6), or with `.closestDistance` take the single closest (then most recent); submaximal
 /// tiers aggregate by duration-weighted median.
 func selectAnchor(_ sessions: [Session], targetDistance: Double, config: EngineConfig,
-                  asOfDay: Int? = nil) -> Anchor? {
+                  asOfDay: Int? = nil, paul: Double? = nil) -> Anchor? {
     guard !sessions.isEmpty else { return nil }
 
     for tier in Tier.all {
@@ -155,7 +237,7 @@ func selectAnchor(_ sessions: [Session], targetDistance: Double, config: EngineC
         if tier.isMaximal && config.maximalAnchorMethod == .blend {
             let reference = asOfDay ?? (sessions.map { (session: Session) -> Int in session.day }.max() ?? 0)
             if let anchor = blendedAnchor(candidates, tag: tier.name, targetDistance: targetDistance,
-                                          asOfDay: reference, config: config) {
+                                          asOfDay: reference, config: config, paul: paul) {
                 return anchor
             }
             continue
@@ -184,8 +266,19 @@ func selectAnchor(_ sessions: [Session], targetDistance: Double, config: EngineC
                 rateMismatch: best.rateMismatch,
                 rpe: best.rpe,
                 rpeMismatch: best.rpeMismatch,
-                declared: best.declared
+                declared: best.declared,
+                measuredDay: best.day
             )
+        }
+
+        if config.submaximalAnchorMethod == .blend {
+            // Every steady zone together, not just this best-ranked one (v1.7, §5.17).
+            let steady = sessions.filter { !$0.tier.isMaximal }
+            let reference = asOfDay ?? (sessions.map { (session: Session) -> Int in session.day }.max() ?? 0)
+            if let anchor = steadyBlendAnchor(steady, asOfDay: reference, config: config) {
+                return anchor
+            }
+            continue
         }
 
         if config.submaximalAnchorMethod == .singleSession {

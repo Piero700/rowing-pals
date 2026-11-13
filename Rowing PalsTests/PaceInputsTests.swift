@@ -38,8 +38,9 @@ struct PaceInputsTests {
         #expect(viewModel.zone == .tr)
     }
 
-    /// HANDOFF.md phase 2: only zoned erg sessions' MAIN segments reach the engine — a 2k test
-    /// with its warm-up and cool-down must not read as an all-out 6k.
+    /// HANDOFF.md phase 2: only zoned erg sessions' MAIN segments are pace pieces — a 2k test
+    /// with its warm-up and cool-down must not read as an all-out 6k. Since v1.7 (decision 104)
+    /// everything else still reaches the engine, as volume only.
     @Test func onlyMainSegmentsOfZonedSessionsFeedTheEngine() throws {
         let json = """
         [
@@ -64,25 +65,41 @@ struct PaceInputsTests {
         calendar.timeZone = TimeZone(identifier: "UTC")!
         let rows = try JSONDecoder().decode([PredictionService.SessionRow].self, from: Data(json.utf8))
         let history = PredictionService.history(from: rows, calendar: calendar)
+        let pace = history.filter { !$0.volumeOnly }
+        let volume = history.filter(\.volumeOnly)
 
-        // The un-zoned session is left out; warm-up and cool-down never enter.
-        #expect(history.count == 3)
-        #expect(history[0].id == "3F2504E0-4F89-11D3-9A0C-0305E82C3301")
-        #expect(history[0].distanceM == 2000)
-        #expect(history[0].timeS == 420)
-        #expect(history[0].tag == .an)
-        #expect(history[0].rpe == 9)
+        // Pace: the un-zoned session and the warm-up and cool-down never enter.
+        #expect(pace.count == 3)
+        #expect(pace[0].id == "3F2504E0-4F89-11D3-9A0C-0305E82C3301")
+        #expect(pace[0].distanceM == 2000)
+        #expect(pace[0].timeS == 420)
+        #expect(pace[0].tag == .an)
+        #expect(pace[0].rpe == 9)
         // Two main pieces in one session: in position order, the second with its own id.
-        #expect(history[1].id == "3F2504E0-4F89-11D3-9A0C-0305E82C3303")
-        #expect(history[1].repDistanceM == 500)
-        #expect(history[2].id == "3F2504E0-4F89-11D3-9A0C-0305E82C3303-2")
+        #expect(pace[1].id == "3F2504E0-4F89-11D3-9A0C-0305E82C3303")
+        #expect(pace[1].repDistanceM == 500)
+        #expect(pace[2].id == "3F2504E0-4F89-11D3-9A0C-0305E82C3303-2")
 
-        // And the engine takes it: the AN 2k is the closest-distance anchor for a 2k.
+        // Volume (v1.7): the warm-up, the cool-down and the un-zoned post, as UT2 minutes only,
+        // each with its own id.
+        #expect(volume.map(\.id) == ["3F2504E0-4F89-11D3-9A0C-0305E82C3301-v0",
+                                     "3F2504E0-4F89-11D3-9A0C-0305E82C3301-v2",
+                                     "3F2504E0-4F89-11D3-9A0C-0305E82C3302-v0"])
+        #expect(volume.allSatisfy { $0.tag == .ut2 && $0.splitS == nil && $0.rpe == nil })
+        #expect(volume.map(\.timeS) == [540, 600, 2700])
+
+        // And the engine takes it: the AN 2k is the closest-distance anchor for a 2k, and the
+        // warm-up, cool-down and un-zoned row are training load.
         let prediction = PacePredictor.predict(history: history, targetDistance: 2000,
                                                asOf: calendar.date(from: DateComponents(year: 2026, month: 10, day: 4))!,
                                                calendar: calendar)
         #expect(prediction.anchor?.sessionIds == ["3F2504E0-4F89-11D3-9A0C-0305E82C3301"])
         #expect(PredictionService.isShowable(prediction))
+        let paceOnly = PacePredictor.predict(history: pace, targetDistance: 2000,
+                                             asOf: calendar.date(from: DateComponents(year: 2026, month: 10, day: 4))!,
+                                             calendar: calendar)
+        #expect(prediction.load.trimpLite > paceOnly.load.trimpLite)
+        #expect(prediction.load.sessionCount == paceOnly.load.sessionCount)
     }
 
     @Test func aPopulationEstimateIsNotShownYet() {

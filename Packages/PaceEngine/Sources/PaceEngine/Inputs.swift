@@ -34,6 +34,9 @@ public struct SessionInput: Sendable, Equatable {
     /// v1.6 (SPEC.md §5.16): a best the rower typed in rather than a logged session — used as
     /// an all-out piece, never as training load.
     public var declared: Bool
+    /// v1.7 (SPEC.md §5.20): a warm-up, cool-down, extra piece or zone-less post — counted as
+    /// training volume, never as pace.
+    public var volumeOnly: Bool
 
     public init(
         id: String,
@@ -46,7 +49,8 @@ public struct SessionInput: Sendable, Equatable {
         repDistanceM: Double? = nil,
         rpe: Double? = nil,
         bodyweightKg: Double? = nil,
-        declared: Bool = false
+        declared: Bool = false,
+        volumeOnly: Bool = false
     ) {
         self.id = id
         self.date = date
@@ -59,6 +63,7 @@ public struct SessionInput: Sendable, Equatable {
         self.rpe = rpe
         self.bodyweightKg = bodyweightKg
         self.declared = declared
+        self.volumeOnly = volumeOnly
     }
 }
 

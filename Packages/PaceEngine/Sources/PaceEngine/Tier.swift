@@ -44,6 +44,9 @@ public struct Tier: Sendable, Equatable {
 
     public var rpeMid: Double { (rpeLo + rpeHi) / 2.0 }
 
+    /// The zone's usual rate: the middle of its plausible range (v1.7, §5.18).
+    public var rateMid: Double { (rateLo + rateHi) / 2.0 }
+
     /// AN and TR (`MAXIMAL_TIERS`): anchored by the single closest-distance session.
     public var isMaximal: Bool { name == .an || name == .tr }
 

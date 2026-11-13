@@ -11,18 +11,22 @@ import Supabase
 /// decisions 30–31). Pure arithmetic over a few dozen rows, so it runs on the phone whenever a
 /// screen loads: one read of the rower's recent sessions, then one prediction per distance.
 ///
-/// What feeds the engine (PaceEngine/HANDOFF.md, phase 2): erg sessions only, with a zone;
-/// the **main** segment(s), never warm-up or cool-down or the session total (a 2k test plus
-/// warm-up and cool-down sent as one 6k "AN" would read as an all-out 6k); the session's own
-/// calendar day; the post's id; its effort rating; an interval's rep distance.
+/// What feeds the engine (PaceEngine/HANDOFF.md, phase 2; every erg post since v1.7, decision
+/// 104): erg sessions only. A zoned session's **main** segment(s) are pace pieces in its zone,
+/// never the session total (a 2k test plus warm-up and cool-down sent as one 6k "AN" would read
+/// as an all-out 6k). Everything else — warm-ups, cool-downs, extra pieces, and every segment of
+/// an old post with no zone — goes in as **volume only**: training minutes (as UT2), never pace.
+/// Also the session's own calendar day, the post's id, its effort rating and rate, and an
+/// interval's rep distance.
 enum PredictionService {
     /// The cold-start Population Estimate stays hidden (decision 30): it is shown as "no
     /// prediction yet". Its values are fitted (engine v1.4); showing it is the user's call.
     static let showsPopulationEstimate = false
 
-    /// Days of history read: the engine's 30-day window, plus enough to tell a lapsed rower
-    /// ("history outside the window") from a brand-new one.
-    private static let historyDays = 60
+    /// Days of sessions read: the engine's 30-day window, the 90 days its personal Paul's Law
+    /// looks back over (v1.7, §5.21), and enough to tell a lapsed rower ("history outside the
+    /// window") from a brand-new one. Coaching reads the same span for its predictions.
+    static let historyDays = 90
 
     /// One prediction per target distance (metres).
     static func predictions(
@@ -131,14 +135,30 @@ enum PredictionService {
         return history(from: rows, calendar: calendar)
     }
 
-    /// The engine's input: each zoned session's MAIN segment(s) — never warm-up, cool-down or the
-    /// session total. A session's first main piece keeps the post's id; any further one adds its
-    /// position, so the engine's de-duplication never merges them.
+    /// The engine's input: each zoned session's MAIN segment(s) as pace pieces — never the
+    /// session total — and every other segment as volume only (v1.7). A session's first main
+    /// piece keeps the post's id; any further one adds its position, and a volume-only row adds
+    /// "v" and its position, so the engine's de-duplication never merges them.
     static func history(from rows: [SessionRow], calendar: Calendar) -> [SessionInput] {
         var history: [SessionInput] = []
         for row in rows {
-            guard let zone = row.zone, let tag = Tier.Name(rawValue: zone),
-                  let date = day(row.sessionDate, calendar: calendar) else { continue }
+            guard let date = day(row.sessionDate, calendar: calendar) else { continue }
+            let tag = row.zone.flatMap(Tier.Name.init(rawValue:))
+            // Warm-ups, cool-downs, extra pieces, and all of a zone-less post: minutes only.
+            let volumeSegments = row.segments
+                .filter { tag == nil || $0.label != .main }
+                .sorted { $0.position < $1.position }
+            for segment in volumeSegments where segment.distanceM > 0 && segment.timeMs > 0 {
+                history.append(SessionInput(
+                    id: "\(row.id.uuidString)-v\(segment.position)",
+                    date: date,
+                    distanceM: Double(segment.distanceM),
+                    tag: .ut2,
+                    timeS: Double(segment.timeMs) / 1000,
+                    volumeOnly: true
+                ))
+            }
+            guard let tag else { continue }
             let mains = row.segments.filter { $0.label == .main }.sorted { $0.position < $1.position }
             for (index, segment) in mains.enumerated() {
                 history.append(SessionInput(

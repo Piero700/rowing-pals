@@ -52,6 +52,9 @@ public struct Prediction: Codable, Sendable, Equatable {
         public var windowDays: Int
         public var rawModifierSeconds: Double
         public var loadConfidence: Double
+        /// v1.7 (§5.20): the share of a faster modifier that applies — training after the newest
+        /// all-out piece; 0 when a measured steady change replaces it.
+        public var afterMeasurementShare: Double
         public var modifierSeconds: Double
 
         enum CodingKeys: String, CodingKey {
@@ -60,26 +63,64 @@ public struct Prediction: Codable, Sendable, Equatable {
             case windowDays = "window_days"
             case rawModifierSeconds = "raw_modifier_seconds"
             case loadConfidence = "load_confidence"
+            case afterMeasurementShare = "after_measurement_share"
             case modifierSeconds = "modifier_seconds"
         }
 
         static func empty(windowDays: Int) -> Load {
             Load(trimpLite: 0.0, sessionCount: 0, windowDays: windowDays, rawModifierSeconds: 0.0,
-                 loadConfidence: 0.0, modifierSeconds: 0.0)
+                 loadConfidence: 0.0, afterMeasurementShare: 0.0, modifierSeconds: 0.0)
         }
     }
 
-    /// Reads top to bottom as the arithmetic: anchor + paul + offset + rpe = 2k equivalent;
-    /// then + projection + weight + volume + clamp = predicted split. A population estimate
-    /// fills only the population, 2k-equivalent and projection lines.
+    /// v1.7 (§5.21): the rower's own Paul's Law, or the seed 5.0 when their all-out pieces
+    /// can't show one.
+    public struct PersonalPaulSummary: Codable, Sendable, Equatable {
+        public var secondsPerDoubling: Double
+        public var fitted: Bool
+        public var pieces: Int
+
+        enum CodingKeys: String, CodingKey {
+            case fitted, pieces
+            case secondsPerDoubling = "seconds_per_doubling"
+        }
+    }
+
+    /// v1.7 (§5.19): steady rows since the newest all-out piece.
+    public struct SteadySummary: Codable, Sendable, Equatable {
+        /// After minus before, 2k-equivalent seconds per 500m (negative = faster).
+        public var changeSeconds: Double
+        /// The share of it that carries to the target.
+        public var transfer: Double
+        public var piecesBefore: Int
+        public var piecesAfter: Int
+        public var zones: [Tier.Name]
+        public var measuredOn: String?
+
+        enum CodingKeys: String, CodingKey {
+            case transfer, zones
+            case changeSeconds = "change_seconds"
+            case piecesBefore = "pieces_before"
+            case piecesAfter = "pieces_after"
+            case measuredOn = "measured_on"
+        }
+    }
+
+    /// Reads top to bottom as the arithmetic: anchor + paul + offset + rpe + rate = 2k
+    /// equivalent; then + projection + weight + steady + volume + held + clamp = predicted
+    /// split. A population estimate fills only the population, 2k-equivalent and projection lines.
     public struct Components: Codable, Sendable, Equatable {
         public var anchorSplit: Double?
         public var paulAdjustment: Double?
         public var intensityOffset: Double?
         public var rpeCorrection: Double?
+        /// v1.7 (§5.18): a steady anchor piece's rate, read back to its zone's usual rate.
+        public var rateCorrection: Double?
         public var twoKEquivalent: Double?
         public var projectionToTarget: Double?
         public var weightTrendCorrection: Double?
+        /// v1.7 (§5.19): steady rows since the newest all-out piece; never positive.
+        public var steadyChangeAdjustment: Double?
         public var volumeModifier: Double?
         /// v1.6: how far the split was brought down to one already held for longer (§5.15).
         public var heldSplitAdjustment: Double?
@@ -91,9 +132,11 @@ public struct Prediction: Codable, Sendable, Equatable {
             case paulAdjustment = "paul_adjustment"
             case intensityOffset = "intensity_offset"
             case rpeCorrection = "rpe_correction"
+            case rateCorrection = "rate_correction"
             case twoKEquivalent = "two_k_equivalent"
             case projectionToTarget = "projection_to_target"
             case weightTrendCorrection = "weight_trend_correction"
+            case steadyChangeAdjustment = "steady_change_adjustment"
             case volumeModifier = "volume_modifier"
             case heldSplitAdjustment = "held_split_adjustment"
             case clampAdjustment = "clamp_adjustment"
@@ -103,7 +146,8 @@ public struct Prediction: Codable, Sendable, Equatable {
         /// The lines present, in arithmetic order, keyed by their output names.
         public var entries: [(key: String, value: Double)] {
             let values: [Double?] = [anchorSplit, paulAdjustment, intensityOffset, rpeCorrection,
-                                     twoKEquivalent, projectionToTarget, weightTrendCorrection,
+                                     rateCorrection, twoKEquivalent, projectionToTarget,
+                                     weightTrendCorrection, steadyChangeAdjustment,
                                      volumeModifier, heldSplitAdjustment, clampAdjustment, population2kSeconds]
             return zip(CodingKeys.allCases, values).compactMap { key, value in
                 value.map { (key.rawValue, $0) }
@@ -220,6 +264,10 @@ public struct Prediction: Codable, Sendable, Equatable {
     public var confidenceFactors: [ConfidenceFactor]
     public var anchor: AnchorSummary?
     public var load: Load
+    /// v1.7: nil for a population estimate or no prediction.
+    public var personalPaul: PersonalPaulSummary?
+    /// v1.7: nil when steady rows since the newest all-out piece weren't measured.
+    public var steady: SteadySummary?
     public var components: Components
     /// Population estimates only: how each adjustment was made.
     public var estimateBasis: [String]?
@@ -233,8 +281,9 @@ public struct Prediction: Codable, Sendable, Equatable {
     public var recommendations: [String]
 
     enum CodingKeys: String, CodingKey {
-        case anchor, load, components, effort, athlete, interpretation, diagnostics, flags,
+        case anchor, load, steady, components, effort, athlete, interpretation, diagnostics, flags,
              warnings, recommendations
+        case personalPaul = "personal_paul"
         case schemaVersion = "schema_version"
         case generatedForDate = "generated_for_date"
         case targetDistanceM = "target_distance_m"

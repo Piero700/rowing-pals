@@ -1,5 +1,5 @@
 {
-  "schema_version": "anchor-impulse/1.6",
+  "schema_version": "anchor-impulse/1.7",
   "generated_from": "pace_engine.py (Python reference implementation)",
   "tolerance": {
     "seconds": 0.02,
@@ -43,12 +43,34 @@
       "TR": 10000.0
     },
     "split_mismatch_tolerance": 0.02,
-    "submaximal_anchor_method": "median",
+    "submaximal_anchor_method": "blend",
     "maximal_anchor_method": "blend",
     "blend_distance_halving_log2": 1.0,
     "blend_recency_half_life_days": 14.0,
     "held_split_floor": true,
     "declared_anchor_penalty": 10,
+    "submaximal_blend_half_life_days": 14.0,
+    "rate_sensitivity_s": 1.5,
+    "rate_max_correction_s": 4.5,
+    "steady_trend": true,
+    "steady_transfer_at_reference": 0.5,
+    "steady_transfer_per_doubling": 0.1,
+    "steady_transfer_min": 0.3,
+    "steady_transfer_max": 0.7,
+    "steady_gain_cap_s": 3.0,
+    "steady_trend_min_pieces": 2,
+    "steady_slower_flag_s": 0.5,
+    "volume_curve": "per_doubling",
+    "load_gain_from": 600.0,
+    "load_gain_per_doubling_s": 0.75,
+    "load_gain_cap_s": 2.5,
+    "volume_after_measurement": true,
+    "personal_paul": true,
+    "personal_paul_window_days": 90,
+    "personal_paul_half_life_days": 60.0,
+    "personal_paul_prior_strength": 1.0,
+    "personal_paul_min": 2.5,
+    "personal_paul_max": 8.0,
     "rpe_sensitivity": 1.2,
     "rpe_max_correction": 3.0,
     "rpe_contradiction_points": 2.5,
@@ -103,6 +125,8 @@
     "range_thin_history_s": 1.5,
     "range_interval_ambiguous_s": 3.0,
     "range_tag_mismatch_s": 1.0,
+    "range_gain_share": 0.5,
+    "range_stale_share_when_tracked": 0.5,
     "legacy_v1_formula": false
   },
   "tiers": {
@@ -179,8 +203,8 @@
           "id": "w0-0",
           "date": "2026-09-17",
           "distance_m": 16000,
-          "split_s": 127.0,
-          "time_s": 4064.0,
+          "split_s": 125.5,
+          "time_s": 4016.0,
           "stroke_rate": 19,
           "tag": "UT2"
         },
@@ -188,8 +212,8 @@
           "id": "w0-1",
           "date": "2026-09-16",
           "distance_m": 14000,
-          "split_s": 126.9,
-          "time_s": 3553.2,
+          "split_s": 123.9,
+          "time_s": 3469.2,
           "stroke_rate": 20,
           "tag": "UT2"
         },
@@ -206,8 +230,8 @@
           "id": "w0-3",
           "date": "2026-09-14",
           "distance_m": 8000,
-          "split_s": 118.0,
-          "time_s": 1888.0,
+          "split_s": 116.5,
+          "time_s": 1864.0,
           "stroke_rate": 26,
           "tag": "AT"
         },
@@ -224,8 +248,8 @@
           "id": "w1-0",
           "date": "2026-09-10",
           "distance_m": 16000,
-          "split_s": 127.0,
-          "time_s": 4064.0,
+          "split_s": 125.5,
+          "time_s": 4016.0,
           "stroke_rate": 19,
           "tag": "UT2"
         },
@@ -233,8 +257,8 @@
           "id": "w1-1",
           "date": "2026-09-09",
           "distance_m": 14000,
-          "split_s": 126.9,
-          "time_s": 3553.2,
+          "split_s": 123.9,
+          "time_s": 3469.2,
           "stroke_rate": 20,
           "tag": "UT2"
         },
@@ -251,8 +275,8 @@
           "id": "w1-3",
           "date": "2026-09-07",
           "distance_m": 8000,
-          "split_s": 118.0,
-          "time_s": 1888.0,
+          "split_s": 116.5,
+          "time_s": 1864.0,
           "stroke_rate": 26,
           "tag": "AT"
         },
@@ -269,8 +293,8 @@
           "id": "w2-0",
           "date": "2026-09-03",
           "distance_m": 16000,
-          "split_s": 127.0,
-          "time_s": 4064.0,
+          "split_s": 125.5,
+          "time_s": 4016.0,
           "stroke_rate": 19,
           "tag": "UT2"
         },
@@ -278,8 +302,8 @@
           "id": "w2-1",
           "date": "2026-09-02",
           "distance_m": 14000,
-          "split_s": 126.9,
-          "time_s": 3553.2,
+          "split_s": 123.9,
+          "time_s": 3469.2,
           "stroke_rate": 20,
           "tag": "UT2"
         },
@@ -296,8 +320,8 @@
           "id": "w2-3",
           "date": "2026-08-31",
           "distance_m": 8000,
-          "split_s": 118.0,
-          "time_s": 1888.0,
+          "split_s": 116.5,
+          "time_s": 1864.0,
           "stroke_rate": 26,
           "tag": "AT"
         },
@@ -314,8 +338,8 @@
           "id": "w3-0",
           "date": "2026-08-27",
           "distance_m": 16000,
-          "split_s": 127.0,
-          "time_s": 4064.0,
+          "split_s": 125.5,
+          "time_s": 4016.0,
           "stroke_rate": 19,
           "tag": "UT2"
         },
@@ -323,8 +347,8 @@
           "id": "w3-1",
           "date": "2026-08-26",
           "distance_m": 14000,
-          "split_s": 126.9,
-          "time_s": 3553.2,
+          "split_s": 123.9,
+          "time_s": 3469.2,
           "stroke_rate": 20,
           "tag": "UT2"
         },
@@ -341,8 +365,8 @@
           "id": "w3-3",
           "date": "2026-08-24",
           "distance_m": 8000,
-          "split_s": 118.0,
-          "time_s": 1888.0,
+          "split_s": 116.5,
+          "time_s": 1864.0,
           "stroke_rate": 26,
           "tag": "AT"
         },
@@ -383,15 +407,22 @@
           "paul_adjustment": -2.49,
           "intensity_offset": -8.0,
           "rpe_correction": 0.0,
+          "rate_correction": 0.0,
           "two_k_equivalent": 105.0,
           "projection_to_target": 0.0,
           "weight_trend_correction": 0.0,
-          "volume_modifier": 0.0,
+          "steady_change_adjustment": 0.0,
+          "volume_modifier": -0.0,
           "held_split_adjustment": 0.0,
           "clamp_adjustment": 0.0
         },
-        "load_trimp_lite": 1282.1,
-        "load_modifier_seconds": 0.0,
+        "load_trimp_lite": 1270.9,
+        "load_modifier_seconds": -0.0,
+        "load_after_measurement_share": 0.0,
+        "load_session_count": 21,
+        "personal_paul_seconds": 5.0,
+        "personal_paul_fitted": false,
+        "steady_change_seconds": 0.0,
         "spread_seconds": 0.0,
         "two_k_equivalent_by_tier": {
           "TR": 105.0,
@@ -415,8 +446,8 @@
           "id": "w0-0",
           "date": "2026-09-17",
           "distance_m": 16000,
-          "split_s": 127.0,
-          "time_s": 4064.0,
+          "split_s": 125.5,
+          "time_s": 4016.0,
           "stroke_rate": 19,
           "tag": "UT2"
         },
@@ -424,8 +455,8 @@
           "id": "w0-1",
           "date": "2026-09-16",
           "distance_m": 14000,
-          "split_s": 126.9,
-          "time_s": 3553.2,
+          "split_s": 123.9,
+          "time_s": 3469.2,
           "stroke_rate": 20,
           "tag": "UT2"
         },
@@ -442,8 +473,8 @@
           "id": "w0-3",
           "date": "2026-09-14",
           "distance_m": 8000,
-          "split_s": 118.0,
-          "time_s": 1888.0,
+          "split_s": 116.5,
+          "time_s": 1864.0,
           "stroke_rate": 26,
           "tag": "AT"
         },
@@ -460,8 +491,8 @@
           "id": "w1-0",
           "date": "2026-09-10",
           "distance_m": 16000,
-          "split_s": 127.0,
-          "time_s": 4064.0,
+          "split_s": 125.5,
+          "time_s": 4016.0,
           "stroke_rate": 19,
           "tag": "UT2"
         },
@@ -469,8 +500,8 @@
           "id": "w1-1",
           "date": "2026-09-09",
           "distance_m": 14000,
-          "split_s": 126.9,
-          "time_s": 3553.2,
+          "split_s": 123.9,
+          "time_s": 3469.2,
           "stroke_rate": 20,
           "tag": "UT2"
         },
@@ -487,8 +518,8 @@
           "id": "w1-3",
           "date": "2026-09-07",
           "distance_m": 8000,
-          "split_s": 118.0,
-          "time_s": 1888.0,
+          "split_s": 116.5,
+          "time_s": 1864.0,
           "stroke_rate": 26,
           "tag": "AT"
         },
@@ -505,8 +536,8 @@
           "id": "w2-0",
           "date": "2026-09-03",
           "distance_m": 16000,
-          "split_s": 127.0,
-          "time_s": 4064.0,
+          "split_s": 125.5,
+          "time_s": 4016.0,
           "stroke_rate": 19,
           "tag": "UT2"
         },
@@ -514,8 +545,8 @@
           "id": "w2-1",
           "date": "2026-09-02",
           "distance_m": 14000,
-          "split_s": 126.9,
-          "time_s": 3553.2,
+          "split_s": 123.9,
+          "time_s": 3469.2,
           "stroke_rate": 20,
           "tag": "UT2"
         },
@@ -532,8 +563,8 @@
           "id": "w2-3",
           "date": "2026-08-31",
           "distance_m": 8000,
-          "split_s": 118.0,
-          "time_s": 1888.0,
+          "split_s": 116.5,
+          "time_s": 1864.0,
           "stroke_rate": 26,
           "tag": "AT"
         },
@@ -550,8 +581,8 @@
           "id": "w3-0",
           "date": "2026-08-27",
           "distance_m": 16000,
-          "split_s": 127.0,
-          "time_s": 4064.0,
+          "split_s": 125.5,
+          "time_s": 4016.0,
           "stroke_rate": 19,
           "tag": "UT2"
         },
@@ -559,8 +590,8 @@
           "id": "w3-1",
           "date": "2026-08-26",
           "distance_m": 14000,
-          "split_s": 126.9,
-          "time_s": 3553.2,
+          "split_s": 123.9,
+          "time_s": 3469.2,
           "stroke_rate": 20,
           "tag": "UT2"
         },
@@ -577,8 +608,8 @@
           "id": "w3-3",
           "date": "2026-08-24",
           "distance_m": 8000,
-          "split_s": 118.0,
-          "time_s": 1888.0,
+          "split_s": 116.5,
+          "time_s": 1864.0,
           "stroke_rate": 26,
           "tag": "AT"
         },
@@ -619,15 +650,22 @@
           "paul_adjustment": -2.49,
           "intensity_offset": -8.0,
           "rpe_correction": 0.0,
+          "rate_correction": 0.0,
           "two_k_equivalent": 105.0,
           "projection_to_target": 6.61,
           "weight_trend_correction": 0.0,
-          "volume_modifier": 0.0,
+          "steady_change_adjustment": 0.0,
+          "volume_modifier": -0.0,
           "held_split_adjustment": 0.0,
           "clamp_adjustment": 0.0
         },
-        "load_trimp_lite": 1282.1,
-        "load_modifier_seconds": 0.0,
+        "load_trimp_lite": 1270.9,
+        "load_modifier_seconds": -0.0,
+        "load_after_measurement_share": 0.0,
+        "load_session_count": 21,
+        "personal_paul_seconds": 5.0,
+        "personal_paul_fitted": false,
+        "steady_change_seconds": 0.0,
         "spread_seconds": 0.0,
         "two_k_equivalent_by_tier": {
           "TR": 105.0,
@@ -651,8 +689,8 @@
           "id": "w0-0",
           "date": "2026-09-17",
           "distance_m": 16000,
-          "split_s": 127.0,
-          "time_s": 4064.0,
+          "split_s": 125.5,
+          "time_s": 4016.0,
           "stroke_rate": 19,
           "tag": "UT2"
         },
@@ -660,8 +698,8 @@
           "id": "w0-1",
           "date": "2026-09-16",
           "distance_m": 14000,
-          "split_s": 126.9,
-          "time_s": 3553.2,
+          "split_s": 123.9,
+          "time_s": 3469.2,
           "stroke_rate": 20,
           "tag": "UT2"
         },
@@ -678,8 +716,8 @@
           "id": "w0-3",
           "date": "2026-09-14",
           "distance_m": 8000,
-          "split_s": 118.0,
-          "time_s": 1888.0,
+          "split_s": 116.5,
+          "time_s": 1864.0,
           "stroke_rate": 26,
           "tag": "AT"
         },
@@ -696,8 +734,8 @@
           "id": "w1-0",
           "date": "2026-09-10",
           "distance_m": 16000,
-          "split_s": 127.0,
-          "time_s": 4064.0,
+          "split_s": 125.5,
+          "time_s": 4016.0,
           "stroke_rate": 19,
           "tag": "UT2"
         },
@@ -705,8 +743,8 @@
           "id": "w1-1",
           "date": "2026-09-09",
           "distance_m": 14000,
-          "split_s": 126.9,
-          "time_s": 3553.2,
+          "split_s": 123.9,
+          "time_s": 3469.2,
           "stroke_rate": 20,
           "tag": "UT2"
         },
@@ -723,8 +761,8 @@
           "id": "w1-3",
           "date": "2026-09-07",
           "distance_m": 8000,
-          "split_s": 118.0,
-          "time_s": 1888.0,
+          "split_s": 116.5,
+          "time_s": 1864.0,
           "stroke_rate": 26,
           "tag": "AT"
         },
@@ -741,8 +779,8 @@
           "id": "w2-0",
           "date": "2026-09-03",
           "distance_m": 16000,
-          "split_s": 127.0,
-          "time_s": 4064.0,
+          "split_s": 125.5,
+          "time_s": 4016.0,
           "stroke_rate": 19,
           "tag": "UT2"
         },
@@ -750,8 +788,8 @@
           "id": "w2-1",
           "date": "2026-09-02",
           "distance_m": 14000,
-          "split_s": 126.9,
-          "time_s": 3553.2,
+          "split_s": 123.9,
+          "time_s": 3469.2,
           "stroke_rate": 20,
           "tag": "UT2"
         },
@@ -768,8 +806,8 @@
           "id": "w2-3",
           "date": "2026-08-31",
           "distance_m": 8000,
-          "split_s": 118.0,
-          "time_s": 1888.0,
+          "split_s": 116.5,
+          "time_s": 1864.0,
           "stroke_rate": 26,
           "tag": "AT"
         },
@@ -786,8 +824,8 @@
           "id": "w3-0",
           "date": "2026-08-27",
           "distance_m": 16000,
-          "split_s": 127.0,
-          "time_s": 4064.0,
+          "split_s": 125.5,
+          "time_s": 4016.0,
           "stroke_rate": 19,
           "tag": "UT2"
         },
@@ -795,8 +833,8 @@
           "id": "w3-1",
           "date": "2026-08-26",
           "distance_m": 14000,
-          "split_s": 126.9,
-          "time_s": 3553.2,
+          "split_s": 123.9,
+          "time_s": 3469.2,
           "stroke_rate": 20,
           "tag": "UT2"
         },
@@ -813,8 +851,8 @@
           "id": "w3-3",
           "date": "2026-08-24",
           "distance_m": 8000,
-          "split_s": 118.0,
-          "time_s": 1888.0,
+          "split_s": 116.5,
+          "time_s": 1864.0,
           "stroke_rate": 26,
           "tag": "AT"
         },
@@ -855,15 +893,22 @@
           "paul_adjustment": -2.49,
           "intensity_offset": -8.0,
           "rpe_correction": 0.0,
+          "rate_correction": 0.0,
           "two_k_equivalent": 105.0,
           "projection_to_target": 7.92,
           "weight_trend_correction": 0.0,
-          "volume_modifier": 0.0,
+          "steady_change_adjustment": 0.0,
+          "volume_modifier": -0.0,
           "held_split_adjustment": 0.0,
           "clamp_adjustment": 0.0
         },
-        "load_trimp_lite": 1282.1,
-        "load_modifier_seconds": 0.0,
+        "load_trimp_lite": 1270.9,
+        "load_modifier_seconds": -0.0,
+        "load_after_measurement_share": 0.0,
+        "load_session_count": 21,
+        "personal_paul_seconds": 5.0,
+        "personal_paul_fitted": false,
+        "steady_change_seconds": 0.0,
         "spread_seconds": 0.0,
         "two_k_equivalent_by_tier": {
           "TR": 105.0,
@@ -893,16 +938,16 @@
         }
       ],
       "expected": {
-        "predicted_split_seconds": 105.42,
-        "predicted_total_time_seconds": 421.67,
-        "predicted_split_formatted": "1:45.4",
-        "predicted_total_time_formatted": "7:01.7",
+        "predicted_split_seconds": 106.92,
+        "predicted_total_time_seconds": 427.67,
+        "predicted_split_formatted": "1:46.9",
+        "predicted_total_time_formatted": "7:07.7",
         "predicted_split_range_seconds": 2.57,
         "predicted_total_time_range_seconds": 10.3,
         "confidence_score": "Low",
         "confidence_numeric": 5,
         "anchor_tier": "UT2",
-        "anchor_method": "duration_weighted_median",
+        "anchor_method": "zone_blend",
         "anchor_session_ids": [
           "u"
         ],
@@ -911,18 +956,25 @@
           "paul_adjustment": 0.07,
           "intensity_offset": -22.0,
           "rpe_correction": 0.0,
-          "two_k_equivalent": 104.97,
+          "rate_correction": 1.5,
+          "two_k_equivalent": 106.47,
           "projection_to_target": 0.0,
           "weight_trend_correction": 0.0,
+          "steady_change_adjustment": 0.0,
           "volume_modifier": 0.45,
           "held_split_adjustment": 0.0,
           "clamp_adjustment": 0.0
         },
         "load_trimp_lite": 63.5,
         "load_modifier_seconds": 0.45,
+        "load_after_measurement_share": 1.0,
+        "load_session_count": 1,
+        "personal_paul_seconds": 5.0,
+        "personal_paul_fitted": false,
+        "steady_change_seconds": null,
         "spread_seconds": 0.0,
         "two_k_equivalent_by_tier": {
-          "UT2": 104.97
+          "UT2": 106.47
         },
         "weight_adjusted_total_seconds": null,
         "age_graded_total_seconds": null,
@@ -966,15 +1018,22 @@
           "paul_adjustment": -0.0,
           "intensity_offset": -0.0,
           "rpe_correction": 0.0,
+          "rate_correction": 0.0,
           "two_k_equivalent": 105.0,
           "projection_to_target": 0.0,
           "weight_trend_correction": 0.0,
+          "steady_change_adjustment": 0.0,
           "volume_modifier": 0.48,
           "held_split_adjustment": -0.48,
           "clamp_adjustment": 0.0
         },
         "load_trimp_lite": 21.0,
         "load_modifier_seconds": 0.48,
+        "load_after_measurement_share": 1.0,
+        "load_session_count": 1,
+        "personal_paul_seconds": 5.0,
+        "personal_paul_fitted": false,
+        "steady_change_seconds": null,
         "spread_seconds": 0.0,
         "two_k_equivalent_by_tier": {
           "AN": 105.0
@@ -1061,7 +1120,7 @@
         "confidence_score": "Low",
         "confidence_numeric": 27,
         "anchor_tier": "UT1",
-        "anchor_method": "duration_weighted_median",
+        "anchor_method": "zone_blend",
         "anchor_session_ids": [
           "a1",
           "a2",
@@ -1076,15 +1135,22 @@
           "paul_adjustment": -0.0,
           "intensity_offset": -17.0,
           "rpe_correction": 0.0,
+          "rate_correction": 0.0,
           "two_k_equivalent": 105.0,
           "projection_to_target": 0.0,
           "weight_trend_correction": 0.0,
+          "steady_change_adjustment": 0.0,
           "volume_modifier": 0.95,
           "held_split_adjustment": 0.0,
           "clamp_adjustment": 0.0
         },
         "load_trimp_lite": 409.9,
         "load_modifier_seconds": 0.95,
+        "load_after_measurement_share": 1.0,
+        "load_session_count": 7,
+        "personal_paul_seconds": 5.0,
+        "personal_paul_fitted": false,
+        "steady_change_seconds": null,
         "spread_seconds": 0.0,
         "two_k_equivalent_by_tier": {
           "UT1": 105.0
@@ -1105,8 +1171,8 @@
           "id": "w0-0",
           "date": "2026-09-17",
           "distance_m": 16000,
-          "split_s": 127.0,
-          "time_s": 4064.0,
+          "split_s": 125.5,
+          "time_s": 4016.0,
           "stroke_rate": 19,
           "tag": "UT2"
         },
@@ -1114,8 +1180,8 @@
           "id": "w0-1",
           "date": "2026-09-16",
           "distance_m": 14000,
-          "split_s": 126.9,
-          "time_s": 3553.2,
+          "split_s": 123.9,
+          "time_s": 3469.2,
           "stroke_rate": 20,
           "tag": "UT2"
         },
@@ -1132,8 +1198,8 @@
           "id": "w0-3",
           "date": "2026-09-14",
           "distance_m": 8000,
-          "split_s": 118.0,
-          "time_s": 1888.0,
+          "split_s": 116.5,
+          "time_s": 1864.0,
           "stroke_rate": 26,
           "tag": "AT"
         },
@@ -1150,8 +1216,8 @@
           "id": "w1-0",
           "date": "2026-09-10",
           "distance_m": 16000,
-          "split_s": 127.0,
-          "time_s": 4064.0,
+          "split_s": 125.5,
+          "time_s": 4016.0,
           "stroke_rate": 19,
           "tag": "UT2"
         },
@@ -1159,8 +1225,8 @@
           "id": "w1-1",
           "date": "2026-09-09",
           "distance_m": 14000,
-          "split_s": 126.9,
-          "time_s": 3553.2,
+          "split_s": 123.9,
+          "time_s": 3469.2,
           "stroke_rate": 20,
           "tag": "UT2"
         },
@@ -1177,8 +1243,8 @@
           "id": "w1-3",
           "date": "2026-09-07",
           "distance_m": 8000,
-          "split_s": 118.0,
-          "time_s": 1888.0,
+          "split_s": 116.5,
+          "time_s": 1864.0,
           "stroke_rate": 26,
           "tag": "AT"
         },
@@ -1195,8 +1261,8 @@
           "id": "w2-0",
           "date": "2026-09-03",
           "distance_m": 16000,
-          "split_s": 127.0,
-          "time_s": 4064.0,
+          "split_s": 125.5,
+          "time_s": 4016.0,
           "stroke_rate": 19,
           "tag": "UT2"
         },
@@ -1204,8 +1270,8 @@
           "id": "w2-1",
           "date": "2026-09-02",
           "distance_m": 14000,
-          "split_s": 126.9,
-          "time_s": 3553.2,
+          "split_s": 123.9,
+          "time_s": 3469.2,
           "stroke_rate": 20,
           "tag": "UT2"
         },
@@ -1222,8 +1288,8 @@
           "id": "w2-3",
           "date": "2026-08-31",
           "distance_m": 8000,
-          "split_s": 118.0,
-          "time_s": 1888.0,
+          "split_s": 116.5,
+          "time_s": 1864.0,
           "stroke_rate": 26,
           "tag": "AT"
         },
@@ -1240,8 +1306,8 @@
           "id": "w3-0",
           "date": "2026-08-27",
           "distance_m": 16000,
-          "split_s": 127.0,
-          "time_s": 4064.0,
+          "split_s": 125.5,
+          "time_s": 4016.0,
           "stroke_rate": 19,
           "tag": "UT2"
         },
@@ -1249,8 +1315,8 @@
           "id": "w3-1",
           "date": "2026-08-26",
           "distance_m": 14000,
-          "split_s": 126.9,
-          "time_s": 3553.2,
+          "split_s": 123.9,
+          "time_s": 3469.2,
           "stroke_rate": 20,
           "tag": "UT2"
         },
@@ -1267,8 +1333,8 @@
           "id": "w3-3",
           "date": "2026-08-24",
           "distance_m": 8000,
-          "split_s": 118.0,
-          "time_s": 1888.0,
+          "split_s": 116.5,
+          "time_s": 1864.0,
           "stroke_rate": 26,
           "tag": "AT"
         },
@@ -1309,15 +1375,22 @@
           "paul_adjustment": -2.49,
           "intensity_offset": -8.0,
           "rpe_correction": 0.0,
+          "rate_correction": 0.0,
           "two_k_equivalent": 94.51,
           "projection_to_target": 0.0,
           "weight_trend_correction": 0.0,
-          "volume_modifier": 0.0,
+          "steady_change_adjustment": 0.0,
+          "volume_modifier": -0.0,
           "held_split_adjustment": 0.0,
           "clamp_adjustment": 0.0
         },
-        "load_trimp_lite": 1277.9,
-        "load_modifier_seconds": 0.0,
+        "load_trimp_lite": 1266.7,
+        "load_modifier_seconds": -0.0,
+        "load_after_measurement_share": 0.0,
+        "load_session_count": 21,
+        "personal_paul_seconds": 5.0,
+        "personal_paul_fitted": false,
+        "steady_change_seconds": 0.0,
         "spread_seconds": 10.49,
         "two_k_equivalent_by_tier": {
           "TR": 94.51,
@@ -1367,15 +1440,22 @@
           "paul_adjustment": -5.0,
           "intensity_offset": -0.0,
           "rpe_correction": 0.0,
+          "rate_correction": 0.0,
           "two_k_equivalent": 91.0,
           "projection_to_target": 0.0,
           "weight_trend_correction": 0.0,
+          "steady_change_adjustment": 0.0,
           "volume_modifier": 0.47,
           "held_split_adjustment": 0.0,
           "clamp_adjustment": 0.0
         },
         "load_trimp_lite": 38.4,
         "load_modifier_seconds": 0.47,
+        "load_after_measurement_share": 1.0,
+        "load_session_count": 1,
+        "personal_paul_seconds": 5.0,
+        "personal_paul_fitted": false,
+        "steady_change_seconds": null,
         "spread_seconds": 0.0,
         "two_k_equivalent_by_tier": {
           "AN": 91.0
@@ -1424,15 +1504,22 @@
           "paul_adjustment": 10.0,
           "intensity_offset": -0.0,
           "rpe_correction": 0.0,
+          "rate_correction": 0.0,
           "two_k_equivalent": 106.0,
           "projection_to_target": 0.0,
           "weight_trend_correction": 0.0,
+          "steady_change_adjustment": 0.0,
           "volume_modifier": 0.47,
           "held_split_adjustment": 0.0,
           "clamp_adjustment": 0.0
         },
         "load_trimp_lite": 38.4,
         "load_modifier_seconds": 0.47,
+        "load_after_measurement_share": 1.0,
+        "load_session_count": 1,
+        "personal_paul_seconds": 5.0,
+        "personal_paul_fitted": false,
+        "steady_change_seconds": null,
         "spread_seconds": 0.0,
         "two_k_equivalent_by_tier": {
           "AN": 106.0
@@ -1466,6 +1553,11 @@
         "components": {},
         "load_trimp_lite": 0.0,
         "load_modifier_seconds": 0.0,
+        "load_after_measurement_share": 0.0,
+        "load_session_count": 0,
+        "personal_paul_seconds": null,
+        "personal_paul_fitted": null,
+        "steady_change_seconds": null,
         "spread_seconds": 0.0,
         "two_k_equivalent_by_tier": {},
         "weight_adjusted_total_seconds": null,
@@ -1486,8 +1578,8 @@
           "id": "w0-0",
           "date": "2026-09-17",
           "distance_m": 16000,
-          "split_s": 127.0,
-          "time_s": 4064.0,
+          "split_s": 125.5,
+          "time_s": 4016.0,
           "stroke_rate": 19,
           "tag": "UT2"
         },
@@ -1495,8 +1587,8 @@
           "id": "w0-1",
           "date": "2026-09-16",
           "distance_m": 14000,
-          "split_s": 126.9,
-          "time_s": 3553.2,
+          "split_s": 123.9,
+          "time_s": 3469.2,
           "stroke_rate": 20,
           "tag": "UT2"
         },
@@ -1513,8 +1605,8 @@
           "id": "w0-3",
           "date": "2026-09-14",
           "distance_m": 8000,
-          "split_s": 118.0,
-          "time_s": 1888.0,
+          "split_s": 116.5,
+          "time_s": 1864.0,
           "stroke_rate": 26,
           "tag": "AT"
         },
@@ -1531,8 +1623,8 @@
           "id": "w1-0",
           "date": "2026-09-10",
           "distance_m": 16000,
-          "split_s": 127.0,
-          "time_s": 4064.0,
+          "split_s": 125.5,
+          "time_s": 4016.0,
           "stroke_rate": 19,
           "tag": "UT2"
         },
@@ -1540,8 +1632,8 @@
           "id": "w1-1",
           "date": "2026-09-09",
           "distance_m": 14000,
-          "split_s": 126.9,
-          "time_s": 3553.2,
+          "split_s": 123.9,
+          "time_s": 3469.2,
           "stroke_rate": 20,
           "tag": "UT2"
         },
@@ -1558,8 +1650,8 @@
           "id": "w1-3",
           "date": "2026-09-07",
           "distance_m": 8000,
-          "split_s": 118.0,
-          "time_s": 1888.0,
+          "split_s": 116.5,
+          "time_s": 1864.0,
           "stroke_rate": 26,
           "tag": "AT"
         },
@@ -1576,8 +1668,8 @@
           "id": "w2-0",
           "date": "2026-09-03",
           "distance_m": 16000,
-          "split_s": 127.0,
-          "time_s": 4064.0,
+          "split_s": 125.5,
+          "time_s": 4016.0,
           "stroke_rate": 19,
           "tag": "UT2"
         },
@@ -1585,8 +1677,8 @@
           "id": "w2-1",
           "date": "2026-09-02",
           "distance_m": 14000,
-          "split_s": 126.9,
-          "time_s": 3553.2,
+          "split_s": 123.9,
+          "time_s": 3469.2,
           "stroke_rate": 20,
           "tag": "UT2"
         },
@@ -1603,8 +1695,8 @@
           "id": "w2-3",
           "date": "2026-08-31",
           "distance_m": 8000,
-          "split_s": 118.0,
-          "time_s": 1888.0,
+          "split_s": 116.5,
+          "time_s": 1864.0,
           "stroke_rate": 26,
           "tag": "AT"
         },
@@ -1621,8 +1713,8 @@
           "id": "w3-0",
           "date": "2026-08-27",
           "distance_m": 16000,
-          "split_s": 127.0,
-          "time_s": 4064.0,
+          "split_s": 125.5,
+          "time_s": 4016.0,
           "stroke_rate": 19,
           "tag": "UT2"
         },
@@ -1630,8 +1722,8 @@
           "id": "w3-1",
           "date": "2026-08-26",
           "distance_m": 14000,
-          "split_s": 126.9,
-          "time_s": 3553.2,
+          "split_s": 123.9,
+          "time_s": 3469.2,
           "stroke_rate": 20,
           "tag": "UT2"
         },
@@ -1648,8 +1740,8 @@
           "id": "w3-3",
           "date": "2026-08-24",
           "distance_m": 8000,
-          "split_s": 118.0,
-          "time_s": 1888.0,
+          "split_s": 116.5,
+          "time_s": 1864.0,
           "stroke_rate": 26,
           "tag": "AT"
         },
@@ -1686,6 +1778,11 @@
         "components": {},
         "load_trimp_lite": 0.0,
         "load_modifier_seconds": 0.0,
+        "load_after_measurement_share": 0.0,
+        "load_session_count": 0,
+        "personal_paul_seconds": null,
+        "personal_paul_fitted": null,
+        "steady_change_seconds": null,
         "spread_seconds": 0.0,
         "two_k_equivalent_by_tier": {},
         "weight_adjusted_total_seconds": null,
@@ -1706,8 +1803,8 @@
           "id": "w0-0",
           "date": "2026-09-17",
           "distance_m": 16000,
-          "split_s": 127.0,
-          "time_s": 4064.0,
+          "split_s": 125.5,
+          "time_s": 4016.0,
           "stroke_rate": 19,
           "tag": "UT2"
         },
@@ -1715,8 +1812,8 @@
           "id": "w0-1",
           "date": "2026-09-16",
           "distance_m": 14000,
-          "split_s": 126.9,
-          "time_s": 3553.2,
+          "split_s": 123.9,
+          "time_s": 3469.2,
           "stroke_rate": 20,
           "tag": "UT2"
         },
@@ -1733,8 +1830,8 @@
           "id": "w0-3",
           "date": "2026-09-14",
           "distance_m": 8000,
-          "split_s": 118.0,
-          "time_s": 1888.0,
+          "split_s": 116.5,
+          "time_s": 1864.0,
           "stroke_rate": 26,
           "tag": "AT"
         },
@@ -1751,8 +1848,8 @@
           "id": "w1-0",
           "date": "2026-09-10",
           "distance_m": 16000,
-          "split_s": 127.0,
-          "time_s": 4064.0,
+          "split_s": 125.5,
+          "time_s": 4016.0,
           "stroke_rate": 19,
           "tag": "UT2"
         },
@@ -1760,8 +1857,8 @@
           "id": "w1-1",
           "date": "2026-09-09",
           "distance_m": 14000,
-          "split_s": 126.9,
-          "time_s": 3553.2,
+          "split_s": 123.9,
+          "time_s": 3469.2,
           "stroke_rate": 20,
           "tag": "UT2"
         },
@@ -1778,8 +1875,8 @@
           "id": "w1-3",
           "date": "2026-09-07",
           "distance_m": 8000,
-          "split_s": 118.0,
-          "time_s": 1888.0,
+          "split_s": 116.5,
+          "time_s": 1864.0,
           "stroke_rate": 26,
           "tag": "AT"
         },
@@ -1796,8 +1893,8 @@
           "id": "w2-0",
           "date": "2026-09-03",
           "distance_m": 16000,
-          "split_s": 127.0,
-          "time_s": 4064.0,
+          "split_s": 125.5,
+          "time_s": 4016.0,
           "stroke_rate": 19,
           "tag": "UT2"
         },
@@ -1805,8 +1902,8 @@
           "id": "w2-1",
           "date": "2026-09-02",
           "distance_m": 14000,
-          "split_s": 126.9,
-          "time_s": 3553.2,
+          "split_s": 123.9,
+          "time_s": 3469.2,
           "stroke_rate": 20,
           "tag": "UT2"
         },
@@ -1823,8 +1920,8 @@
           "id": "w2-3",
           "date": "2026-08-31",
           "distance_m": 8000,
-          "split_s": 118.0,
-          "time_s": 1888.0,
+          "split_s": 116.5,
+          "time_s": 1864.0,
           "stroke_rate": 26,
           "tag": "AT"
         },
@@ -1841,8 +1938,8 @@
           "id": "w3-0",
           "date": "2026-08-27",
           "distance_m": 16000,
-          "split_s": 127.0,
-          "time_s": 4064.0,
+          "split_s": 125.5,
+          "time_s": 4016.0,
           "stroke_rate": 19,
           "tag": "UT2"
         },
@@ -1850,8 +1947,8 @@
           "id": "w3-1",
           "date": "2026-08-26",
           "distance_m": 14000,
-          "split_s": 126.9,
-          "time_s": 3553.2,
+          "split_s": 123.9,
+          "time_s": 3469.2,
           "stroke_rate": 20,
           "tag": "UT2"
         },
@@ -1868,8 +1965,8 @@
           "id": "w3-3",
           "date": "2026-08-24",
           "distance_m": 8000,
-          "split_s": 118.0,
-          "time_s": 1888.0,
+          "split_s": 116.5,
+          "time_s": 1864.0,
           "stroke_rate": 26,
           "tag": "AT"
         },
@@ -1906,6 +2003,11 @@
         "components": {},
         "load_trimp_lite": 0.0,
         "load_modifier_seconds": 0.0,
+        "load_after_measurement_share": 0.0,
+        "load_session_count": 0,
+        "personal_paul_seconds": null,
+        "personal_paul_fitted": null,
+        "steady_change_seconds": null,
         "spread_seconds": 0.0,
         "two_k_equivalent_by_tier": {},
         "weight_adjusted_total_seconds": null,
@@ -1945,6 +2047,11 @@
         "components": {},
         "load_trimp_lite": 0.0,
         "load_modifier_seconds": 0.0,
+        "load_after_measurement_share": 0.0,
+        "load_session_count": 0,
+        "personal_paul_seconds": null,
+        "personal_paul_fitted": null,
+        "steady_change_seconds": null,
         "spread_seconds": 0.0,
         "two_k_equivalent_by_tier": {},
         "weight_adjusted_total_seconds": null,
@@ -1984,6 +2091,11 @@
         "components": {},
         "load_trimp_lite": 0.0,
         "load_modifier_seconds": 0.0,
+        "load_after_measurement_share": 0.0,
+        "load_session_count": 0,
+        "personal_paul_seconds": null,
+        "personal_paul_fitted": null,
+        "steady_change_seconds": null,
         "spread_seconds": 0.0,
         "two_k_equivalent_by_tier": {},
         "weight_adjusted_total_seconds": null,
@@ -2004,8 +2116,8 @@
           "id": "w0-0",
           "date": "2026-09-17",
           "distance_m": 16000,
-          "split_s": 127.0,
-          "time_s": 4064.0,
+          "split_s": 125.5,
+          "time_s": 4016.0,
           "stroke_rate": 19,
           "tag": "UT2"
         },
@@ -2013,8 +2125,8 @@
           "id": "w0-1",
           "date": "2026-09-16",
           "distance_m": 14000,
-          "split_s": 126.9,
-          "time_s": 3553.2,
+          "split_s": 123.9,
+          "time_s": 3469.2,
           "stroke_rate": 20,
           "tag": "UT2"
         },
@@ -2031,8 +2143,8 @@
           "id": "w0-3",
           "date": "2026-09-14",
           "distance_m": 8000,
-          "split_s": 118.0,
-          "time_s": 1888.0,
+          "split_s": 116.5,
+          "time_s": 1864.0,
           "stroke_rate": 26,
           "tag": "AT"
         },
@@ -2049,8 +2161,8 @@
           "id": "w1-0",
           "date": "2026-09-10",
           "distance_m": 16000,
-          "split_s": 127.0,
-          "time_s": 4064.0,
+          "split_s": 125.5,
+          "time_s": 4016.0,
           "stroke_rate": 19,
           "tag": "UT2"
         },
@@ -2058,8 +2170,8 @@
           "id": "w1-1",
           "date": "2026-09-09",
           "distance_m": 14000,
-          "split_s": 126.9,
-          "time_s": 3553.2,
+          "split_s": 123.9,
+          "time_s": 3469.2,
           "stroke_rate": 20,
           "tag": "UT2"
         },
@@ -2076,8 +2188,8 @@
           "id": "w1-3",
           "date": "2026-09-07",
           "distance_m": 8000,
-          "split_s": 118.0,
-          "time_s": 1888.0,
+          "split_s": 116.5,
+          "time_s": 1864.0,
           "stroke_rate": 26,
           "tag": "AT"
         },
@@ -2094,8 +2206,8 @@
           "id": "w2-0",
           "date": "2026-09-03",
           "distance_m": 16000,
-          "split_s": 127.0,
-          "time_s": 4064.0,
+          "split_s": 125.5,
+          "time_s": 4016.0,
           "stroke_rate": 19,
           "tag": "UT2"
         },
@@ -2103,8 +2215,8 @@
           "id": "w2-1",
           "date": "2026-09-02",
           "distance_m": 14000,
-          "split_s": 126.9,
-          "time_s": 3553.2,
+          "split_s": 123.9,
+          "time_s": 3469.2,
           "stroke_rate": 20,
           "tag": "UT2"
         },
@@ -2121,8 +2233,8 @@
           "id": "w2-3",
           "date": "2026-08-31",
           "distance_m": 8000,
-          "split_s": 118.0,
-          "time_s": 1888.0,
+          "split_s": 116.5,
+          "time_s": 1864.0,
           "stroke_rate": 26,
           "tag": "AT"
         },
@@ -2139,8 +2251,8 @@
           "id": "w3-0",
           "date": "2026-08-27",
           "distance_m": 16000,
-          "split_s": 127.0,
-          "time_s": 4064.0,
+          "split_s": 125.5,
+          "time_s": 4016.0,
           "stroke_rate": 19,
           "tag": "UT2"
         },
@@ -2148,8 +2260,8 @@
           "id": "w3-1",
           "date": "2026-08-26",
           "distance_m": 14000,
-          "split_s": 126.9,
-          "time_s": 3553.2,
+          "split_s": 123.9,
+          "time_s": 3469.2,
           "stroke_rate": 20,
           "tag": "UT2"
         },
@@ -2166,8 +2278,8 @@
           "id": "w3-3",
           "date": "2026-08-24",
           "distance_m": 8000,
-          "split_s": 118.0,
-          "time_s": 1888.0,
+          "split_s": 116.5,
+          "time_s": 1864.0,
           "stroke_rate": 26,
           "tag": "AT"
         },
@@ -2215,15 +2327,22 @@
           "paul_adjustment": -2.49,
           "intensity_offset": -8.0,
           "rpe_correction": 0.0,
+          "rate_correction": 0.0,
           "two_k_equivalent": 105.0,
           "projection_to_target": 0.0,
           "weight_trend_correction": 0.0,
-          "volume_modifier": 0.0,
+          "steady_change_adjustment": 0.0,
+          "volume_modifier": -0.0,
           "held_split_adjustment": 0.0,
           "clamp_adjustment": 0.0
         },
-        "load_trimp_lite": 1282.1,
-        "load_modifier_seconds": 0.0,
+        "load_trimp_lite": 1270.9,
+        "load_modifier_seconds": -0.0,
+        "load_after_measurement_share": 0.0,
+        "load_session_count": 21,
+        "personal_paul_seconds": 5.0,
+        "personal_paul_fitted": false,
+        "steady_change_seconds": 0.0,
         "spread_seconds": 0.0,
         "two_k_equivalent_by_tier": {
           "TR": 105.0,
@@ -2273,15 +2392,22 @@
           "paul_adjustment": -0.0,
           "intensity_offset": -0.0,
           "rpe_correction": 0.0,
+          "rate_correction": 0.0,
           "two_k_equivalent": 60.0,
           "projection_to_target": 0.0,
           "weight_trend_correction": 0.0,
+          "steady_change_adjustment": 0.0,
           "volume_modifier": 0.49,
           "held_split_adjustment": -0.49,
           "clamp_adjustment": 22.0
         },
         "load_trimp_lite": 12.0,
         "load_modifier_seconds": 0.49,
+        "load_after_measurement_share": 1.0,
+        "load_session_count": 1,
+        "personal_paul_seconds": 5.0,
+        "personal_paul_fitted": false,
+        "steady_change_seconds": null,
         "spread_seconds": 0.0,
         "two_k_equivalent_by_tier": {
           "AN": 60.0
@@ -2313,16 +2439,16 @@
         }
       ],
       "expected": {
-        "predicted_split_seconds": 108.97,
-        "predicted_total_time_seconds": 435.89,
-        "predicted_split_formatted": "1:49.0",
-        "predicted_total_time_formatted": "7:15.9",
+        "predicted_split_seconds": 111.97,
+        "predicted_total_time_seconds": 447.89,
+        "predicted_split_formatted": "1:52.0",
+        "predicted_total_time_formatted": "7:27.9",
         "predicted_split_range_seconds": 2.57,
         "predicted_total_time_range_seconds": 10.3,
         "confidence_score": "Low",
         "confidence_numeric": 5,
         "anchor_tier": "UT2",
-        "anchor_method": "duration_weighted_median",
+        "anchor_method": "zone_blend",
         "anchor_session_ids": [
           "d"
         ],
@@ -2331,18 +2457,25 @@
           "paul_adjustment": 0.51,
           "intensity_offset": -22.0,
           "rpe_correction": 0.0,
-          "two_k_equivalent": 108.51,
+          "rate_correction": 3.0,
+          "two_k_equivalent": 111.51,
           "projection_to_target": 0.0,
           "weight_trend_correction": 0.0,
+          "steady_change_adjustment": 0.0,
           "volume_modifier": 0.46,
           "held_split_adjustment": 0.0,
           "clamp_adjustment": 0.0
         },
         "load_trimp_lite": 43.3,
         "load_modifier_seconds": 0.46,
+        "load_after_measurement_share": 1.0,
+        "load_session_count": 1,
+        "personal_paul_seconds": 5.0,
+        "personal_paul_fitted": false,
+        "steady_change_seconds": null,
         "spread_seconds": 0.0,
         "two_k_equivalent_by_tier": {
-          "UT2": 108.51
+          "UT2": 111.51
         },
         "weight_adjusted_total_seconds": null,
         "age_graded_total_seconds": null,
@@ -2368,16 +2501,16 @@
         }
       ],
       "expected": {
-        "predicted_split_seconds": 103.97,
-        "predicted_total_time_seconds": 415.9,
-        "predicted_split_formatted": "1:44.0",
-        "predicted_total_time_formatted": "6:55.9",
+        "predicted_split_seconds": 108.47,
+        "predicted_total_time_seconds": 433.9,
+        "predicted_split_formatted": "1:48.5",
+        "predicted_total_time_formatted": "7:13.9",
         "predicted_split_range_seconds": 2.76,
         "predicted_total_time_range_seconds": 11.05,
         "confidence_score": "Low",
         "confidence_numeric": 5,
         "anchor_tier": "UT2",
-        "anchor_method": "duration_weighted_median",
+        "anchor_method": "zone_blend",
         "anchor_session_ids": [
           "odd"
         ],
@@ -2386,18 +2519,25 @@
           "paul_adjustment": 0.51,
           "intensity_offset": -22.0,
           "rpe_correction": 0.0,
-          "two_k_equivalent": 103.51,
+          "rate_correction": 4.5,
+          "two_k_equivalent": 108.01,
           "projection_to_target": 0.0,
           "weight_trend_correction": 0.0,
+          "steady_change_adjustment": 0.0,
           "volume_modifier": 0.47,
           "held_split_adjustment": 0.0,
           "clamp_adjustment": 0.0
         },
         "load_trimp_lite": 41.7,
         "load_modifier_seconds": 0.47,
+        "load_after_measurement_share": 1.0,
+        "load_session_count": 1,
+        "personal_paul_seconds": 5.0,
+        "personal_paul_fitted": false,
+        "steady_change_seconds": null,
         "spread_seconds": 0.0,
         "two_k_equivalent_by_tier": {
-          "UT2": 103.51
+          "UT2": 108.01
         },
         "weight_adjusted_total_seconds": null,
         "age_graded_total_seconds": null,
@@ -2418,8 +2558,8 @@
           "id": "w0-0",
           "date": "2026-09-17",
           "distance_m": 16000,
-          "split_s": 127.0,
-          "time_s": 4064.0,
+          "split_s": 125.5,
+          "time_s": 4016.0,
           "stroke_rate": 19,
           "tag": "UT2"
         },
@@ -2427,8 +2567,8 @@
           "id": "w0-1",
           "date": "2026-09-16",
           "distance_m": 14000,
-          "split_s": 126.9,
-          "time_s": 3553.2,
+          "split_s": 123.9,
+          "time_s": 3469.2,
           "stroke_rate": 20,
           "tag": "UT2"
         },
@@ -2445,8 +2585,8 @@
           "id": "w0-3",
           "date": "2026-09-14",
           "distance_m": 8000,
-          "split_s": 118.0,
-          "time_s": 1888.0,
+          "split_s": 116.5,
+          "time_s": 1864.0,
           "stroke_rate": 26,
           "tag": "AT"
         },
@@ -2463,8 +2603,8 @@
           "id": "w1-0",
           "date": "2026-09-10",
           "distance_m": 16000,
-          "split_s": 127.0,
-          "time_s": 4064.0,
+          "split_s": 125.5,
+          "time_s": 4016.0,
           "stroke_rate": 19,
           "tag": "UT2"
         },
@@ -2472,8 +2612,8 @@
           "id": "w1-1",
           "date": "2026-09-09",
           "distance_m": 14000,
-          "split_s": 126.9,
-          "time_s": 3553.2,
+          "split_s": 123.9,
+          "time_s": 3469.2,
           "stroke_rate": 20,
           "tag": "UT2"
         },
@@ -2490,8 +2630,8 @@
           "id": "w1-3",
           "date": "2026-09-07",
           "distance_m": 8000,
-          "split_s": 118.0,
-          "time_s": 1888.0,
+          "split_s": 116.5,
+          "time_s": 1864.0,
           "stroke_rate": 26,
           "tag": "AT"
         },
@@ -2508,8 +2648,8 @@
           "id": "w2-0",
           "date": "2026-09-03",
           "distance_m": 16000,
-          "split_s": 127.0,
-          "time_s": 4064.0,
+          "split_s": 125.5,
+          "time_s": 4016.0,
           "stroke_rate": 19,
           "tag": "UT2"
         },
@@ -2517,8 +2657,8 @@
           "id": "w2-1",
           "date": "2026-09-02",
           "distance_m": 14000,
-          "split_s": 126.9,
-          "time_s": 3553.2,
+          "split_s": 123.9,
+          "time_s": 3469.2,
           "stroke_rate": 20,
           "tag": "UT2"
         },
@@ -2535,8 +2675,8 @@
           "id": "w2-3",
           "date": "2026-08-31",
           "distance_m": 8000,
-          "split_s": 118.0,
-          "time_s": 1888.0,
+          "split_s": 116.5,
+          "time_s": 1864.0,
           "stroke_rate": 26,
           "tag": "AT"
         },
@@ -2553,8 +2693,8 @@
           "id": "w3-0",
           "date": "2026-08-27",
           "distance_m": 16000,
-          "split_s": 127.0,
-          "time_s": 4064.0,
+          "split_s": 125.5,
+          "time_s": 4016.0,
           "stroke_rate": 19,
           "tag": "UT2"
         },
@@ -2562,8 +2702,8 @@
           "id": "w3-1",
           "date": "2026-08-26",
           "distance_m": 14000,
-          "split_s": 126.9,
-          "time_s": 3553.2,
+          "split_s": 123.9,
+          "time_s": 3469.2,
           "stroke_rate": 20,
           "tag": "UT2"
         },
@@ -2580,8 +2720,8 @@
           "id": "w3-3",
           "date": "2026-08-24",
           "distance_m": 8000,
-          "split_s": 118.0,
-          "time_s": 1888.0,
+          "split_s": 116.5,
+          "time_s": 1864.0,
           "stroke_rate": 26,
           "tag": "AT"
         },
@@ -2606,8 +2746,8 @@
           "id": "w0-0",
           "date": "2026-09-17",
           "distance_m": 16000,
-          "split_s": 127.0,
-          "time_s": 4064.0,
+          "split_s": 125.5,
+          "time_s": 4016.0,
           "stroke_rate": 19,
           "tag": "UT2"
         },
@@ -2615,8 +2755,8 @@
           "id": "w0-1",
           "date": "2026-09-16",
           "distance_m": 14000,
-          "split_s": 126.9,
-          "time_s": 3553.2,
+          "split_s": 123.9,
+          "time_s": 3469.2,
           "stroke_rate": 20,
           "tag": "UT2"
         }
@@ -2640,15 +2780,22 @@
           "paul_adjustment": -2.49,
           "intensity_offset": -8.0,
           "rpe_correction": 0.0,
+          "rate_correction": 0.0,
           "two_k_equivalent": 105.0,
           "projection_to_target": 0.0,
           "weight_trend_correction": 0.0,
-          "volume_modifier": 0.0,
+          "steady_change_adjustment": 0.0,
+          "volume_modifier": -0.0,
           "held_split_adjustment": 0.0,
           "clamp_adjustment": 0.0
         },
-        "load_trimp_lite": 1282.1,
-        "load_modifier_seconds": 0.0,
+        "load_trimp_lite": 1270.9,
+        "load_modifier_seconds": -0.0,
+        "load_after_measurement_share": 0.0,
+        "load_session_count": 21,
+        "personal_paul_seconds": 5.0,
+        "personal_paul_fitted": false,
+        "steady_change_seconds": 0.0,
         "spread_seconds": 0.0,
         "two_k_equivalent_by_tier": {
           "TR": 105.0,
@@ -2735,16 +2882,16 @@
         }
       ],
       "expected": {
-        "predicted_split_seconds": 105.63,
-        "predicted_total_time_seconds": 422.52,
-        "predicted_split_formatted": "1:45.6",
-        "predicted_total_time_formatted": "7:02.5",
+        "predicted_split_seconds": 107.13,
+        "predicted_total_time_seconds": 428.52,
+        "predicted_split_formatted": "1:47.1",
+        "predicted_total_time_formatted": "7:08.5",
         "predicted_split_range_seconds": 2.25,
         "predicted_total_time_range_seconds": 9.0,
         "confidence_score": "Low",
         "confidence_numeric": 20,
         "anchor_tier": "UT2",
-        "anchor_method": "duration_weighted_median",
+        "anchor_method": "zone_blend",
         "anchor_session_ids": [
           "u1",
           "u2",
@@ -2759,18 +2906,25 @@
           "paul_adjustment": -0.0,
           "intensity_offset": -22.0,
           "rpe_correction": 0.0,
-          "two_k_equivalent": 105.0,
+          "rate_correction": 1.5,
+          "two_k_equivalent": 106.5,
           "projection_to_target": 0.0,
           "weight_trend_correction": 0.0,
+          "steady_change_adjustment": 0.0,
           "volume_modifier": 0.63,
           "held_split_adjustment": 0.0,
           "clamp_adjustment": 0.0
         },
         "load_trimp_lite": 474.1,
         "load_modifier_seconds": 0.63,
+        "load_after_measurement_share": 1.0,
+        "load_session_count": 7,
+        "personal_paul_seconds": 5.0,
+        "personal_paul_fitted": false,
+        "steady_change_seconds": null,
         "spread_seconds": 0.0,
         "two_k_equivalent_by_tier": {
-          "UT2": 105.0
+          "UT2": 106.5
         },
         "weight_adjusted_total_seconds": null,
         "age_graded_total_seconds": null,
@@ -2849,16 +3003,16 @@
         }
       ],
       "expected": {
-        "predicted_split_seconds": 106.83,
-        "predicted_total_time_seconds": 427.32,
-        "predicted_split_formatted": "1:46.8",
-        "predicted_total_time_formatted": "7:07.3",
+        "predicted_split_seconds": 108.33,
+        "predicted_total_time_seconds": 433.32,
+        "predicted_split_formatted": "1:48.3",
+        "predicted_total_time_formatted": "7:13.3",
         "predicted_split_range_seconds": 2.25,
         "predicted_total_time_range_seconds": 9.0,
         "confidence_score": "Low",
         "confidence_numeric": 20,
         "anchor_tier": "UT2",
-        "anchor_method": "duration_weighted_median",
+        "anchor_method": "zone_blend",
         "anchor_session_ids": [
           "u1",
           "u2",
@@ -2873,18 +3027,25 @@
           "paul_adjustment": -0.0,
           "intensity_offset": -22.0,
           "rpe_correction": 1.2,
-          "two_k_equivalent": 106.2,
+          "rate_correction": 1.5,
+          "two_k_equivalent": 107.7,
           "projection_to_target": 0.0,
           "weight_trend_correction": 0.0,
+          "steady_change_adjustment": 0.0,
           "volume_modifier": 0.63,
           "held_split_adjustment": 0.0,
           "clamp_adjustment": 0.0
         },
         "load_trimp_lite": 474.1,
         "load_modifier_seconds": 0.63,
+        "load_after_measurement_share": 1.0,
+        "load_session_count": 7,
+        "personal_paul_seconds": 5.0,
+        "personal_paul_fitted": false,
+        "steady_change_seconds": null,
         "spread_seconds": 0.0,
         "two_k_equivalent_by_tier": {
-          "UT2": 106.2
+          "UT2": 107.7
         },
         "weight_adjusted_total_seconds": null,
         "age_graded_total_seconds": null,
@@ -2963,16 +3124,16 @@
         }
       ],
       "expected": {
-        "predicted_split_seconds": 104.43,
-        "predicted_total_time_seconds": 417.72,
-        "predicted_split_formatted": "1:44.4",
-        "predicted_total_time_formatted": "6:57.7",
+        "predicted_split_seconds": 105.93,
+        "predicted_total_time_seconds": 423.72,
+        "predicted_split_formatted": "1:45.9",
+        "predicted_total_time_formatted": "7:03.7",
         "predicted_split_range_seconds": 2.25,
         "predicted_total_time_range_seconds": 9.0,
         "confidence_score": "Low",
         "confidence_numeric": 20,
         "anchor_tier": "UT2",
-        "anchor_method": "duration_weighted_median",
+        "anchor_method": "zone_blend",
         "anchor_session_ids": [
           "u1",
           "u2",
@@ -2987,18 +3148,25 @@
           "paul_adjustment": -0.0,
           "intensity_offset": -22.0,
           "rpe_correction": -1.2,
-          "two_k_equivalent": 103.8,
+          "rate_correction": 1.5,
+          "two_k_equivalent": 105.3,
           "projection_to_target": 0.0,
           "weight_trend_correction": 0.0,
+          "steady_change_adjustment": 0.0,
           "volume_modifier": 0.63,
           "held_split_adjustment": 0.0,
           "clamp_adjustment": 0.0
         },
         "load_trimp_lite": 474.1,
         "load_modifier_seconds": 0.63,
+        "load_after_measurement_share": 1.0,
+        "load_session_count": 7,
+        "personal_paul_seconds": 5.0,
+        "personal_paul_fitted": false,
+        "steady_change_seconds": null,
         "spread_seconds": 0.0,
         "two_k_equivalent_by_tier": {
-          "UT2": 103.8
+          "UT2": 105.3
         },
         "weight_adjusted_total_seconds": null,
         "age_graded_total_seconds": null,
@@ -3077,16 +3245,16 @@
         }
       ],
       "expected": {
-        "predicted_split_seconds": 105.63,
-        "predicted_total_time_seconds": 422.52,
-        "predicted_split_formatted": "1:45.6",
-        "predicted_total_time_formatted": "7:02.5",
+        "predicted_split_seconds": 107.13,
+        "predicted_total_time_seconds": 428.52,
+        "predicted_split_formatted": "1:47.1",
+        "predicted_total_time_formatted": "7:08.5",
         "predicted_split_range_seconds": 2.46,
         "predicted_total_time_range_seconds": 9.85,
         "confidence_score": "Low",
         "confidence_numeric": 10,
         "anchor_tier": "UT2",
-        "anchor_method": "duration_weighted_median",
+        "anchor_method": "zone_blend",
         "anchor_session_ids": [
           "u1",
           "u2",
@@ -3101,18 +3269,25 @@
           "paul_adjustment": -0.0,
           "intensity_offset": -22.0,
           "rpe_correction": 0.0,
-          "two_k_equivalent": 105.0,
+          "rate_correction": 1.5,
+          "two_k_equivalent": 106.5,
           "projection_to_target": 0.0,
           "weight_trend_correction": 0.0,
+          "steady_change_adjustment": 0.0,
           "volume_modifier": 0.63,
           "held_split_adjustment": 0.0,
           "clamp_adjustment": 0.0
         },
         "load_trimp_lite": 474.1,
         "load_modifier_seconds": 0.63,
+        "load_after_measurement_share": 1.0,
+        "load_session_count": 7,
+        "personal_paul_seconds": 5.0,
+        "personal_paul_fitted": false,
+        "steady_change_seconds": null,
         "spread_seconds": 0.0,
         "two_k_equivalent_by_tier": {
-          "UT2": 105.0
+          "UT2": 106.5
         },
         "weight_adjusted_total_seconds": null,
         "age_graded_total_seconds": null,
@@ -3156,15 +3331,22 @@
           "paul_adjustment": -0.0,
           "intensity_offset": -0.0,
           "rpe_correction": 0.0,
+          "rate_correction": 0.0,
           "two_k_equivalent": 105.0,
           "projection_to_target": 0.0,
           "weight_trend_correction": 0.0,
+          "steady_change_adjustment": 0.0,
           "volume_modifier": 0.48,
           "held_split_adjustment": -0.48,
           "clamp_adjustment": 0.0
         },
         "load_trimp_lite": 21.0,
         "load_modifier_seconds": 0.48,
+        "load_after_measurement_share": 1.0,
+        "load_session_count": 1,
+        "personal_paul_seconds": 5.0,
+        "personal_paul_fitted": false,
+        "steady_change_seconds": null,
         "spread_seconds": 0.0,
         "two_k_equivalent_by_tier": {
           "AN": 105.0
@@ -3339,16 +3521,16 @@
         }
       ],
       "expected": {
-        "predicted_split_seconds": 105.13,
-        "predicted_total_time_seconds": 420.51,
-        "predicted_split_formatted": "1:45.1",
-        "predicted_total_time_formatted": "7:00.5",
-        "predicted_split_range_seconds": 2.25,
-        "predicted_total_time_range_seconds": 9.0,
+        "predicted_split_seconds": 105.67,
+        "predicted_total_time_seconds": 422.7,
+        "predicted_split_formatted": "1:45.7",
+        "predicted_total_time_formatted": "7:02.7",
+        "predicted_split_range_seconds": 2.29,
+        "predicted_total_time_range_seconds": 9.15,
         "confidence_score": "Low",
         "confidence_numeric": 20,
         "anchor_tier": "UT2",
-        "anchor_method": "duration_weighted_median",
+        "anchor_method": "zone_blend",
         "anchor_session_ids": [
           "u1",
           "u2",
@@ -3374,19 +3556,26 @@
           "anchor_split": 127.0,
           "paul_adjustment": -0.0,
           "intensity_offset": -22.0,
-          "rpe_correction": 0.13,
-          "two_k_equivalent": 105.13,
+          "rpe_correction": 0.0,
+          "rate_correction": 1.5,
+          "two_k_equivalent": 106.5,
           "projection_to_target": 0.0,
           "weight_trend_correction": 0.0,
-          "volume_modifier": 0.0,
+          "steady_change_adjustment": 0.0,
+          "volume_modifier": -0.83,
           "held_split_adjustment": 0.0,
           "clamp_adjustment": 0.0
         },
         "load_trimp_lite": 1286.9,
-        "load_modifier_seconds": 0.0,
+        "load_modifier_seconds": -0.83,
+        "load_after_measurement_share": 1.0,
+        "load_session_count": 19,
+        "personal_paul_seconds": 5.0,
+        "personal_paul_fitted": false,
+        "steady_change_seconds": null,
         "spread_seconds": 0.0,
         "two_k_equivalent_by_tier": {
-          "UT2": 105.13
+          "UT2": 106.5
         },
         "weight_adjusted_total_seconds": null,
         "age_graded_total_seconds": null,
@@ -3404,8 +3593,8 @@
           "id": "w0-0",
           "date": "2026-09-17",
           "distance_m": 16000,
-          "split_s": 127.0,
-          "time_s": 4064.0,
+          "split_s": 125.5,
+          "time_s": 4016.0,
           "stroke_rate": 19,
           "tag": "UT2",
           "rpe": 5.5
@@ -3414,8 +3603,8 @@
           "id": "w0-1",
           "date": "2026-09-16",
           "distance_m": 14000,
-          "split_s": 126.9,
-          "time_s": 3553.2,
+          "split_s": 123.9,
+          "time_s": 3469.2,
           "stroke_rate": 20,
           "tag": "UT2",
           "rpe": 5.5
@@ -3433,8 +3622,8 @@
           "id": "w0-3",
           "date": "2026-09-14",
           "distance_m": 8000,
-          "split_s": 118.0,
-          "time_s": 1888.0,
+          "split_s": 116.5,
+          "time_s": 1864.0,
           "stroke_rate": 26,
           "tag": "AT"
         },
@@ -3452,8 +3641,8 @@
           "id": "w1-0",
           "date": "2026-09-10",
           "distance_m": 16000,
-          "split_s": 127.0,
-          "time_s": 4064.0,
+          "split_s": 125.5,
+          "time_s": 4016.0,
           "stroke_rate": 19,
           "tag": "UT2",
           "rpe": 5.5
@@ -3462,8 +3651,8 @@
           "id": "w1-1",
           "date": "2026-09-09",
           "distance_m": 14000,
-          "split_s": 126.9,
-          "time_s": 3553.2,
+          "split_s": 123.9,
+          "time_s": 3469.2,
           "stroke_rate": 20,
           "tag": "UT2"
         },
@@ -3480,8 +3669,8 @@
           "id": "w1-3",
           "date": "2026-09-07",
           "distance_m": 8000,
-          "split_s": 118.0,
-          "time_s": 1888.0,
+          "split_s": 116.5,
+          "time_s": 1864.0,
           "stroke_rate": 26,
           "tag": "AT"
         },
@@ -3498,8 +3687,8 @@
           "id": "w2-0",
           "date": "2026-09-03",
           "distance_m": 16000,
-          "split_s": 127.0,
-          "time_s": 4064.0,
+          "split_s": 125.5,
+          "time_s": 4016.0,
           "stroke_rate": 19,
           "tag": "UT2"
         },
@@ -3507,8 +3696,8 @@
           "id": "w2-1",
           "date": "2026-09-02",
           "distance_m": 14000,
-          "split_s": 126.9,
-          "time_s": 3553.2,
+          "split_s": 123.9,
+          "time_s": 3469.2,
           "stroke_rate": 20,
           "tag": "UT2"
         },
@@ -3525,8 +3714,8 @@
           "id": "w2-3",
           "date": "2026-08-31",
           "distance_m": 8000,
-          "split_s": 118.0,
-          "time_s": 1888.0,
+          "split_s": 116.5,
+          "time_s": 1864.0,
           "stroke_rate": 26,
           "tag": "AT"
         },
@@ -3543,8 +3732,8 @@
           "id": "w3-0",
           "date": "2026-08-27",
           "distance_m": 16000,
-          "split_s": 127.0,
-          "time_s": 4064.0,
+          "split_s": 125.5,
+          "time_s": 4016.0,
           "stroke_rate": 19,
           "tag": "UT2"
         },
@@ -3552,8 +3741,8 @@
           "id": "w3-1",
           "date": "2026-08-26",
           "distance_m": 14000,
-          "split_s": 126.9,
-          "time_s": 3553.2,
+          "split_s": 123.9,
+          "time_s": 3469.2,
           "stroke_rate": 20,
           "tag": "UT2"
         },
@@ -3570,8 +3759,8 @@
           "id": "w3-3",
           "date": "2026-08-24",
           "distance_m": 8000,
-          "split_s": 118.0,
-          "time_s": 1888.0,
+          "split_s": 116.5,
+          "time_s": 1864.0,
           "stroke_rate": 26,
           "tag": "AT"
         },
@@ -3598,8 +3787,8 @@
         "predicted_total_time_seconds": 419.99,
         "predicted_split_formatted": "1:45.0",
         "predicted_total_time_formatted": "7:00.0",
-        "predicted_split_range_seconds": 1.63,
-        "predicted_total_time_range_seconds": 6.53,
+        "predicted_split_range_seconds": 1.55,
+        "predicted_total_time_range_seconds": 6.21,
         "confidence_score": "Medium",
         "confidence_numeric": 72,
         "anchor_tier": "TR",
@@ -3612,26 +3801,34 @@
           "paul_adjustment": -2.49,
           "intensity_offset": -8.0,
           "rpe_correction": 0.0,
+          "rate_correction": 0.0,
           "two_k_equivalent": 105.0,
           "projection_to_target": 0.0,
           "weight_trend_correction": 0.0,
-          "volume_modifier": 0.0,
+          "steady_change_adjustment": 0.0,
+          "volume_modifier": -0.0,
           "held_split_adjustment": 0.0,
           "clamp_adjustment": 0.0
         },
-        "load_trimp_lite": 1282.1,
-        "load_modifier_seconds": 0.0,
-        "spread_seconds": 1.0,
+        "load_trimp_lite": 1270.9,
+        "load_modifier_seconds": -0.0,
+        "load_after_measurement_share": 0.0,
+        "load_session_count": 21,
+        "personal_paul_seconds": 5.0,
+        "personal_paul_fitted": false,
+        "steady_change_seconds": 2.15,
+        "spread_seconds": 0.04,
         "two_k_equivalent_by_tier": {
           "TR": 105.0,
           "AT": 105.0,
           "UT1": 105.0,
-          "UT2": 106.0
+          "UT2": 105.04
         },
         "weight_adjusted_total_seconds": null,
         "age_graded_total_seconds": null,
         "flags": [
-          "elevated_recent_effort"
+          "elevated_recent_effort",
+          "steady_pace_slower"
         ]
       }
     },
@@ -3663,7 +3860,7 @@
         "confidence_score": "Low",
         "confidence_numeric": 5,
         "anchor_tier": "UT2",
-        "anchor_method": "duration_weighted_median",
+        "anchor_method": "zone_blend",
         "anchor_session_ids": [
           "c"
         ],
@@ -3672,15 +3869,22 @@
           "paul_adjustment": -0.0,
           "intensity_offset": -22.0,
           "rpe_correction": 3.0,
+          "rate_correction": 0.0,
           "two_k_equivalent": 108.0,
           "projection_to_target": 0.0,
           "weight_trend_correction": 0.0,
+          "steady_change_adjustment": 0.0,
           "volume_modifier": 0.44,
           "held_split_adjustment": 0.0,
           "clamp_adjustment": 0.0
         },
         "load_trimp_lite": 67.7,
         "load_modifier_seconds": 0.44,
+        "load_after_measurement_share": 1.0,
+        "load_session_count": 1,
+        "personal_paul_seconds": 5.0,
+        "personal_paul_fitted": false,
+        "steady_change_seconds": null,
         "spread_seconds": 0.0,
         "two_k_equivalent_by_tier": {
           "UT2": 108.0
@@ -3707,8 +3911,8 @@
           "id": "w0-0",
           "date": "2026-09-17",
           "distance_m": 16000,
-          "split_s": 127.0,
-          "time_s": 4064.0,
+          "split_s": 125.5,
+          "time_s": 4016.0,
           "stroke_rate": 19,
           "tag": "UT2"
         },
@@ -3716,8 +3920,8 @@
           "id": "w0-1",
           "date": "2026-09-16",
           "distance_m": 14000,
-          "split_s": 126.9,
-          "time_s": 3553.2,
+          "split_s": 123.9,
+          "time_s": 3469.2,
           "stroke_rate": 20,
           "tag": "UT2"
         },
@@ -3734,8 +3938,8 @@
           "id": "w0-3",
           "date": "2026-09-14",
           "distance_m": 8000,
-          "split_s": 118.0,
-          "time_s": 1888.0,
+          "split_s": 116.5,
+          "time_s": 1864.0,
           "stroke_rate": 26,
           "tag": "AT"
         },
@@ -3752,8 +3956,8 @@
           "id": "w1-0",
           "date": "2026-09-10",
           "distance_m": 16000,
-          "split_s": 127.0,
-          "time_s": 4064.0,
+          "split_s": 125.5,
+          "time_s": 4016.0,
           "stroke_rate": 19,
           "tag": "UT2"
         },
@@ -3761,8 +3965,8 @@
           "id": "w1-1",
           "date": "2026-09-09",
           "distance_m": 14000,
-          "split_s": 126.9,
-          "time_s": 3553.2,
+          "split_s": 123.9,
+          "time_s": 3469.2,
           "stroke_rate": 20,
           "tag": "UT2"
         },
@@ -3779,8 +3983,8 @@
           "id": "w1-3",
           "date": "2026-09-07",
           "distance_m": 8000,
-          "split_s": 118.0,
-          "time_s": 1888.0,
+          "split_s": 116.5,
+          "time_s": 1864.0,
           "stroke_rate": 26,
           "tag": "AT"
         },
@@ -3797,8 +4001,8 @@
           "id": "w2-0",
           "date": "2026-09-03",
           "distance_m": 16000,
-          "split_s": 127.0,
-          "time_s": 4064.0,
+          "split_s": 125.5,
+          "time_s": 4016.0,
           "stroke_rate": 19,
           "tag": "UT2"
         },
@@ -3806,8 +4010,8 @@
           "id": "w2-1",
           "date": "2026-09-02",
           "distance_m": 14000,
-          "split_s": 126.9,
-          "time_s": 3553.2,
+          "split_s": 123.9,
+          "time_s": 3469.2,
           "stroke_rate": 20,
           "tag": "UT2"
         },
@@ -3824,8 +4028,8 @@
           "id": "w2-3",
           "date": "2026-08-31",
           "distance_m": 8000,
-          "split_s": 118.0,
-          "time_s": 1888.0,
+          "split_s": 116.5,
+          "time_s": 1864.0,
           "stroke_rate": 26,
           "tag": "AT"
         },
@@ -3842,8 +4046,8 @@
           "id": "w3-0",
           "date": "2026-08-27",
           "distance_m": 16000,
-          "split_s": 127.0,
-          "time_s": 4064.0,
+          "split_s": 125.5,
+          "time_s": 4016.0,
           "stroke_rate": 19,
           "tag": "UT2"
         },
@@ -3851,8 +4055,8 @@
           "id": "w3-1",
           "date": "2026-08-26",
           "distance_m": 14000,
-          "split_s": 126.9,
-          "time_s": 3553.2,
+          "split_s": 123.9,
+          "time_s": 3469.2,
           "stroke_rate": 20,
           "tag": "UT2"
         },
@@ -3869,8 +4073,8 @@
           "id": "w3-3",
           "date": "2026-08-24",
           "distance_m": 8000,
-          "split_s": 118.0,
-          "time_s": 1888.0,
+          "split_s": 116.5,
+          "time_s": 1864.0,
           "stroke_rate": 26,
           "tag": "AT"
         },
@@ -3911,15 +4115,22 @@
           "paul_adjustment": -2.49,
           "intensity_offset": -8.0,
           "rpe_correction": 0.0,
+          "rate_correction": 0.0,
           "two_k_equivalent": 105.0,
           "projection_to_target": 0.0,
           "weight_trend_correction": 0.0,
-          "volume_modifier": 0.0,
+          "steady_change_adjustment": 0.0,
+          "volume_modifier": -0.0,
           "held_split_adjustment": 0.0,
           "clamp_adjustment": 0.0
         },
-        "load_trimp_lite": 1282.1,
-        "load_modifier_seconds": 0.0,
+        "load_trimp_lite": 1270.9,
+        "load_modifier_seconds": -0.0,
+        "load_after_measurement_share": 0.0,
+        "load_session_count": 21,
+        "personal_paul_seconds": 5.0,
+        "personal_paul_fitted": false,
+        "steady_change_seconds": 0.0,
         "spread_seconds": 0.0,
         "two_k_equivalent_by_tier": {
           "TR": 105.0,
@@ -3947,8 +4158,8 @@
           "id": "w0-0",
           "date": "2026-09-17",
           "distance_m": 16000,
-          "split_s": 127.0,
-          "time_s": 4064.0,
+          "split_s": 125.5,
+          "time_s": 4016.0,
           "stroke_rate": 19,
           "tag": "UT2"
         },
@@ -3956,8 +4167,8 @@
           "id": "w0-1",
           "date": "2026-09-16",
           "distance_m": 14000,
-          "split_s": 126.9,
-          "time_s": 3553.2,
+          "split_s": 123.9,
+          "time_s": 3469.2,
           "stroke_rate": 20,
           "tag": "UT2"
         },
@@ -3974,8 +4185,8 @@
           "id": "w0-3",
           "date": "2026-09-14",
           "distance_m": 8000,
-          "split_s": 118.0,
-          "time_s": 1888.0,
+          "split_s": 116.5,
+          "time_s": 1864.0,
           "stroke_rate": 26,
           "tag": "AT"
         },
@@ -3992,8 +4203,8 @@
           "id": "w1-0",
           "date": "2026-09-10",
           "distance_m": 16000,
-          "split_s": 127.0,
-          "time_s": 4064.0,
+          "split_s": 125.5,
+          "time_s": 4016.0,
           "stroke_rate": 19,
           "tag": "UT2"
         },
@@ -4001,8 +4212,8 @@
           "id": "w1-1",
           "date": "2026-09-09",
           "distance_m": 14000,
-          "split_s": 126.9,
-          "time_s": 3553.2,
+          "split_s": 123.9,
+          "time_s": 3469.2,
           "stroke_rate": 20,
           "tag": "UT2"
         },
@@ -4019,8 +4230,8 @@
           "id": "w1-3",
           "date": "2026-09-07",
           "distance_m": 8000,
-          "split_s": 118.0,
-          "time_s": 1888.0,
+          "split_s": 116.5,
+          "time_s": 1864.0,
           "stroke_rate": 26,
           "tag": "AT"
         },
@@ -4037,8 +4248,8 @@
           "id": "w2-0",
           "date": "2026-09-03",
           "distance_m": 16000,
-          "split_s": 127.0,
-          "time_s": 4064.0,
+          "split_s": 125.5,
+          "time_s": 4016.0,
           "stroke_rate": 19,
           "tag": "UT2"
         },
@@ -4046,8 +4257,8 @@
           "id": "w2-1",
           "date": "2026-09-02",
           "distance_m": 14000,
-          "split_s": 126.9,
-          "time_s": 3553.2,
+          "split_s": 123.9,
+          "time_s": 3469.2,
           "stroke_rate": 20,
           "tag": "UT2"
         },
@@ -4064,8 +4275,8 @@
           "id": "w2-3",
           "date": "2026-08-31",
           "distance_m": 8000,
-          "split_s": 118.0,
-          "time_s": 1888.0,
+          "split_s": 116.5,
+          "time_s": 1864.0,
           "stroke_rate": 26,
           "tag": "AT"
         },
@@ -4082,8 +4293,8 @@
           "id": "w3-0",
           "date": "2026-08-27",
           "distance_m": 16000,
-          "split_s": 127.0,
-          "time_s": 4064.0,
+          "split_s": 125.5,
+          "time_s": 4016.0,
           "stroke_rate": 19,
           "tag": "UT2"
         },
@@ -4091,8 +4302,8 @@
           "id": "w3-1",
           "date": "2026-08-26",
           "distance_m": 14000,
-          "split_s": 126.9,
-          "time_s": 3553.2,
+          "split_s": 123.9,
+          "time_s": 3469.2,
           "stroke_rate": 20,
           "tag": "UT2"
         },
@@ -4109,8 +4320,8 @@
           "id": "w3-3",
           "date": "2026-08-24",
           "distance_m": 8000,
-          "split_s": 118.0,
-          "time_s": 1888.0,
+          "split_s": 116.5,
+          "time_s": 1864.0,
           "stroke_rate": 26,
           "tag": "AT"
         },
@@ -4151,15 +4362,22 @@
           "paul_adjustment": -2.49,
           "intensity_offset": -8.0,
           "rpe_correction": 0.0,
+          "rate_correction": 0.0,
           "two_k_equivalent": 105.0,
           "projection_to_target": 0.0,
           "weight_trend_correction": 0.0,
-          "volume_modifier": 0.0,
+          "steady_change_adjustment": 0.0,
+          "volume_modifier": -0.0,
           "held_split_adjustment": 0.0,
           "clamp_adjustment": 0.0
         },
-        "load_trimp_lite": 1282.1,
-        "load_modifier_seconds": 0.0,
+        "load_trimp_lite": 1270.9,
+        "load_modifier_seconds": -0.0,
+        "load_after_measurement_share": 0.0,
+        "load_session_count": 21,
+        "personal_paul_seconds": 5.0,
+        "personal_paul_fitted": false,
+        "steady_change_seconds": 0.0,
         "spread_seconds": 0.0,
         "two_k_equivalent_by_tier": {
           "TR": 105.0,
@@ -4183,8 +4401,8 @@
           "id": "w0-0",
           "date": "2026-09-17",
           "distance_m": 16000,
-          "split_s": 127.0,
-          "time_s": 4064.0,
+          "split_s": 125.5,
+          "time_s": 4016.0,
           "stroke_rate": 19,
           "tag": "UT2",
           "bodyweight_kg": 74.0
@@ -4193,8 +4411,8 @@
           "id": "w0-1",
           "date": "2026-09-16",
           "distance_m": 14000,
-          "split_s": 126.9,
-          "time_s": 3553.2,
+          "split_s": 123.9,
+          "time_s": 3469.2,
           "stroke_rate": 20,
           "tag": "UT2",
           "bodyweight_kg": 74.2
@@ -4213,8 +4431,8 @@
           "id": "w0-3",
           "date": "2026-09-14",
           "distance_m": 8000,
-          "split_s": 118.0,
-          "time_s": 1888.0,
+          "split_s": 116.5,
+          "time_s": 1864.0,
           "stroke_rate": 26,
           "tag": "AT",
           "bodyweight_kg": 74.6
@@ -4233,8 +4451,8 @@
           "id": "w1-0",
           "date": "2026-09-10",
           "distance_m": 16000,
-          "split_s": 127.0,
-          "time_s": 4064.0,
+          "split_s": 125.5,
+          "time_s": 4016.0,
           "stroke_rate": 19,
           "tag": "UT2",
           "bodyweight_kg": 75.4
@@ -4243,8 +4461,8 @@
           "id": "w1-1",
           "date": "2026-09-09",
           "distance_m": 14000,
-          "split_s": 126.9,
-          "time_s": 3553.2,
+          "split_s": 123.9,
+          "time_s": 3469.2,
           "stroke_rate": 20,
           "tag": "UT2",
           "bodyweight_kg": 75.6
@@ -4263,8 +4481,8 @@
           "id": "w1-3",
           "date": "2026-09-07",
           "distance_m": 8000,
-          "split_s": 118.0,
-          "time_s": 1888.0,
+          "split_s": 116.5,
+          "time_s": 1864.0,
           "stroke_rate": 26,
           "tag": "AT",
           "bodyweight_kg": 76.0
@@ -4283,8 +4501,8 @@
           "id": "w2-0",
           "date": "2026-09-03",
           "distance_m": 16000,
-          "split_s": 127.0,
-          "time_s": 4064.0,
+          "split_s": 125.5,
+          "time_s": 4016.0,
           "stroke_rate": 19,
           "tag": "UT2",
           "bodyweight_kg": 76.8
@@ -4293,8 +4511,8 @@
           "id": "w2-1",
           "date": "2026-09-02",
           "distance_m": 14000,
-          "split_s": 126.9,
-          "time_s": 3553.2,
+          "split_s": 123.9,
+          "time_s": 3469.2,
           "stroke_rate": 20,
           "tag": "UT2",
           "bodyweight_kg": 77.0
@@ -4313,8 +4531,8 @@
           "id": "w2-3",
           "date": "2026-08-31",
           "distance_m": 8000,
-          "split_s": 118.0,
-          "time_s": 1888.0,
+          "split_s": 116.5,
+          "time_s": 1864.0,
           "stroke_rate": 26,
           "tag": "AT",
           "bodyweight_kg": 77.4
@@ -4333,8 +4551,8 @@
           "id": "w3-0",
           "date": "2026-08-27",
           "distance_m": 16000,
-          "split_s": 127.0,
-          "time_s": 4064.0,
+          "split_s": 125.5,
+          "time_s": 4016.0,
           "stroke_rate": 19,
           "tag": "UT2",
           "bodyweight_kg": 78.2
@@ -4343,8 +4561,8 @@
           "id": "w3-1",
           "date": "2026-08-26",
           "distance_m": 14000,
-          "split_s": 126.9,
-          "time_s": 3553.2,
+          "split_s": 123.9,
+          "time_s": 3469.2,
           "stroke_rate": 20,
           "tag": "UT2",
           "bodyweight_kg": 78.4
@@ -4363,8 +4581,8 @@
           "id": "w3-3",
           "date": "2026-08-24",
           "distance_m": 8000,
-          "split_s": 118.0,
-          "time_s": 1888.0,
+          "split_s": 116.5,
+          "time_s": 1864.0,
           "stroke_rate": 26,
           "tag": "AT",
           "bodyweight_kg": 78.8
@@ -4408,15 +4626,22 @@
           "paul_adjustment": -2.49,
           "intensity_offset": -8.0,
           "rpe_correction": 0.0,
+          "rate_correction": 0.0,
           "two_k_equivalent": 105.0,
           "projection_to_target": 0.0,
           "weight_trend_correction": 0.0,
-          "volume_modifier": 0.0,
+          "steady_change_adjustment": 0.0,
+          "volume_modifier": -0.0,
           "held_split_adjustment": 0.0,
           "clamp_adjustment": 0.0
         },
-        "load_trimp_lite": 1282.1,
-        "load_modifier_seconds": 0.0,
+        "load_trimp_lite": 1270.9,
+        "load_modifier_seconds": -0.0,
+        "load_after_measurement_share": 0.0,
+        "load_session_count": 21,
+        "personal_paul_seconds": 5.0,
+        "personal_paul_fitted": false,
+        "steady_change_seconds": 0.0,
         "spread_seconds": 0.0,
         "two_k_equivalent_by_tier": {
           "TR": 105.0,
@@ -4444,8 +4669,8 @@
           "id": "w0-0",
           "date": "2026-09-17",
           "distance_m": 16000,
-          "split_s": 127.0,
-          "time_s": 4064.0,
+          "split_s": 125.5,
+          "time_s": 4016.0,
           "stroke_rate": 19,
           "tag": "UT2",
           "bodyweight_kg": 74.0
@@ -4454,8 +4679,8 @@
           "id": "w0-1",
           "date": "2026-09-16",
           "distance_m": 14000,
-          "split_s": 126.9,
-          "time_s": 3553.2,
+          "split_s": 123.9,
+          "time_s": 3469.2,
           "stroke_rate": 20,
           "tag": "UT2",
           "bodyweight_kg": 74.2
@@ -4474,8 +4699,8 @@
           "id": "w0-3",
           "date": "2026-09-14",
           "distance_m": 8000,
-          "split_s": 118.0,
-          "time_s": 1888.0,
+          "split_s": 116.5,
+          "time_s": 1864.0,
           "stroke_rate": 26,
           "tag": "AT",
           "bodyweight_kg": 74.6
@@ -4494,8 +4719,8 @@
           "id": "w1-0",
           "date": "2026-09-10",
           "distance_m": 16000,
-          "split_s": 127.0,
-          "time_s": 4064.0,
+          "split_s": 125.5,
+          "time_s": 4016.0,
           "stroke_rate": 19,
           "tag": "UT2",
           "bodyweight_kg": 75.4
@@ -4504,8 +4729,8 @@
           "id": "w1-1",
           "date": "2026-09-09",
           "distance_m": 14000,
-          "split_s": 126.9,
-          "time_s": 3553.2,
+          "split_s": 123.9,
+          "time_s": 3469.2,
           "stroke_rate": 20,
           "tag": "UT2",
           "bodyweight_kg": 75.6
@@ -4524,8 +4749,8 @@
           "id": "w1-3",
           "date": "2026-09-07",
           "distance_m": 8000,
-          "split_s": 118.0,
-          "time_s": 1888.0,
+          "split_s": 116.5,
+          "time_s": 1864.0,
           "stroke_rate": 26,
           "tag": "AT",
           "bodyweight_kg": 76.0
@@ -4544,8 +4769,8 @@
           "id": "w2-0",
           "date": "2026-09-03",
           "distance_m": 16000,
-          "split_s": 127.0,
-          "time_s": 4064.0,
+          "split_s": 125.5,
+          "time_s": 4016.0,
           "stroke_rate": 19,
           "tag": "UT2",
           "bodyweight_kg": 76.8
@@ -4554,8 +4779,8 @@
           "id": "w2-1",
           "date": "2026-09-02",
           "distance_m": 14000,
-          "split_s": 126.9,
-          "time_s": 3553.2,
+          "split_s": 123.9,
+          "time_s": 3469.2,
           "stroke_rate": 20,
           "tag": "UT2",
           "bodyweight_kg": 77.0
@@ -4574,8 +4799,8 @@
           "id": "w2-3",
           "date": "2026-08-31",
           "distance_m": 8000,
-          "split_s": 118.0,
-          "time_s": 1888.0,
+          "split_s": 116.5,
+          "time_s": 1864.0,
           "stroke_rate": 26,
           "tag": "AT",
           "bodyweight_kg": 77.4
@@ -4594,8 +4819,8 @@
           "id": "w3-0",
           "date": "2026-08-27",
           "distance_m": 16000,
-          "split_s": 127.0,
-          "time_s": 4064.0,
+          "split_s": 125.5,
+          "time_s": 4016.0,
           "stroke_rate": 19,
           "tag": "UT2",
           "bodyweight_kg": 78.2
@@ -4604,8 +4829,8 @@
           "id": "w3-1",
           "date": "2026-08-26",
           "distance_m": 14000,
-          "split_s": 126.9,
-          "time_s": 3553.2,
+          "split_s": 123.9,
+          "time_s": 3469.2,
           "stroke_rate": 20,
           "tag": "UT2",
           "bodyweight_kg": 78.4
@@ -4624,8 +4849,8 @@
           "id": "w3-3",
           "date": "2026-08-24",
           "distance_m": 8000,
-          "split_s": 118.0,
-          "time_s": 1888.0,
+          "split_s": 116.5,
+          "time_s": 1864.0,
           "stroke_rate": 26,
           "tag": "AT",
           "bodyweight_kg": 78.8
@@ -4669,15 +4894,22 @@
           "paul_adjustment": -2.49,
           "intensity_offset": -8.0,
           "rpe_correction": 0.0,
+          "rate_correction": 0.0,
           "two_k_equivalent": 105.0,
           "projection_to_target": 0.0,
           "weight_trend_correction": 0.56,
-          "volume_modifier": 0.0,
+          "steady_change_adjustment": 0.0,
+          "volume_modifier": -0.0,
           "held_split_adjustment": 0.0,
           "clamp_adjustment": 0.0
         },
-        "load_trimp_lite": 1282.1,
-        "load_modifier_seconds": 0.0,
+        "load_trimp_lite": 1270.9,
+        "load_modifier_seconds": -0.0,
+        "load_after_measurement_share": 0.0,
+        "load_session_count": 21,
+        "personal_paul_seconds": 5.0,
+        "personal_paul_fitted": false,
+        "steady_change_seconds": 0.0,
         "spread_seconds": 0.0,
         "two_k_equivalent_by_tier": {
           "TR": 105.0,
@@ -4705,8 +4937,8 @@
           "id": "w0-0",
           "date": "2026-09-17",
           "distance_m": 16000,
-          "split_s": 127.0,
-          "time_s": 4064.0,
+          "split_s": 125.5,
+          "time_s": 4016.0,
           "stroke_rate": 19,
           "tag": "UT2",
           "bodyweight_kg": 80.0
@@ -4715,8 +4947,8 @@
           "id": "w0-1",
           "date": "2026-09-16",
           "distance_m": 14000,
-          "split_s": 126.9,
-          "time_s": 3553.2,
+          "split_s": 123.9,
+          "time_s": 3469.2,
           "stroke_rate": 20,
           "tag": "UT2",
           "bodyweight_kg": 79.8
@@ -4735,8 +4967,8 @@
           "id": "w0-3",
           "date": "2026-09-14",
           "distance_m": 8000,
-          "split_s": 118.0,
-          "time_s": 1888.0,
+          "split_s": 116.5,
+          "time_s": 1864.0,
           "stroke_rate": 26,
           "tag": "AT",
           "bodyweight_kg": 79.4
@@ -4755,8 +4987,8 @@
           "id": "w1-0",
           "date": "2026-09-10",
           "distance_m": 16000,
-          "split_s": 127.0,
-          "time_s": 4064.0,
+          "split_s": 125.5,
+          "time_s": 4016.0,
           "stroke_rate": 19,
           "tag": "UT2",
           "bodyweight_kg": 78.6
@@ -4765,8 +4997,8 @@
           "id": "w1-1",
           "date": "2026-09-09",
           "distance_m": 14000,
-          "split_s": 126.9,
-          "time_s": 3553.2,
+          "split_s": 123.9,
+          "time_s": 3469.2,
           "stroke_rate": 20,
           "tag": "UT2",
           "bodyweight_kg": 78.4
@@ -4785,8 +5017,8 @@
           "id": "w1-3",
           "date": "2026-09-07",
           "distance_m": 8000,
-          "split_s": 118.0,
-          "time_s": 1888.0,
+          "split_s": 116.5,
+          "time_s": 1864.0,
           "stroke_rate": 26,
           "tag": "AT",
           "bodyweight_kg": 78.0
@@ -4805,8 +5037,8 @@
           "id": "w2-0",
           "date": "2026-09-03",
           "distance_m": 16000,
-          "split_s": 127.0,
-          "time_s": 4064.0,
+          "split_s": 125.5,
+          "time_s": 4016.0,
           "stroke_rate": 19,
           "tag": "UT2",
           "bodyweight_kg": 77.2
@@ -4815,8 +5047,8 @@
           "id": "w2-1",
           "date": "2026-09-02",
           "distance_m": 14000,
-          "split_s": 126.9,
-          "time_s": 3553.2,
+          "split_s": 123.9,
+          "time_s": 3469.2,
           "stroke_rate": 20,
           "tag": "UT2",
           "bodyweight_kg": 77.0
@@ -4835,8 +5067,8 @@
           "id": "w2-3",
           "date": "2026-08-31",
           "distance_m": 8000,
-          "split_s": 118.0,
-          "time_s": 1888.0,
+          "split_s": 116.5,
+          "time_s": 1864.0,
           "stroke_rate": 26,
           "tag": "AT",
           "bodyweight_kg": 76.6
@@ -4855,8 +5087,8 @@
           "id": "w3-0",
           "date": "2026-08-27",
           "distance_m": 16000,
-          "split_s": 127.0,
-          "time_s": 4064.0,
+          "split_s": 125.5,
+          "time_s": 4016.0,
           "stroke_rate": 19,
           "tag": "UT2",
           "bodyweight_kg": 75.8
@@ -4865,8 +5097,8 @@
           "id": "w3-1",
           "date": "2026-08-26",
           "distance_m": 14000,
-          "split_s": 126.9,
-          "time_s": 3553.2,
+          "split_s": 123.9,
+          "time_s": 3469.2,
           "stroke_rate": 20,
           "tag": "UT2",
           "bodyweight_kg": 75.6
@@ -4885,8 +5117,8 @@
           "id": "w3-3",
           "date": "2026-08-24",
           "distance_m": 8000,
-          "split_s": 118.0,
-          "time_s": 1888.0,
+          "split_s": 116.5,
+          "time_s": 1864.0,
           "stroke_rate": 26,
           "tag": "AT",
           "bodyweight_kg": 75.2
@@ -4930,15 +5162,22 @@
           "paul_adjustment": -2.49,
           "intensity_offset": -8.0,
           "rpe_correction": 0.0,
+          "rate_correction": 0.0,
           "two_k_equivalent": 105.0,
           "projection_to_target": 0.0,
           "weight_trend_correction": -0.53,
-          "volume_modifier": 0.0,
+          "steady_change_adjustment": 0.0,
+          "volume_modifier": -0.0,
           "held_split_adjustment": 0.0,
           "clamp_adjustment": 0.0
         },
-        "load_trimp_lite": 1282.1,
-        "load_modifier_seconds": 0.0,
+        "load_trimp_lite": 1270.9,
+        "load_modifier_seconds": -0.0,
+        "load_after_measurement_share": 0.0,
+        "load_session_count": 21,
+        "personal_paul_seconds": 5.0,
+        "personal_paul_fitted": false,
+        "steady_change_seconds": 0.0,
         "spread_seconds": 0.0,
         "two_k_equivalent_by_tier": {
           "TR": 105.0,
@@ -4983,6 +5222,11 @@
         },
         "load_trimp_lite": 0.0,
         "load_modifier_seconds": 0.0,
+        "load_after_measurement_share": 0.0,
+        "load_session_count": 0,
+        "personal_paul_seconds": null,
+        "personal_paul_fitted": null,
+        "steady_change_seconds": null,
         "spread_seconds": 0.0,
         "two_k_equivalent_by_tier": {},
         "weight_adjusted_total_seconds": 382.93,
@@ -5024,6 +5268,11 @@
         },
         "load_trimp_lite": 0.0,
         "load_modifier_seconds": 0.0,
+        "load_after_measurement_share": 0.0,
+        "load_session_count": 0,
+        "personal_paul_seconds": null,
+        "personal_paul_fitted": null,
+        "steady_change_seconds": null,
         "spread_seconds": 0.0,
         "two_k_equivalent_by_tier": {},
         "weight_adjusted_total_seconds": 424.3,
@@ -5063,6 +5312,11 @@
         },
         "load_trimp_lite": 0.0,
         "load_modifier_seconds": 0.0,
+        "load_after_measurement_share": 0.0,
+        "load_session_count": 0,
+        "personal_paul_seconds": null,
+        "personal_paul_fitted": null,
+        "steady_change_seconds": null,
         "spread_seconds": 0.0,
         "two_k_equivalent_by_tier": {},
         "weight_adjusted_total_seconds": null,
@@ -5105,6 +5359,11 @@
         },
         "load_trimp_lite": 0.0,
         "load_modifier_seconds": 0.0,
+        "load_after_measurement_share": 0.0,
+        "load_session_count": 0,
+        "personal_paul_seconds": null,
+        "personal_paul_fitted": null,
+        "steady_change_seconds": null,
         "spread_seconds": 0.0,
         "two_k_equivalent_by_tier": {},
         "weight_adjusted_total_seconds": 1134.44,
@@ -5149,6 +5408,11 @@
         "components": {},
         "load_trimp_lite": 0.0,
         "load_modifier_seconds": 0.0,
+        "load_after_measurement_share": 0.0,
+        "load_session_count": 0,
+        "personal_paul_seconds": null,
+        "personal_paul_fitted": null,
+        "steady_change_seconds": null,
         "spread_seconds": 0.0,
         "two_k_equivalent_by_tier": {},
         "weight_adjusted_total_seconds": null,
@@ -5183,6 +5447,11 @@
         "components": {},
         "load_trimp_lite": 0.0,
         "load_modifier_seconds": 0.0,
+        "load_after_measurement_share": 0.0,
+        "load_session_count": 0,
+        "personal_paul_seconds": null,
+        "personal_paul_fitted": null,
+        "steady_change_seconds": null,
         "spread_seconds": 0.0,
         "two_k_equivalent_by_tier": {},
         "weight_adjusted_total_seconds": null,
@@ -5216,12 +5485,12 @@
         }
       ],
       "expected": {
-        "predicted_split_seconds": 104.54,
-        "predicted_total_time_seconds": 418.17,
-        "predicted_split_formatted": "1:44.5",
-        "predicted_total_time_formatted": "6:58.2",
-        "predicted_split_range_seconds": 1.35,
-        "predicted_total_time_range_seconds": 5.39,
+        "predicted_split_seconds": 105.56,
+        "predicted_total_time_seconds": 422.22,
+        "predicted_split_formatted": "1:45.6",
+        "predicted_total_time_formatted": "7:02.2",
+        "predicted_split_range_seconds": 1.31,
+        "predicted_total_time_range_seconds": 5.22,
         "confidence_score": "Medium",
         "confidence_numeric": 70,
         "anchor_tier": "AN",
@@ -5232,18 +5501,25 @@
         ],
         "components": {
           "anchor_split": 107.01,
-          "paul_adjustment": -3.35,
+          "paul_adjustment": -2.33,
           "intensity_offset": -0.0,
           "rpe_correction": 0.0,
-          "two_k_equivalent": 103.67,
+          "rate_correction": 0.0,
+          "two_k_equivalent": 104.68,
           "projection_to_target": 0.0,
           "weight_trend_correction": 0.0,
+          "steady_change_adjustment": 0.0,
           "volume_modifier": 0.87,
           "held_split_adjustment": 0.0,
           "clamp_adjustment": 0.0
         },
         "load_trimp_lite": 75.2,
         "load_modifier_seconds": 0.87,
+        "load_after_measurement_share": 1.0,
+        "load_session_count": 2,
+        "personal_paul_seconds": 3.48,
+        "personal_paul_fitted": true,
+        "steady_change_seconds": null,
         "spread_seconds": 0.0,
         "two_k_equivalent_by_tier": {
           "AN": 106.0
@@ -5251,7 +5527,8 @@
         "weight_adjusted_total_seconds": null,
         "age_graded_total_seconds": null,
         "flags": [
-          "load_estimate_damped"
+          "load_estimate_damped",
+          "personal_paul_law"
         ]
       }
     },
@@ -5283,8 +5560,8 @@
         "predicted_total_time_seconds": 1080.0,
         "predicted_split_formatted": "1:48.0",
         "predicted_total_time_formatted": "18:00.0",
-        "predicted_split_range_seconds": 1.26,
-        "predicted_total_time_range_seconds": 12.57,
+        "predicted_split_range_seconds": 1.25,
+        "predicted_total_time_range_seconds": 12.54,
         "confidence_score": "Medium",
         "confidence_numeric": 70,
         "anchor_tier": "AN",
@@ -5295,18 +5572,25 @@
         ],
         "components": {
           "anchor_split": 107.73,
-          "paul_adjustment": -5.72,
+          "paul_adjustment": -3.98,
           "intensity_offset": -0.0,
           "rpe_correction": 0.0,
-          "two_k_equivalent": 102.01,
-          "projection_to_target": 6.61,
+          "rate_correction": 0.0,
+          "two_k_equivalent": 103.75,
+          "projection_to_target": 4.61,
           "weight_trend_correction": 0.0,
+          "steady_change_adjustment": 0.0,
           "volume_modifier": 0.87,
-          "held_split_adjustment": -1.5,
+          "held_split_adjustment": -1.23,
           "clamp_adjustment": 0.0
         },
         "load_trimp_lite": 75.2,
         "load_modifier_seconds": 0.87,
+        "load_after_measurement_share": 1.0,
+        "load_session_count": 2,
+        "personal_paul_seconds": 3.48,
+        "personal_paul_fitted": true,
+        "steady_change_seconds": null,
         "spread_seconds": 0.0,
         "two_k_equivalent_by_tier": {
           "AN": 106.0
@@ -5315,6 +5599,7 @@
         "age_graded_total_seconds": null,
         "flags": [
           "load_estimate_damped",
+          "personal_paul_law",
           "raised_to_held_split"
         ]
       }
@@ -5354,8 +5639,8 @@
         "predicted_total_time_seconds": 422.0,
         "predicted_split_formatted": "1:45.5",
         "predicted_total_time_formatted": "7:02.0",
-        "predicted_split_range_seconds": 1.07,
-        "predicted_total_time_range_seconds": 4.28,
+        "predicted_split_range_seconds": 1.06,
+        "predicted_total_time_range_seconds": 4.25,
         "confidence_score": "High",
         "confidence_numeric": 78,
         "anchor_tier": "AN",
@@ -5367,26 +5652,34 @@
         ],
         "components": {
           "anchor_split": 106.05,
-          "paul_adjustment": -0.95,
+          "paul_adjustment": -0.83,
           "intensity_offset": -0.0,
           "rpe_correction": 0.0,
-          "two_k_equivalent": 105.1,
+          "rate_correction": 0.0,
+          "two_k_equivalent": 105.22,
           "projection_to_target": 0.0,
           "weight_trend_correction": 0.0,
+          "steady_change_adjustment": 0.0,
           "volume_modifier": 1.27,
-          "held_split_adjustment": -0.88,
+          "held_split_adjustment": -1.0,
           "clamp_adjustment": 0.0
         },
         "load_trimp_lite": 91.2,
         "load_modifier_seconds": 1.27,
+        "load_after_measurement_share": 1.0,
+        "load_session_count": 3,
+        "personal_paul_seconds": 4.36,
+        "personal_paul_fitted": true,
+        "steady_change_seconds": null,
         "spread_seconds": 0.0,
         "two_k_equivalent_by_tier": {
-          "AN": 106.0
+          "AN": 105.36
         },
         "weight_adjusted_total_seconds": null,
         "age_graded_total_seconds": null,
         "flags": [
           "load_estimate_damped",
+          "personal_paul_law",
           "raised_to_held_split"
         ]
       }
@@ -5436,15 +5729,22 @@
           "paul_adjustment": -0.0,
           "intensity_offset": -0.0,
           "rpe_correction": 0.0,
+          "rate_correction": 0.0,
           "two_k_equivalent": 106.0,
           "projection_to_target": 0.0,
           "weight_trend_correction": 0.0,
+          "steady_change_adjustment": 0.0,
           "volume_modifier": 0.87,
           "held_split_adjustment": 0.0,
           "clamp_adjustment": 0.0
         },
         "load_trimp_lite": 75.2,
         "load_modifier_seconds": 0.87,
+        "load_after_measurement_share": 1.0,
+        "load_session_count": 2,
+        "personal_paul_seconds": 3.48,
+        "personal_paul_fitted": true,
+        "steady_change_seconds": null,
         "spread_seconds": 0.0,
         "two_k_equivalent_by_tier": {
           "AN": 106.0
@@ -5452,7 +5752,8 @@
         "weight_adjusted_total_seconds": null,
         "age_graded_total_seconds": null,
         "flags": [
-          "load_estimate_damped"
+          "load_estimate_damped",
+          "personal_paul_law"
         ]
       }
     },
@@ -5484,8 +5785,8 @@
         "predicted_total_time_seconds": 424.0,
         "predicted_split_formatted": "1:46.0",
         "predicted_total_time_formatted": "7:04.0",
-        "predicted_split_range_seconds": 8.08,
-        "predicted_total_time_range_seconds": 32.33,
+        "predicted_split_range_seconds": 8.82,
+        "predicted_total_time_range_seconds": 35.3,
         "confidence_score": "Low",
         "confidence_numeric": 35,
         "anchor_tier": "AN",
@@ -5498,19 +5799,26 @@
           "paul_adjustment": -0.0,
           "intensity_offset": -0.0,
           "rpe_correction": 0.0,
+          "rate_correction": 0.0,
           "two_k_equivalent": 110.0,
           "projection_to_target": 0.0,
           "weight_trend_correction": 0.0,
+          "steady_change_adjustment": 0.0,
           "volume_modifier": 0.91,
           "held_split_adjustment": -4.91,
           "clamp_adjustment": 0.0
         },
         "load_trimp_lite": 53.8,
         "load_modifier_seconds": 0.91,
-        "spread_seconds": 15.96,
+        "load_after_measurement_share": 1.0,
+        "load_session_count": 2,
+        "personal_paul_seconds": 5.0,
+        "personal_paul_fitted": false,
+        "steady_change_seconds": null,
+        "spread_seconds": 17.46,
         "two_k_equivalent_by_tier": {
           "AN": 110.0,
-          "AT": 94.04
+          "AT": 92.54
         },
         "weight_adjusted_total_seconds": null,
         "age_graded_total_seconds": null,
@@ -5551,8 +5859,8 @@
         "predicted_total_time_seconds": 443.64,
         "predicted_split_formatted": "1:50.9",
         "predicted_total_time_formatted": "7:23.6",
-        "predicted_split_range_seconds": 8.08,
-        "predicted_total_time_range_seconds": 32.33,
+        "predicted_split_range_seconds": 8.82,
+        "predicted_total_time_range_seconds": 35.3,
         "confidence_score": "Low",
         "confidence_numeric": 35,
         "anchor_tier": "AN",
@@ -5565,19 +5873,26 @@
           "paul_adjustment": -0.0,
           "intensity_offset": -0.0,
           "rpe_correction": 0.0,
+          "rate_correction": 0.0,
           "two_k_equivalent": 110.0,
           "projection_to_target": 0.0,
           "weight_trend_correction": 0.0,
+          "steady_change_adjustment": 0.0,
           "volume_modifier": 0.91,
           "held_split_adjustment": 0.0,
           "clamp_adjustment": 0.0
         },
         "load_trimp_lite": 53.8,
         "load_modifier_seconds": 0.91,
-        "spread_seconds": 15.96,
+        "load_after_measurement_share": 1.0,
+        "load_session_count": 2,
+        "personal_paul_seconds": 5.0,
+        "personal_paul_fitted": false,
+        "steady_change_seconds": null,
+        "spread_seconds": 17.46,
         "two_k_equivalent_by_tier": {
           "AN": 110.0,
-          "AT": 94.04
+          "AT": 92.54
         },
         "weight_adjusted_total_seconds": null,
         "age_graded_total_seconds": null,
@@ -5622,15 +5937,22 @@
           "paul_adjustment": -0.0,
           "intensity_offset": -0.0,
           "rpe_correction": 0.0,
+          "rate_correction": 0.0,
           "two_k_equivalent": 100.0,
           "projection_to_target": 0.0,
           "weight_trend_correction": 0.0,
+          "steady_change_adjustment": 0.0,
           "volume_modifier": 0.0,
           "held_split_adjustment": 0.0,
           "clamp_adjustment": 0.0
         },
         "load_trimp_lite": 0,
         "load_modifier_seconds": 0.0,
+        "load_after_measurement_share": 1.0,
+        "load_session_count": 0,
+        "personal_paul_seconds": 5.0,
+        "personal_paul_fitted": false,
+        "steady_change_seconds": null,
         "spread_seconds": 0.0,
         "two_k_equivalent_by_tier": {
           "AN": 100.0
@@ -5703,8 +6025,8 @@
         "predicted_total_time_seconds": 1080.68,
         "predicted_split_formatted": "1:48.1",
         "predicted_total_time_formatted": "18:00.7",
-        "predicted_split_range_seconds": 2.08,
-        "predicted_total_time_range_seconds": 20.85,
+        "predicted_split_range_seconds": 2.72,
+        "predicted_total_time_range_seconds": 27.19,
         "confidence_score": "Medium",
         "confidence_numeric": 68,
         "anchor_tier": "AN",
@@ -5717,19 +6039,2737 @@
           "paul_adjustment": -0.0,
           "intensity_offset": -0.0,
           "rpe_correction": 0.0,
+          "rate_correction": 0.0,
           "two_k_equivalent": 100.0,
           "projection_to_target": 6.61,
           "weight_trend_correction": 0.0,
+          "steady_change_adjustment": 0.0,
           "volume_modifier": 1.46,
           "held_split_adjustment": 0.0,
           "clamp_adjustment": 0.0
         },
         "load_trimp_lite": 250.0,
         "load_modifier_seconds": 1.46,
-        "spread_seconds": 3.31,
+        "load_after_measurement_share": 1.0,
+        "load_session_count": 5,
+        "personal_paul_seconds": 5.0,
+        "personal_paul_fitted": false,
+        "steady_change_seconds": 0.0,
+        "spread_seconds": 4.81,
         "two_k_equivalent_by_tier": {
           "AN": 100.0,
-          "UT2": 103.31
+          "UT2": 104.81
+        },
+        "weight_adjusted_total_seconds": null,
+        "age_graded_total_seconds": null,
+        "flags": [
+          "load_estimate_damped"
+        ]
+      }
+    },
+    {
+      "name": "steady_faster_since_test_2k",
+      "as_of": "2026-09-17",
+      "target_distance_m": 2000,
+      "config_overrides": {},
+      "athlete": null,
+      "history": [
+        {
+          "id": "an",
+          "date": "2026-08-28",
+          "distance_m": 2000,
+          "split_s": 105.0,
+          "tag": "AN",
+          "stroke_rate": 32
+        },
+        {
+          "id": "b21",
+          "date": "2026-08-27",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "b22",
+          "date": "2026-08-26",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "b23",
+          "date": "2026-08-25",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "b24",
+          "date": "2026-08-24",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "b25",
+          "date": "2026-08-23",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "a2",
+          "date": "2026-09-15",
+          "distance_m": 16000,
+          "split_s": 125.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "a5",
+          "date": "2026-09-12",
+          "distance_m": 16000,
+          "split_s": 125.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "a8",
+          "date": "2026-09-09",
+          "distance_m": 16000,
+          "split_s": 125.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "a11",
+          "date": "2026-09-06",
+          "distance_m": 16000,
+          "split_s": 125.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "a14",
+          "date": "2026-09-03",
+          "distance_m": 16000,
+          "split_s": 125.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "a17",
+          "date": "2026-08-31",
+          "distance_m": 16000,
+          "split_s": 125.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        }
+      ],
+      "expected": {
+        "predicted_split_seconds": 104.0,
+        "predicted_total_time_seconds": 416.0,
+        "predicted_split_formatted": "1:44.0",
+        "predicted_total_time_formatted": "6:56.0",
+        "predicted_split_range_seconds": 1.35,
+        "predicted_total_time_range_seconds": 5.42,
+        "confidence_score": "Medium",
+        "confidence_numeric": 65,
+        "anchor_tier": "AN",
+        "anchor_method": "closest_distance",
+        "anchor_session_ids": [
+          "an"
+        ],
+        "components": {
+          "anchor_split": 105.0,
+          "paul_adjustment": -0.0,
+          "intensity_offset": -0.0,
+          "rpe_correction": 0.0,
+          "rate_correction": 0.0,
+          "two_k_equivalent": 105.0,
+          "projection_to_target": 0.0,
+          "weight_trend_correction": 0.0,
+          "steady_change_adjustment": -1.0,
+          "volume_modifier": -0.0,
+          "held_split_adjustment": 0.0,
+          "clamp_adjustment": 0.0
+        },
+        "load_trimp_lite": 759.7,
+        "load_modifier_seconds": -0.0,
+        "load_after_measurement_share": 0.0,
+        "load_session_count": 12,
+        "personal_paul_seconds": 5.0,
+        "personal_paul_fitted": false,
+        "steady_change_seconds": -2.0,
+        "spread_seconds": 2.0,
+        "two_k_equivalent_by_tier": {
+          "AN": 105.0,
+          "UT2": 103.0
+        },
+        "weight_adjusted_total_seconds": null,
+        "age_graded_total_seconds": null,
+        "flags": [
+          "steady_change_applied"
+        ]
+      }
+    },
+    {
+      "name": "steady_faster_since_test_5k",
+      "as_of": "2026-09-17",
+      "target_distance_m": 5000,
+      "config_overrides": {},
+      "athlete": null,
+      "history": [
+        {
+          "id": "an",
+          "date": "2026-08-28",
+          "distance_m": 2000,
+          "split_s": 105.0,
+          "tag": "AN",
+          "stroke_rate": 32
+        },
+        {
+          "id": "b21",
+          "date": "2026-08-27",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "b22",
+          "date": "2026-08-26",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "b23",
+          "date": "2026-08-25",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "b24",
+          "date": "2026-08-24",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "b25",
+          "date": "2026-08-23",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "a2",
+          "date": "2026-09-15",
+          "distance_m": 16000,
+          "split_s": 125.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "a5",
+          "date": "2026-09-12",
+          "distance_m": 16000,
+          "split_s": 125.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "a8",
+          "date": "2026-09-09",
+          "distance_m": 16000,
+          "split_s": 125.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "a11",
+          "date": "2026-09-06",
+          "distance_m": 16000,
+          "split_s": 125.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "a14",
+          "date": "2026-09-03",
+          "distance_m": 16000,
+          "split_s": 125.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "a17",
+          "date": "2026-08-31",
+          "distance_m": 16000,
+          "split_s": 125.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        }
+      ],
+      "expected": {
+        "predicted_split_seconds": 110.35,
+        "predicted_total_time_seconds": 1103.45,
+        "predicted_split_formatted": "1:50.3",
+        "predicted_total_time_formatted": "18:23.5",
+        "predicted_split_range_seconds": 1.72,
+        "predicted_total_time_range_seconds": 17.23,
+        "confidence_score": "Medium",
+        "confidence_numeric": 65,
+        "anchor_tier": "AN",
+        "anchor_method": "closest_distance",
+        "anchor_session_ids": [
+          "an"
+        ],
+        "components": {
+          "anchor_split": 105.0,
+          "paul_adjustment": -0.0,
+          "intensity_offset": -0.0,
+          "rpe_correction": 0.0,
+          "rate_correction": 0.0,
+          "two_k_equivalent": 105.0,
+          "projection_to_target": 6.61,
+          "weight_trend_correction": 0.0,
+          "steady_change_adjustment": -1.26,
+          "volume_modifier": -0.0,
+          "held_split_adjustment": 0.0,
+          "clamp_adjustment": 0.0
+        },
+        "load_trimp_lite": 759.7,
+        "load_modifier_seconds": -0.0,
+        "load_after_measurement_share": 0.0,
+        "load_session_count": 12,
+        "personal_paul_seconds": 5.0,
+        "personal_paul_fitted": false,
+        "steady_change_seconds": -2.0,
+        "spread_seconds": 2.0,
+        "two_k_equivalent_by_tier": {
+          "AN": 105.0,
+          "UT2": 103.0
+        },
+        "weight_adjusted_total_seconds": null,
+        "age_graded_total_seconds": null,
+        "flags": [
+          "steady_change_applied"
+        ]
+      }
+    },
+    {
+      "name": "steady_slower_never_drags",
+      "as_of": "2026-09-17",
+      "target_distance_m": 2000,
+      "config_overrides": {},
+      "athlete": null,
+      "history": [
+        {
+          "id": "an",
+          "date": "2026-08-28",
+          "distance_m": 2000,
+          "split_s": 105.0,
+          "tag": "AN",
+          "stroke_rate": 32
+        },
+        {
+          "id": "b21",
+          "date": "2026-08-27",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "b22",
+          "date": "2026-08-26",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "b23",
+          "date": "2026-08-25",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "b24",
+          "date": "2026-08-24",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "b25",
+          "date": "2026-08-23",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "a2",
+          "date": "2026-09-15",
+          "distance_m": 16000,
+          "split_s": 129.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "a5",
+          "date": "2026-09-12",
+          "distance_m": 16000,
+          "split_s": 129.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "a8",
+          "date": "2026-09-09",
+          "distance_m": 16000,
+          "split_s": 129.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "a11",
+          "date": "2026-09-06",
+          "distance_m": 16000,
+          "split_s": 129.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "a14",
+          "date": "2026-09-03",
+          "distance_m": 16000,
+          "split_s": 129.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "a17",
+          "date": "2026-08-31",
+          "distance_m": 16000,
+          "split_s": 129.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        }
+      ],
+      "expected": {
+        "predicted_split_seconds": 105.0,
+        "predicted_total_time_seconds": 420.0,
+        "predicted_split_formatted": "1:45.0",
+        "predicted_total_time_formatted": "7:00.0",
+        "predicted_split_range_seconds": 1.26,
+        "predicted_total_time_range_seconds": 5.04,
+        "confidence_score": "Medium",
+        "confidence_numeric": 65,
+        "anchor_tier": "AN",
+        "anchor_method": "closest_distance",
+        "anchor_session_ids": [
+          "an"
+        ],
+        "components": {
+          "anchor_split": 105.0,
+          "paul_adjustment": -0.0,
+          "intensity_offset": -0.0,
+          "rpe_correction": 0.0,
+          "rate_correction": 0.0,
+          "two_k_equivalent": 105.0,
+          "projection_to_target": 0.0,
+          "weight_trend_correction": 0.0,
+          "steady_change_adjustment": 0.0,
+          "volume_modifier": -0.0,
+          "held_split_adjustment": 0.0,
+          "clamp_adjustment": 0.0
+        },
+        "load_trimp_lite": 772.5,
+        "load_modifier_seconds": -0.0,
+        "load_after_measurement_share": 0.0,
+        "load_session_count": 12,
+        "personal_paul_seconds": 5.0,
+        "personal_paul_fitted": false,
+        "steady_change_seconds": 2.0,
+        "spread_seconds": 2.0,
+        "two_k_equivalent_by_tier": {
+          "AN": 105.0,
+          "UT2": 107.0
+        },
+        "weight_adjusted_total_seconds": null,
+        "age_graded_total_seconds": null,
+        "flags": [
+          "steady_pace_slower"
+        ]
+      }
+    },
+    {
+      "name": "steady_trend_off",
+      "as_of": "2026-09-17",
+      "target_distance_m": 2000,
+      "config_overrides": {
+        "steady_trend": false
+      },
+      "athlete": null,
+      "history": [
+        {
+          "id": "an",
+          "date": "2026-08-28",
+          "distance_m": 2000,
+          "split_s": 105.0,
+          "tag": "AN",
+          "stroke_rate": 32
+        },
+        {
+          "id": "b21",
+          "date": "2026-08-27",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "b22",
+          "date": "2026-08-26",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "b23",
+          "date": "2026-08-25",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "b24",
+          "date": "2026-08-24",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "b25",
+          "date": "2026-08-23",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "a2",
+          "date": "2026-09-15",
+          "distance_m": 16000,
+          "split_s": 125.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "a5",
+          "date": "2026-09-12",
+          "distance_m": 16000,
+          "split_s": 125.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "a8",
+          "date": "2026-09-09",
+          "distance_m": 16000,
+          "split_s": 125.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "a11",
+          "date": "2026-09-06",
+          "distance_m": 16000,
+          "split_s": 125.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "a14",
+          "date": "2026-09-03",
+          "distance_m": 16000,
+          "split_s": 125.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "a17",
+          "date": "2026-08-31",
+          "distance_m": 16000,
+          "split_s": 125.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        }
+      ],
+      "expected": {
+        "predicted_split_seconds": 104.87,
+        "predicted_total_time_seconds": 419.46,
+        "predicted_split_formatted": "1:44.9",
+        "predicted_total_time_formatted": "6:59.5",
+        "predicted_split_range_seconds": 1.29,
+        "predicted_total_time_range_seconds": 5.15,
+        "confidence_score": "Medium",
+        "confidence_numeric": 65,
+        "anchor_tier": "AN",
+        "anchor_method": "closest_distance",
+        "anchor_session_ids": [
+          "an"
+        ],
+        "components": {
+          "anchor_split": 105.0,
+          "paul_adjustment": -0.0,
+          "intensity_offset": -0.0,
+          "rpe_correction": 0.0,
+          "rate_correction": 0.0,
+          "two_k_equivalent": 105.0,
+          "projection_to_target": 0.0,
+          "weight_trend_correction": 0.0,
+          "steady_change_adjustment": 0.0,
+          "volume_modifier": -0.13,
+          "held_split_adjustment": 0.0,
+          "clamp_adjustment": 0.0
+        },
+        "load_trimp_lite": 759.7,
+        "load_modifier_seconds": -0.13,
+        "load_after_measurement_share": 0.53,
+        "load_session_count": 12,
+        "personal_paul_seconds": 5.0,
+        "personal_paul_fitted": false,
+        "steady_change_seconds": null,
+        "spread_seconds": 2.0,
+        "two_k_equivalent_by_tier": {
+          "AN": 105.0,
+          "UT2": 103.0
+        },
+        "weight_adjusted_total_seconds": null,
+        "age_graded_total_seconds": null,
+        "flags": []
+      }
+    },
+    {
+      "name": "steady_mixed_zones_since_test",
+      "as_of": "2026-09-17",
+      "target_distance_m": 2000,
+      "config_overrides": {},
+      "athlete": null,
+      "history": [
+        {
+          "id": "an",
+          "date": "2026-08-28",
+          "distance_m": 2000,
+          "split_s": 105.0,
+          "tag": "AN",
+          "stroke_rate": 32
+        },
+        {
+          "id": "b21",
+          "date": "2026-08-27",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "b22",
+          "date": "2026-08-26",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "b23",
+          "date": "2026-08-25",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "b24",
+          "date": "2026-08-24",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "b25",
+          "date": "2026-08-23",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "a2",
+          "date": "2026-09-15",
+          "distance_m": 16000,
+          "split_s": 125.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "a5",
+          "date": "2026-09-12",
+          "distance_m": 16000,
+          "split_s": 125.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "a8",
+          "date": "2026-09-09",
+          "distance_m": 16000,
+          "split_s": 125.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "a11",
+          "date": "2026-09-06",
+          "distance_m": 16000,
+          "split_s": 125.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "a14",
+          "date": "2026-09-03",
+          "distance_m": 16000,
+          "split_s": 125.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "a17",
+          "date": "2026-08-31",
+          "distance_m": 16000,
+          "split_s": 125.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "at-b21",
+          "date": "2026-08-27",
+          "distance_m": 8000,
+          "split_s": 118.0,
+          "tag": "AT",
+          "stroke_rate": 25
+        },
+        {
+          "id": "at-b23",
+          "date": "2026-08-25",
+          "distance_m": 8000,
+          "split_s": 118.0,
+          "tag": "AT",
+          "stroke_rate": 25
+        },
+        {
+          "id": "at-a3",
+          "date": "2026-09-14",
+          "distance_m": 8000,
+          "split_s": 117.0,
+          "tag": "AT",
+          "stroke_rate": 25
+        },
+        {
+          "id": "at-a9",
+          "date": "2026-09-08",
+          "distance_m": 8000,
+          "split_s": 117.0,
+          "tag": "AT",
+          "stroke_rate": 25
+        }
+      ],
+      "expected": {
+        "predicted_split_seconds": 104.07,
+        "predicted_total_time_seconds": 416.29,
+        "predicted_split_formatted": "1:44.1",
+        "predicted_total_time_formatted": "6:56.3",
+        "predicted_split_range_seconds": 1.34,
+        "predicted_total_time_range_seconds": 5.37,
+        "confidence_score": "Medium",
+        "confidence_numeric": 65,
+        "anchor_tier": "AN",
+        "anchor_method": "closest_distance",
+        "anchor_session_ids": [
+          "an"
+        ],
+        "components": {
+          "anchor_split": 105.0,
+          "paul_adjustment": -0.0,
+          "intensity_offset": -0.0,
+          "rpe_correction": 0.0,
+          "rate_correction": 0.0,
+          "two_k_equivalent": 105.0,
+          "projection_to_target": 0.0,
+          "weight_trend_correction": 0.0,
+          "steady_change_adjustment": -0.93,
+          "volume_modifier": -0.0,
+          "held_split_adjustment": 0.0,
+          "clamp_adjustment": 0.0
+        },
+        "load_trimp_lite": 947.7,
+        "load_modifier_seconds": -0.0,
+        "load_after_measurement_share": 0.0,
+        "load_session_count": 16,
+        "personal_paul_seconds": 5.0,
+        "personal_paul_fitted": false,
+        "steady_change_seconds": -1.85,
+        "spread_seconds": 2.0,
+        "two_k_equivalent_by_tier": {
+          "AN": 105.0,
+          "AT": 105.0,
+          "UT2": 103.0
+        },
+        "weight_adjusted_total_seconds": null,
+        "age_graded_total_seconds": null,
+        "flags": [
+          "steady_change_applied"
+        ]
+      }
+    },
+    {
+      "name": "volume_before_fresh_test",
+      "as_of": "2026-09-17",
+      "target_distance_m": 2000,
+      "config_overrides": {},
+      "athlete": null,
+      "history": [
+        {
+          "id": "an",
+          "date": "2026-09-16",
+          "distance_m": 2000,
+          "split_s": 105.0,
+          "tag": "AN",
+          "stroke_rate": 32
+        },
+        {
+          "id": "u2",
+          "date": "2026-09-15",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "u3",
+          "date": "2026-09-14",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "u4",
+          "date": "2026-09-13",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "u5",
+          "date": "2026-09-12",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "u6",
+          "date": "2026-09-11",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "u7",
+          "date": "2026-09-10",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "u8",
+          "date": "2026-09-09",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "u9",
+          "date": "2026-09-08",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "u10",
+          "date": "2026-09-07",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "u11",
+          "date": "2026-09-06",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "u12",
+          "date": "2026-09-05",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "u13",
+          "date": "2026-09-04",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "u14",
+          "date": "2026-09-03",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "u15",
+          "date": "2026-09-02",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "u16",
+          "date": "2026-09-01",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "u17",
+          "date": "2026-08-31",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "u18",
+          "date": "2026-08-30",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "u19",
+          "date": "2026-08-29",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "u20",
+          "date": "2026-08-28",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "u21",
+          "date": "2026-08-27",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "u22",
+          "date": "2026-08-26",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "u23",
+          "date": "2026-08-25",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "u24",
+          "date": "2026-08-24",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "u25",
+          "date": "2026-08-23",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "u26",
+          "date": "2026-08-22",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "u27",
+          "date": "2026-08-21",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "u28",
+          "date": "2026-08-20",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "u29",
+          "date": "2026-08-19",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        }
+      ],
+      "expected": {
+        "predicted_split_seconds": 105.0,
+        "predicted_total_time_seconds": 420.0,
+        "predicted_split_formatted": "1:45.0",
+        "predicted_total_time_formatted": "7:00.0",
+        "predicted_split_range_seconds": 0.75,
+        "predicted_total_time_range_seconds": 3.0,
+        "confidence_score": "High",
+        "confidence_numeric": 90,
+        "anchor_tier": "AN",
+        "anchor_method": "closest_distance",
+        "anchor_session_ids": [
+          "an"
+        ],
+        "components": {
+          "anchor_split": 105.0,
+          "paul_adjustment": -0.0,
+          "intensity_offset": -0.0,
+          "rpe_correction": 0.0,
+          "rate_correction": 0.0,
+          "two_k_equivalent": 105.0,
+          "projection_to_target": 0.0,
+          "weight_trend_correction": 0.0,
+          "steady_change_adjustment": 0.0,
+          "volume_modifier": -0.0,
+          "held_split_adjustment": 0.0,
+          "clamp_adjustment": 0.0
+        },
+        "load_trimp_lite": 1917.5,
+        "load_modifier_seconds": -0.0,
+        "load_after_measurement_share": 0.0,
+        "load_session_count": 29,
+        "personal_paul_seconds": 5.0,
+        "personal_paul_fitted": false,
+        "steady_change_seconds": null,
+        "spread_seconds": 0.0,
+        "two_k_equivalent_by_tier": {
+          "AN": 105.0,
+          "UT2": 105.0
+        },
+        "weight_adjusted_total_seconds": null,
+        "age_graded_total_seconds": null,
+        "flags": []
+      }
+    },
+    {
+      "name": "volume_after_older_test",
+      "as_of": "2026-09-17",
+      "target_distance_m": 2000,
+      "config_overrides": {},
+      "athlete": null,
+      "history": [
+        {
+          "id": "an",
+          "date": "2026-08-23",
+          "distance_m": 2000,
+          "split_s": 105.0,
+          "tag": "AN",
+          "stroke_rate": 32
+        },
+        {
+          "id": "u1",
+          "date": "2026-09-16",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "u2",
+          "date": "2026-09-15",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "u3",
+          "date": "2026-09-14",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "u4",
+          "date": "2026-09-13",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "u5",
+          "date": "2026-09-12",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "u6",
+          "date": "2026-09-11",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "u7",
+          "date": "2026-09-10",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "u8",
+          "date": "2026-09-09",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "u9",
+          "date": "2026-09-08",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "u10",
+          "date": "2026-09-07",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "u11",
+          "date": "2026-09-06",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "u12",
+          "date": "2026-09-05",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "u13",
+          "date": "2026-09-04",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "u14",
+          "date": "2026-09-03",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "u15",
+          "date": "2026-09-02",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "u16",
+          "date": "2026-09-01",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "u17",
+          "date": "2026-08-31",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "u18",
+          "date": "2026-08-30",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "u19",
+          "date": "2026-08-29",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "u20",
+          "date": "2026-08-28",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "u21",
+          "date": "2026-08-27",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "u22",
+          "date": "2026-08-26",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "u23",
+          "date": "2026-08-25",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "u24",
+          "date": "2026-08-24",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        }
+      ],
+      "expected": {
+        "predicted_split_seconds": 103.92,
+        "predicted_total_time_seconds": 415.69,
+        "predicted_split_formatted": "1:43.9",
+        "predicted_total_time_formatted": "6:55.7",
+        "predicted_split_range_seconds": 1.08,
+        "predicted_total_time_range_seconds": 4.3,
+        "confidence_score": "Medium",
+        "confidence_numeric": 65,
+        "anchor_tier": "AN",
+        "anchor_method": "closest_distance",
+        "anchor_session_ids": [
+          "an"
+        ],
+        "components": {
+          "anchor_split": 105.0,
+          "paul_adjustment": -0.0,
+          "intensity_offset": -0.0,
+          "rpe_correction": 0.0,
+          "rate_correction": 0.0,
+          "two_k_equivalent": 105.0,
+          "projection_to_target": 0.0,
+          "weight_trend_correction": 0.0,
+          "steady_change_adjustment": 0.0,
+          "volume_modifier": -1.08,
+          "held_split_adjustment": 0.0,
+          "clamp_adjustment": 0.0
+        },
+        "load_trimp_lite": 1646.6,
+        "load_modifier_seconds": -1.08,
+        "load_after_measurement_share": 0.99,
+        "load_session_count": 25,
+        "personal_paul_seconds": 5.0,
+        "personal_paul_fitted": false,
+        "steady_change_seconds": null,
+        "spread_seconds": 0.0,
+        "two_k_equivalent_by_tier": {
+          "AN": 105.0,
+          "UT2": 105.0
+        },
+        "weight_adjusted_total_seconds": null,
+        "age_graded_total_seconds": null,
+        "flags": []
+      }
+    },
+    {
+      "name": "volume_knots_parity",
+      "as_of": "2026-09-17",
+      "target_distance_m": 2000,
+      "config_overrides": {
+        "volume_curve": "knots",
+        "volume_after_measurement": false
+      },
+      "athlete": null,
+      "history": [
+        {
+          "id": "an",
+          "date": "2026-08-23",
+          "distance_m": 2000,
+          "split_s": 105.0,
+          "tag": "AN",
+          "stroke_rate": 32
+        },
+        {
+          "id": "u1",
+          "date": "2026-09-16",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "u2",
+          "date": "2026-09-15",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "u3",
+          "date": "2026-09-14",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "u4",
+          "date": "2026-09-13",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "u5",
+          "date": "2026-09-12",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "u6",
+          "date": "2026-09-11",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "u7",
+          "date": "2026-09-10",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "u8",
+          "date": "2026-09-09",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "u9",
+          "date": "2026-09-08",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "u10",
+          "date": "2026-09-07",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "u11",
+          "date": "2026-09-06",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "u12",
+          "date": "2026-09-05",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "u13",
+          "date": "2026-09-04",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "u14",
+          "date": "2026-09-03",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "u15",
+          "date": "2026-09-02",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "u16",
+          "date": "2026-09-01",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "u17",
+          "date": "2026-08-31",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "u18",
+          "date": "2026-08-30",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "u19",
+          "date": "2026-08-29",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "u20",
+          "date": "2026-08-28",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "u21",
+          "date": "2026-08-27",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "u22",
+          "date": "2026-08-26",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "u23",
+          "date": "2026-08-25",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "u24",
+          "date": "2026-08-24",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        }
+      ],
+      "expected": {
+        "predicted_split_seconds": 105.0,
+        "predicted_total_time_seconds": 420.0,
+        "predicted_split_formatted": "1:45.0",
+        "predicted_total_time_formatted": "7:00.0",
+        "predicted_split_range_seconds": 0.93,
+        "predicted_total_time_range_seconds": 3.72,
+        "confidence_score": "Medium",
+        "confidence_numeric": 65,
+        "anchor_tier": "AN",
+        "anchor_method": "closest_distance",
+        "anchor_session_ids": [
+          "an"
+        ],
+        "components": {
+          "anchor_split": 105.0,
+          "paul_adjustment": -0.0,
+          "intensity_offset": -0.0,
+          "rpe_correction": 0.0,
+          "rate_correction": 0.0,
+          "two_k_equivalent": 105.0,
+          "projection_to_target": 0.0,
+          "weight_trend_correction": 0.0,
+          "steady_change_adjustment": 0.0,
+          "volume_modifier": 0.0,
+          "held_split_adjustment": 0.0,
+          "clamp_adjustment": 0.0
+        },
+        "load_trimp_lite": 1646.6,
+        "load_modifier_seconds": 0.0,
+        "load_after_measurement_share": 1.0,
+        "load_session_count": 25,
+        "personal_paul_seconds": 5.0,
+        "personal_paul_fitted": false,
+        "steady_change_seconds": null,
+        "spread_seconds": 0.0,
+        "two_k_equivalent_by_tier": {
+          "AN": 105.0,
+          "UT2": 105.0
+        },
+        "weight_adjusted_total_seconds": null,
+        "age_graded_total_seconds": null,
+        "flags": []
+      }
+    },
+    {
+      "name": "volume_only_rows",
+      "as_of": "2026-09-17",
+      "target_distance_m": 2000,
+      "config_overrides": {},
+      "athlete": null,
+      "history": [
+        {
+          "id": "u1",
+          "date": "2026-09-16",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "u2",
+          "date": "2026-09-15",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "u3",
+          "date": "2026-09-14",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "u4",
+          "date": "2026-09-13",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "u5",
+          "date": "2026-09-12",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "u6",
+          "date": "2026-09-11",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "u7",
+          "date": "2026-09-10",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "u8",
+          "date": "2026-09-09",
+          "distance_m": 16000,
+          "split_s": 127.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "wu1",
+          "date": "2026-09-16",
+          "distance_m": 2000,
+          "split_s": 150.0,
+          "tag": "UT2",
+          "volume_only": true
+        },
+        {
+          "id": "wu2",
+          "date": "2026-09-15",
+          "distance_m": 2000,
+          "split_s": 150.0,
+          "tag": "UT2",
+          "volume_only": true
+        },
+        {
+          "id": "wu3",
+          "date": "2026-09-14",
+          "distance_m": 2000,
+          "split_s": 150.0,
+          "tag": "UT2",
+          "volume_only": true
+        },
+        {
+          "id": "wu4",
+          "date": "2026-09-13",
+          "distance_m": 2000,
+          "split_s": 150.0,
+          "tag": "UT2",
+          "volume_only": true
+        },
+        {
+          "id": "wu5",
+          "date": "2026-09-12",
+          "distance_m": 2000,
+          "split_s": 150.0,
+          "tag": "UT2",
+          "volume_only": true
+        },
+        {
+          "id": "wu6",
+          "date": "2026-09-11",
+          "distance_m": 2000,
+          "split_s": 150.0,
+          "tag": "UT2",
+          "volume_only": true
+        },
+        {
+          "id": "wu7",
+          "date": "2026-09-10",
+          "distance_m": 2000,
+          "split_s": 150.0,
+          "tag": "UT2",
+          "volume_only": true
+        },
+        {
+          "id": "wu8",
+          "date": "2026-09-09",
+          "distance_m": 2000,
+          "split_s": 150.0,
+          "tag": "UT2",
+          "volume_only": true
+        }
+      ],
+      "expected": {
+        "predicted_split_seconds": 104.96,
+        "predicted_total_time_seconds": 419.85,
+        "predicted_split_formatted": "1:45.0",
+        "predicted_total_time_formatted": "6:59.8",
+        "predicted_split_range_seconds": 2.25,
+        "predicted_total_time_range_seconds": 9.0,
+        "confidence_score": "Low",
+        "confidence_numeric": 20,
+        "anchor_tier": "UT2",
+        "anchor_method": "zone_blend",
+        "anchor_session_ids": [
+          "u1",
+          "u2",
+          "u3",
+          "u4",
+          "u5",
+          "u6",
+          "u7",
+          "u8"
+        ],
+        "components": {
+          "anchor_split": 127.0,
+          "paul_adjustment": -0.0,
+          "intensity_offset": -22.0,
+          "rpe_correction": 0.0,
+          "rate_correction": 0.0,
+          "two_k_equivalent": 105.0,
+          "projection_to_target": 0.0,
+          "weight_trend_correction": 0.0,
+          "steady_change_adjustment": 0.0,
+          "volume_modifier": -0.04,
+          "held_split_adjustment": 0.0,
+          "clamp_adjustment": 0.0
+        },
+        "load_trimp_lite": 621.9,
+        "load_modifier_seconds": -0.04,
+        "load_after_measurement_share": 1.0,
+        "load_session_count": 8,
+        "personal_paul_seconds": 5.0,
+        "personal_paul_fitted": false,
+        "steady_change_seconds": null,
+        "spread_seconds": 0.0,
+        "two_k_equivalent_by_tier": {
+          "UT2": 105.0
+        },
+        "weight_adjusted_total_seconds": null,
+        "age_graded_total_seconds": null,
+        "flags": []
+      }
+    },
+    {
+      "name": "volume_only_alone",
+      "as_of": "2026-09-17",
+      "target_distance_m": 2000,
+      "config_overrides": {},
+      "athlete": null,
+      "history": [
+        {
+          "id": "wu",
+          "date": "2026-09-16",
+          "distance_m": 2000,
+          "split_s": 150.0,
+          "tag": "UT2",
+          "volume_only": true
+        }
+      ],
+      "expected": {
+        "predicted_split_seconds": null,
+        "predicted_total_time_seconds": null,
+        "predicted_split_formatted": null,
+        "predicted_total_time_formatted": null,
+        "predicted_split_range_seconds": null,
+        "predicted_total_time_range_seconds": null,
+        "confidence_score": "Insufficient Data",
+        "confidence_numeric": 0,
+        "anchor_tier": null,
+        "anchor_method": null,
+        "anchor_session_ids": null,
+        "components": {},
+        "load_trimp_lite": 0.0,
+        "load_modifier_seconds": 0.0,
+        "load_after_measurement_share": 0.0,
+        "load_session_count": 0,
+        "personal_paul_seconds": null,
+        "personal_paul_fitted": null,
+        "steady_change_seconds": null,
+        "spread_seconds": 0.0,
+        "two_k_equivalent_by_tier": {},
+        "weight_adjusted_total_seconds": null,
+        "age_graded_total_seconds": null,
+        "flags": [
+          "no_anchor"
+        ]
+      }
+    },
+    {
+      "name": "steady_zones_together",
+      "as_of": "2026-09-17",
+      "target_distance_m": 2000,
+      "config_overrides": {},
+      "athlete": null,
+      "history": [
+        {
+          "id": "at1",
+          "date": "2026-09-16",
+          "distance_m": 8000,
+          "split_s": 118.0,
+          "tag": "AT",
+          "stroke_rate": 25
+        },
+        {
+          "id": "at4",
+          "date": "2026-09-13",
+          "distance_m": 8000,
+          "split_s": 118.0,
+          "tag": "AT",
+          "stroke_rate": 25
+        },
+        {
+          "id": "at7",
+          "date": "2026-09-10",
+          "distance_m": 8000,
+          "split_s": 118.0,
+          "tag": "AT",
+          "stroke_rate": 25
+        },
+        {
+          "id": "at10",
+          "date": "2026-09-07",
+          "distance_m": 8000,
+          "split_s": 118.0,
+          "tag": "AT",
+          "stroke_rate": 25
+        },
+        {
+          "id": "ut2",
+          "date": "2026-09-15",
+          "distance_m": 16000,
+          "split_s": 129.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "ut3",
+          "date": "2026-09-14",
+          "distance_m": 16000,
+          "split_s": 129.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "ut5",
+          "date": "2026-09-12",
+          "distance_m": 16000,
+          "split_s": 129.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "ut6",
+          "date": "2026-09-11",
+          "distance_m": 16000,
+          "split_s": 129.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "ut8",
+          "date": "2026-09-09",
+          "distance_m": 16000,
+          "split_s": 129.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "ut9",
+          "date": "2026-09-08",
+          "distance_m": 16000,
+          "split_s": 129.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "ut11",
+          "date": "2026-09-06",
+          "distance_m": 16000,
+          "split_s": 129.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "ut12",
+          "date": "2026-09-05",
+          "distance_m": 16000,
+          "split_s": 129.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        }
+      ],
+      "expected": {
+        "predicted_split_seconds": 106.77,
+        "predicted_total_time_seconds": 427.1,
+        "predicted_split_formatted": "1:46.8",
+        "predicted_total_time_formatted": "7:07.1",
+        "predicted_split_range_seconds": 2.25,
+        "predicted_total_time_range_seconds": 9.01,
+        "confidence_score": "Low",
+        "confidence_numeric": 20,
+        "anchor_tier": "UT2",
+        "anchor_method": "zone_blend",
+        "anchor_session_ids": [
+          "at1",
+          "at4",
+          "at7",
+          "at10",
+          "ut2",
+          "ut3",
+          "ut5",
+          "ut6",
+          "ut8",
+          "ut9",
+          "ut11",
+          "ut12"
+        ],
+        "components": {
+          "anchor_split": 129.0,
+          "paul_adjustment": -0.0,
+          "intensity_offset": -22.0,
+          "rpe_correction": 0.0,
+          "rate_correction": 0.0,
+          "two_k_equivalent": 107.0,
+          "projection_to_target": 0.0,
+          "weight_trend_correction": 0.0,
+          "steady_change_adjustment": 0.0,
+          "volume_modifier": -0.23,
+          "held_split_adjustment": 0.0,
+          "clamp_adjustment": 0.0
+        },
+        "load_trimp_lite": 739.2,
+        "load_modifier_seconds": -0.23,
+        "load_after_measurement_share": 1.0,
+        "load_session_count": 12,
+        "personal_paul_seconds": 5.0,
+        "personal_paul_fitted": false,
+        "steady_change_seconds": null,
+        "spread_seconds": 2.0,
+        "two_k_equivalent_by_tier": {
+          "AT": 105.0,
+          "UT2": 107.0
+        },
+        "weight_adjusted_total_seconds": null,
+        "age_graded_total_seconds": null,
+        "flags": []
+      }
+    },
+    {
+      "name": "steady_zones_best_only_parity",
+      "as_of": "2026-09-17",
+      "target_distance_m": 2000,
+      "config_overrides": {
+        "submaximal_anchor_method": "median"
+      },
+      "athlete": null,
+      "history": [
+        {
+          "id": "at1",
+          "date": "2026-09-16",
+          "distance_m": 8000,
+          "split_s": 118.0,
+          "tag": "AT",
+          "stroke_rate": 25
+        },
+        {
+          "id": "at4",
+          "date": "2026-09-13",
+          "distance_m": 8000,
+          "split_s": 118.0,
+          "tag": "AT",
+          "stroke_rate": 25
+        },
+        {
+          "id": "at7",
+          "date": "2026-09-10",
+          "distance_m": 8000,
+          "split_s": 118.0,
+          "tag": "AT",
+          "stroke_rate": 25
+        },
+        {
+          "id": "at10",
+          "date": "2026-09-07",
+          "distance_m": 8000,
+          "split_s": 118.0,
+          "tag": "AT",
+          "stroke_rate": 25
+        },
+        {
+          "id": "ut2",
+          "date": "2026-09-15",
+          "distance_m": 16000,
+          "split_s": 129.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "ut3",
+          "date": "2026-09-14",
+          "distance_m": 16000,
+          "split_s": 129.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "ut5",
+          "date": "2026-09-12",
+          "distance_m": 16000,
+          "split_s": 129.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "ut6",
+          "date": "2026-09-11",
+          "distance_m": 16000,
+          "split_s": 129.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "ut8",
+          "date": "2026-09-09",
+          "distance_m": 16000,
+          "split_s": 129.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "ut9",
+          "date": "2026-09-08",
+          "distance_m": 16000,
+          "split_s": 129.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "ut11",
+          "date": "2026-09-06",
+          "distance_m": 16000,
+          "split_s": 129.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        },
+        {
+          "id": "ut12",
+          "date": "2026-09-05",
+          "distance_m": 16000,
+          "split_s": 129.0,
+          "tag": "UT2",
+          "stroke_rate": 18
+        }
+      ],
+      "expected": {
+        "predicted_split_seconds": 104.77,
+        "predicted_total_time_seconds": 419.1,
+        "predicted_split_formatted": "1:44.8",
+        "predicted_total_time_formatted": "6:59.1",
+        "predicted_split_range_seconds": 1.81,
+        "predicted_total_time_range_seconds": 7.23,
+        "confidence_score": "Medium",
+        "confidence_numeric": 60,
+        "anchor_tier": "AT",
+        "anchor_method": "duration_weighted_median",
+        "anchor_session_ids": [
+          "at1",
+          "at4",
+          "at7",
+          "at10"
+        ],
+        "components": {
+          "anchor_split": 118.0,
+          "paul_adjustment": -0.0,
+          "intensity_offset": -13.0,
+          "rpe_correction": 0.0,
+          "rate_correction": 0.0,
+          "two_k_equivalent": 105.0,
+          "projection_to_target": 0.0,
+          "weight_trend_correction": 0.0,
+          "steady_change_adjustment": 0.0,
+          "volume_modifier": -0.23,
+          "held_split_adjustment": 0.0,
+          "clamp_adjustment": 0.0
+        },
+        "load_trimp_lite": 739.2,
+        "load_modifier_seconds": -0.23,
+        "load_after_measurement_share": 1.0,
+        "load_session_count": 12,
+        "personal_paul_seconds": 5.0,
+        "personal_paul_fitted": false,
+        "steady_change_seconds": null,
+        "spread_seconds": 2.0,
+        "two_k_equivalent_by_tier": {
+          "AT": 105.0,
+          "UT2": 107.0
+        },
+        "weight_adjusted_total_seconds": null,
+        "age_graded_total_seconds": null,
+        "flags": []
+      }
+    },
+    {
+      "name": "rate_corrected_ut2",
+      "as_of": "2026-09-17",
+      "target_distance_m": 2000,
+      "config_overrides": {},
+      "athlete": null,
+      "history": [
+        {
+          "id": "r20",
+          "date": "2026-09-16",
+          "distance_m": 16000,
+          "split_s": 124.0,
+          "tag": "UT2",
+          "stroke_rate": 20
+        },
+        {
+          "id": "r24",
+          "date": "2026-09-15",
+          "distance_m": 16000,
+          "split_s": 118.0,
+          "tag": "UT2",
+          "stroke_rate": 24
+        }
+      ],
+      "expected": {
+        "predicted_split_seconds": 105.78,
+        "predicted_total_time_seconds": 423.14,
+        "predicted_split_formatted": "1:45.8",
+        "predicted_total_time_formatted": "7:03.1",
+        "predicted_split_range_seconds": 2.46,
+        "predicted_total_time_range_seconds": 9.85,
+        "confidence_score": "Low",
+        "confidence_numeric": 5,
+        "anchor_tier": "UT2",
+        "anchor_method": "zone_blend",
+        "anchor_session_ids": [
+          "r20",
+          "r24"
+        ],
+        "components": {
+          "anchor_split": 124.0,
+          "paul_adjustment": -0.0,
+          "intensity_offset": -22.0,
+          "rpe_correction": 0.0,
+          "rate_correction": 3.0,
+          "two_k_equivalent": 105.0,
+          "projection_to_target": 0.0,
+          "weight_trend_correction": 0.0,
+          "steady_change_adjustment": 0.0,
+          "volume_modifier": 0.78,
+          "held_split_adjustment": 0.0,
+          "clamp_adjustment": 0.0
+        },
+        "load_trimp_lite": 129.1,
+        "load_modifier_seconds": 0.78,
+        "load_after_measurement_share": 1.0,
+        "load_session_count": 2,
+        "personal_paul_seconds": 5.0,
+        "personal_paul_fitted": false,
+        "steady_change_seconds": null,
+        "spread_seconds": 0.0,
+        "two_k_equivalent_by_tier": {
+          "UT2": 105.0
+        },
+        "weight_adjusted_total_seconds": null,
+        "age_graded_total_seconds": null,
+        "flags": [
+          "load_estimate_damped"
+        ]
+      }
+    },
+    {
+      "name": "rate_correction_off",
+      "as_of": "2026-09-17",
+      "target_distance_m": 2000,
+      "config_overrides": {
+        "rate_sensitivity_s": 0.0
+      },
+      "athlete": null,
+      "history": [
+        {
+          "id": "r20",
+          "date": "2026-09-16",
+          "distance_m": 16000,
+          "split_s": 124.0,
+          "tag": "UT2",
+          "stroke_rate": 20
+        }
+      ],
+      "expected": {
+        "predicted_split_seconds": 102.44,
+        "predicted_total_time_seconds": 409.78,
+        "predicted_split_formatted": "1:42.4",
+        "predicted_total_time_formatted": "6:49.8",
+        "predicted_split_range_seconds": 2.57,
+        "predicted_total_time_range_seconds": 10.3,
+        "confidence_score": "Low",
+        "confidence_numeric": 5,
+        "anchor_tier": "UT2",
+        "anchor_method": "zone_blend",
+        "anchor_session_ids": [
+          "r20"
+        ],
+        "components": {
+          "anchor_split": 124.0,
+          "paul_adjustment": -0.0,
+          "intensity_offset": -22.0,
+          "rpe_correction": 0.0,
+          "rate_correction": 0.0,
+          "two_k_equivalent": 102.0,
+          "projection_to_target": 0.0,
+          "weight_trend_correction": 0.0,
+          "steady_change_adjustment": 0.0,
+          "volume_modifier": 0.44,
+          "held_split_adjustment": 0.0,
+          "clamp_adjustment": 0.0
+        },
+        "load_trimp_lite": 66.1,
+        "load_modifier_seconds": 0.44,
+        "load_after_measurement_share": 1.0,
+        "load_session_count": 1,
+        "personal_paul_seconds": 5.0,
+        "personal_paul_fitted": false,
+        "steady_change_seconds": null,
+        "spread_seconds": 0.0,
+        "two_k_equivalent_by_tier": {
+          "UT2": 102.0
+        },
+        "weight_adjusted_total_seconds": null,
+        "age_graded_total_seconds": null,
+        "flags": [
+          "load_estimate_damped"
+        ]
+      }
+    },
+    {
+      "name": "personal_paul_fade_5k",
+      "as_of": "2026-09-17",
+      "target_distance_m": 5000,
+      "config_overrides": {},
+      "athlete": null,
+      "history": [
+        {
+          "id": "2k",
+          "date": "2026-09-07",
+          "distance_m": 2000,
+          "split_s": 105.0,
+          "tag": "AN",
+          "stroke_rate": 32
+        },
+        {
+          "id": "6k",
+          "date": "2026-09-07",
+          "distance_m": 6000,
+          "split_s": 116.09,
+          "tag": "AN",
+          "stroke_rate": 30,
+          "rep_distance_m": 6000
+        }
+      ],
+      "expected": {
+        "predicted_split_seconds": 114.86,
+        "predicted_total_time_seconds": 1148.62,
+        "predicted_split_formatted": "1:54.9",
+        "predicted_total_time_formatted": "19:08.6",
+        "predicted_split_range_seconds": 1.26,
+        "predicted_total_time_range_seconds": 12.57,
+        "confidence_score": "Medium",
+        "confidence_numeric": 70,
+        "anchor_tier": "AN",
+        "anchor_method": "weighted_blend",
+        "anchor_session_ids": [
+          "6k",
+          "2k"
+        ],
+        "components": {
+          "anchor_split": 112.49,
+          "paul_adjustment": -6.48,
+          "intensity_offset": -0.0,
+          "rpe_correction": 0.0,
+          "rate_correction": 0.0,
+          "two_k_equivalent": 106.01,
+          "projection_to_target": 8.0,
+          "weight_trend_correction": 0.0,
+          "steady_change_adjustment": 0.0,
+          "volume_modifier": 0.85,
+          "held_split_adjustment": 0.0,
+          "clamp_adjustment": 0.0
+        },
+        "load_trimp_lite": 90.7,
+        "load_modifier_seconds": 0.85,
+        "load_after_measurement_share": 1.0,
+        "load_session_count": 2,
+        "personal_paul_seconds": 6.05,
+        "personal_paul_fitted": true,
+        "steady_change_seconds": null,
+        "spread_seconds": 0.0,
+        "two_k_equivalent_by_tier": {
+          "AN": 105.0
+        },
+        "weight_adjusted_total_seconds": null,
+        "age_graded_total_seconds": null,
+        "flags": [
+          "load_estimate_damped",
+          "personal_paul_law"
+        ]
+      }
+    },
+    {
+      "name": "personal_paul_fade_2k",
+      "as_of": "2026-09-17",
+      "target_distance_m": 2000,
+      "config_overrides": {},
+      "athlete": null,
+      "history": [
+        {
+          "id": "2k",
+          "date": "2026-09-07",
+          "distance_m": 2000,
+          "split_s": 105.0,
+          "tag": "AN",
+          "stroke_rate": 32
+        },
+        {
+          "id": "6k",
+          "date": "2026-09-07",
+          "distance_m": 6000,
+          "split_s": 116.09,
+          "tag": "AN",
+          "stroke_rate": 30,
+          "rep_distance_m": 6000
+        }
+      ],
+      "expected": {
+        "predicted_split_seconds": 105.0,
+        "predicted_total_time_seconds": 420.0,
+        "predicted_split_formatted": "1:45.0",
+        "predicted_total_time_formatted": "7:00.0",
+        "predicted_split_range_seconds": 1.27,
+        "predicted_total_time_range_seconds": 5.07,
+        "confidence_score": "Medium",
+        "confidence_numeric": 70,
+        "anchor_tier": "AN",
+        "anchor_method": "weighted_blend",
+        "anchor_session_ids": [
+          "2k",
+          "6k"
+        ],
+        "components": {
+          "anchor_split": 107.77,
+          "paul_adjustment": -2.4,
+          "intensity_offset": -0.0,
+          "rpe_correction": 0.0,
+          "rate_correction": 0.0,
+          "two_k_equivalent": 105.37,
+          "projection_to_target": 0.0,
+          "weight_trend_correction": 0.0,
+          "steady_change_adjustment": 0.0,
+          "volume_modifier": 0.85,
+          "held_split_adjustment": -1.22,
+          "clamp_adjustment": 0.0
+        },
+        "load_trimp_lite": 90.7,
+        "load_modifier_seconds": 0.85,
+        "load_after_measurement_share": 1.0,
+        "load_session_count": 2,
+        "personal_paul_seconds": 6.05,
+        "personal_paul_fitted": true,
+        "steady_change_seconds": null,
+        "spread_seconds": 0.0,
+        "two_k_equivalent_by_tier": {
+          "AN": 105.0
+        },
+        "weight_adjusted_total_seconds": null,
+        "age_graded_total_seconds": null,
+        "flags": [
+          "load_estimate_damped",
+          "personal_paul_law",
+          "raised_to_held_split"
+        ]
+      }
+    },
+    {
+      "name": "personal_paul_strong_fade_capped",
+      "as_of": "2026-09-17",
+      "target_distance_m": 5000,
+      "config_overrides": {
+        "personal_paul_prior_strength": 0.01
+      },
+      "athlete": null,
+      "history": [
+        {
+          "id": "2k",
+          "date": "2026-09-07",
+          "distance_m": 2000,
+          "split_s": 105.0,
+          "tag": "AN",
+          "stroke_rate": 32
+        },
+        {
+          "id": "6k",
+          "date": "2026-09-07",
+          "distance_m": 6000,
+          "split_s": 124.02,
+          "tag": "AN",
+          "stroke_rate": 30,
+          "rep_distance_m": 6000
+        }
+      ],
+      "expected": {
+        "predicted_split_seconds": 120.7,
+        "predicted_total_time_seconds": 1207.0,
+        "predicted_split_formatted": "2:00.7",
+        "predicted_total_time_formatted": "20:07.0",
+        "predicted_split_range_seconds": 1.25,
+        "predicted_total_time_range_seconds": 12.5,
+        "confidence_score": "Medium",
+        "confidence_numeric": 70,
+        "anchor_tier": "AN",
+        "anchor_method": "weighted_blend",
+        "anchor_session_ids": [
+          "6k",
+          "2k"
+        ],
+        "components": {
+          "anchor_split": 117.85,
+          "paul_adjustment": -8.57,
+          "intensity_offset": -0.0,
+          "rpe_correction": 0.0,
+          "rate_correction": 0.0,
+          "two_k_equivalent": 109.28,
+          "projection_to_target": 10.58,
+          "weight_trend_correction": 0.0,
+          "steady_change_adjustment": 0.0,
+          "volume_modifier": 0.84,
+          "held_split_adjustment": 0.0,
+          "clamp_adjustment": 0.0
+        },
+        "load_trimp_lite": 95.4,
+        "load_modifier_seconds": 0.84,
+        "load_after_measurement_share": 1.0,
+        "load_session_count": 2,
+        "personal_paul_seconds": 8.0,
+        "personal_paul_fitted": true,
+        "steady_change_seconds": null,
+        "spread_seconds": 0.0,
+        "two_k_equivalent_by_tier": {
+          "AN": 105.0
+        },
+        "weight_adjusted_total_seconds": null,
+        "age_graded_total_seconds": null,
+        "flags": [
+          "load_estimate_damped",
+          "personal_paul_law"
+        ]
+      }
+    },
+    {
+      "name": "personal_paul_off",
+      "as_of": "2026-09-17",
+      "target_distance_m": 5000,
+      "config_overrides": {
+        "personal_paul": false
+      },
+      "athlete": null,
+      "history": [
+        {
+          "id": "2k",
+          "date": "2026-09-07",
+          "distance_m": 2000,
+          "split_s": 105.0,
+          "tag": "AN",
+          "stroke_rate": 32
+        },
+        {
+          "id": "6k",
+          "date": "2026-09-07",
+          "distance_m": 6000,
+          "split_s": 116.09,
+          "tag": "AN",
+          "stroke_rate": 30,
+          "rep_distance_m": 6000
+        }
+      ],
+      "expected": {
+        "predicted_split_seconds": 114.6,
+        "predicted_total_time_seconds": 1145.97,
+        "predicted_split_formatted": "1:54.6",
+        "predicted_total_time_formatted": "19:06.0",
+        "predicted_split_range_seconds": 1.26,
+        "predicted_total_time_range_seconds": 12.64,
+        "confidence_score": "Medium",
+        "confidence_numeric": 70,
+        "anchor_tier": "AN",
+        "anchor_method": "weighted_blend",
+        "anchor_session_ids": [
+          "6k",
+          "2k"
+        ],
+        "components": {
+          "anchor_split": 112.49,
+          "paul_adjustment": -5.35,
+          "intensity_offset": -0.0,
+          "rpe_correction": 0.0,
+          "rate_correction": 0.0,
+          "two_k_equivalent": 107.14,
+          "projection_to_target": 6.61,
+          "weight_trend_correction": 0.0,
+          "steady_change_adjustment": 0.0,
+          "volume_modifier": 0.85,
+          "held_split_adjustment": 0.0,
+          "clamp_adjustment": 0.0
+        },
+        "load_trimp_lite": 90.7,
+        "load_modifier_seconds": 0.85,
+        "load_after_measurement_share": 1.0,
+        "load_session_count": 2,
+        "personal_paul_seconds": 5.0,
+        "personal_paul_fitted": false,
+        "steady_change_seconds": null,
+        "spread_seconds": 0.0,
+        "two_k_equivalent_by_tier": {
+          "AN": 105.0
+        },
+        "weight_adjusted_total_seconds": null,
+        "age_graded_total_seconds": null,
+        "flags": [
+          "load_estimate_damped"
+        ]
+      }
+    },
+    {
+      "name": "personal_paul_from_older_pieces",
+      "as_of": "2026-09-17",
+      "target_distance_m": 5000,
+      "config_overrides": {},
+      "athlete": null,
+      "history": [
+        {
+          "id": "old-2k",
+          "date": "2026-07-29",
+          "distance_m": 2000,
+          "split_s": 106.0,
+          "tag": "AN",
+          "stroke_rate": 32
+        },
+        {
+          "id": "old-6k",
+          "date": "2026-07-09",
+          "distance_m": 6000,
+          "split_s": 115.0,
+          "tag": "AN",
+          "stroke_rate": 30,
+          "rep_distance_m": 6000
+        },
+        {
+          "id": "new-2k",
+          "date": "2026-09-14",
+          "distance_m": 2000,
+          "split_s": 105.0,
+          "tag": "AN",
+          "stroke_rate": 32
+        }
+      ],
+      "expected": {
+        "predicted_split_seconds": 112.75,
+        "predicted_total_time_seconds": 1127.53,
+        "predicted_split_formatted": "1:52.8",
+        "predicted_total_time_formatted": "18:47.5",
+        "predicted_split_range_seconds": 1.63,
+        "predicted_total_time_range_seconds": 16.28,
+        "confidence_score": "Medium",
+        "confidence_numeric": 70,
+        "anchor_tier": "AN",
+        "anchor_method": "closest_distance",
+        "anchor_session_ids": [
+          "new-2k"
+        ],
+        "components": {
+          "anchor_split": 105.0,
+          "paul_adjustment": -0.0,
+          "intensity_offset": -0.0,
+          "rpe_correction": 0.0,
+          "rate_correction": 0.0,
+          "two_k_equivalent": 105.0,
+          "projection_to_target": 7.27,
+          "weight_trend_correction": 0.0,
+          "steady_change_adjustment": 0.0,
+          "volume_modifier": 0.48,
+          "held_split_adjustment": 0.0,
+          "clamp_adjustment": 0.0
+        },
+        "load_trimp_lite": 21.0,
+        "load_modifier_seconds": 0.48,
+        "load_after_measurement_share": 1.0,
+        "load_session_count": 1,
+        "personal_paul_seconds": 5.5,
+        "personal_paul_fitted": true,
+        "steady_change_seconds": null,
+        "spread_seconds": 0.0,
+        "two_k_equivalent_by_tier": {
+          "AN": 105.0
+        },
+        "weight_adjusted_total_seconds": null,
+        "age_graded_total_seconds": null,
+        "flags": [
+          "load_estimate_damped",
+          "personal_paul_law"
+        ]
+      }
+    },
+    {
+      "name": "personal_paul_ignores_reps",
+      "as_of": "2026-09-17",
+      "target_distance_m": 5000,
+      "config_overrides": {},
+      "athlete": null,
+      "history": [
+        {
+          "id": "2k",
+          "date": "2026-09-14",
+          "distance_m": 2000,
+          "split_s": 105.0,
+          "tag": "AN",
+          "stroke_rate": 32
+        },
+        {
+          "id": "reps",
+          "date": "2026-09-12",
+          "distance_m": 4000,
+          "split_s": 96.0,
+          "tag": "AN",
+          "stroke_rate": 34,
+          "rep_distance_m": 500
+        }
+      ],
+      "expected": {
+        "predicted_split_seconds": 112.7,
+        "predicted_total_time_seconds": 1126.95,
+        "predicted_split_formatted": "1:52.7",
+        "predicted_total_time_formatted": "18:47.0",
+        "predicted_split_range_seconds": 1.78,
+        "predicted_total_time_range_seconds": 17.81,
+        "confidence_score": "Medium",
+        "confidence_numeric": 70,
+        "anchor_tier": "AN",
+        "anchor_method": "weighted_blend",
+        "anchor_session_ids": [
+          "2k",
+          "reps"
+        ],
+        "components": {
+          "anchor_split": 103.34,
+          "paul_adjustment": 1.85,
+          "intensity_offset": -0.0,
+          "rpe_correction": 0.0,
+          "rate_correction": 0.0,
+          "two_k_equivalent": 105.18,
+          "projection_to_target": 6.61,
+          "weight_trend_correction": 0.0,
+          "steady_change_adjustment": 0.0,
+          "volume_modifier": 0.9,
+          "held_split_adjustment": 0.0,
+          "clamp_adjustment": 0.0
+        },
+        "load_trimp_lite": 59.4,
+        "load_modifier_seconds": 0.9,
+        "load_after_measurement_share": 1.0,
+        "load_session_count": 2,
+        "personal_paul_seconds": 5.0,
+        "personal_paul_fitted": false,
+        "steady_change_seconds": null,
+        "spread_seconds": 0.0,
+        "two_k_equivalent_by_tier": {
+          "AN": 106.0
         },
         "weight_adjusted_total_seconds": null,
         "age_graded_total_seconds": null,
