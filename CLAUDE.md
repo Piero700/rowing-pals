@@ -78,9 +78,16 @@ Structure that should survive any redesign:
   navigation stack (an `AppRoute` in `RouteHost`) or present full-screen areas through `RouteHost`,
   and the swipe comes for free (`App/SwipeBackNavigation.swift`, `edgeSwipeToDismiss()`); never
   turn it off.
-- **Grouped rows (decision 97, on trial):** setting or editing a land session uses the compact grouped-rows
-  style (`DesignSystem/GroupedForm.swift`, `Tokens.Grouped`): one card per group with 12 pt corners and a hairline
-  edge, 44 pt rows with the label left and the value right. The user will decide whether the rest of the app follows.
+- **Grouped rows (decisions 97, 99), app-wide:** one card per group with 12 pt corners and a hairline edge, 44 pt
+  rows with the label left and the value right, Save top right, destructive actions as red rows, and an action at the
+  foot of a card as a thin `CardLinkRow`. Build new forms and lists from `DesignSystem/GroupedForm.swift` and
+  `Tokens.Grouped`, not label-above-box fields or a card per row.
+- **The Feed page's corners (decision 101)** are rounder than the rest of the app: use `Tokens.Feed` there and nowhere else.
+- **No gradients (decision 100):** solid colours only, for fills, buttons, cards and fades. The one exception, kept by the
+  user, is the glass rim in `GlassSurface`.
+- **Helper text is marked, not hard-coded (decision 98):** explanatory notes and hints use `.guidance()` (or
+  `GuidedText` for an empty state's hint) from `DesignSystem/Guidance.swift`, so they hide after 7 days of use or
+  when turned off in Settings. Never mark errors, empty-state facts or anything needed to use a screen.
 - **Every workout time is typed with `DurationTextField`** (decisions 53, 56): digits only, the colon
   put in as you type.
 
@@ -98,6 +105,7 @@ Current v2 palette (dark / light):
 | `Accent.records` | `#C6ADFF` | `#67409B` | Personal bests, avatars, the rank-hero card |
 | `Accent.rank` | `#EFC37C` | `#84500B` | The #1 leaderboard row and rank-movement indicators |
 | `Accent.success` | `#78D7AC` | `#176A4A` | Success confirmation; the Review screen's "Include on leaderboards" switch |
+| `Accent.verified` | `#91B8FF` | `#214FA3` | The verified-club tag beside a club's name (decision 98); brand blue's value, its own role |
 | `System.error` | `#FF766F` | `#C93C36` | Error/destructive text and controls |
 | `Ink.primary` / `.secondary` / `.faint` | `#F7F8FC` / `#BBC0CE` / `#A3ABBA` | `#111723` / `#3E4C61` / `#4E5C70` | Text levels |
 | `Base` | `#101114` | `#EDF0F5` | Screen/card ground |
@@ -160,13 +168,14 @@ After any change:
 
 ## Current focus
 
-**Next: the coach notepad** (decision 96): phases NP1–NP4 in `docs/design/coach-notepad-build-plan.md`,
-on branch `t42-coach-notepad`. NP1 and NP2 passed the phone tests and are merged into `main` (2026-11-05). NP3
-(many pieces, tests, timed pieces; migration run) and NP4 (the Notebook and the rower's Feed card) are
-built, waiting on the migration `2026-11-05-coach-notepad-np4.sql` and the phone tests in
-`docs/testing/coach-notepad-np3.md` and `-np4.md`. Also on the branch (decision 97): editing a land session
-(migration `2026-11-05-edit-workout.sql`), reps from the pieces only, and the grouped-rows land session screen
-(checklist `docs/testing/land-session-edit-and-grouped.md`). That completes the notepad plan. Canvas boards `CoachNotepad…`, `CoachNotebook…` and
+**Next: the combined test build** on branch `t45-combined-test` (2026-11-08): everything not yet on `main` in one
+branch — grouped rows and no gradients (decisions 99–101) with helper text, open clubs and the optional selfie (98),
+the legal wording and full delete account (102), one-at-a-time photos (103), the website's Privacy/Terms/Support pages
+and the App Store art. Uploaded as TestFlight RP Beta 1.0 (3) on 2026-11-09, with `delete-account` v5 deployed to
+staging; waiting on the phone tests in `docs/testing/combined-t45.md`. Earlier:
+
+**The coach notepad** (decision 96): phases NP1–NP4 and editing land sessions (decision 97) passed the phone tests
+and are merged into `main` (2026-11-05); general checklist `docs/testing/note-taking.md`. Canvas boards `CoachNotepad…`, `CoachNotebook…` and
 `RowerCoachScores…` in `docs/design/v4/`. Earlier:
 
 **The coach version** (decisions 67–70): phases CV1–CV3 in `docs/design/coach-version-build-plan.md`, on branch

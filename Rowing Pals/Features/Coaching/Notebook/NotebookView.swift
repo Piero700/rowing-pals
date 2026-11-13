@@ -140,7 +140,7 @@ struct NotebookView: View {
             table(page)
         }
         .background(Self.cardShape.fill(Tokens.Surface.card))
-        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
         .clipShape(Self.cardShape)
         .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { cardWidth = $0 }
     }
@@ -343,7 +343,7 @@ struct NotebookView: View {
         .background(RoundedRectangle(cornerRadius: Tokens.Notepad.tableRadius, style: .continuous).fill(Tokens.Surface.card))
         .overlay {
             RoundedRectangle(cornerRadius: Tokens.Notepad.tableRadius, style: .continuous)
-                .strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1)
+                .strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline)
         }
     }
 

@@ -26,9 +26,13 @@ struct ClubFormView: View {
     @State private var currentClubName: String?
     @State private var isSaving = false
     @State private var errorMessage: String?
+    /// The club being edited, so keeping its own name isn't "taken".
+    @State private var editingClubId: UUID?
+    /// Another club already has the typed name (decision 98), checked once typing pauses.
+    @State private var isNameTaken = false
 
     private var canSave: Bool {
-        !name.trimmingCharacters(in: .whitespaces).isEmpty && !isSaving
+        ClubNameRules.problem(with: name) == nil && !isNameTaken && !isSaving
     }
 
     var body: some View {
@@ -40,43 +44,60 @@ struct ClubFormView: View {
                         .foregroundStyle(Tokens.Ink.secondary)
                         .padding(.horizontal, 2)
                         .padding(.bottom, 14)
+                        .guidance()
                 }
 
-                field("Club name") {
-                    TextField("Your club name", text: $name)
-                        .textInputAutocapitalization(.words)
-                        .onChange(of: name) { name = String(name.prefix(60)) }
-                }
-                field("Description") {
-                    TextField("What brings your crew together?", text: $description, axis: .vertical)
-                        .lineLimit(3...6)
+                GroupedSection(hint: policyNote) {
+                    GroupedRow(label: "Club name") {
+                        TextField("Your club name", text: $name)
+                            .textStyle(Typography.detail)
+                            .multilineTextAlignment(.trailing)
+                            .textInputAutocapitalization(.words)
+                            .onChange(of: name) { name = String(name.prefix(ClubNameRules.maxLength)) }
+                            .task(id: name) { await checkName() }
+                    }
+                    GroupedDivider()
+                    GroupedRow(label: "Location") {
+                        TextField("City or online", text: $location)
+                            .textStyle(Typography.detail)
+                            .multilineTextAlignment(.trailing)
+                            .textInputAutocapitalization(.words)
+                            .onChange(of: location) { location = String(location.prefix(80)) }
+                    }
+                    GroupedDivider()
+                    GroupedRow(label: "Who can join") {
+                        Menu {
+                            ForEach(ClubJoinPolicy.allCases, id: \.self) { option in
+                                Button(option.choiceLabel) { policy = option }
+                            }
+                        } label: {
+                            GroupedValue(text: policy.choiceLabel)
+                        }
+                    }
+                    GroupedDivider()
+                    GroupedRow(label: "Club focus") {
+                        Menu {
+                            ForEach(ClubFocus.allCases, id: \.self) { option in
+                                Button(option.rawValue) { focus = option }
+                            }
+                        } label: {
+                            GroupedValue(text: focus.rawValue)
+                        }
+                    }
+                    GroupedDivider()
+                    TextField("Description: what brings your crew together?", text: $description, axis: .vertical)
+                        .textStyle(Typography.detail)
+                        .foregroundStyle(Tokens.Ink.primary)
+                        .lineLimit(1...6)
                         .onChange(of: description) { description = String(description.prefix(400)) }
+                        .padding(.horizontal, Tokens.Grouped.rowPadding)
+                        .padding(.vertical, Tokens.Spacing.loose)
+                        .frame(maxWidth: .infinity, minHeight: Tokens.Grouped.rowHeight, alignment: .leading)
                 }
-                field("Location") {
-                    TextField("City or online", text: $location)
-                        .textInputAutocapitalization(.words)
-                        .onChange(of: location) { location = String(location.prefix(80)) }
+                if isNameTaken {
+                    GroupedError(text: ClubNameRules.takenMessage(for: name))
+                        .padding(.top, Tokens.Spacing.tight)
                 }
-                field("Who can join?") {
-                    choice(policy.choiceLabel) {
-                        ForEach(ClubJoinPolicy.allCases, id: \.self) { option in
-                            Button(option.choiceLabel) { policy = option }
-                        }
-                    }
-                }
-                field("Club focus") {
-                    choice(focus.rawValue) {
-                        ForEach(ClubFocus.allCases, id: \.self) { option in
-                            Button(option.rawValue) { focus = option }
-                        }
-                    }
-                }
-
-                Text(policyNote)
-                    .textStyle(Typography.meta)
-                    .foregroundStyle(Tokens.Ink.secondary)
-                    .padding(.horizontal, 2)
-                    .padding(.top, 2)
 
                 if let errorMessage {
                     Text(errorMessage)
@@ -91,16 +112,11 @@ struct ClubFormView: View {
         .scrollIndicators(.hidden)
         .scrollDismissesKeyboard(.interactively)
         .safeAreaInset(edge: .top, spacing: 0) {
-            ScreenHeader(title: mode == .create ? "Create a club" : "Edit club") { dismiss() }
-        }
-        .safeAreaInset(edge: .bottom, spacing: 0) {
-            Button(mode == .create ? "Create club" : "Save changes") { Task { await save() } }
-                .buttonStyle(.rpPrimary)
-                .disabled(!canSave)
-                .padding(.horizontal, Tokens.Spacing.screen)
-                .padding(.top, Tokens.Spacing.loose)
-                .padding(.bottom, Tokens.Spacing.screen)
-                .background(Tokens.Base.ground)
+            ScreenHeader(title: mode == .create ? "Create a club" : "Edit club", onBack: { dismiss() }) {
+                HeaderSaveButton(title: mode == .create ? "Create" : "Save", isSaving: isSaving, isDisabled: !canSave) {
+                    Task { await save() }
+                }
+            }
         }
         .toolbar(.hidden, for: .navigationBar)
         .background(Tokens.Base.ground)
@@ -124,47 +140,13 @@ struct ClubFormView: View {
         }
     }
 
-    /// v3 field: 12.5 pt label over a 52 pt input (card fill, 1 pt line, radius 24).
-    private func field<Content: View>(_ label: String, @ViewBuilder content: () -> Content) -> some View {
-        let shape = RoundedRectangle(cornerRadius: Tokens.Radius.input, style: .continuous)
-        return VStack(alignment: .leading, spacing: 6) {
-            Text(label)
-                .textStyle(Typography.fieldLabel)
-                .foregroundStyle(Tokens.Ink.secondary)
-            content()
-                .foregroundStyle(Tokens.Ink.primary)
-                .padding(.horizontal, 14)
-                .padding(.vertical, Tokens.Spacing.loose)
-                .frame(maxWidth: .infinity, minHeight: Tokens.Size.input, alignment: .leading)
-                .background(shape.fill(Tokens.Surface.card))
-                .overlay { shape.strokeBorder(Tokens.Surface.line, lineWidth: 1) }
-        }
-        .padding(.bottom, Tokens.Spacing.loose)
-    }
-
-    /// A select: the current choice with a chevron; tapping lists the options.
-    private func choice<Options: View>(_ current: String, @ViewBuilder options: () -> Options) -> some View {
-        Menu {
-            options()
-        } label: {
-            HStack {
-                Text(current)
-                    .foregroundStyle(Tokens.Ink.primary)
-                Spacer()
-                RPIconView(icon: .chevronUpDown, size: Tokens.Icon.small)
-                    .textStyle(Typography.pill)
-                    .foregroundStyle(Tokens.Ink.secondary)
-            }
-            .contentShape(Rectangle())
-        }
-    }
-
     /// Create: your current club's name, for the "switch your membership" line. Edit: the
     /// club's current details.
     private func loadCurrent() async {
         guard let membership = try? await ClubService.membership(), let club = membership.club else { return }
         currentClubName = club.name
         guard mode == .edit else { return }
+        editingClubId = club.id
         name = club.name
         description = club.description ?? ""
         location = club.location ?? ""
@@ -172,12 +154,27 @@ struct ClubFormView: View {
         focus = club.focus
     }
 
+    /// Asks the database whether the name is free once typing pauses. Before the clubs migration
+    /// has run the check can't be made, so it says nothing and Create still answers.
+    private func checkName() async {
+        let typed = name
+        guard ClubNameRules.problem(with: typed) == nil else {
+            isNameTaken = false
+            return
+        }
+        try? await Task.sleep(for: .milliseconds(400))
+        guard !Task.isCancelled else { return }
+        let isFree = (try? await ClubService.nameIsFree(ClubNameRules.tidied(typed), except: editingClubId)) ?? true
+        guard !Task.isCancelled, typed == name else { return }
+        isNameTaken = !isFree
+    }
+
     private func save() async {
         isSaving = true
         errorMessage = nil
         defer { isSaving = false }
         let details = ClubService.Details(
-            p_name: name.trimmingCharacters(in: .whitespacesAndNewlines),
+            p_name: ClubNameRules.tidied(name),
             p_description: description,
             p_location: location,
             p_policy: policy,

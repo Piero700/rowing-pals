@@ -16,13 +16,60 @@ func normaliseToReference(
     split: Double,
     effectiveDistanceM: Double,
     tier: Tier,
-    config: EngineConfig
+    config: EngineConfig,
+    paul: Double? = nil
 ) -> (s2k: Double, paulAdjustment: Double, intensityOffset: Double) {
     precondition(effectiveDistanceM > 0, "effective distance must be positive")
     let ratio = effectiveDistanceM / tier.refDistanceM
-    let paulAdjustment = -tier.paulWeight * config.paulConstant * log2(ratio)
+    let paulAdjustment = -tier.paulWeight * paulFor(tier, config: config, paul: paul) * log2(ratio)
     let intensityOffset = -tier.offset
     return (split + paulAdjustment + intensityOffset, paulAdjustment, intensityOffset)
+}
+
+/// `_paul_for` (v1.7, §5.21): the rower's own seconds per doubling for the all-out zones
+/// (AN, TR); the steady zones keep the seed's shape.
+func paulFor(_ tier: Tier, config: EngineConfig, paul: Double?) -> Double {
+    if let paul, tier.isMaximal { return paul }
+    return config.paulConstant
+}
+
+/// `_rate_correction` (v1.7, §5.18): seconds to ADD to a steady piece's 2k equivalent for its
+/// rate. Above the zone's usual rate the same effort gives a faster split, so the inversion is
+/// moved back. Steady zones only.
+func rateCorrection(rate: Double?, tier: Tier, config: EngineConfig) -> Double {
+    guard let rate, !tier.isMaximal else { return 0.0 }
+    let raw = config.rateSensitivityS * (rate - tier.rateMid)
+    return Py.max(-config.rateMaxCorrectionS, Py.min(config.rateMaxCorrectionS, raw))
+}
+
+/// `_piece_two_k` (v1.7): one piece's own 2k equivalent — inversion, RPE and rate.
+func pieceTwoK(_ session: Session, config: EngineConfig, paul: Double?) -> Double {
+    let tier = session.tier
+    let reference = normaliseToReference(split: session.splitS,
+                                         effectiveDistanceM: session.effectiveDistanceM,
+                                         tier: tier, config: config, paul: paul).s2k
+    return reference
+        + rpeOffsetCorrection(rpe: session.rpe, tier: tier, rpeMismatch: session.rpeMismatch,
+                              config: config)
+        + rateCorrection(rate: session.strokeRate, tier: tier, config: config)
+}
+
+/// `_steady_transfer` (v1.7, §5.19): the share of a steady-split change that carries over to
+/// the target — half at 2000m, more for a longer (more aerobic) target, within bounds.
+func steadyTransfer(targetDistance: Double, config: EngineConfig) -> Double {
+    let raw = config.steadyTransferAtReference
+        + config.steadyTransferPerDoubling * log2(targetDistance / config.referenceDistanceM)
+    return Py.max(config.steadyTransferMin, Py.min(config.steadyTransferMax, raw))
+}
+
+/// `_raw_volume_modifier` (§5.5, v1.7 §5.20): the knots up to `loadGainFrom`, then a gain per
+/// doubling of the load with diminishing returns, capped.
+func rawVolumeModifier(load: Double, config: EngineConfig) -> Double {
+    if config.volumeCurve == .knots || load <= config.loadGainFrom {
+        return interpolate(config.loadKnots, load)
+    }
+    let gain = config.loadGainPerDoublingS * log2(load / config.loadGainFrom)
+    return -Py.min(config.loadGainCapS, gain)
 }
 
 /// Piecewise-linear interpolation with flat extrapolation beyond the end knots.

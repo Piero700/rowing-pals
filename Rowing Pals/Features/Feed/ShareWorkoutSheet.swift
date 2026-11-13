@@ -62,7 +62,7 @@ struct ShareWorkoutSheet: View {
                 .resizable()
                 .aspectRatio(contentMode: .fit)
                 .clipShape(shape)
-                .overlay { shape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+                .overlay { shape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
                 .accessibilityLabel("Workout image: \(post.author.displayName), \(post.leadDistanceM.formattedMetres) in \(post.leadTimeMs.formattedDurationMs)")
         } else {
             shape.fill(Tokens.Surface.card)

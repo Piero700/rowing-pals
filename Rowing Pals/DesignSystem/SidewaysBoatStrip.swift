@@ -6,8 +6,8 @@
 import SwiftUI
 
 /// A boat on its side and scrolling sideways (decision 82): "‹ Stern" and "Bow ›" above it; a boat
-/// longer than the card opens centred on the viewer's seat (or at the stern), fades at an edge where
-/// there's more to see, and shows a thin bar for where you are along it. A boat that fits (a pair, a
+/// longer than the card opens centred on the viewer's seat (or at the stern), and shows a thin bar for
+/// where you are along it. A boat that fits (a pair, a
 /// double, a four) sits in the middle with nothing to scroll. The rower's Feed, the Boats tab and a
 /// session's boats show it with names; the crewing screen lays its seat buttons over it (decision 88).
 struct SidewaysBoatStrip<Overlay: View>: View {
@@ -66,7 +66,6 @@ struct SidewaysBoatStrip<Overlay: View>: View {
             }
             // Crewing doesn't scroll the boat when the next seat is chosen: it stays where the coach
             // left it (user, 2026-11-03).
-            .mask { fade }
             if geometry.overflows {
                 bar
             }
@@ -85,20 +84,6 @@ struct SidewaysBoatStrip<Overlay: View>: View {
     private func scroll(to seat: Int, layout: SidewaysBoatDrawing.Layout) {
         guard geometry.overflows, let x = layout.xs[seat] else { return }
         position.scrollTo(x: min(max(x - geometry.container / 2, 0), geometry.scrollable))
-    }
-
-    /// Fades the edge on each side where there's more boat to scroll to.
-    private var fade: some View {
-        let width = max(geometry.container, 1)
-        let edge = min(Tokens.Boat.sidewaysFade / width, 0.5)
-        let left = geometry.overflows && geometry.offset > 1
-        let right = geometry.overflows && geometry.offset < geometry.scrollable - 1
-        return LinearGradient(stops: [
-            .init(color: left ? .clear : .black, location: 0),
-            .init(color: .black, location: edge),
-            .init(color: .black, location: 1 - edge),
-            .init(color: right ? .clear : .black, location: 1)
-        ], startPoint: .leading, endPoint: .trailing)
     }
 
     /// A thin track with a thumb for the part of the boat on screen.

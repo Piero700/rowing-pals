@@ -105,7 +105,7 @@ struct EventView: View {
         }
         .padding(Tokens.Spacing.card)
         .background(Self.cardShape.fill(Tokens.Surface.card))
-        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
     }
 
     /// Opens the water session already planned for this race, or a new one from it: its boats
@@ -169,12 +169,16 @@ struct EventView: View {
             .padding(.horizontal, Tokens.Spacing.card)
             .frame(minHeight: Tokens.Size.input)
             .background(Self.field.fill(Tokens.Surface.card))
-            .overlay { Self.field.strokeBorder(Tokens.Surface.line, lineWidth: 1) }
+            .overlay { Self.field.strokeBorder(Tokens.Surface.line, lineWidth: Tokens.Grouped.hairline) }
             .padding(.top, Tokens.Spacing.loose)
             FormFootnote("Only your club’s coaches see your reason.")
+                .guidance()
         }
-        FormFootnote(viewModel.canAnswer
-            ? "You can change your answer until the \(viewModel.isRace ? "race" : "event"). Your coaches see it straight away."
-            : "This has finished, so your answer can’t change now.")
+        if viewModel.canAnswer {
+            FormFootnote("You can change your answer until the \(viewModel.isRace ? "race" : "event"). Your coaches see it straight away.")
+                .guidance()
+        } else {
+            FormFootnote("This has finished, so your answer can’t change now.")
+        }
     }
 }

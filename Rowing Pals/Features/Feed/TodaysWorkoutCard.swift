@@ -12,7 +12,7 @@ struct TodaysWorkoutCard: View {
     let today: TodaysWorkout
     let onLog: () -> Void
 
-    private static let cardShape = RoundedRectangle(cornerRadius: Tokens.Radius.card, style: .continuous)
+    private static let cardShape = RoundedRectangle(cornerRadius: Tokens.Feed.card, style: .continuous)
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -55,16 +55,12 @@ struct TodaysWorkoutCard: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(Tokens.Spacing.card)
         .background {
-            Self.cardShape.fill(
-                LinearGradient(
-                    stops: [.init(color: Tokens.Accent.brandSoft, location: 0),
-                            .init(color: Tokens.Surface.card, location: 0.7)],
-                    startPoint: .topLeading, endPoint: .bottomTrailing
-                )
-            )
-            .background(Self.cardShape.fill(Tokens.Surface.card))
+            ZStack {
+                Self.cardShape.fill(Tokens.Surface.card)
+                Self.cardShape.fill(Tokens.Accent.brandSoft)
+            }
         }
-        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
         .accessibilityElement(children: .combine)
     }
 

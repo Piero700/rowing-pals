@@ -46,6 +46,7 @@ struct ClubSearchView: View {
     /// Joining later: the rower's join request, waiting or declined (decision 26).
     @State private var myRequest: ClubService.JoinRequest?
     @Environment(\.closeRoute) private var closeRoute
+    @Environment(\.navigate) private var navigate
     @Environment(\.scenePhase) private var scenePhase
     /// Onboarding's back button: the account exists by now, so going back means signing out.
     @State private var isConfirmingSignOut = false
@@ -129,6 +130,11 @@ struct ClubSearchView: View {
                     .frame(maxWidth: .infinity)
                     .padding(.top, Tokens.Spacing.tight)
 
+                // Anyone can start a club and becomes its owner (decision 98).
+                Button("Create a club") { navigate(.createClub) }
+                    .buttonStyle(.rpText)
+                    .frame(maxWidth: .infinity)
+
                 if mode == .onboarding {
                     Button("I’m not in a club") {
                         viewModel.selectedClub = nil
@@ -202,6 +208,11 @@ struct ClubSearchView: View {
             Text("Enter the code a club admin shared with you.")
         }
         .task { await refreshMembership() }
+        // A club made from Create a club: its owner goes straight on (About you at onboarding;
+        // back to Your crew when joining later).
+        .onReceive(NotificationCenter.default.publisher(for: .rowerClubChanged)) { _ in
+            Task { await afterCreatingClub() }
+        }
         .task {
             guard mode == .joinLater else { return }
             for await _ in ClubLiveUpdates.changes() { await refreshMembership() }
@@ -279,6 +290,20 @@ struct ClubSearchView: View {
         }
     }
 
+    private func afterCreatingClub() async {
+        guard joinedByCodeName == nil,
+              let membership = try? await ClubService.membership(),
+              let club = membership.club, membership.role == .owner else { return }
+        joinedByCodeName = club.name
+        isWithoutClub = false
+        viewModel.selectedClub = nil
+        if mode == .joinLater {
+            dismiss()
+        } else {
+            isAboutYou = true
+        }
+    }
+
     private func joinWithCode(_ code: String) async {
         saveError = nil
         do {
@@ -316,6 +341,7 @@ struct ClubSearchView: View {
                     .textStyle(Typography.bodyV3)
                     .foregroundStyle(Tokens.Ink.secondary)
                     .padding(.bottom, 16)
+                    .guidance()
             } else {
                 Spacer().frame(height: Tokens.Spacing.tight)
             }
@@ -340,7 +366,7 @@ struct ClubSearchView: View {
         .padding(.horizontal, 14)
         .frame(minHeight: Tokens.Size.input)
         .background(shape.fill(Tokens.Surface.card))
-        .overlay { shape.strokeBorder(Tokens.Surface.line, lineWidth: 1) }
+        .overlay { shape.strokeBorder(Tokens.Surface.line, lineWidth: Tokens.Grouped.hairline) }
     }
 
     @ViewBuilder
@@ -379,7 +405,7 @@ struct ClubSearchView: View {
                 .background(RoundedRectangle(cornerRadius: Tokens.Radius.crest, style: .continuous).fill(Tokens.Surface.raised))
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 2) {
-                Text(club.name)
+                ClubNameLabel(name: club.name, isVerified: club.isVerified)
                     .textStyle(Typography.name)
                     .foregroundStyle(Tokens.Ink.primary)
                 Text(clubMeta(club))
@@ -400,7 +426,7 @@ struct ClubSearchView: View {
         .padding(Tokens.Spacing.gap)
         .frame(minHeight: 76)
         .background(shape.fill(isSelected ? Tokens.Accent.brandSoft : Tokens.Surface.card))
-        .overlay { shape.strokeBorder(isSelected ? Tokens.Accent.brand : Tokens.Surface.line, lineWidth: 1) }
+        .overlay { shape.strokeBorder(isSelected ? Tokens.Accent.brand : Tokens.Surface.line, lineWidth: Tokens.Grouped.hairline) }
         .asButton { viewModel.selectedClub = club }
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(isSelected ? .isSelected : [])
@@ -473,6 +499,7 @@ struct ClubSearchView: View {
                         .textStyle(Typography.meta)
                         .foregroundStyle(Tokens.Ink.secondary)
                         .padding(.top, Tokens.Spacing.tight)
+                        .guidance()
 
                     Text("Side")
                         .textStyle(Typography.fieldLabel)
@@ -484,6 +511,7 @@ struct ClubSearchView: View {
                         .textStyle(Typography.meta)
                         .foregroundStyle(Tokens.Ink.secondary)
                         .padding(.top, Tokens.Spacing.tight)
+                        .guidance()
                 }
 
                 Text("You can change this later in Edit profile.")
@@ -491,6 +519,7 @@ struct ClubSearchView: View {
                     .foregroundStyle(Tokens.Ink.secondary)
                     .padding(.horizontal, 4)
                     .padding(.top, Tokens.Spacing.loose)
+                    .guidance()
 
                 if let saveError {
                     Text(saveError)
@@ -538,6 +567,7 @@ struct ClubSearchView: View {
                     .foregroundStyle(Tokens.Ink.secondary)
                     .padding(.horizontal, 4)
                     .padding(.top, Tokens.Spacing.loose)
+                    .guidance()
 
                 if let saveError {
                     Text(saveError)
@@ -606,10 +636,11 @@ struct ClubSearchView: View {
                 .textStyle(Typography.meta)
                 .foregroundStyle(Tokens.Ink.secondary)
                 .frame(maxWidth: .infinity, alignment: .leading)
+                .guidance()
         }
         .padding(Tokens.Spacing.card)
         .background(shape.fill(Tokens.Surface.card))
-        .overlay { shape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+        .overlay { shape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
     }
 
     // MARK: - Sticky primary button
@@ -633,12 +664,7 @@ struct ClubSearchView: View {
         .padding(.top, Tokens.Spacing.loose)
         .padding(.bottom, Tokens.Spacing.screen)
         .background {
-            LinearGradient(
-                stops: [.init(color: Tokens.Base.ground, location: 0.72), .init(color: Tokens.Base.ground.opacity(0), location: 1)],
-                startPoint: .bottom,
-                endPoint: .top
-            )
-            .ignoresSafeArea(edges: .bottom)
+            Tokens.Base.ground.ignoresSafeArea(edges: .bottom)
         }
     }
 
@@ -784,7 +810,7 @@ struct ClubSearchView: View {
         }
         .padding(Tokens.Spacing.card)
         .background(shape.fill(Tokens.Surface.card))
-        .overlay { shape.strokeBorder(request.isDeclined ? Tokens.System.error.opacity(0.5) : Tokens.Surface.line, lineWidth: 1) }
+        .overlay { shape.strokeBorder(request.isDeclined ? Tokens.System.error.opacity(0.5) : Tokens.Surface.line, lineWidth: Tokens.Grouped.hairline) }
     }
 }
 

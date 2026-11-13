@@ -132,15 +132,12 @@ struct MetresLeaderboardView: View {
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background {
-            shape.fill(
-                LinearGradient(
-                    stops: [.init(color: Tokens.Accent.recordsSoft, location: 0), .init(color: Tokens.Surface.card, location: 0.75)],
-                    startPoint: UnitPoint(x: 0.1, y: 0.2),
-                    endPoint: UnitPoint(x: 0.9, y: 0.8)
-                )
-            )
+            ZStack {
+                shape.fill(Tokens.Surface.card)
+                shape.fill(Tokens.Accent.recordsSoft)
+            }
         }
-        .overlay { shape.strokeBorder(Tokens.Surface.line, lineWidth: 1) }
+        .overlay { shape.strokeBorder(Tokens.Surface.line, lineWidth: Tokens.Grouped.hairline) }
         .accessibilityElement(children: .combine)
     }
 
@@ -180,13 +177,13 @@ struct MetresLeaderboardView: View {
             ForEach(viewModel.rankedRows) { row in
                 leaderboardRow(row)
                 if row.id != viewModel.rankedRows.last?.id {
-                    Rectangle().fill(Tokens.Surface.line).frame(height: 1)
+                    Rectangle().fill(Tokens.Surface.line).frame(height: Tokens.Grouped.hairline)
                 }
             }
         }
         .background(shape.fill(Tokens.Surface.card))
         .clipShape(shape)
-        .overlay { shape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+        .overlay { shape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
     }
 
     /// 72 pt row, columns 20 | 32 | name | score with 7 pt gaps. #1: ♛ and score in gold, gold
@@ -206,7 +203,7 @@ struct MetresLeaderboardView: View {
                     .textStyle(Typography.fieldLabel)
                     .foregroundStyle(Tokens.Ink.primary)
                     .lineLimit(1)
-                Text(rowMeta(row))
+                leaderboardClubLine(row, after: row.level.map { " · \($0.rawValue)" } ?? "")
                     .font(.system(size: 10))
                     .foregroundStyle(Tokens.Ink.secondary)
                     .lineLimit(1)
@@ -242,9 +239,6 @@ struct MetresLeaderboardView: View {
         .modifier(TrackVisibility(isTracked: row.isCurrentUser, isVisible: $isOwnRowVisible))
     }
 
-    private func rowMeta(_ row: MetresLeaderboardViewModel.Row) -> String {
-        [row.club ?? "No club", row.level?.rawValue].compactMap { $0 }.joined(separator: " · ")
-    }
 
     private var emptyCard: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -262,6 +256,7 @@ struct MetresLeaderboardView: View {
                 Text("Join one to see how your metres stack up against your crew.")
                     .textStyle(Typography.meta)
                     .foregroundStyle(Tokens.Ink.secondary)
+                    .guidance()
                 Button("Find a club") { navigate(.findClub) }
                     .buttonStyle(.rpPrimary)
                     .padding(.top, 4)
@@ -281,7 +276,7 @@ struct MetresLeaderboardView: View {
         }
         .overlay {
             RoundedRectangle(cornerRadius: Tokens.Radius.card, style: .continuous)
-                .strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1)
+                .strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline)
         }
     }
 }
@@ -323,7 +318,7 @@ struct MetresPinnedRow: View {
                 Text("You")
                     .textStyle(Typography.name)
                     .foregroundStyle(Tokens.Ink.primary)
-                Text("\(row.club ?? "No club") · this \(periodLabel)")
+                leaderboardClubLine(row, after: " · this \(periodLabel)")
                     .textStyle(Typography.meta)
                     .foregroundStyle(Tokens.Ink.secondary)
                     .lineLimit(1)
@@ -345,4 +340,15 @@ struct MetresPinnedRow: View {
 
 #Preview {
     MetresLeaderboardView(mode: .constant(.volume))
+}
+
+/// "Club ✓ · novice": the club with its verified tag (decision 98), then the rest.
+private func leaderboardClubLine(_ row: MetresLeaderboardViewModel.Row, after rest: String) -> some View {
+    HStack(spacing: Tokens.Spacing.verifiedGap) {
+        ClubNameLabel(name: row.club ?? "No club", isVerified: row.club != nil && row.clubIsVerified,
+                      badgeSize: Tokens.Icon.badge)
+        if !rest.isEmpty {
+            Text(rest.trimmingCharacters(in: .whitespaces))
+        }
+    }
 }

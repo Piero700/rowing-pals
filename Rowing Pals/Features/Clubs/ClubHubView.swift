@@ -102,9 +102,10 @@ struct ClubHubView: View {
             .padding(.top, 6)
 
         if membership.role.canManageMembers {
-            Button("Manage club") { navigate(.manageClub) }
-                .buttonStyle(.rpGlass)
-                .padding(.top, Tokens.Spacing.loose)
+            GroupedSection {
+                GroupedNavRow(title: "Manage club") { navigate(.manageClub) }
+            }
+            .padding(.top, Tokens.Spacing.loose)
         }
 
         if !coaches.isEmpty {
@@ -122,16 +123,23 @@ struct ClubHubView: View {
                 .foregroundStyle(Tokens.Ink.secondary)
                 .padding(.horizontal, 4)
                 .padding(.top, Tokens.Spacing.tight)
+                .guidance()
         }
 
         VStack(alignment: .leading, spacing: 6) {
             if membership.role == .owner {
-                Text("You own this club. To leave it, hand it over to another member or delete it in Manage club.")
+                Text("You own this club. To leave it or start another, hand it over to another member or delete it in Manage club.")
                     .textStyle(Typography.meta)
                     .foregroundStyle(Tokens.Ink.secondary)
+                    .guidance()
             } else {
-                Button("Leave club") { isConfirmingLeave = true }
-                    .buttonStyle(.rpDestructive)
+                // Anyone can start their own club (decision 98), in a club or not; creating one
+                // moves you into it as its owner.
+                GroupedSection {
+                    GroupedNavRow(title: "Create your own club") { navigate(.createClub) }
+                    GroupedDivider()
+                    GroupedButtonRow(title: "Leave club", isDestructive: true) { isConfirmingLeave = true }
+                }
             }
         }
         .padding(.top, Tokens.Spacing.sectionTop)
@@ -143,7 +151,7 @@ struct ClubHubView: View {
             Text(roleLine(membership))
                 .textStyle(Typography.overline)
                 .foregroundStyle(Tokens.Accent.brand)
-            Text(club.name)
+            ClubNameLabel(name: club.name, isVerified: club.isVerified, badgeSize: Tokens.Icon.regular)
                 .textStyle(Typography.profileName)
                 .foregroundStyle(Tokens.Ink.primary)
             if let description = club.description, !description.isEmpty {
@@ -162,7 +170,7 @@ struct ClubHubView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(Tokens.Spacing.card + 3)
         .background(Self.cardShape.fill(Tokens.Surface.card))
-        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
     }
 
     private func tag(_ text: String) -> some View {
@@ -209,7 +217,7 @@ struct ClubHubView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(Tokens.Spacing.card)
                 .background(Self.cardShape.fill(Tokens.Surface.card))
-                .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+                .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
         } else {
             crewmatesList
         }
@@ -248,13 +256,13 @@ struct ClubHubView: View {
                 .asButton { navigate(person.id == viewModel.myId && !person.isRower ? .coachProfile : .profile(person.id)) }
                 .accessibilityElement(children: .combine)
                 if index < people.count - 1 {
-                    Rectangle().fill(Tokens.Surface.line).frame(height: 1)
+                    Rectangle().fill(Tokens.Surface.line).frame(height: Tokens.Grouped.hairline)
                 }
             }
         }
         .background(Self.cardShape.fill(Tokens.Surface.card))
         .clipShape(Self.cardShape)
-        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
     }
 
     /// Accepts at once for a club without coaches; otherwise says so first (decision 34).
@@ -285,6 +293,7 @@ struct ClubHubView: View {
             Text("Join an existing crew, start your own, or row independently.")
                 .textStyle(Typography.meta)
                 .foregroundStyle(Tokens.Ink.secondary)
+                .guidance()
         }
         .padding(.horizontal, 2)
         .padding(.top, 6)
@@ -343,7 +352,7 @@ struct ClubHubView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(Tokens.Spacing.card)
         .background(Self.cardShape.fill(Tokens.Surface.card))
-        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
     }
 
     private func invitations(_ clubs: [Club]) -> some View {
@@ -353,7 +362,7 @@ struct ClubHubView: View {
                 ForEach(Array(clubs.enumerated()), id: \.element.id) { index, club in
                     HStack(spacing: Tokens.Spacing.gap) {
                         VStack(alignment: .leading, spacing: 2) {
-                            Text(club.name)
+                            ClubNameLabel(name: club.name, isVerified: club.isVerified)
                                 .textStyle(Typography.name)
                                 .foregroundStyle(Tokens.Ink.primary)
                             Text("invited you to join")
@@ -368,13 +377,13 @@ struct ClubHubView: View {
                     }
                     .padding(Tokens.Spacing.loose)
                     if index < clubs.count - 1 {
-                        Rectangle().fill(Tokens.Surface.line).frame(height: 1)
+                        Rectangle().fill(Tokens.Surface.line).frame(height: Tokens.Grouped.hairline)
                     }
                 }
             }
             .background(Self.cardShape.fill(Tokens.Surface.card))
             .clipShape(Self.cardShape)
-            .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+            .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
         }
     }
 }

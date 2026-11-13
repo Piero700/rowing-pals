@@ -47,7 +47,7 @@ struct PBTileView: View {
             }
         }
         .background(shape.fill(Tokens.Surface.card))
-        .overlay { shape.strokeBorder(Tokens.Surface.line, lineWidth: 1) }
+        .overlay { shape.strokeBorder(Tokens.Surface.line, lineWidth: Tokens.Grouped.hairline) }
         .asButton {
             guard tile.hasResult else { return }
             onOpen()

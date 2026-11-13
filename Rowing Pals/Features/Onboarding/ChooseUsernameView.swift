@@ -29,6 +29,7 @@ struct ChooseUsernameView: View {
                 Text("It shows as @username on your profile, people can find you by it, and you can sign in with it instead of your email.")
                     .textStyle(Typography.bodySecondary)
                     .foregroundStyle(Tokens.Ink.secondary)
+                    .guidance()
 
                 HStack(spacing: 2) {
                     Text("@")
@@ -83,6 +84,7 @@ struct ChooseUsernameView: View {
                     .textStyle(Typography.meta)
                     .foregroundStyle(Tokens.Ink.secondary)
                     .frame(maxWidth: .infinity)
+                    .guidance()
             }
             .padding(.horizontal, Tokens.Spacing.screen)
             .padding(.bottom, 40)

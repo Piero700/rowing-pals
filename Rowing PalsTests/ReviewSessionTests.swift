@@ -90,7 +90,7 @@ struct ReviewSessionTests {
     // MARK: Stroke rate
 
     @Test func photographedPieceNeedsNoRateConfirmation() {
-        let vm = ReviewSheetViewModel(selfieJPEG: Data([0]))
+        let vm = ReviewSheetViewModel(selfieJPEG: Data([0]), isLiveCapture: true)
         vm.segments = [Self.photographedSegment(distanceM: 2000, timeMs: 420_000, rate: 24)]
         #expect(vm.postBlocker == nil)
         #expect(vm.canPost)
@@ -99,7 +99,7 @@ struct ReviewSessionTests {
     // MARK: Session type on a photographed session
 
     @Test func choosingATestBlocksPostingWhenTheDistanceDoesNotMatch() {
-        let vm = ReviewSheetViewModel(selfieJPEG: Data([0]))
+        let vm = ReviewSheetViewModel(selfieJPEG: Data([0]), isLiveCapture: true)
         vm.segments = [Self.photographedSegment(distanceM: 1800, timeMs: 420_000, rate: 24)]
         vm.sessionKind = .test(Self.twoK)
         #expect(vm.sessionKindProblem != nil)
@@ -110,14 +110,14 @@ struct ReviewSessionTests {
     }
 
     @Test func aTestNeedsAMainPiece() {
-        let vm = ReviewSheetViewModel(selfieJPEG: Data([0]))
+        let vm = ReviewSheetViewModel(selfieJPEG: Data([0]), isLiveCapture: true)
         vm.segments = [Self.photographedSegment(distanceM: 2000, timeMs: 420_000, rate: 24, label: .extra)]
         vm.sessionKind = .test(Self.twoK)
         #expect(vm.sessionKindProblem != nil)
     }
 
     @Test func aMatchingMainPieceOnlySuggestsATest() {
-        let vm = ReviewSheetViewModel(selfieJPEG: Data([0]))
+        let vm = ReviewSheetViewModel(selfieJPEG: Data([0]), isLiveCapture: true)
         vm.segments = [Self.photographedSegment(distanceM: 2000, timeMs: 420_000, rate: 24)]
         #expect(vm.detectedTest?.key == "2k")
         #expect(vm.showsTestPrompt)
@@ -130,7 +130,7 @@ struct ReviewSessionTests {
     }
 
     @Test func decliningTheSuggestionHidesItAndStaysTraining() {
-        let vm = ReviewSheetViewModel(selfieJPEG: Data([0]))
+        let vm = ReviewSheetViewModel(selfieJPEG: Data([0]), isLiveCapture: true)
         vm.segments = [Self.photographedSegment(distanceM: 2000, timeMs: 420_000, rate: 24)]
         vm.decideTest(accepted: false)
         #expect(vm.sessionKind == .training)
@@ -140,20 +140,20 @@ struct ReviewSessionTests {
     // MARK: Manual entry
 
     @Test func manualEntryStartsWithOneBlankPiece() {
-        let vm = ReviewSheetViewModel(selfieJPEG: nil)
+        let vm = ReviewSheetViewModel(selfieJPEG: nil, isLiveCapture: false)
         #expect(vm.isManual)
         #expect(vm.segments.count == 1)
         #expect(vm.segments[0].isManual)
     }
 
     @Test func manualEntryCannotBePostedBlank() {
-        let vm = ReviewSheetViewModel(selfieJPEG: nil)
+        let vm = ReviewSheetViewModel(selfieJPEG: nil, isLiveCapture: false)
         #expect(vm.postBlocker == "Enter a distance and time for every piece.")
         #expect(!vm.canPost)
     }
 
     @Test func manualEntryNeedsAStrokeRate() {
-        let vm = ReviewSheetViewModel(selfieJPEG: nil)
+        let vm = ReviewSheetViewModel(selfieJPEG: nil, isLiveCapture: false)
         vm.segments[0].distanceM = 5000
         vm.segments[0].timeMs = 1_200_000
         #expect(vm.postBlocker == "Enter the stroke rate for every piece.")
@@ -162,7 +162,7 @@ struct ReviewSessionTests {
     }
 
     @Test func manualEntryIsTrainingOnlyAndNeverSuggestsATest() {
-        let vm = ReviewSheetViewModel(selfieJPEG: nil)
+        let vm = ReviewSheetViewModel(selfieJPEG: nil, isLiveCapture: false)
         vm.segments[0].distanceM = 2000
         vm.segments[0].timeMs = 420_000
         vm.segments[0].rate = 24
@@ -172,7 +172,7 @@ struct ReviewSessionTests {
     }
 
     @Test func removingAPieceLeavesTheOthers() {
-        let vm = ReviewSheetViewModel(selfieJPEG: nil)
+        let vm = ReviewSheetViewModel(selfieJPEG: nil, isLiveCapture: false)
         vm.addManualSegment()
         #expect(vm.segments.count == 2)
         vm.removeSegment(vm.segments[1].id)
@@ -182,7 +182,7 @@ struct ReviewSessionTests {
     // MARK: Extra photos
 
     @Test func extraPhotosCanBeAddedAndRemoved() {
-        let vm = ReviewSheetViewModel(selfieJPEG: Data([0]))
+        let vm = ReviewSheetViewModel(selfieJPEG: Data([0]), isLiveCapture: true)
         vm.addGalleryPhoto(Data([1]))
         vm.addGalleryPhoto(Data([2]))
         #expect(vm.galleryPhotos.count == 2)

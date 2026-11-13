@@ -22,6 +22,7 @@ struct AllPersonalBestsView: View {
                     .foregroundStyle(Tokens.Ink.secondary)
                     .padding(.horizontal, 2)
                     .padding(.bottom, 14)
+                    .guidance()
                 LazyVGrid(
                     columns: Array(repeating: GridItem(.flexible(), spacing: Tokens.Spacing.tight), count: 2),
                     spacing: Tokens.Spacing.tight

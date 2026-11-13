@@ -67,6 +67,6 @@ struct WorkoutCard: View {
     /// The card's ground and edge, for a caller that draws it around more than this.
     @ViewBuilder static var card: some View {
         cardShape.fill(Tokens.Surface.card)
-            .overlay { cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+            .overlay { cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
     }
 }

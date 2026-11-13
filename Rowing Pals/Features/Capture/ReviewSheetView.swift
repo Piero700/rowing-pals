@@ -41,11 +41,12 @@ struct ReviewSheetView: View {
 
     /// A photographed session passes both photos; a manual entry passes nil
     /// for both.
-    init(selfieJPEG: Data?, initialMonitorPhoto: Data?, linkedWorkout: CoachWorkout? = nil, onPosted: @escaping () -> Void) {
+    init(selfieJPEG: Data?, isLiveCapture: Bool, initialMonitorPhoto: Data?, linkedWorkout: CoachWorkout? = nil,
+         onPosted: @escaping () -> Void) {
         self.initialMonitorPhoto = initialMonitorPhoto
         self.onPosted = onPosted
         _viewModel = State(initialValue: ReviewSheetViewModel(
-            selfieJPEG: selfieJPEG, startsBlank: initialMonitorPhoto == nil, linkedWorkout: linkedWorkout
+            selfieJPEG: selfieJPEG, isLiveCapture: isLiveCapture, startsBlank: initialMonitorPhoto == nil, linkedWorkout: linkedWorkout
         ))
     }
 
@@ -110,6 +111,7 @@ struct ReviewSheetView: View {
                     Text("Manual sessions count toward your own totals and streak, but never appear on leaderboards or set test results — the numbers can't be checked against a monitor photo.")
                         .textStyle(Typography.meta)
                         .foregroundStyle(Tokens.Ink.secondary)
+                        .guidance()
                 } else {
                     leaderboardToggle
                 }
@@ -142,6 +144,7 @@ struct ReviewSheetView: View {
             Button("Choose from library") { isShowingLibrary = true }
         } message: {
             Text("A photo of the erg monitor is read and added as a piece. Any other photo is added to the post's photos.")
+                .guidance()
         }
         .sheet(isPresented: $isShowingCamera) {
             NavigationStack {
@@ -177,35 +180,29 @@ struct ReviewSheetView: View {
     /// v3 split rows: a badge (the Main piece wears the workout label in brand), "distance ·
     /// time", and the split — one per piece, in order.
     private var splitsSummary: some View {
-        VStack(spacing: Tokens.Spacing.tight) {
-            ForEach(viewModel.segments) { segment in
+        GroupedSection {
+            ForEach(Array(viewModel.segments.enumerated()), id: \.element.id) { index, segment in
+                if index > 0 { GroupedDivider() }
                 let isMain = segment.label == .main
-                let shape = RoundedRectangle(cornerRadius: Tokens.Radius.input, style: .continuous)
                 HStack(spacing: Tokens.Spacing.tight) {
                     Text(isMain ? (viewModel.sessionKind.testLabel ?? viewModel.zone.rawValue) : segment.label.rawValue.capitalized)
-                        .textStyle(Typography.fieldLabel)
+                        .textStyle(Typography.detail)
                         .tabularNumerals()
                         .foregroundStyle(isMain ? Tokens.Accent.brand : Tokens.Ink.secondary)
                         .lineLimit(1)
                         .minimumScaleFactor(0.8)
-                        .padding(.horizontal, Tokens.Spacing.tight)
-                        .frame(minWidth: 72, minHeight: 27)
-                        .background(Capsule().fill(isMain ? Tokens.Accent.brandSoft : Tokens.Surface.raised))
                     Text("\(segment.distanceM.formattedMetres) · \(segment.timeMs.formattedDurationMs)")
-                        .textStyle(Typography.meta)
+                        .textStyle(Typography.statLabel)
                         .tabularNumerals()
                         .foregroundStyle(Tokens.Ink.secondary)
                     Spacer(minLength: 0)
                     Text(segment.splitMs > 0 ? segment.splitMs.formattedPace(display: paceDisplay) : "—")
-                        .textStyle(Typography.pill)
+                        .textStyle(Typography.detail)
                         .tabularNumerals()
                         .foregroundStyle(Tokens.Ink.primary)
                 }
-                .padding(.horizontal, Tokens.Spacing.gap)
-                .padding(.vertical, Tokens.Spacing.tight)
-                .frame(minHeight: 62)
-                .background(shape.fill(Tokens.Surface.card))
-                .overlay { shape.strokeBorder(Tokens.Surface.line, lineWidth: 1) }
+                .padding(.horizontal, Tokens.Grouped.rowPadding)
+                .frame(minHeight: Tokens.Grouped.rowHeight)
                 .accessibilityElement(children: .combine)
             }
         }
@@ -257,7 +254,7 @@ struct ReviewSheetView: View {
             .padding(.vertical, Tokens.Spacing.loose)
             .frame(maxWidth: .infinity, minHeight: Tokens.Size.input, alignment: .leading)
             .background(shape.fill(Tokens.Surface.card))
-            .overlay { shape.strokeBorder(Tokens.Surface.line, lineWidth: 1) }
+            .overlay { shape.strokeBorder(Tokens.Surface.line, lineWidth: Tokens.Grouped.hairline) }
             .contentShape(shape)
         }
         .buttonStyle(IconPressStyle())
@@ -281,7 +278,7 @@ struct ReviewSheetView: View {
             .padding(.vertical, Tokens.Spacing.loose)
             .frame(maxWidth: .infinity, minHeight: 82, alignment: .topLeading)
             .background(shape.fill(Tokens.Surface.card))
-            .overlay { shape.strokeBorder(Tokens.Surface.line, lineWidth: 1) }
+            .overlay { shape.strokeBorder(Tokens.Surface.line, lineWidth: Tokens.Grouped.hairline) }
     }
 
     /// Sticky "Post session" over a fade of the screen colour, with the reason it's unavailable.
@@ -302,13 +299,6 @@ struct ReviewSheetView: View {
         .padding(.top, Tokens.Spacing.gap)
         .padding(.bottom, Tokens.Spacing.tight)
         .background(Tokens.Base.ground.ignoresSafeArea())
-        // Content fades out just above the bar rather than stopping at a hard edge.
-        .overlay(alignment: .top) {
-            LinearGradient(colors: [Tokens.Base.ground.opacity(0), Tokens.Base.ground], startPoint: .top, endPoint: .bottom)
-                .frame(height: 24)
-                .offset(y: -24)
-                .allowsHitTesting(false)
-        }
     }
 
     // MARK: - Zone and effort
@@ -331,6 +321,7 @@ struct ReviewSheetView: View {
                 Text("A test is an all-out effort, so AN is chosen. Change it if this wasn't flat out.")
                     .textStyle(Typography.bodySecondary)
                     .foregroundStyle(Tokens.Ink.secondary)
+                    .guidance()
             }
         }
     }
@@ -378,7 +369,7 @@ struct ReviewSheetView: View {
         }
         .overlay {
             RoundedRectangle(cornerRadius: Tokens.Radius.select, style: .continuous)
-                .strokeBorder(Tokens.Surface.line, lineWidth: 1)
+                .strokeBorder(Tokens.Surface.line, lineWidth: Tokens.Grouped.hairline)
         }
         .contentShape(RoundedRectangle(cornerRadius: Tokens.Radius.select, style: .continuous))
     }
@@ -431,6 +422,7 @@ struct ReviewSheetView: View {
                     .textStyle(Typography.meta)
                     .foregroundStyle(Tokens.Ink.secondary)
                     .padding(.bottom, Tokens.Spacing.loose)
+                    .guidance()
             }
         }
     }
@@ -442,7 +434,7 @@ struct ReviewSheetView: View {
                     .resizable()
                     .scaledToFill()
                     .frame(width: 84, height: 84)
-                    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                    .clipShape(RoundedRectangle(cornerRadius: Tokens.Radius.input, style: .continuous))
                     .contextMenu {
                         Button {
                             viewModel.readGalleryPhotoAsMonitor(photo.id)
@@ -546,7 +538,7 @@ struct ReviewSheetView: View {
                 Text("Include on leaderboards")
                     .textStyle(Typography.rowTitle)
                     .foregroundStyle(Tokens.Ink.primary)
-                Text("Include this session in your volume totals.")
+                Text("Your volume, and any piece or rep at a test distance or time.")
                     .textStyle(Typography.meta)
                     .foregroundStyle(Tokens.Ink.secondary)
             }
@@ -556,7 +548,7 @@ struct ReviewSheetView: View {
         .padding(.vertical, Tokens.Spacing.tight)
         .frame(minHeight: 66)
         .background(shape.fill(Tokens.Surface.card))
-        .overlay { shape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+        .overlay { shape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
     }
 
     /// Who can see this post — a new choice at post time, added after
@@ -574,6 +566,7 @@ struct ReviewSheetView: View {
                 .textStyle(Typography.statLabel)
                 .foregroundStyle(Tokens.Ink.secondary)
                 .padding(.horizontal, 4)
+                .guidance()
         }
     }
 
@@ -599,7 +592,7 @@ struct ReviewSheetView: View {
         .padding(Tokens.Spacing.card)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(shape.fill(Tokens.Surface.card))
-        .overlay { shape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+        .overlay { shape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
         .accessibilityElement(children: .combine)
     }
 
@@ -614,7 +607,7 @@ struct ReviewSheetView: View {
                     .textStyle(Typography.rowTitle)
                     .tabularNumerals()
                     .foregroundStyle(Tokens.Ink.primary)
-                Text("Post it as a \(test.label) test and add it to the leaderboard?")
+                Text("Call it a \(test.label) test? It goes on the \(test.label) leaderboard either way.")
                     .textStyle(Typography.bodySecondary)
                     .tabularNumerals()
                     .foregroundStyle(Tokens.Ink.secondary)
@@ -629,7 +622,7 @@ struct ReviewSheetView: View {
                     .padding(.horizontal, 16)
                     .padding(.vertical, Tokens.Spacing.tight)
                     .background {
-                        RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Tokens.Accent.brand)
+                        RoundedRectangle(cornerRadius: Tokens.Radius.input, style: .continuous).fill(Tokens.Accent.brand)
                     }
             }
             Button {
@@ -641,17 +634,17 @@ struct ReviewSheetView: View {
                     .padding(.horizontal, 16)
                     .padding(.vertical, Tokens.Spacing.tight)
                     .background {
-                        RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Tokens.Ink.primary.opacity(0.1))
+                        RoundedRectangle(cornerRadius: Tokens.Radius.input, style: .continuous).fill(Tokens.Ink.primary.opacity(0.1))
                     }
             }
         }
-        .padding(14)
+        .padding(Tokens.Spacing.loose)
         .background {
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
+            RoundedRectangle(cornerRadius: Tokens.Radius.card, style: .continuous)
                 .fill(Tokens.Accent.brand.opacity(0.14))
         }
         .overlay {
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
+            RoundedRectangle(cornerRadius: Tokens.Radius.card, style: .continuous)
                 .strokeBorder(Tokens.Accent.brand.opacity(0.35), lineWidth: 1)
         }
         .buttonStyle(.plain)
@@ -691,6 +684,6 @@ struct ReviewSheetView: View {
 
 #Preview {
     NavigationStack {
-        ReviewSheetView(selfieJPEG: Data(), initialMonitorPhoto: Data(), onPosted: {})
+        ReviewSheetView(selfieJPEG: Data(), isLiveCapture: true, initialMonitorPhoto: Data(), onPosted: {})
     }
 }

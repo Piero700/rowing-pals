@@ -17,7 +17,7 @@ struct FeedBoatCard: View {
     let coachName: String?
     let mySeat: Int?
 
-    private static let cardShape = RoundedRectangle(cornerRadius: Tokens.Radius.card, style: .continuous)
+    private static let cardShape = RoundedRectangle(cornerRadius: Tokens.Feed.card, style: .continuous)
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -55,9 +55,13 @@ struct FeedBoatCard: View {
             }
         }
         .padding(Tokens.Spacing.card)
-        .background(Self.cardShape.fill(LinearGradient(colors: [Tokens.Accent.brandSoft, Tokens.Surface.card],
-                                                       startPoint: .topLeading, endPoint: UnitPoint(x: 0.7, y: 0.7))))
-        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+        .background {
+            ZStack {
+                Self.cardShape.fill(Tokens.Surface.card)
+                Self.cardShape.fill(Tokens.Accent.brandSoft)
+            }
+        }
+        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
     }
 
     /// "Sat 07:00".

@@ -29,6 +29,7 @@ struct RegisterView: View {
                         .padding(.horizontal, 4)
                         .padding(.top, Tokens.Spacing.loose)
                         .fixedSize(horizontal: false, vertical: true)
+                        .guidance()
 
                     Text("\(viewModel.squadText) · \(viewModel.rows.count)")
                         .textStyle(Typography.sectionTitle)
@@ -48,14 +49,14 @@ struct RegisterView: View {
                         VStack(spacing: 0) {
                             ForEach(Array(viewModel.rows.enumerated()), id: \.element.id) { index, row in
                                 if index > 0 {
-                                    Rectangle().fill(Tokens.Surface.line).frame(height: 1)
+                                    Rectangle().fill(Tokens.Surface.line).frame(height: Tokens.Grouped.hairline)
                                 }
                                 rowView(row)
                             }
                         }
                         .background(Self.cardShape.fill(Tokens.Surface.card))
                         .clipShape(Self.cardShape)
-                        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+                        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
                     }
 
                     if let error = viewModel.errorMessage {
@@ -126,7 +127,7 @@ struct RegisterView: View {
         }
         .padding(Tokens.Spacing.card)
         .background(Self.cardShape.fill(Tokens.Surface.card))
-        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
     }
 
     private func rowView(_ row: RegisterViewModel.Row) -> some View {

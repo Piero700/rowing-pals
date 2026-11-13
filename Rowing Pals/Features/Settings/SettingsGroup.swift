@@ -30,7 +30,7 @@ struct SettingsGroup<Content: View>: View {
             VStack(spacing: 0) { content() }
                 .background(Self.cardShape.fill(Tokens.Surface.card))
                 .clipShape(Self.cardShape)
-                .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+                .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
             if let footnote {
                 Text(footnote)
                     .textStyle(Typography.meta)
@@ -38,6 +38,7 @@ struct SettingsGroup<Content: View>: View {
                     .padding(.horizontal, 4)
                     .padding(.top, Tokens.Spacing.tight)
                     .fixedSize(horizontal: false, vertical: true)
+                    .guidance()
             }
         }
     }

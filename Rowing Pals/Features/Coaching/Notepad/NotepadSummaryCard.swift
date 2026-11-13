@@ -38,7 +38,7 @@ struct NotepadSummaryCard: View {
                 .overlay(alignment: .top) { Divider().overlay(Tokens.Surface.cardEdge) }
         }
         .background(Self.cardShape.fill(Tokens.Surface.card))
-        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
         .clipShape(Self.cardShape)
         .onChange(of: viewModel.selection) { _, spot in
             // A box picked by Next on a closed row opens it, so the coach sees where they are.

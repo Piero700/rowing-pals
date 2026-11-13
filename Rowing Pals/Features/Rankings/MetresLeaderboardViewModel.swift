@@ -29,6 +29,8 @@ final class MetresLeaderboardViewModel {
         let rank: Int
         let name: String
         let club: String?
+        /// The club carries the verified tag (decision 98).
+        var clubIsVerified = false
         let level: RowerCategory?
         let metres: Int
         let isCurrentUser: Bool
@@ -65,6 +67,7 @@ final class MetresLeaderboardViewModel {
     private struct Aggregate {
         let name: String
         let club: String?
+        var clubIsVerified = false
         var level: RowerCategory? = nil
         var distanceM = 0
         var streakDays = 0
@@ -128,7 +131,7 @@ final class MetresLeaderboardViewModel {
             }
 
             struct ProfileRow: Decodable {
-                struct Club: Decodable { let name: String }
+                typealias Club = ClubNameRef
                 let id: UUID
                 let displayName: String
                 let category: RowerCategory?
@@ -144,7 +147,7 @@ final class MetresLeaderboardViewModel {
 
             var profileQuery = SupabaseService.shared
                 .from("profiles")
-                .select("id, display_name, category, clubs(name)")
+                .select("id, display_name, category, clubs(*)")
                 .in("id", values: scopeIds)
             if let gender = filters.gender { profileQuery = profileQuery.eq("gender", value: gender.rawValue) }
             if let level = filters.level { profileQuery = profileQuery.eq("category", value: level.rawValue) }
@@ -217,7 +220,8 @@ final class MetresLeaderboardViewModel {
 
             var newAggregates: [UUID: Aggregate] = [:]
             for row in profileRows {
-                newAggregates[row.id] = Aggregate(name: row.displayName, club: row.club?.name, level: row.category)
+                newAggregates[row.id] = Aggregate(name: row.displayName, club: row.club?.name,
+                                                  clubIsVerified: row.club?.isVerified ?? false, level: row.category)
             }
             for row in totalRows {
                 newAggregates[row.userId]?.distanceM += row.distanceM
@@ -256,6 +260,7 @@ final class MetresLeaderboardViewModel {
                     rank: index + 1,
                     name: aggregate.name,
                     club: aggregate.club,
+                    clubIsVerified: aggregate.clubIsVerified,
                     level: aggregate.level,
                     metres: metres(aggregate),
                     isCurrentUser: userId == currentUserId,

@@ -127,6 +127,7 @@ struct CoachRowersView: View {
             .frame(maxWidth: .infinity)
             .multilineTextAlignment(.center)
             .padding(.top, Tokens.Spacing.loose)
+            .guidance()
     }
 
     private func stat(_ value: String, _ label: String) -> some View {
@@ -142,7 +143,7 @@ struct CoachRowersView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(Tokens.Spacing.loose)
         .background(Self.statShape.fill(Tokens.Surface.card))
-        .overlay { Self.statShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+        .overlay { Self.statShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
         .accessibilityElement(children: .combine)
     }
 }

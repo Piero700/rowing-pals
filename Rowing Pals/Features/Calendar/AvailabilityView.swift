@@ -43,7 +43,7 @@ struct AvailabilityView: View {
                         .frame(maxWidth: .infinity)
                         .padding(.top, 40)
                 } else if viewModel.practices.isEmpty {
-                    Text("No practices this week yet. Add them from the Calendar.")
+                    GuidedText("No practices this week yet.", hint: "Add them from the Calendar.")
                         .textStyle(Typography.meta)
                         .foregroundStyle(Tokens.Ink.secondary)
                         .padding(.horizontal, 4)
@@ -95,7 +95,7 @@ struct AvailabilityView: View {
             .padding(.vertical, Tokens.Spacing.tight)
             .padding(.horizontal, 4)
             .background(Self.cardShape.fill(Tokens.Surface.card))
-            .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+            .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
         }
     }
 
@@ -178,6 +178,7 @@ struct AvailabilityView: View {
         .buttonStyle(.rpGlass)
         .padding(.top, Tokens.Spacing.group)
         FormFootnote("Only available rowers are offered when you crew the boats.")
+            .guidance()
     }
 
     /// Opens the water session already planned for this practice, or a new one from it.
@@ -195,8 +196,9 @@ struct AvailabilityView: View {
     private var races: some View {
         if !viewModel.events.isEmpty {
             FormSectionTitle("Races")
-            VStack(spacing: Tokens.Spacing.tight) {
-                ForEach(viewModel.events) { event in
+            GroupedSection {
+                ForEach(Array(viewModel.events.enumerated()), id: \.element.id) { index, event in
+                    if index > 0 { GroupedDivider() }
                     raceRow(event)
                 }
             }
@@ -227,10 +229,9 @@ struct AvailabilityView: View {
                     .textStyle(Typography.pill)
                     .foregroundStyle(Tokens.Ink.secondary)
             }
-            .padding(Tokens.Spacing.card)
-            .background(Self.cardShape.fill(Tokens.Surface.card))
-            .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
-            .contentShape(Self.cardShape)
+            .padding(.horizontal, Tokens.Grouped.rowPadding)
+            .padding(.vertical, Tokens.Spacing.tight)
+            .contentShape(Rectangle())
         }
         .buttonStyle(IconPressStyle())
     }

@@ -50,7 +50,7 @@ struct RowerCalendarView: View {
                     if !viewModel.openPractices.isEmpty {
                         answerBanner
                     } else if viewModel.practices.isEmpty && viewModel.water.isEmpty {
-                        Text("No sessions set for you this week yet. When your coaches add practices, they show here.")
+                        GuidedText("No sessions set for you this week yet.", hint: "When your coaches add practices, they show here.")
                             .textStyle(Typography.meta)
                             .foregroundStyle(Tokens.Ink.secondary)
                             .padding(.horizontal, 4)
@@ -68,6 +68,7 @@ struct RowerCalendarView: View {
                         .foregroundStyle(Tokens.Ink.secondary)
                         .padding(.horizontal, 4)
                         .padding(.top, Tokens.Spacing.loose)
+                        .guidance()
                 }
                 Color.clear.frame(height: Tokens.Spacing.tabScrollBottom)
             }
@@ -127,7 +128,7 @@ struct RowerCalendarView: View {
             Text("Say which sessions you can make")
                 .textStyle(Typography.cardTitle)
                 .foregroundStyle(Tokens.Ink.primary)
-            Text("\(answered) of \(total) answered. Your coaches plan the week from your answers, so a week’s notice helps.")
+            GuidedText("\(answered) of \(total) answered.", hint: "Your coaches plan the week from your answers, so a week’s notice helps.")
                 .textStyle(Typography.meta)
                 .tabularNumerals()
                 .foregroundStyle(Tokens.Ink.secondary)
@@ -144,9 +145,13 @@ struct RowerCalendarView: View {
             }
         }
         .padding(Tokens.Spacing.card)
-        .background(Self.cardShape.fill(LinearGradient(colors: [Tokens.Accent.brandSoft, Tokens.Surface.card],
-                                                      startPoint: .topLeading, endPoint: .bottomTrailing)))
-        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+        .background {
+            ZStack {
+                Self.cardShape.fill(Tokens.Surface.card)
+                Self.cardShape.fill(Tokens.Accent.brandSoft)
+            }
+        }
+        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
         .padding(.top, Tokens.Spacing.loose)
     }
 
@@ -169,7 +174,7 @@ struct RowerCalendarView: View {
             .padding(.horizontal, Tokens.Spacing.card)
             .padding(.vertical, Tokens.Spacing.loose)
             .background(Self.cardShape.fill(Tokens.Surface.card))
-            .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+            .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
         } else {
             VStack(alignment: .leading, spacing: 0) {
                 HStack(spacing: Tokens.Spacing.gap) {
@@ -199,7 +204,7 @@ struct RowerCalendarView: View {
             .padding(.horizontal, Tokens.Spacing.card)
             .padding(.vertical, Tokens.Spacing.loose)
             .background(Self.cardShape.fill(Tokens.Surface.card))
-            .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+            .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
         }
     }
 
@@ -207,7 +212,7 @@ struct RowerCalendarView: View {
         let calendar = viewModel.calendar
         let workouts = viewModel.workouts(during: practice)
         return VStack(alignment: .leading, spacing: 6) {
-            if !isFirst { Rectangle().fill(Tokens.Surface.line).frame(height: 1) }
+            if !isFirst { Rectangle().fill(Tokens.Surface.line).frame(height: Tokens.Grouped.hairline) }
             HStack(spacing: Tokens.Spacing.gap) {
                 Button {
                     navigate(.practice(practice.id))
@@ -264,7 +269,7 @@ struct RowerCalendarView: View {
     private func waterRow(_ row: RowerCalendarViewModel.WaterRow, isFirst: Bool) -> some View {
         let calendar = viewModel.calendar
         return VStack(alignment: .leading, spacing: 6) {
-            if !isFirst { Rectangle().fill(Tokens.Surface.line).frame(height: 1) }
+            if !isFirst { Rectangle().fill(Tokens.Surface.line).frame(height: Tokens.Grouped.hairline) }
             Button {
                 navigate(.rowerWaterSession(row.session.id))
             } label: {
@@ -299,7 +304,7 @@ struct RowerCalendarView: View {
 
     private func workoutRow(_ workout: CoachWorkout, isFirst: Bool) -> some View {
         VStack(alignment: .leading, spacing: 6) {
-            if !isFirst { Rectangle().fill(Tokens.Surface.line).frame(height: 1) }
+            if !isFirst { Rectangle().fill(Tokens.Surface.line).frame(height: Tokens.Grouped.hairline) }
             HStack(spacing: Tokens.Spacing.gap) {
                 Text(WorkoutRules.startDate(workout, calendar: viewModel.calendar).map { CalendarRules.time($0, calendar: viewModel.calendar) } ?? "")
                     .textStyle(Typography.rowTitle)
@@ -381,6 +386,6 @@ struct RowerCalendarView: View {
         }
         .padding(Tokens.Spacing.card)
         .background(Self.cardShape.fill(Tokens.Surface.card))
-        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
     }
 }

@@ -37,14 +37,14 @@ struct FeedCardView: View {
     /// Redesign phase B — per-device pace display preference.
     @AppStorage(PaceDisplay.storageKey) private var paceDisplay: PaceDisplay = .split
 
-    private static let cardShape = RoundedRectangle(cornerRadius: Tokens.Radius.card, style: .continuous)
-    private static let photoShape = RoundedRectangle(cornerRadius: Tokens.Radius.photo, style: .continuous)
+    private static let cardShape = RoundedRectangle(cornerRadius: Tokens.Feed.card, style: .continuous)
+    private static let photoShape = RoundedRectangle(cornerRadius: Tokens.Feed.card, style: .continuous)
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             header
             carousel
-                .padding(.top, 14)
+                .padding(.top, Tokens.Spacing.loose)
             metricTrio
                 .padding(.vertical, Tokens.Spacing.loose)
             if let caption = post.caption, !caption.isEmpty {
@@ -63,11 +63,11 @@ struct FeedCardView: View {
             }
             workoutLink
             actionRow
-                .padding(.top, 14)
+                .padding(.top, Tokens.Spacing.loose)
         }
         .padding(Tokens.Spacing.card)
         .background { Self.cardShape.fill(Tokens.Surface.card) }
-        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1).allowsHitTesting(false) }
+        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline).allowsHitTesting(false) }
         .pbGlow(post.isNewPB, in: Self.cardShape)
         .sheet(isPresented: $isShowingReactionPicker) {
             reactionPicker
@@ -89,8 +89,8 @@ struct FeedCardView: View {
                         .textStyle(Typography.name)
                         .foregroundStyle(Tokens.Ink.primary)
                         .lineLimit(1)
-                    if let club = post.author.club?.name {
-                        Text(club)
+                    if let club = post.author.club {
+                        ClubNameLabel(name: club.name, isVerified: club.isVerified, badgeSize: Tokens.Icon.badge)
                             .textStyle(Typography.meta)
                             .foregroundStyle(Tokens.Ink.secondary)
                             .lineLimit(1)
@@ -112,7 +112,7 @@ struct FeedCardView: View {
         return ZStack(alignment: .bottom) {
             if pages.isEmpty {
                 Button(action: onOpen) {
-                    PhotoPlaceholder(cornerRadius: Tokens.Radius.photo, caption: "MANUAL ENTRY")
+                    PhotoPlaceholder(cornerRadius: Tokens.Feed.card, caption: "MANUAL ENTRY")
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
@@ -161,13 +161,13 @@ struct FeedCardView: View {
                         withAnimation(.snappy) { isSelfiePrimary.toggle() }
                     } label: {
                         CachedAsyncImage(url: insetURL) {
-                            PhotoPlaceholder(cornerRadius: Tokens.Radius.photoInset, caption: nil)
+                            PhotoPlaceholder(cornerRadius: Tokens.Feed.photoInset, caption: nil)
                         }
                         .aspectRatio(contentMode: .fill)
                         .frame(width: geometry.size.width * 0.27, height: geometry.size.height * 0.37)
-                        .clipShape(RoundedRectangle(cornerRadius: Tokens.Radius.photoInset, style: .continuous))
+                        .clipShape(RoundedRectangle(cornerRadius: Tokens.Feed.photoInset, style: .continuous))
                         .overlay {
-                            RoundedRectangle(cornerRadius: Tokens.Radius.photoInset, style: .continuous)
+                            RoundedRectangle(cornerRadius: Tokens.Feed.photoInset, style: .continuous)
                                 .strokeBorder(Tokens.Surface.card, lineWidth: 2)
                         }
                         .shadow(color: .black.opacity(0.33), radius: 7, y: 5)
@@ -260,14 +260,14 @@ struct FeedCardView: View {
             .padding(Tokens.Spacing.card)
             .frame(maxWidth: .infinity, minHeight: 68, alignment: .leading)
             .background {
-                RoundedRectangle(cornerRadius: Tokens.Radius.workoutLink, style: .continuous)
+                RoundedRectangle(cornerRadius: Tokens.Feed.inner, style: .continuous)
                     .fill(Tokens.Surface.raised)
             }
             .overlay {
-                RoundedRectangle(cornerRadius: Tokens.Radius.workoutLink, style: .continuous)
-                    .strokeBorder(Tokens.Surface.line, lineWidth: 1)
+                RoundedRectangle(cornerRadius: Tokens.Feed.inner, style: .continuous)
+                    .strokeBorder(Tokens.Surface.line, lineWidth: Tokens.Grouped.hairline)
             }
-            .contentShape(RoundedRectangle(cornerRadius: Tokens.Radius.workoutLink, style: .continuous))
+            .contentShape(RoundedRectangle(cornerRadius: Tokens.Feed.inner, style: .continuous))
         }
         .buttonStyle(IconPressStyle())
     }
@@ -320,10 +320,10 @@ struct FeedCardView: View {
                             .font(.system(size: 26))
                             .frame(maxWidth: .infinity, minHeight: 52)
                             .background {
-                                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                RoundedRectangle(cornerRadius: Tokens.Feed.inner, style: .continuous)
                                     .fill(isMine ? Tokens.Accent.brandSoft : Tokens.Surface.raised)
                             }
-                            .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                            .contentShape(RoundedRectangle(cornerRadius: Tokens.Feed.inner, style: .continuous))
                     }
                     .buttonStyle(IconPressStyle())
                     .accessibilityLabel(kind.name)
@@ -374,7 +374,7 @@ struct FeedCardView: View {
         }
         .padding(.top, Tokens.Spacing.tight)
         .overlay(alignment: .top) {
-            Rectangle().fill(Tokens.Surface.line).frame(height: 1)
+            Rectangle().fill(Tokens.Surface.line).frame(height: Tokens.Grouped.hairline)
         }
         .sheet(isPresented: $isShowingShare) {
             ShareWorkoutSheet(post: post, photoURL: post.pages.first.flatMap { photoURL($0.path) })

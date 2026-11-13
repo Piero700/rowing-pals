@@ -39,7 +39,7 @@ struct GoldenVectorTests {
     @Test("The vectors and the port share a schema version")
     func schemaVersion() {
         #expect(vectors.schemaVersion == PacePredictor.schemaVersion)
-        #expect(vectors.cases.count == 46)
+        #expect(vectors.cases.count == 66)
         let parsing = vectors.parsing
         #expect(parsing.formatSeconds.count + parsing.weightAdjustmentFactor.count
             + parsing.agePerformanceFactor.count + parsing.normaliseRPE.count == 34)
@@ -71,6 +71,14 @@ struct GoldenVectorTests {
                     "predicted_total_time_range_seconds")
         expectClose(prediction.load.trimpLite, expected.loadTrimpLite, "load.trimp_lite")
         expectClose(prediction.load.modifierSeconds, expected.loadModifierSeconds, "load.modifier_seconds")
+        // v1.7
+        expectClose(prediction.load.afterMeasurementShare, expected.loadAfterMeasurementShare,
+                    "load.after_measurement_share")
+        #expect(prediction.load.sessionCount == expected.loadSessionCount, "load.session_count")
+        expectClose(prediction.personalPaul?.secondsPerDoubling, expected.personalPaulSeconds,
+                    "personal_paul.seconds_per_doubling")
+        #expect(prediction.personalPaul?.fitted == expected.personalPaulFitted, "personal_paul.fitted")
+        expectClose(prediction.steady?.changeSeconds, expected.steadyChangeSeconds, "steady.change_seconds")
         expectClose(prediction.diagnostics.spreadSeconds, expected.spreadSeconds, "diagnostics.spread_seconds")
         expectClose(prediction.interpretation?.weightAdjusted?.totalTimeSeconds,
                     expected.weightAdjustedTotalSeconds, "weight_adjusted.total_time_seconds")

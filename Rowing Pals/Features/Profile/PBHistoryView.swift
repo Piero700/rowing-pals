@@ -106,7 +106,7 @@ struct PBHistoryView: View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, 30)
             .background(Self.cardShape.fill(Tokens.Surface.card))
-            .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+            .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
     }
 
     private func sectionTitle(_ text: String) -> some View {
@@ -151,7 +151,7 @@ struct PBHistoryView: View {
         }
         .padding(20)
         .background(Self.cardShape.fill(Tokens.Surface.card))
-        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
         .accessibilityElement(children: .combine)
     }
 
@@ -205,12 +205,13 @@ struct PBHistoryView: View {
                 .frame(maxWidth: .infinity)
                 .padding(.top, Tokens.Spacing.tight)
                 .padding(.bottom, 3)
+                .guidance()
         }
         .padding(.top, 16)
         .padding(.horizontal, Tokens.Spacing.gap)
         .padding(.bottom, Tokens.Spacing.gap)
         .background(Self.cardShape.fill(Tokens.Surface.card))
-        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
     }
 
     /// Bigger values higher up, as v3 draws it — so a faster 2k sits lower ("Lower is
@@ -426,13 +427,13 @@ struct PBHistoryView: View {
             ForEach(Array(rows.enumerated()), id: \.element.id) { index, point in
                 historyRow(point)
                 if index < rows.count - 1 {
-                    Rectangle().fill(Tokens.Surface.line).frame(height: 1)
+                    Rectangle().fill(Tokens.Surface.line).frame(height: Tokens.Grouped.hairline)
                 }
             }
         }
         .background(Self.cardShape.fill(Tokens.Surface.card))
         .clipShape(Self.cardShape)
-        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
     }
 
     private func historyRow(_ point: PBHistoryViewModel.Point) -> some View {

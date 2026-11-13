@@ -8,7 +8,7 @@
 import Foundation
 
 public enum PacePredictor {
-    public static let schemaVersion = "anchor-impulse/1.6"
+    public static let schemaVersion = "anchor-impulse/1.7"
 
     /// Predicts a test-piece split and total time from session-summary history.
     ///
@@ -91,7 +91,13 @@ public enum PacePredictor {
             return emptyResult(targetDistance: target, config: config, warnings: warnings, flags: flags)
         }
 
-        guard let anchor = selectAnchor(window, targetDistance: target, config: config, asOfDay: asOfDay) else {
+        // v1.7: volume-only rows are training load and nothing else (§5.20). The rower's own
+        // Paul's Law reads their all-out pieces over a longer look-back than the window (§5.21).
+        let paceWindow = window.filter { !$0.volumeOnly }
+        let personal = PersonalPaul.fit(parsed.filter { !$0.volumeOnly }, asOfDay: asOfDay, config: config)
+        let paul = personal.secondsPerDoubling
+        guard let anchor = selectAnchor(paceWindow, targetDistance: target, config: config,
+                                        asOfDay: asOfDay, paul: paul) else {
             warnings.append("No session in the window qualified as an anchor")
             flags.append("no_anchor")
             return emptyResult(targetDistance: target, config: config, warnings: warnings, flags: flags)
@@ -99,7 +105,8 @@ public enum PacePredictor {
 
         // Bests the rower typed in are evidence of fitness, not training: never load, sessions
         // logged or recent effort (v1.6, §5.16).
-        let training = window.filter { !$0.declared }
+        let training = paceWindow.filter { !$0.declared }
+        let loadRows = window.filter { !$0.declared }
         let diagnostics = diagnoseHistory(rawSessions, days: rawDays, asOfDay: asOfDay, config: config)
         let spread = diagnostics.spreadSeconds
 
@@ -111,6 +118,7 @@ public enum PacePredictor {
         var baseSplit: Double
         let projection: Double
         let rpeCorrection: Double
+        let rateCorrectionApplied: Double
         if config.legacyV1Formula {
             // The original v1.0 single-step formula, kept only so its divergence is measurable.
             referenceSplit = .nan
@@ -120,21 +128,46 @@ public enum PacePredictor {
             projection = 0.0
             flags.append("legacy_v1_formula_enabled")
             rpeCorrection = 0.0
+            rateCorrectionApplied = 0.0
         } else {
             let recovered = normaliseToReference(split: anchor.splitS,
                                                  effectiveDistanceM: anchor.effectiveDistanceM,
-                                                 tier: tier, config: config)
+                                                 tier: tier, config: config, paul: paul)
             referenceSplit = recovered.s2k
             paulAdjustment = recovered.paulAdjustment
             intensityOffset = recovered.intensityOffset
-            // Perceived effort refines where in its tier the anchor actually sat.
-            rpeCorrection = rpeOffsetCorrection(rpe: anchor.rpe, tier: tier,
-                                                rpeMismatch: anchor.rpeMismatch, config: config)
-                * anchor.rpeCoverage
-            referenceSplit += rpeCorrection
-            // A test piece is maximal by definition: project at full Paul weight.
-            projection = config.paulConstant * log2(target / config.referenceDistanceM)
+            // Perceived effort refines where in its tier the anchor actually sat. A steady-zone
+            // blend carries its median piece's corrections already (§5.17).
+            rpeCorrection = anchor.rpeCorrection
+                ?? rpeOffsetCorrection(rpe: anchor.rpe, tier: tier,
+                                       rpeMismatch: anchor.rpeMismatch, config: config) * anchor.rpeCoverage
+            rateCorrectionApplied = anchor.rateCorrection
+            referenceSplit += rpeCorrection + rateCorrectionApplied
+            // A test piece is maximal by definition: project at full Paul weight — the rower's
+            // own Paul's Law when their all-out pieces show it (v1.7, §5.21).
+            projection = paul * log2(target / config.referenceDistanceM)
             baseSplit = referenceSplit + projection
+        }
+
+        // --- v1.7: steady rows since the newest all-out piece (§5.19) -------------------
+        // Only ever faster: an easy piece never drags the prediction slower than what the
+        // rower has held all-out (decision 65). A slower steady split is flagged and advised on.
+        let steady = (config.legacyV1Formula || !anchor.tier.isMaximal)
+            ? nil
+            : SteadyChange.measure(paceWindow, anchor: anchor, config: config, paul: paul)
+        let transfer = steadyTransfer(targetDistance: target, config: config)
+        var steadyGain = 0.0
+        if let steady {
+            steadyGain = Py.max(-config.steadyGainCapS, Py.min(0.0, transfer * steady.changeS))
+            if steadyGain < 0 {
+                flags.append("steady_change_applied")
+            } else if transfer * steady.changeS >= config.steadySlowerFlagS {
+                flags.append("steady_pace_slower")
+            }
+        }
+        baseSplit += steadyGain
+        if personal.fitted {
+            flags.append("personal_paul_law")
         }
 
         // --- Bodyweight trend (off by default) ------------------------------------------
@@ -159,10 +192,24 @@ public enum PacePredictor {
         }
 
         // --- Step 4: volume modifier, damped by how much history it rests on ------------
-        let load = rollingLoad(training)
-        let rawModifier = interpolate(config.loadKnots, load)
+        // v1.7 (§5.20): every minute counts, volume-only rows included; above maintenance the
+        // gain is per doubling. With an all-out anchor only training after the newest all-out
+        // piece can make the prediction faster, and a measured steady change replaces that
+        // faster side, so one improvement isn't counted twice.
+        let load = rollingLoad(loadRows)
+        let rawModifier = rawVolumeModifier(load: load, config: config)
+        var afterShare = 1.0
+        if rawModifier < 0, config.volumeAfterMeasurement, let measuredDay = anchor.measuredDay,
+           anchor.tier.isMaximal {
+            if steady != nil {
+                afterShare = 0.0
+            } else {
+                let after = rollingLoad(loadRows.filter { $0.day > measuredDay })
+                afterShare = load > 0 ? after / load : 0.0
+            }
+        }
         let loadConfidence = Py.min(1.0, Double(training.count) / Double(config.minSessionsComfortable))
-        let volumeModifier = rawModifier * loadConfidence
+        let volumeModifier = rawModifier * afterShare * loadConfidence
         if loadConfidence < 1.0 {
             flags.append("load_estimate_damped")
         }
@@ -172,7 +219,7 @@ public enum PacePredictor {
         var heldAdjustment = 0.0
         var heldPiece: Session?
         if config.heldSplitFloor && !config.legacyV1Formula {
-            let longer = window.filter { $0.effectiveDistanceM >= target && !$0.intervalAmbiguous }
+            let longer = paceWindow.filter { $0.effectiveDistanceM >= target && !$0.intervalAmbiguous }
             // min by (split, -day): the fastest, then the newest.
             if let best = Py.firstMin(longer, by: { lhs, rhs in
                 lhs.splitS < rhs.splitS || (lhs.splitS == rhs.splitS && lhs.day > rhs.day)
@@ -211,9 +258,15 @@ public enum PacePredictor {
             flags.append("tier_disagreement")
         }
 
-        var confidence = scoreConfidence(anchor: anchor, sessions: window, targetDistance: target,
+        var confidence = scoreConfidence(anchor: anchor, sessions: paceWindow, targetDistance: target,
                                          spreadS: spread, asOfDay: asOfDay, config: config,
                                          fatigueExcess: fatigueExcess)
+        if flags.contains("steady_pace_slower") {
+            confidence.recommendations.append(
+                "Your steady rows are slower than around your last all-out piece. If you're "
+                    + "tired, a test now may come in slower than this prediction."
+            )
+        }
         if let heldPiece {
             let what = heldPiece.declared ? "best you entered" : "piece"
             let metres = Int(Py.round(heldPiece.effectiveDistanceM, 0))
@@ -248,8 +301,13 @@ public enum PacePredictor {
         let splitRange = predictionRange(
             anchor: anchor, targetDistance: target, spreadS: spread,
             tiersRepresented: diagnostics.tiersRepresented, loadConfidence: loadConfidence,
-            asOfDay: asOfDay, config: config
+            asOfDay: asOfDay, config: config,
+            paulDoubtShare: personal.doubtShare, steadyTracked: steady != nil,
+            steadyGain: steadyGain, volumeGain: volumeModifier
         )
+        let measuredOn: String? = anchor.measuredDay.flatMap { day in
+            paceWindow.first(where: { $0.day == day }).map { days.iso($0.date) }
+        }
 
         return Prediction(
             schemaVersion: schemaVersion,
@@ -282,16 +340,26 @@ public enum PacePredictor {
                 windowDays: config.windowDays,
                 rawModifierSeconds: Py.round(rawModifier, 2),
                 loadConfidence: Py.round(loadConfidence, 2),
+                afterMeasurementShare: Py.round(afterShare, 2),
                 modifierSeconds: Py.round(volumeModifier, 2)
             ),
+            personalPaul: .init(secondsPerDoubling: Py.round(paul, 2), fitted: personal.fitted,
+                                pieces: personal.pieces),
+            steady: steady.map { change in
+                .init(changeSeconds: Py.round(change.changeS, 2), transfer: Py.round(transfer, 2),
+                      piecesBefore: change.piecesBefore, piecesAfter: change.piecesAfter,
+                      zones: change.zones, measuredOn: measuredOn)
+            },
             components: .init(
                 anchorSplit: Py.round(anchor.splitS, 2),
                 paulAdjustment: Py.round(paulAdjustment, 2),
                 intensityOffset: Py.round(intensityOffset, 2),
                 rpeCorrection: Py.round(rpeCorrection, 2),
+                rateCorrection: Py.round(rateCorrectionApplied, 2),
                 twoKEquivalent: referenceSplit.isNaN ? nil : Py.round(referenceSplit, 2),
                 projectionToTarget: Py.round(projection, 2),
                 weightTrendCorrection: Py.round(trend.correction, 2),
+                steadyChangeAdjustment: Py.round(steadyGain, 2),
                 volumeModifier: Py.round(volumeModifier, 2),
                 heldSplitAdjustment: Py.round(heldAdjustment, 2),
                 clampAdjustment: Py.round(finalSplit - modelledSplit, 2)
@@ -357,6 +425,8 @@ public enum PacePredictor {
             )],
             anchor: nil,
             load: .empty(windowDays: config.windowDays),
+            personalPaul: nil,
+            steady: nil,
             components: .init(
                 twoKEquivalent: Py.round(s2k, 2),
                 projectionToTarget: Py.round(projection, 2),
@@ -402,6 +472,8 @@ public enum PacePredictor {
             confidenceFactors: [],
             anchor: nil,
             load: .empty(windowDays: config.windowDays),
+            personalPaul: nil,
+            steady: nil,
             components: .init(),
             estimateBasis: nil,
             effort: .init(sessionsWithRpe: 0, anchorRpe: nil, recentRpeExcess: nil),

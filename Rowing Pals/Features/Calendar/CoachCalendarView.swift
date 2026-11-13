@@ -82,6 +82,7 @@ struct CoachCalendarView: View {
                     .foregroundStyle(Tokens.Ink.secondary)
                     .padding(.horizontal, 4)
                     .padding(.top, Tokens.Spacing.loose)
+                    .guidance()
                 Color.clear.frame(height: Tokens.Spacing.tabScrollBottom)
             }
             .padding(.horizontal, Tokens.Spacing.screen)
@@ -208,17 +209,14 @@ struct CoachCalendarView: View {
                 }
             }
             if canRegister {
-                Button {
-                    navigate(.register(practice.id))
-                } label: {
-                    Label("Take register", icon: .check, size: Tokens.Icon.small)
-                }
-                .buttonStyle(.rpPrimary)
+                CardLinkRow(icon: .check, title: "Take register") { navigate(.register(practice.id)) }
+                    // The row's own height is the room under it.
+                    .padding(.bottom, -Tokens.Spacing.card)
             }
         }
         .padding(Tokens.Spacing.card)
         .background(Self.cardShape.fill(Tokens.Surface.card))
-        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
     }
 
     private func workoutCard(_ workout: CoachWorkout) -> some View {
@@ -249,7 +247,7 @@ struct CoachCalendarView: View {
             }
             .padding(Tokens.Spacing.card)
             .background(Self.cardShape.fill(Tokens.Surface.card))
-            .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+            .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
             .contentShape(Self.cardShape)
         }
         .buttonStyle(IconPressStyle())
@@ -288,7 +286,7 @@ struct CoachCalendarView: View {
             }
             .padding(Tokens.Spacing.card)
             .background(Self.cardShape.fill(Tokens.Surface.card))
-            .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+            .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
             .contentShape(Self.cardShape)
         }
         .buttonStyle(IconPressStyle())
@@ -327,7 +325,7 @@ struct CoachCalendarView: View {
             }
             .padding(Tokens.Spacing.card)
             .background(Self.cardShape.fill(Tokens.Surface.card))
-            .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+            .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
             .contentShape(Self.cardShape)
         }
         .buttonStyle(IconPressStyle())
@@ -343,19 +341,20 @@ struct CoachCalendarView: View {
         VStack(spacing: 0) {
             ForEach(Array(challenges.items.enumerated()), id: \.element.id) { index, item in
                 if index > 0 {
-                    Rectangle().fill(Tokens.Surface.line).frame(height: 1)
+                    Rectangle().fill(Tokens.Surface.line).frame(height: Tokens.Grouped.hairline)
                 }
                 challengeRow(item)
             }
         }
         .background(Self.cardShape.fill(Tokens.Surface.card))
         .clipShape(Self.cardShape)
-        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
         Text("Tap one to see how it’s going, change it or delete it. New ones come from +.")
             .textStyle(Typography.meta)
             .foregroundStyle(Tokens.Ink.secondary)
             .padding(.horizontal, 4)
             .padding(.top, Tokens.Spacing.tight)
+            .guidance()
     }
 
     private func challengeRow(_ item: CoachChallengesModel.Item) -> some View {
@@ -428,19 +427,20 @@ struct CoachCalendarView: View {
         VStack(spacing: 0) {
             ForEach(Array(viewModel.announcements.enumerated()), id: \.element.id) { index, announcement in
                 if index > 0 {
-                    Rectangle().fill(Tokens.Surface.line).frame(height: 1)
+                    Rectangle().fill(Tokens.Surface.line).frame(height: Tokens.Grouped.hairline)
                 }
                 announcementRow(announcement)
             }
         }
         .background(Self.cardShape.fill(Tokens.Surface.card))
         .clipShape(Self.cardShape)
-        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
         Text("Tap one to change it or take it down. New ones come from +.")
             .textStyle(Typography.meta)
             .foregroundStyle(Tokens.Ink.secondary)
             .padding(.horizontal, 4)
             .padding(.top, Tokens.Spacing.tight)
+            .guidance()
     }
 
     private func announcementRow(_ announcement: Announcement) -> some View {
@@ -506,9 +506,13 @@ struct CoachCalendarView: View {
                     .foregroundStyle(Tokens.Ink.secondary)
             }
             .padding(Tokens.Spacing.card)
-            .background(Self.cardShape.fill(LinearGradient(colors: [Tokens.Accent.brandSoft, Tokens.Surface.card],
-                                                          startPoint: .topLeading, endPoint: .bottomTrailing)))
-            .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+            .background {
+            ZStack {
+                Self.cardShape.fill(Tokens.Surface.card)
+                Self.cardShape.fill(Tokens.Accent.brandSoft)
+            }
+        }
+            .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
             .contentShape(Self.cardShape)
         }
         .buttonStyle(IconPressStyle())

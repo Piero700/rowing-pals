@@ -107,7 +107,7 @@ struct NewWorkoutView: View {
     private var piecesSection: some View {
         GroupedSection(
             header: "Pieces",
-            footer: viewModel.pieces.isEmpty ? "Each piece is a column on the notepad and the results." : nil
+            hint: viewModel.pieces.isEmpty ? "Each piece is a column on the notepad and the results." : nil
         ) {
             ForEach(viewModel.pieces) { piece in
                 Button {
@@ -159,9 +159,8 @@ struct NewWorkoutView: View {
     private var detailsSection: some View {
         let count = viewModel.recipientCount
         return GroupedSection(
-            footer: viewModel.isEditing
-                ? "Saving changes doesn't alert anyone again."
-                : "\(count) rower\(count == 1 ? "" : "s") get “New workout from your coach”."
+            footer: viewModel.isEditing ? nil : "\(count) rower\(count == 1 ? "" : "s") get “New workout from your coach”.",
+            hint: viewModel.isEditing ? "Saving changes doesn't alert anyone again." : nil
         ) {
             GroupedRow(label: "Title") {
                 TextField(viewModel.autoTitle.isEmpty ? "From the pieces" : viewModel.autoTitle,

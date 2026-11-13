@@ -234,6 +234,38 @@ enum ClubService {
         return clubId
     }
 
+    /// Whether no other club has this name, ignoring capitals and spaces (decision 98).
+    /// `except` is the caller's own club when renaming it.
+    static func nameIsFree(_ name: String, except clubId: UUID? = nil) async throws -> Bool {
+        struct Params: Encodable { let p_name: String; let p_except: UUID? }
+        return try await SupabaseService.shared
+            .rpc("club_name_is_free", params: Params(p_name: name, p_except: clubId)).execute().value
+    }
+
+    /// Settings → Your club → Club name: just the name (owner and co-owners, as editing).
+    static func rename(to name: String) async throws {
+        struct Params: Encodable { let p_name: String }
+        try await SupabaseService.shared.rpc("rename_club", params: Params(p_name: ClubNameRules.tidied(name))).execute()
+        announce()
+    }
+
+    /// Where the signed-in rower's club stands on verification.
+    enum Verification: String, Decodable {
+        case none, pending, declined, verified
+    }
+
+    static func verificationStatus() async throws -> Verification {
+        let raw: String? = try await SupabaseService.shared.rpc("club_verification_status").execute().value
+        return raw.flatMap(Verification.init(rawValue:)) ?? .none
+    }
+
+    /// The owner asks for the verified tag, with an optional note for whoever checks it.
+    static func applyForVerification(message: String) async throws {
+        struct Params: Encodable { let p_message: String }
+        try await SupabaseService.shared
+            .rpc("apply_for_club_verification", params: Params(p_message: message)).execute()
+    }
+
     static func update(_ details: Details) async throws {
         try await SupabaseService.shared.rpc("update_club", params: details).execute()
         announce()

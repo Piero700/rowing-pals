@@ -302,13 +302,17 @@ enum CoachingService {
 
         let earliest = calendar.date(byAdding: .day, value: -CoachingRules.historyDays, to: asOf) ?? asOf
         let since = PredictionService.isoDay(earliest, calendar: calendar)
+        // Sessions reach back further: the Pace Engine's personal Paul's Law reads 90 days of
+        // all-out pieces (v1.7). Everything else here filters them to 28 days or 8 weeks.
+        let sessionsEarliest = calendar.date(byAdding: .day, value: -PredictionService.historyDays, to: asOf) ?? asOf
+        let sessionsSince = PredictionService.isoDay(sessionsEarliest, calendar: calendar)
         async let totalsTask: [TotalRow] = SupabaseService.shared
             .from("daily_totals").select("user_id, day, distance_m, session_count")
             .in("user_id", values: ids).gte("day", value: since)
             .execute().value
         async let sessionsTask: [UserSessionRow] = SupabaseService.shared
             .from("sessions").select("user_id, " + PredictionService.sessionColumns)
-            .in("user_id", values: ids).eq("type", value: SessionType.erg.rawValue).gte("session_date", value: since)
+            .in("user_id", values: ids).eq("type", value: SessionType.erg.rawValue).gte("session_date", value: sessionsSince)
             .execute().value
         async let twoKsTask: [TestRow] = SupabaseService.shared
             .from("test_results").select("user_id, distance_key, distance_m, time_ms, split_ms, set_at")

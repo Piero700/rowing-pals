@@ -13,7 +13,7 @@ struct FeedChallengeCard: View {
     let onOpen: () -> Void
     let onLog: () -> Void
 
-    private static let cardShape = RoundedRectangle(cornerRadius: Tokens.Radius.card, style: .continuous)
+    private static let cardShape = RoundedRectangle(cornerRadius: Tokens.Feed.card, style: .continuous)
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -59,15 +59,14 @@ struct FeedChallengeCard: View {
             .buttonStyle(IconPressStyle())
 
             if case .event(let event) = item, event.isOpenForPosting(at: Date()) {
-                Button(action: onLog) {
-                    Label("Log your \(event.pieceLabel)", icon: .plus)
-                }
-                .buttonStyle(.rpGlass)
-                .padding(.top, 4)
+                CardLinkRow(icon: .plus, title: "Log your \(event.pieceLabel)", action: onLog)
+                    .padding(.top, 4)
+                    // The row's own height is the room under it.
+                    .padding(.bottom, -Tokens.Spacing.card)
             }
         }
         .padding(Tokens.Spacing.card)
         .background(Self.cardShape.fill(Tokens.Surface.card))
-        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
     }
 }

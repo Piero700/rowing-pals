@@ -24,7 +24,7 @@ struct ProfileVisibilityView: View {
                         detail: "Anyone can follow you and see your profile.",
                         isSelected: !viewModel.isPrivate
                     ) { Task { await viewModel.setPrivate(false) } }
-                    Rectangle().fill(Tokens.Surface.line).frame(height: 1)
+                    Rectangle().fill(Tokens.Surface.line).frame(height: Tokens.Grouped.hairline)
                     choice(
                         title: "Private",
                         detail: "Only followers you approve see your posts.",

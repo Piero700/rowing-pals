@@ -82,7 +82,7 @@ struct ClubMemberSheet: View {
                         .padding(.vertical, Tokens.Spacing.loose)
                         .frame(minHeight: Tokens.Size.row)
                         .background(Self.cardShape.fill(Tokens.Surface.card))
-                        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+                        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
                         footnote("Coaching is separate from club roles: being a coach adds no member-management powers, and being an admin adds no coaching powers.")
                     }
 

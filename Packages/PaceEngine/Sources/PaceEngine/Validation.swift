@@ -111,8 +111,16 @@ struct Session {
     let bodyweightKg: Double?
     /// v1.6: a best the rower typed in, not a logged session (§5.16).
     var declared = false
+    /// v1.7: training volume only, never pace (§5.20).
+    var volumeOnly = false
 
     var durationMinutes: Double { timeS / 60.0 }
+
+    /// One unbroken piece: no rep distance shorter than the piece, and not suspected of being
+    /// unlabelled intervals.
+    var isContinuous: Bool {
+        !intervalAmbiguous && (repDistanceM.map { $0 >= distanceM } ?? true)
+    }
 
     var tier: Tier { Tier.named(tag) }
 
@@ -227,7 +235,8 @@ func normaliseSession(
         rpe: rpe,
         rpeMismatch: rpeMismatch,
         bodyweightKg: bodyweight,
-        declared: raw.declared
+        declared: raw.declared,
+        volumeOnly: raw.volumeOnly
     )
 }
 

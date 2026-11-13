@@ -22,7 +22,9 @@ import UIKit
 /// photo" — a session has one selfie no matter how many monitor photos it
 /// has, so re-shooting the front camera for a second or third photo would be
 /// pointless. It reuses the same sequential-rear code path as the multi-cam
-/// fallback above, rather than a duplicate camera setup.
+/// fallback above, rather than a duplicate camera setup. It is also the
+/// session One at a time uses (decision 103): the monitor photo on Log, then
+/// the second photo, which `flipCamera()` can turn to the front camera.
 @Observable
 final class CaptureViewModel: NSObject {
     enum Phase: Equatable {
@@ -44,6 +46,9 @@ final class CaptureViewModel: NSObject {
     /// in multi-cam mode; only true once the sequential fallback reaches its
     /// second shot. Stays nil for the whole session in `rearOnly` mode.
     var frontPreviewLayer: AVCaptureVideoPreviewLayer?
+    /// Which way a one-camera session faces after `flipCamera()`. `rearPreviewLayer` and
+    /// `rearOutput` then carry the front camera: they belong to the session, not to a camera.
+    private(set) var isFacingFront = false
 
     private let sessionQueue = DispatchQueue(label: "com.rowingpals.camera-session")
     // Read from the nonisolated delegate callback below, alongside the two
@@ -106,6 +111,9 @@ final class CaptureViewModel: NSObject {
 
     func start() {
         if hasStarted {
+            // Coming back to retake a photo: the last capture left the phase at `.done`, whose
+            // spinner would otherwise replace the shutter for good.
+            if phase == .done { phase = .ready }
             resumeSession()
             return
         }
@@ -136,6 +144,7 @@ final class CaptureViewModel: NSObject {
         }
         phase = .configuring
         hasStarted = false
+        isFacingFront = false
         sessionQueue.async { [session] in
             session.beginConfiguration()
             session.inputs.forEach { session.removeInput($0) }
@@ -160,6 +169,30 @@ final class CaptureViewModel: NSObject {
     func stop() {
         sessionQueue.async { [session] in
             if session.isRunning { session.stopRunning() }
+        }
+    }
+
+    /// Set on the session queue by `shutDown()`, so a setup still waiting in the queue doesn't
+    /// start this session again afterwards.
+    @ObservationIgnored
+    nonisolated(unsafe) private var isShutDown = false
+
+    /// Stops the session and lets go of its cameras, returning only once that's finished. Log
+    /// replaces its session when the selfie or Together | One at a time changes; the next session
+    /// can't run until this one has released the cameras (a two-camera session started while a
+    /// one-camera session still holds the back camera never runs: no preview, and the shutter fails
+    /// with "Cannot Record").
+    func shutDown() async {
+        await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+            sessionQueue.async { [weak self, session] in
+                self?.isShutDown = true
+                if session.isRunning { session.stopRunning() }
+                session.beginConfiguration()
+                session.inputs.forEach { session.removeInput($0) }
+                session.outputs.forEach { session.removeOutput($0) }
+                session.commitConfiguration()
+                continuation.resume()
+            }
         }
     }
 
@@ -191,7 +224,7 @@ final class CaptureViewModel: NSObject {
         guard let multiCamSession = session as? AVCaptureMultiCamSession else { return }
 
         sessionQueue.async { [weak self] in
-            guard let self else { return }
+            guard let self, !isShutDown else { return }
 
             multiCamSession.beginConfiguration()
 
@@ -211,6 +244,17 @@ final class CaptureViewModel: NSObject {
             multiCamSession.addInput(frontInput)
             self.rearInput = rearInput
             self.frontInput = frontInput
+
+            // A camera keeps its format from the last session that used it. A one-camera session
+            // (One at a time, Selfie off, Review's Add photo) leaves the back camera in its full
+            // 4032 × 3024 photo format, which two cameras can't run together: the session then
+            // stops with "Cannot Record" and shows no preview. So both are put on a format that
+            // runs with the other camera first.
+            guard Self.useMultiCamFormat(rearDevice), Self.useMultiCamFormat(frontDevice) else {
+                multiCamSession.commitConfiguration()
+                fail(.deviceUnavailable)
+                return
+            }
 
             guard
                 let rearPort = rearInput.ports(for: .video, sourceDeviceType: rearDevice.deviceType, sourceDevicePosition: .back).first,
@@ -260,11 +304,36 @@ final class CaptureViewModel: NSObject {
         }
     }
 
+    /// Moves a camera onto a format that can run alongside the other camera, if it isn't on one:
+    /// the photo's 4:3 shape first (decision 55), then the largest. False when the camera has none
+    /// or can't be changed right now.
+    nonisolated private static func useMultiCamFormat(_ device: AVCaptureDevice) -> Bool {
+        if device.activeFormat.isMultiCamSupported { return true }
+        func size(_ format: AVCaptureDevice.Format) -> (isFourByThree: Bool, area: Int32) {
+            let dimensions = format.formatDescription.dimensions
+            return (dimensions.width * 3 == dimensions.height * 4, dimensions.width * dimensions.height)
+        }
+        let best = device.formats.filter(\.isMultiCamSupported).max { a, b in
+            let (sizeA, sizeB) = (size(a), size(b))
+            if sizeA.isFourByThree != sizeB.isFourByThree { return !sizeA.isFourByThree }
+            return sizeA.area < sizeB.area
+        }
+        guard let best else { return false }
+        do {
+            try device.lockForConfiguration()
+            device.activeFormat = best
+            device.unlockForConfiguration()
+            return true
+        } catch {
+            return false
+        }
+    }
+
     // MARK: - Sequential fallback (devices without multi-cam support)
 
     private func configureSequentialRear() {
         sessionQueue.async { [weak self] in
-            guard let self else { return }
+            guard let self, !isShutDown else { return }
 
             session.beginConfiguration()
             session.sessionPreset = .photo
@@ -331,6 +400,51 @@ final class CaptureViewModel: NSObject {
         }
     }
 
+    /// Turns a one-camera session to the other camera, for the second photo in One at a time
+    /// (decision 103). The input is swapped inside one configuration, so the session, its output
+    /// and its preview layer all carry on with the new camera. If the new camera can't start, the
+    /// old one goes back and the phase reports the failure.
+    func flipCamera() {
+        guard !isMultiCam, phase == .ready else { return }
+        let toFront = !isFacingFront
+        let previewLayer = rearPreviewLayer
+        phase = .configuring
+        sessionQueue.async { [weak self] in
+            guard let self else { return }
+
+            session.beginConfiguration()
+            let current = toFront ? rearInput : frontInput
+            if let current { session.removeInput(current) }
+
+            let position: AVCaptureDevice.Position = toFront ? .front : .back
+            guard
+                let device = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: position),
+                let input = try? AVCaptureDeviceInput(device: device),
+                session.canAddInput(input)
+            else {
+                if let current, session.canAddInput(current) { session.addInput(current) }
+                session.commitConfiguration()
+                fail(.deviceUnavailable)
+                return
+            }
+            session.addInput(input)
+            if toFront { frontInput = input } else { rearInput = input }
+
+            // The swap builds new connections, so upright is set again for the photo and preview.
+            for connection in [rearOutput.connection(with: .video), previewLayer?.connection] {
+                if let connection, connection.isVideoRotationAngleSupported(90) {
+                    connection.videoRotationAngle = 90
+                }
+            }
+            session.commitConfiguration()
+
+            DispatchQueue.main.async {
+                self.isFacingFront = toFront
+                self.phase = .ready
+            }
+        }
+    }
+
     private func fail(_ error: CaptureError) {
         DispatchQueue.main.async { self.phase = .failed(error.localizedDescription) }
     }
@@ -373,9 +487,9 @@ final class CaptureViewModel: NSObject {
         }
     }
 
-    /// Captures a single rear-camera photo — `rearOnly` mode, for adding a
-    /// second or third monitor photo to a session already in review.
-    func captureMonitorPhoto() async -> Data? {
+    /// Captures one photo from a one-camera session (`rearOnly` mode): a monitor
+    /// photo, or One at a time's second photo from whichever way it faces.
+    func captureSinglePhoto() async -> Data? {
         do {
             phase = .capturingRear
             let data = try await capturePhotoData(from: rearOutput, isRear: true)

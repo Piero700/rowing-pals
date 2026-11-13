@@ -62,11 +62,10 @@ struct CrewBoatView: View {
 
     @ViewBuilder
     private var form: some View {
-        FormLabel("Boat name").padding(.top, Tokens.Spacing.card)
-        TextField("M1 four", text: $viewModel.name)
-            .textStyle(Typography.bodyV3)
-            .padding(.horizontal, Tokens.Spacing.card)
-            .formFieldBox()
+        GroupedSection {
+            GroupedTextRow(label: "Boat name", placeholder: "M1 four", text: $viewModel.name)
+        }
+        .padding(.top, Tokens.Spacing.tight)
 
         FormLabel("Boat type").padding(.top, Tokens.Spacing.card)
         // One row that scrolls sideways (user, 2026-10-18), so the eight types never stack.
@@ -91,21 +90,26 @@ struct CrewBoatView: View {
             FormFootnote(viewModel.rigging == .custom
                 ? "Custom: tap ⇄ beside an oar to put it on the other side — for a bucket rig or any staggered setup."
                 : "Stroke-rigged: the stroke’s oar is on stroke side, then the seats alternate. Bow-rigged is the other way round.")
+                .guidance()
         }
 
         FormLabel("Colour").padding(.top, Tokens.Spacing.card)
         colourRow
         FormFootnote("Colour a boat to pick it out at a glance. Its crew see it on their Feed too.")
+            .guidance()
 
         FormSectionTitle("Crew")
         crewCard
         FormFootnote("Tap a seat, then a rower. Hold and drag a rower to swap seats. Rowers set their side in their profile.")
+            .guidance()
 
         picker
 
         if viewModel.isSessionBoat {
-            ToggleCard(title: "Keep in Saved boats", detail: "Add this crew to later sessions in a tap.", isOn: $viewModel.keepSaved)
-                .padding(.top, Tokens.Spacing.group)
+            GroupedSection {
+                GroupedToggleRow(label: "Keep in Saved boats", hint: "Add this crew to later sessions in a tap.", isOn: $viewModel.keepSaved)
+            }
+            .padding(.top, Tokens.Spacing.group)
         }
 
         if let error = viewModel.errorMessage {
@@ -172,7 +176,7 @@ struct CrewBoatView: View {
                     } label: {
                         Circle()
                             .fill(BoatPalette.color(swatch.hex) ?? Tokens.Surface.raised)
-                            .overlay { Circle().strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+                            .overlay { Circle().strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
                             .frame(width: Tokens.Boat.swatch, height: Tokens.Boat.swatch)
                             .padding(Tokens.Boat.swatchRing * 1.6)
                             .overlay { if isOn { ring } }
@@ -248,13 +252,14 @@ struct CrewBoatView: View {
                 Text("Stroke side’s oars are above the boat, bow side’s below.")
                     .textStyle(Typography.statLabel)
                     .foregroundStyle(Tokens.Ink.secondary)
+                    .guidance()
             }
         }
         .padding(.horizontal, Tokens.Spacing.loose)
         .padding(.vertical, Tokens.Spacing.loose)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Self.cardShape.fill(Tokens.Surface.card))
-        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
     }
 
     /// ⇄: moves this seat's oar to the other side (custom rigging, decision 74).
@@ -340,7 +345,7 @@ struct CrewBoatView: View {
                                                   style: StrokeStyle(lineWidth: isSelected ? Tokens.Boat.selectedLineWidth : 1.5,
                                                                      dash: person == nil ? Tokens.Boat.dash : []))
                 } else {
-                    Self.buttonShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1)
+                    Self.buttonShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline)
                 }
             }
             .contentShape(Self.buttonShape)
@@ -392,7 +397,7 @@ struct CrewBoatView: View {
                             .contentShape(Rectangle())
                     }
                     .buttonStyle(IconPressStyle())
-                    if !candidates.isEmpty { Rectangle().fill(Tokens.Surface.line).frame(height: 1) }
+                    if !candidates.isEmpty { Rectangle().fill(Tokens.Surface.line).frame(height: Tokens.Grouped.hairline) }
                 }
                 if candidates.isEmpty {
                     Text("Nobody to offer yet: rowers appear here once they say they can make it.")
@@ -402,13 +407,13 @@ struct CrewBoatView: View {
                         .padding(Tokens.Spacing.card)
                 }
                 ForEach(Array(candidates.enumerated()), id: \.element.id) { index, candidate in
-                    if index > 0 { Rectangle().fill(Tokens.Surface.line).frame(height: 1) }
+                    if index > 0 { Rectangle().fill(Tokens.Surface.line).frame(height: Tokens.Grouped.hairline) }
                     candidateRow(candidate)
                 }
             }
             .background(Self.cardShape.fill(Tokens.Surface.card))
             .clipShape(Self.cardShape)
-            .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+            .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
             if let note = viewModel.unansweredNote {
                 FormFootnote(note)
             }

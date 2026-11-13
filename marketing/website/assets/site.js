@@ -1,36 +1,20 @@
 /* rowingpals.com — interactions and effects. */
 
-// Coach pricing — placeholder until the price is decided. Change it here only.
-const PRICES = { currency: '£', month: 9.99, year: 99.99 };
-
 (function () {
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => [...r.querySelectorAll(s)];
-  const money = (n) => PRICES.currency + n.toFixed(2);
 
   RPUI.base = 'assets/';
   RPUI.mount();
 
-  /* ---------- prices ---------- */
-  const perMonthOfYear = PRICES.year / 12;
-  const saving = Math.round((1 - PRICES.year / (PRICES.month * 12)) * 100);
-  $$('.js-month').forEach(el => { el.textContent = money(PRICES.month); });
-  $('#saveTag').textContent = `Save ${saving}% with yearly`;
+  // The app's own icons wherever the page asks for one.
+  $$('[data-icon]').forEach(el => { el.innerHTML = RPUI.ico(el.dataset.icon, el.dataset.icon === 'shield' ? 18 : 20); });
 
-  function setBilling(b) {
-    const amt = $('#coachAmt');
-    amt.classList.remove('flip'); void amt.offsetWidth; amt.classList.add('flip');
-    if (b === 'year') {
-      amt.textContent = money(perMonthOfYear);
-      $('#coachSub').innerHTML = `<b>${money(PRICES.year)} billed yearly</b> · two months free`;
-    } else {
-      amt.textContent = money(PRICES.month);
-      $('#coachSub').innerHTML = `Billed monthly · or <b>${money(PRICES.year)}/year</b>`;
-    }
-  }
+  // An eight on its side, seat 5 is yours.
+  $('#boatDemo').innerHTML = RPUI.boat(RPUI.crew, { type: '8+', mine: 5 });
 
-  /* ---------- segmented controls with a sliding thumb ---------- */
+  /* ---------- segmented control with a sliding thumb ---------- */
   function segmented(root, onPick) {
     const thumb = $('.thumb', root);
     const place = (btn) => { thumb.style.left = btn.offsetLeft + 'px'; thumb.style.width = btn.offsetWidth + 'px'; };
@@ -41,23 +25,10 @@ const PRICES = { currency: '£', month: 9.99, year: 99.99 };
     const init = () => place($('button.on', root));
     init(); addEventListener('resize', init); document.fonts && document.fonts.ready.then(init);
   }
-  segmented($('#billSeg'), (btn) => setBilling(btn.dataset.b));
-  setBilling('month');
 
   /* ---------- nav shrinks on scroll, like the app's tab bar ---------- */
   const nav = $('#nav');
   addEventListener('scroll', () => nav.classList.toggle('small', scrollY > 80), { passive: true });
-
-  /* ---------- cursor spotlight + tile border light ---------- */
-  addEventListener('pointermove', (e) => {
-    document.body.style.setProperty('--mx', e.clientX + 'px');
-    document.body.style.setProperty('--my', e.clientY + 'px');
-  }, { passive: true });
-  $$('.tile').forEach(t => t.addEventListener('pointermove', (e) => {
-    const r = t.getBoundingClientRect();
-    t.style.setProperty('--x', (e.clientX - r.left) + 'px');
-    t.style.setProperty('--y', (e.clientY - r.top) + 'px');
-  }));
 
   /* ---------- hero phone tilts toward the cursor ---------- */
   const tilt = $('#heroTilt');
@@ -66,7 +37,7 @@ const PRICES = { currency: '£', month: 9.99, year: 99.99 };
       const x = e.clientX / innerWidth - .5, y = e.clientY / innerHeight - .5;
       tilt.style.transform = `rotateY(${x * 14}deg) rotateX(${-y * 10}deg)`;
     }, { passive: true });
-  } else {
+  } else if (!reduce) {
     tilt.style.transform = 'rotateY(-8deg) rotateX(4deg)';
   }
 
@@ -75,13 +46,13 @@ const PRICES = { currency: '£', month: 9.99, year: 99.99 };
     if (reduce) return;
     const start = performance.now();
     const step = (t) => {
-      const p = Math.min(1, (t - start) / ms), e = 1 - Math.pow(1 - p, 3);
+      const p = Math.max(0, Math.min(1, (t - start) / ms)), e = 1 - Math.pow(1 - p, 3);
       el.firstChild.nodeValue = fmt(to * e);
       if (p < 1) requestAnimationFrame(step);
     };
     requestAnimationFrame(step);
   }
-  // Counts a time like 7:07.3 down to 7:04.1 — a PB arriving.
+  // Counts a time like 7:07.3 down to 7:04.1: a PB arriving.
   function countTime(el) {
     if (reduce) return;
     const toS = (s) => { const [m, r] = s.split(':'); return +m * 60 + +r; };
@@ -89,7 +60,7 @@ const PRICES = { currency: '£', month: 9.99, year: 99.99 };
     const fmt = (v) => { const m = Math.floor(v / 60), s = (v - m * 60).toFixed(1).padStart(4, '0'); return `${m}:${s}`; };
     const start = performance.now(), ms = 1600;
     const step = (t) => {
-      const p = Math.min(1, (t - start) / ms), e = 1 - Math.pow(1 - p, 4);
+      const p = Math.max(0, Math.min(1, (t - start) / ms)), e = 1 - Math.pow(1 - p, 4);
       el.firstChild.nodeValue = fmt(from + (to - from) * e);
       if (p < 1) requestAnimationFrame(step);
     };
@@ -98,18 +69,18 @@ const PRICES = { currency: '£', month: 9.99, year: 99.99 };
 
   /* ---------- hero: scan the monitor, box each number, count the post up ---------- */
   const heroMedia = $('#heroPhone .rp-media');
-  const heroTotal = $('#heroPhone .rp-strip .total');
+  const heroMetres = $('#heroPhone [data-hero-metres]');
   heroMedia.insertAdjacentHTML('beforeend', '<div class="scan"></div>');
   function scanLoop() {
     heroMedia.classList.remove('scanning', 'ocr-on'); void heroMedia.offsetWidth;
     heroMedia.classList.add('scanning');
     setTimeout(() => heroMedia.classList.add('ocr-on'), 700);
-    setTimeout(() => countUp(heroTotal, 16000, 1200, v => Math.round(v).toLocaleString('en-GB')), 1300);
+    setTimeout(() => countUp(heroMetres, 12000, 1200, v => Math.round(v).toLocaleString('en-GB') + 'm'), 1300);
   }
   if (!reduce) { setTimeout(scanLoop, 900); setInterval(scanLoop, 7000); } else heroMedia.classList.add('ocr-on');
 
   /* ---------- marquee ---------- */
-  const words = ['2K TEST', 'STEADY STATE', '6K', 'RATE LADDER', '30 MIN', '500M SPRINT', '5K', '3 × 2K', '10K', 'UT2'];
+  const words = ['2K TEST', 'STEADY STATE', '6K', 'CLUB 2K DAY', '30 MIN', '100KM IN NOVEMBER', '5K', '3 × 2K', '10K', 'UT2'];
   const run = words.map((w, i) => `<span class="${i % 3 === 0 ? 'fill' : ''}">${w}</span><span class="dot">●</span>`).join('');
   $('#marquee').innerHTML = run + run;
 
@@ -120,7 +91,7 @@ const PRICES = { currency: '£', month: 9.99, year: 99.99 };
     $$('[data-count]', en.target).forEach(c => countUp(c, +c.dataset.count, 1400, v => Math.round(v)));
     $$('[data-count-time]', en.target).forEach(countTime);
     io.unobserve(en.target);
-  }), { threshold: .18 });
+  }), { threshold: .15 });
   $$('[data-reveal]').forEach(el => io.observe(el));
 
   /* PB sparks */
@@ -142,25 +113,15 @@ const PRICES = { currency: '£', month: 9.99, year: 99.99 };
   steps[0].classList.add('active');
 
   /* ---------- leaderboard with FLIP re-ordering ---------- */
-  const people = {
-    'Tom Ashworth': { club: 'Newcastle University BC', c: 'a' },
-    'Jack Fenwick': { club: 'Durham University BC', c: 'b' },
-    'Piero Ciobanu': { club: 'UEA Boat Club', c: '', me: true },
-    'Marcus Reilly': { club: 'UEA Boat Club', c: 's' },
-    'Ollie Grant': { club: 'UEA Boat Club', c: 'g' },
-    'Sam Okonkwo': { club: 'UEA Boat Club', c: 'b' }
-  };
+  const people = { 'Tom Ashworth': false, 'Joe Fenwick': false, 'Sam Cole': true, 'Marcus Reilly': false, 'Ollie Grant': false };
   const boards = {
-    week: { 'Tom Ashworth': 128400, 'Jack Fenwick': 121900, 'Piero Ciobanu': 116250, 'Marcus Reilly': 104800, 'Ollie Grant': 88300, 'Sam Okonkwo': 41300 },
-    month: { 'Jack Fenwick': 512300, 'Piero Ciobanu': 498100, 'Tom Ashworth': 470900, 'Ollie Grant': 401200, 'Marcus Reilly': 388000, 'Sam Okonkwo': 210400 },
-    year: { 'Piero Ciobanu': 4812000, 'Tom Ashworth': 4700500, 'Jack Fenwick': 4522900, 'Marcus Reilly': 3980100, 'Ollie Grant': 2904800, 'Sam Okonkwo': 1260000 }
+    week: { 'Tom Ashworth': 128400, 'Joe Fenwick': 121900, 'Sam Cole': 116250, 'Marcus Reilly': 104800, 'Ollie Grant': 88300 },
+    month: { 'Joe Fenwick': 512300, 'Sam Cole': 498100, 'Tom Ashworth': 470900, 'Ollie Grant': 401200, 'Marcus Reilly': 388000 },
+    year: { 'Sam Cole': 4812000, 'Tom Ashworth': 4700500, 'Joe Fenwick': 4522900, 'Marcus Reilly': 3980100, 'Ollie Grant': 2904800 }
   };
   const rowsEl = $('#boardRows');
-  rowsEl.innerHTML = Object.keys(people).map(n => {
-    const p = people[n];
-    return `<div class="brow ${p.me ? 'me' : ''}" data-n="${n}"><div class="pos"></div><div class="rp-av ${p.c}">${n.split(' ').map(w => w[0]).join('')}</div>
-      <div class="who"><b>${n}</b><span>${p.club}</span></div><div class="val"><span class="v">0</span><small>m</small></div></div>`;
-  }).join('');
+  rowsEl.innerHTML = Object.keys(people).map(n => `<div class="brow ${people[n] ? 'me' : ''}" data-n="${n}"><div class="pos"></div><div class="rp-av">${n.split(' ').map(w => w[0]).join('')}</div>
+      <div class="who"><b>${n}</b><span>Riverside BC</span></div><div class="val"><span class="v">0</span><small>m</small></div></div>`).join('');
   const shown = {};
   function showBoard(period, animate) {
     const data = boards[period];
@@ -177,7 +138,7 @@ const PRICES = { currency: '£', month: 9.99, year: 99.99 };
       if (reduce) { v.textContent = to.toLocaleString('en-GB'); return; }
       const start = performance.now();
       const tick = (t) => {
-        const p = Math.min(1, (t - start) / 900), e = 1 - Math.pow(1 - p, 3);
+        const p = Math.max(0, Math.min(1, (t - start) / 900)), e = 1 - Math.pow(1 - p, 3);
         v.textContent = Math.round(from + (to - from) * e).toLocaleString('en-GB');
         if (p < 1) requestAnimationFrame(tick);
       };
@@ -210,7 +171,7 @@ const PRICES = { currency: '£', month: 9.99, year: 99.99 };
   const coachIO = new IntersectionObserver((en) => { if (en[0].isIntersecting) { showCoach(0); startTimer(); coachIO.disconnect(); } }, { threshold: .3 });
   coachIO.observe(grid);
 
-  /* ---------- water: layered glowing swells on a canvas ---------- */
+  /* ---------- water: layered swells on a canvas, solid lines with a soft glow ---------- */
   $$('canvas[data-water]').forEach(cv => {
     const ctx = cv.getContext('2d');
     let w, h, visible = true;
@@ -218,34 +179,26 @@ const PRICES = { currency: '£', month: 9.99, year: 99.99 };
     size(); addEventListener('resize', size);
     new IntersectionObserver((en) => { visible = en[0].isIntersecting; }).observe(cv);
     const layers = [
-      { amp: 26, len: 520, speed: .00025, y: .38, a: .55, c: '145,184,255' },
-      { amp: 20, len: 380, speed: -.0004, y: .5, a: .4, c: '198,173,255' },
-      { amp: 32, len: 700, speed: .0002, y: .62, a: .35, c: '145,184,255' },
-      { amp: 16, len: 300, speed: .0006, y: .74, a: .25, c: '120,160,255' },
-      { amp: 22, len: 460, speed: -.0003, y: .86, a: .2, c: '198,173,255' }
+      { amp: 26, len: 520, speed: .00025, y: .38, a: .5, c: '145,184,255' },
+      { amp: 20, len: 380, speed: -.0004, y: .5, a: .32, c: '145,184,255' },
+      { amp: 32, len: 700, speed: .0002, y: .62, a: .24, c: '145,184,255' },
+      { amp: 16, len: 300, speed: .0006, y: .74, a: .16, c: '145,184,255' },
+      { amp: 22, len: 460, speed: -.0003, y: .86, a: .1, c: '145,184,255' }
     ];
-    function frame(t) {
-      if (visible) {
-        ctx.clearRect(0, 0, w, h);
-        layers.forEach((L, k) => {
-          const base = h * L.y;
-          ctx.beginPath();
-          for (let x = 0; x <= w + 10; x += 10) {
-            const y = base + Math.sin(x / L.len * Math.PI * 2 + t * L.speed * 6) * L.amp + Math.sin(x / (L.len * .37) + t * L.speed * 9 + k) * L.amp * .35;
-            x ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
-          }
-          const g = ctx.createLinearGradient(0, 0, w, 0);
-          g.addColorStop(0, `rgba(${L.c},0)`); g.addColorStop(.3, `rgba(${L.c},${L.a})`); g.addColorStop(.7, `rgba(${L.c},${L.a})`); g.addColorStop(1, `rgba(${L.c},0)`);
-          ctx.strokeStyle = g; ctx.lineWidth = 1.6; ctx.shadowColor = `rgba(${L.c},.8)`; ctx.shadowBlur = 12;
-          ctx.stroke();
-          ctx.lineTo(w, h); ctx.lineTo(0, h); ctx.closePath();
-          const f = ctx.createLinearGradient(0, base - L.amp, 0, h);
-          f.addColorStop(0, `rgba(${L.c},${L.a * .1})`); f.addColorStop(1, 'rgba(10,11,13,0)');
-          ctx.shadowBlur = 0; ctx.fillStyle = f; ctx.fill();
-        });
-      }
-      if (!reduce) requestAnimationFrame(frame);
+    function draw(t) {
+      ctx.clearRect(0, 0, w, h);
+      layers.forEach((L, k) => {
+        const base = h * L.y;
+        ctx.beginPath();
+        for (let x = 0; x <= w + 10; x += 10) {
+          const y = base + Math.sin(x / L.len * Math.PI * 2 + t * L.speed * 6) * L.amp + Math.sin(x / (L.len * .37) + t * L.speed * 9 + k) * L.amp * .35;
+          x ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+        }
+        ctx.strokeStyle = `rgba(${L.c},${L.a})`; ctx.lineWidth = 1.6; ctx.shadowColor = `rgba(${L.c},.6)`; ctx.shadowBlur = 10;
+        ctx.stroke();
+      });
     }
-    requestAnimationFrame(frame);
+    function frame(t) { if (visible) draw(t); requestAnimationFrame(frame); }
+    if (reduce) draw(0); else requestAnimationFrame(frame);
   });
 })();

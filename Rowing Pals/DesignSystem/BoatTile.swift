@@ -52,7 +52,7 @@ struct BoatTile: View {
         .padding(.bottom, Tokens.Spacing.tight)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Self.shape.fill(Tokens.Base.ground))
-        .overlay { Self.shape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+        .overlay { Self.shape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
         .contentShape(Self.shape)
     }
 

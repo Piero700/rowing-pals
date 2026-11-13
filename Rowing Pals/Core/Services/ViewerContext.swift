@@ -26,6 +26,8 @@ final class ViewerContext {
         let category: RowerCategory
         let clubId: UUID?
         let clubName: String?
+        /// The club carries the verified tag (decision 98).
+        var clubIsVerified: Bool = false
         let clubRole: ClubRole
         /// Coaches their club (decision 39).
         let isCoach: Bool
@@ -104,7 +106,7 @@ final class ViewerContext {
         let userId = try await SupabaseService.shared.auth.session.user.id
 
         nonisolated struct ProfileRow: Decodable {
-            struct Club: Decodable { let name: String }
+            typealias Club = ClubNameRef
             let displayName: String
             /// Absent before docs/migrations/2026-10-18-usernames.sql.
             let username: String?
@@ -149,7 +151,7 @@ final class ViewerContext {
         async let profileRow: ProfileRow = SupabaseService.shared
             .from("profiles")
             // Every column, so a column a migration hasn't added yet (username) is just absent.
-            .select("*, clubs(name)")
+            .select("*, clubs(*)")
             .eq("id", value: userId)
             .single()
             .execute()
@@ -180,6 +182,7 @@ final class ViewerContext {
             category: profile.category,
             clubId: profile.clubId,
             clubName: profile.club?.name,
+            clubIsVerified: profile.club?.isVerified ?? false,
             clubRole: profile.clubRole ?? .member,
             isCoach: profile.isCoach ?? false,
             isRower: profile.isRower ?? true,

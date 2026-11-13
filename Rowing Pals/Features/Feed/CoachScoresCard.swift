@@ -14,8 +14,8 @@ struct CoachScoresCard: View {
     let card: CoachNotedScores
     let onLog: () -> Void
 
-    private static let cardShape = RoundedRectangle(cornerRadius: Tokens.Radius.card, style: .continuous)
-    private static let tileShape = RoundedRectangle(cornerRadius: Tokens.Notepad.scoreTileRadius, style: .continuous)
+    private static let cardShape = RoundedRectangle(cornerRadius: Tokens.Feed.card, style: .continuous)
+    private static let tileShape = RoundedRectangle(cornerRadius: Tokens.Feed.inner, style: .continuous)
 
     private var reps: [WorkoutPiece?] {
         NotepadRules.reps(NotepadRules.pieces(set: card.pieces, title: card.title, testKey: card.testKey))
@@ -52,15 +52,14 @@ struct CoachScoresCard: View {
                 Text("Your coach’s numbers don’t count towards your volume, pieces or PBs. Log the session yourself to count it.")
                     .textStyle(Typography.meta)
                     .foregroundStyle(Tokens.Ink.secondary)
-                Button(action: onLog) {
-                    Label("Log your session", icon: .plus, size: Tokens.Icon.small)
-                }
-                .buttonStyle(.rpPrimary)
+                CardLinkRow(icon: .plus, title: "Log your session", action: onLog)
+                    // The row's own height is the room under it.
+                    .padding(.bottom, -Tokens.Spacing.card)
             }
         }
         .padding(Tokens.Spacing.card)
         .background(Self.cardShape.fill(Tokens.Surface.card))
-        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
     }
 
     /// "Tue 4 Nov · 3 × 2,000m · erg 3".

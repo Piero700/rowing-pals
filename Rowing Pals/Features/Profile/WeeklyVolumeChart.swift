@@ -117,7 +117,7 @@ struct WeeklyVolumeChart: View {
             }
         }
         .overlay(alignment: .bottom) {
-            Rectangle().fill(Tokens.Surface.line).frame(height: 1)
+            Rectangle().fill(Tokens.Surface.line).frame(height: Tokens.Grouped.hairline)
         }
     }
 

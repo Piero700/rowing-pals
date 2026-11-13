@@ -34,7 +34,11 @@ struct SignInView: View {
         }
     }
 
+    /// Signing in or up: the email form at the top, Apple and Google at the bottom of the screen.
+    private var isCredentialsStep: Bool { viewModel.step == .signIn || viewModel.step == .signUp }
+
     private var page: some View {
+        GeometryReader { proxy in
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
                 if viewModel.step != .signIn {
@@ -63,8 +67,20 @@ struct SignInView: View {
                         .textStyle(Typography.bodySecondary)
                         .foregroundStyle(Tokens.System.error)
                 }
+
+                // Apple and Google sit at the foot of the screen, below the email form (user,
+                // 2026-11-05); on a short screen they follow the form and scroll.
+                if isCredentialsStep {
+                    Spacer(minLength: Tokens.Spacing.group)
+                    VStack(spacing: 20) {
+                        orDivider
+                        socialButtons
+                    }
+                }
             }
-            .padding(24)
+            .padding(Tokens.Spacing.card + Tokens.Spacing.tight)
+            .frame(minHeight: proxy.size.height, alignment: .top)
+        }
         }
         .scrollIndicators(.hidden)
         .background(Tokens.Base.ground)
@@ -119,11 +135,12 @@ struct SignInView: View {
 
     @ViewBuilder
     private var credentials: some View {
-        VStack(spacing: Tokens.Spacing.gap) {
+        GroupedSection {
             if viewModel.isSigningUp {
                 field("Display name", text: $viewModel.displayName, field: .displayName)
                     .textContentType(.name)
                     .onChange(of: viewModel.displayName) { viewModel.displayNameChanged() }
+                GroupedDivider()
                 field("Username", text: $viewModel.username, field: .username)
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
@@ -138,26 +155,30 @@ struct SignInView: View {
                         .textStyle(Typography.meta)
                         .foregroundStyle(viewModel.usernameIsFree ? Tokens.Accent.success : Tokens.System.error)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.horizontal, 4)
+                        .padding(.horizontal, Tokens.Grouped.rowPadding)
+                        .padding(.bottom, Tokens.Spacing.tight)
                 }
+                GroupedDivider()
             }
             field(viewModel.isSigningUp ? "Email" : "Email or username", text: $viewModel.email, field: .email)
                 .textInputAutocapitalization(.never)
                 .keyboardType(.emailAddress)
                 .textContentType(.username)
+            GroupedDivider()
             field("Password", text: $viewModel.password, field: .password, isSecure: true)
                 .textContentType(viewModel.isSigningUp ? .newPassword : .password)
         }
 
         if viewModel.step == .signIn {
+            // On the left, under the password (user, 2026-11-05), clear of the right-hand thumb.
             HStack {
-                Spacer()
                 Button("Forgot password?") {
                     focusedField = nil
                     viewModel.go(to: .forgotEmail)
                 }
                 .buttonStyle(.rpText)
                 .textStyle(Typography.bodySecondary)
+                Spacer()
             }
             .padding(.top, -12)
         }
@@ -169,9 +190,6 @@ struct SignInView: View {
         primaryButton(viewModel.isSigningUp ? "Sign up" : "Sign in", isEnabled: canSubmit) {
             await viewModel.submit()
         }
-
-        orDivider
-        socialButtons
 
         Button {
             viewModel.go(to: viewModel.isSigningUp ? .signIn : .signUp)
@@ -185,11 +203,11 @@ struct SignInView: View {
 
     private var orDivider: some View {
         HStack(spacing: Tokens.Spacing.loose) {
-            Rectangle().fill(Tokens.Surface.line).frame(height: 1)
+            Rectangle().fill(Tokens.Surface.line).frame(height: Tokens.Grouped.hairline)
             Text("or")
                 .textStyle(Typography.meta)
                 .foregroundStyle(Tokens.Ink.secondary)
-            Rectangle().fill(Tokens.Surface.line).frame(height: 1)
+            Rectangle().fill(Tokens.Surface.line).frame(height: Tokens.Grouped.hairline)
         }
     }
 
@@ -203,7 +221,7 @@ struct SignInView: View {
             }
             .signInWithAppleButtonStyle(colorScheme == .dark ? .white : .black)
             .frame(height: Tokens.Size.primaryButton)
-            .clipShape(Capsule())
+            .clipShape(RoundedRectangle(cornerRadius: Tokens.Radius.button, style: .continuous))
             .disabled(viewModel.isLoading)
 
             Button {
@@ -285,16 +303,19 @@ struct SignInView: View {
         Text("Can't find it? Check your junk folder. The code works for an hour.")
             .textStyle(Typography.meta)
             .foregroundStyle(Tokens.Ink.secondary)
+            .guidance()
     }
 
     // MARK: - Forgot password
 
     @ViewBuilder
     private var forgotEmail: some View {
-        field("Email or username", text: $viewModel.email, field: .email)
-            .textInputAutocapitalization(.never)
-            .keyboardType(.emailAddress)
-            .textContentType(.username)
+        GroupedSection {
+            field("Email or username", text: $viewModel.email, field: .email)
+                .textInputAutocapitalization(.never)
+                .keyboardType(.emailAddress)
+                .textContentType(.username)
+        }
         primaryButton("Send code", isEnabled: !viewModel.email.trimmingCharacters(in: .whitespaces).isEmpty && !viewModel.isLoading) {
             await viewModel.sendResetCode()
         }
@@ -303,8 +324,10 @@ struct SignInView: View {
     @ViewBuilder
     private var forgotCode: some View {
         codeField
-        field("New password", text: $viewModel.newPassword, field: .newPassword, isSecure: true)
-            .textContentType(.newPassword)
+        GroupedSection {
+            field("New password", text: $viewModel.newPassword, field: .newPassword, isSecure: true)
+                .textContentType(.newPassword)
+        }
         if !viewModel.newPassword.isEmpty && viewModel.newPassword.count < SignInViewModel.minimumPasswordLength {
             Text("At least \(SignInViewModel.minimumPasswordLength) characters.")
                 .textStyle(Typography.meta)
@@ -375,9 +398,8 @@ struct SignInView: View {
         .textStyle(Typography.body)
         .foregroundStyle(Tokens.Ink.primary)
         .focused($focusedField, equals: field)
-        .padding(.horizontal, 16)
-        .frame(height: Tokens.Size.input)
-        .glassSurface(cornerRadius: Tokens.Radius.input)
+        .padding(.horizontal, Tokens.Grouped.rowPadding)
+        .frame(height: Tokens.Grouped.rowHeight)
     }
 }
 

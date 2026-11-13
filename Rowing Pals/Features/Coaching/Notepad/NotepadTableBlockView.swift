@@ -56,7 +56,7 @@ struct NotepadTableBlockView: View {
             .overlay(alignment: .top) { Self.line.frame(height: 1) }
         }
         .background(Self.shape.fill(Tokens.Surface.card))
-        .overlay { Self.shape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+        .overlay { Self.shape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
         .clipShape(Self.shape)
     }
 

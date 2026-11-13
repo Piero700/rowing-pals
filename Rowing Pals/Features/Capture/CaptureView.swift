@@ -11,7 +11,8 @@ import SwiftUI
 /// "Log workout", Help; the dual-camera frame (radius 22) with the front camera inset (27 % ×
 /// 37 %, top-right by default); "Front + rear · No time limit"; "Enter session manually"; and a
 /// flip / shutter / library row. Simultaneous capture on multi-cam devices, sequential rear then
-/// front elsewhere. Nothing is uploaded until the rower confirms the numbers on Review.
+/// front elsewhere. One at a time (decision 103) takes the monitor here and the second photo on
+/// `SecondPhotoCaptureView`. Nothing is uploaded until the rower confirms the numbers on Review.
 ///
 /// A photo chosen from the library has no live selfie, so — like manual entry — the session is
 /// unverified and stays personal (decision 2026-09-24); the photo is still read.
@@ -23,7 +24,16 @@ struct CaptureView: View {
     /// Closes the Log modal without posting (the back button).
     let onClose: () -> Void
 
-    @State private var viewModel = CaptureViewModel()
+    /// Rear-only while the selfie is off or the photos are taken one at a time, so the front camera
+    /// isn't on at all.
+    @State private var viewModel: CaptureViewModel
+    /// The selfie (the front camera, the rower's face) for this session — starts from Settings →
+    /// Logging and can be switched here (decision 98). Off: only the monitor photo is taken.
+    @State private var takesSelfie: Bool
+    /// Together or One at a time, while the selfie is on; remembers the last one used (decision 103).
+    @AppStorage(CaptureMode.storageKey) private var captureMode: CaptureMode = .together
+    /// The monitor photo, on its way to the second-photo screen.
+    @State private var secondPhotoStart: SecondPhotoStart?
     @State private var initialCapture: InitialCapture?
     @State private var libraryStart: LibraryStart?
     /// Which corner the front preview sits in — user-configurable (phase D); press and hold the
@@ -48,11 +58,29 @@ struct CaptureView: View {
         return todaysWorkouts[chosenWorkout].workout
     }
 
+    init(workoutId: UUID? = nil, onPosted: @escaping () -> Void, onClose: @escaping () -> Void) {
+        self.workoutId = workoutId
+        self.onPosted = onPosted
+        self.onClose = onClose
+        let selfie = UserDefaults.standard.object(forKey: SelfieDefault.storageKey) as? Bool ?? true
+        _takesSelfie = State(initialValue: selfie)
+        _viewModel = State(initialValue: CaptureViewModel(rearOnly: !selfie || CaptureMode.saved == .oneAtATime))
+    }
+
     private struct InitialCapture: Hashable {
         let id = UUID()
         let rearJPEG: Data
-        let frontJPEG: Data
+        /// Nil when the selfie was switched off for this session.
+        let frontJPEG: Data?
     }
+
+    private struct SecondPhotoStart: Hashable {
+        let id = UUID()
+        let monitorJPEG: Data
+    }
+
+    /// Whether the front camera is live on this screen.
+    private var showsBothCameras: Bool { takesSelfie && captureMode == .together }
 
     private struct LibraryStart: Hashable {
         let id = UUID()
@@ -65,9 +93,17 @@ struct CaptureView: View {
 
             VStack(spacing: Tokens.Spacing.gap) {
                 cameraFrame
-                Text("Front + rear · No time limit")
-                    .textStyle(Typography.statLabel)
-                    .foregroundStyle(Tokens.Ink.secondary)
+                selfieRow
+                if takesSelfie {
+                    PillSegmentedControl(
+                        options: CaptureMode.allCases.map(\.label),
+                        selection: Binding(
+                            get: { CaptureMode.allCases.firstIndex(of: captureMode) ?? 0 },
+                            set: { setCaptureMode(CaptureMode.allCases[$0]) }
+                        ),
+                        compact: true
+                    )
+                }
             }
             .padding(.horizontal, Tokens.Spacing.screen)
 
@@ -95,15 +131,18 @@ struct CaptureView: View {
         }
         .onDisappear { viewModel.stop() }
         .navigationDestination(item: $initialCapture) { capture in
-            ReviewSheetView(selfieJPEG: capture.frontJPEG, initialMonitorPhoto: capture.rearJPEG,
+            ReviewSheetView(selfieJPEG: capture.frontJPEG, isLiveCapture: true, initialMonitorPhoto: capture.rearJPEG,
                             linkedWorkout: linkedWorkout, onPosted: onPosted)
         }
+        .navigationDestination(item: $secondPhotoStart) { start in
+            SecondPhotoCaptureView(monitorJPEG: start.monitorJPEG, linkedWorkout: linkedWorkout, onPosted: onPosted)
+        }
         .navigationDestination(item: $libraryStart) { start in
-            ReviewSheetView(selfieJPEG: nil, initialMonitorPhoto: start.jpeg,
+            ReviewSheetView(selfieJPEG: nil, isLiveCapture: false, initialMonitorPhoto: start.jpeg,
                             linkedWorkout: linkedWorkout, onPosted: onPosted)
         }
         .navigationDestination(isPresented: $isManualEntry) {
-            ReviewSheetView(selfieJPEG: nil, initialMonitorPhoto: nil,
+            ReviewSheetView(selfieJPEG: nil, isLiveCapture: false, initialMonitorPhoto: nil,
                             linkedWorkout: linkedWorkout, onPosted: onPosted)
         }
         .sheet(isPresented: $isShowingCornerPicker) {
@@ -140,20 +179,22 @@ struct CaptureView: View {
                     .frame(width: geometry.size.width, height: geometry.size.height)
                     .clipShape(shape)
 
-                insetPreview
-                    .frame(width: geometry.size.width * Tokens.Size.cameraInsetShare,
-                           height: geometry.size.height * Tokens.Size.cameraInsetShare)
-                    .clipShape(RoundedRectangle(cornerRadius: Tokens.Radius.photoInset, style: .continuous))
-                    .overlay {
-                        RoundedRectangle(cornerRadius: Tokens.Radius.photoInset, style: .continuous)
-                            .strokeBorder(Tokens.Surface.card, lineWidth: 2)
-                    }
-                    .shadow(color: .black.opacity(0.33), radius: 7, y: 5)
-                    .padding(Tokens.Spacing.gap)
-                    .onLongPressGesture { isShowingCornerPicker = true }
-                    .accessibilityLabel("Front camera preview")
-                    .accessibilityHint("Press and hold to move it to another corner")
-                    .accessibilityAction(named: "Move preview") { isShowingCornerPicker = true }
+                if showsBothCameras {
+                    insetPreview
+                        .frame(width: geometry.size.width * Tokens.Size.cameraInsetShare,
+                               height: geometry.size.height * Tokens.Size.cameraInsetShare)
+                        .clipShape(RoundedRectangle(cornerRadius: Tokens.Radius.photoInset, style: .continuous))
+                        .overlay {
+                            RoundedRectangle(cornerRadius: Tokens.Radius.photoInset, style: .continuous)
+                                .strokeBorder(Tokens.Surface.card, lineWidth: 2)
+                        }
+                        .shadow(color: .black.opacity(0.33), radius: 7, y: 5)
+                        .padding(Tokens.Spacing.gap)
+                        .onLongPressGesture { isShowingCornerPicker = true }
+                        .accessibilityLabel("Front camera preview")
+                        .accessibilityHint("Press and hold to move it to another corner")
+                        .accessibilityAction(named: "Move preview") { isShowingCornerPicker = true }
+                }
 
                 if todaysWorkouts.indices.contains(chosenWorkout) {
                     workoutPanel(todaysWorkouts[chosenWorkout])
@@ -182,6 +223,63 @@ struct CaptureView: View {
             PhotoPlaceholder(cornerRadius: Tokens.Radius.photo, caption: viewModel.phase == .configuring ? "STARTING CAMERA…" : "REAR CAMERA")
         }
     }
+
+    /// "Front + rear" or "Monitor only", and the selfie switch for this session (decision 98).
+    private var selfieRow: some View {
+        HStack(spacing: Tokens.Spacing.loose) {
+            Text(captionText)
+                .textStyle(Typography.statLabel)
+                .foregroundStyle(Tokens.Ink.secondary)
+            Spacer(minLength: 0)
+            Text("Selfie")
+                .textStyle(Typography.detail)
+                .foregroundStyle(Tokens.Ink.primary)
+            Toggle("Take a selfie with this session", isOn: Binding(
+                get: { takesSelfie },
+                set: { setTakesSelfie($0) }
+            ))
+            .labelsHidden()
+            .tint(Tokens.Accent.brand)
+            .disabled(viewModel.phase == .capturingRear || viewModel.phase == .capturingFront)
+        }
+        .padding(.horizontal, 2)
+    }
+
+    private var captionText: String {
+        guard takesSelfie else { return "Monitor only · No time limit" }
+        return captureMode == .together ? "Front + rear · No time limit" : "Monitor first · No time limit"
+    }
+
+    private func setTakesSelfie(_ isOn: Bool) {
+        guard isOn != takesSelfie else { return }
+        takesSelfie = isOn
+        restartCamera()
+    }
+
+    private func setCaptureMode(_ mode: CaptureMode) {
+        guard mode != captureMode else { return }
+        captureMode = mode
+        restartCamera()
+    }
+
+    /// Restarts the camera with or without the front camera, so it's only ever on when this screen
+    /// is taking both photos together. The new session starts only after the old one has released
+    /// the cameras, and switches made in quick succession run in order.
+    private func restartCamera() {
+        if !showsBothCameras { isFrontPrimary = false }
+        let previousRestart = cameraRestart
+        let old = viewModel
+        let next = CaptureViewModel(rearOnly: !showsBothCameras)
+        viewModel = next
+        cameraRestart = Task {
+            await previousRestart?.value
+            await old.shutDown()
+            next.start()
+        }
+    }
+
+    /// The camera switch in progress, so the next one waits for it.
+    @State private var cameraRestart: Task<Void, Never>?
 
     @ViewBuilder
     private var insetPreview: some View {
@@ -282,15 +380,13 @@ struct CaptureView: View {
             Button {
                 withAnimation(.snappy) { isFrontPrimary.toggle() }
             } label: {
-                RPIconView(icon: .flipCamera)
-                    .textStyle(Typography.cardTitle)
-                    .foregroundStyle(Tokens.Ink.primary)
-                    .frame(width: 48, height: 48)
-                    .glassSurface(in: Circle())
-                    .contentShape(Circle())
+                CaptureFlipLabel()
             }
             .buttonStyle(IconPressStyle())
             .accessibilityLabel("Flip camera")
+            // Nothing to flip to with only the back camera on: the monitor is always the back camera.
+            .opacity(showsBothCameras ? 1 : 0)
+            .disabled(!showsBothCameras)
             .frame(maxWidth: .infinity)
 
             shutterSlot
@@ -320,7 +416,16 @@ struct CaptureView: View {
         default:
             Button {
                 Task {
-                    if let (rear, front) = await viewModel.captureInitialPair() {
+                    if !showsBothCameras {
+                        if let rear = await viewModel.captureSinglePhoto() {
+                            viewModel.stop()
+                            if takesSelfie {
+                                secondPhotoStart = SecondPhotoStart(monitorJPEG: rear)
+                            } else {
+                                initialCapture = InitialCapture(rearJPEG: rear, frontJPEG: nil)
+                            }
+                        }
+                    } else if let (rear, front) = await viewModel.captureInitialPair() {
                         // Release the camera before Review can start another session for
                         // "Add photo" — this view stays on the stack, so onDisappear isn't
                         // a reliable moment.
@@ -329,14 +434,7 @@ struct CaptureView: View {
                     }
                 }
             } label: {
-                Circle()
-                    .fill(Color.white)
-                    .frame(width: 64, height: 64)
-                    .padding(6)
-                    .background(Circle().fill(Tokens.Surface.raised))
-                    .padding(2)
-                    .background(Circle().fill(Color.white))
-                    .contentShape(Circle())
+                CaptureShutterLabel()
             }
             .buttonStyle(IconPressStyle())
             .disabled(viewModel.phase != .ready)
@@ -375,6 +473,8 @@ struct CaptureView: View {
                     .textStyle(Typography.navTitle)
                     .foregroundStyle(Tokens.Ink.primary)
                 helpItem("One tap, two photos", "The shutter takes the monitor with the back camera and you with the front camera at the same moment. There's no time limit.")
+                helpItem("One at a time", "Choose One at a time to take the monitor first, then a second photo whenever you're ready, before you post. It opens on the back camera for your surroundings, and flip turns it to your face. Skip it if you like. There's no time limit, but closing the app loses the photos. The session still counts on leaderboards.")
+                helpItem("No selfie", "Turn Selfie off under the camera to take just the monitor photo this time. Settings › Logging sets whether it starts on or off. The session still counts on leaderboards.")
                 helpItem("Photograph the right screen", "On a Concept2 PM5, open Menu › Memory › View Detail for the piece. The app reads the table on that screen: time, metres, /500m and rate.")
                 helpItem("Keep it sharp", "Fill the frame with the screen, hold still, and avoid glare from lights above.")
                 helpItem("Several pieces", "On the next screen, Add photo takes or chooses more monitor photos — each becomes a piece and its metres are added to the total.")

@@ -72,7 +72,7 @@ struct CoachBoatsView: View {
     @ViewBuilder
     private var sessionsList: some View {
         if viewModel.sessions.isEmpty {
-            Text("No water sessions coming up. Tap + and choose Water session to plan one and crew its boats.")
+            GuidedText("No water sessions coming up.", hint: "Tap + and choose Water session to plan one and crew its boats.")
                 .textStyle(Typography.meta)
                 .foregroundStyle(Tokens.Ink.secondary)
                 .padding(.horizontal, 4)
@@ -112,7 +112,7 @@ struct CoachBoatsView: View {
             .padding(.horizontal, Tokens.Spacing.card)
             .padding(.vertical, Tokens.Spacing.loose)
             .background(Self.cardShape.fill(Tokens.Surface.card))
-            .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+            .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
         }
     }
 
@@ -184,7 +184,7 @@ struct CoachBoatsView: View {
         .padding(.vertical, Tokens.Spacing.card)
         .padding(.horizontal, Tokens.Spacing.gap)
         .background(Self.cardShape.fill(Tokens.Surface.card))
-        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
         .padding(.bottom, Tokens.Spacing.tight)
     }
 
@@ -197,8 +197,9 @@ struct CoachBoatsView: View {
             .foregroundStyle(Tokens.Ink.secondary)
             .padding(.horizontal, 4)
             .padding(.bottom, Tokens.Spacing.loose)
+            .guidance()
         if viewModel.savedBoats.isEmpty {
-            Text("No saved boats yet. Save one here, or turn on Keep in Saved boats when you crew a boat.")
+            GuidedText("No saved boats yet.", hint: "Save one here, or turn on Keep in Saved boats when you crew a boat.")
                 .textStyle(Typography.meta)
                 .foregroundStyle(Tokens.Ink.secondary)
                 .padding(.horizontal, 4)
@@ -220,7 +221,7 @@ struct CoachBoatsView: View {
             .padding(.vertical, Tokens.Spacing.loose)
             .padding(.horizontal, Tokens.Spacing.gap)
             .background(Self.cardShape.fill(Tokens.Surface.card))
-            .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+            .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
         }
         Button {
             navigate(.savedBoat(nil))

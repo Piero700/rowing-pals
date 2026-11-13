@@ -66,25 +66,25 @@ struct RosterFiltersSheet: View {
                     VStack(spacing: 0) {
                         choiceRow(name: "All squads", detail: Self.rowers(rowerCount), isSelected: squad == nil) { squad = nil }
                         ForEach(squads) { item in
-                            Rectangle().fill(Tokens.Surface.line).frame(height: 1)
+                            Rectangle().fill(Tokens.Surface.line).frame(height: Tokens.Grouped.hairline)
                             choiceRow(name: item.name, detail: Self.rowers(item.memberIds.count), isSelected: squad == item.id) { squad = item.id }
                         }
                     }
                     .background(Self.cardShape.fill(Tokens.Surface.card))
                     .clipShape(Self.cardShape)
-                    .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+                    .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
 
                     title("Sort by")
                         .padding(.top, Tokens.Spacing.group)
                     VStack(spacing: 0) {
                         ForEach(Array(RosterSort.allCases.enumerated()), id: \.element) { index, option in
-                            if index > 0 { Rectangle().fill(Tokens.Surface.line).frame(height: 1) }
+                            if index > 0 { Rectangle().fill(Tokens.Surface.line).frame(height: Tokens.Grouped.hairline) }
                             choiceRow(name: option.label, detail: option.detail, isSelected: sort == option) { sort = option }
                         }
                     }
                     .background(Self.cardShape.fill(Tokens.Surface.card))
                     .clipShape(Self.cardShape)
-                    .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+                    .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
                 }
                 .padding(.horizontal, Tokens.Spacing.screen)
                 .padding(.bottom, Tokens.Spacing.group)

@@ -67,7 +67,7 @@ struct RowerWaterSessionView: View {
         }
         .padding(Tokens.Spacing.card)
         .background(Self.cardShape.fill(Tokens.Surface.card))
-        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
         .padding(.top, Tokens.Spacing.tight)
     }
 
@@ -88,7 +88,7 @@ struct RowerWaterSessionView: View {
         let mine = viewModel.myBoats
         let others = viewModel.otherBoats
         if mine.isEmpty && others.isEmpty {
-            Text("No boats yet. Your coach crews the boats and sends them; yours shows here when it’s sent.")
+            GuidedText("No boats yet.", hint: "Your coach crews the boats and sends them; yours shows here when it’s sent.")
                 .textStyle(Typography.meta)
                 .foregroundStyle(Tokens.Ink.secondary)
                 .padding(.horizontal, 4)

@@ -64,7 +64,7 @@ struct PhotoClassificationTests {
     // MARK: Corrections
 
     @Test func pieceCanBeMovedToPhotosAndBack() {
-        let vm = ReviewSheetViewModel(selfieJPEG: Data([0]))
+        let vm = ReviewSheetViewModel(selfieJPEG: Data([0]), isLiveCapture: true)
         vm.segments = [Self.piece(.main, distanceM: 5000, timeMs: 1_200_000),
                        Self.piece(.extra, distanceM: 2000, timeMs: 480_000)]
         let extraID = vm.segments[1].id
@@ -84,7 +84,7 @@ struct PhotoClassificationTests {
     }
 
     @Test func environmentPhotosAreCapped() {
-        let vm = ReviewSheetViewModel(selfieJPEG: Data([0]))
+        let vm = ReviewSheetViewModel(selfieJPEG: Data([0]), isLiveCapture: true)
         for i in 0..<ReviewSheetViewModel.maxGalleryPhotos { vm.addGalleryPhoto(Data([UInt8(i)])) }
         vm.segments = [Self.piece(.main, distanceM: 5000, timeMs: 1_200_000),
                        Self.piece(.extra, distanceM: 2000, timeMs: 480_000)]

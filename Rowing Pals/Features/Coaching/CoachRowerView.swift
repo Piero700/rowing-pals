@@ -141,7 +141,7 @@ struct CoachRowerView: View {
                 Self.cardShape.fill(Tokens.System.error.opacity(Tokens.Coaching.flagCardTint))
             }
         }
-        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
         .accessibilityElement(children: .combine)
     }
 
@@ -222,7 +222,7 @@ struct CoachRowerView: View {
                             navigate(.pbHistory(StandardTest(key: test.key, label: test.label, target: target), detail.rower.id))
                         }
                     if index < detail.tests.count - 1 {
-                        Rectangle().fill(Tokens.Surface.line).frame(height: 1)
+                        Rectangle().fill(Tokens.Surface.line).frame(height: Tokens.Grouped.hairline)
                     }
                 }
             }
@@ -348,7 +348,7 @@ struct CoachRowerView: View {
 
     private var card: some View {
         Self.cardShape.fill(Tokens.Surface.card)
-            .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+            .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
     }
 
     private func emptyCard(_ text: String) -> some View {

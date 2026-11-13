@@ -24,7 +24,7 @@ struct FilterChip: View {
             .padding(.horizontal, Tokens.Spacing.gap)
             .padding(.vertical, Tokens.Spacing.tight)
             .background {
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                RoundedRectangle(cornerRadius: Tokens.Radius.input, style: .continuous)
                     .fill(Tokens.Ink.primary.opacity(isSelected ? 0.16 : 0.07))
             }
     }

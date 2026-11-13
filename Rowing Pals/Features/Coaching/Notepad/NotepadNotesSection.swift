@@ -25,12 +25,13 @@ struct NotepadNotesSection: View {
                 .foregroundStyle(Tokens.Ink.primary)
                 .padding(Tokens.Spacing.card)
                 .background(Self.shape.fill(Tokens.Surface.card))
-                .overlay { Self.shape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+                .overlay { Self.shape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
                 .accessibilityLabel("Notes")
             Text("Only your club’s coaches see this page. None of it counts towards anyone’s volume, pieces or PBs.")
                 .textStyle(Typography.statLabel)
                 .foregroundStyle(Tokens.Ink.secondary)
                 .padding(.horizontal, 4)
+                .guidance()
         }
         .padding(.top, Tokens.Spacing.loose)
         .onChange(of: viewModel.notes) { viewModel.pageChanged() }

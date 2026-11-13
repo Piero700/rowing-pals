@@ -93,11 +93,12 @@ struct ErgEventDetailView: View {
                     .textStyle(Typography.meta)
                     .tabularNumerals()
                     .foregroundStyle(Tokens.Ink.secondary)
+                    .guidance()
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(Tokens.Spacing.card)
             .background(Self.cardShape.fill(Tokens.Surface.card))
-            .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+            .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
             .padding(.top, Tokens.Spacing.loose)
         }
 
@@ -122,13 +123,13 @@ struct ErgEventDetailView: View {
         } else {
             VStack(spacing: 0) {
                 ForEach(Array(viewModel.board.enumerated()), id: \.element.id) { index, result in
-                    if index > 0 { Rectangle().fill(Tokens.Surface.line).frame(height: 1) }
+                    if index > 0 { Rectangle().fill(Tokens.Surface.line).frame(height: Tokens.Grouped.hairline) }
                     row(place: index + 1, result: result, event: event)
                 }
             }
             .background(Self.cardShape.fill(Tokens.Surface.card))
             .clipShape(Self.cardShape)
-            .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+            .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
         }
     }
 

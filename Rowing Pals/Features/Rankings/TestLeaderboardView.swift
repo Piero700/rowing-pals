@@ -46,8 +46,9 @@ struct TestLeaderboardView: View {
                 if viewModel.rows.isEmpty {
                     emptyState
                 } else {
-                    VStack(spacing: Tokens.Spacing.tight) {
-                        ForEach(viewModel.rows) { row in
+                    GroupedSection {
+                        ForEach(Array(viewModel.rows.enumerated()), id: \.element.id) { index, row in
+                            if index > 0 { GroupedDivider() }
                             rowView(row)
                         }
                     }
@@ -55,7 +56,7 @@ struct TestLeaderboardView: View {
 
                 Color.clear.frame(height: 100)
             }
-            .padding(.horizontal, 14)
+            .padding(.horizontal, Tokens.Spacing.screen)
         }
         .safeAreaInset(edge: .top, spacing: 0) {
             // v4: the shared header, title centred; a club test's delete button on the right.
@@ -161,7 +162,11 @@ struct TestLeaderboardView: View {
                             }
                     }
                 }
-                Text("\(row.club ?? "No club") · \(row.dateLabel)")
+                HStack(spacing: Tokens.Spacing.verifiedGap) {
+                    ClubNameLabel(name: row.club ?? "No club", isVerified: row.club != nil && row.clubIsVerified,
+                                  badgeSize: Tokens.Icon.badge)
+                    Text("· \(row.dateLabel)")
+                }
                     .textStyle(Typography.statLabel)
                     .tabularNumerals()
                     .foregroundStyle(Tokens.Ink.secondary)
@@ -179,11 +184,9 @@ struct TestLeaderboardView: View {
                     .foregroundStyle(Tokens.Ink.secondary)
             }
         }
-        .padding(Tokens.Spacing.loose)
-        .background {
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .fill(isPodium ? Tokens.Accent.records.opacity(0.07) : Tokens.Ink.primary.opacity(0.05))
-        }
+        .padding(.horizontal, Tokens.Grouped.rowPadding)
+        .padding(.vertical, Tokens.Spacing.tight)
+        .background(isPodium ? Tokens.Accent.records.opacity(0.07) : Color.clear)
     }
 }
 

@@ -80,7 +80,7 @@ from dataclasses import dataclass, field, replace
 from datetime import date, datetime, timedelta
 from typing import Any, Iterable, Mapping, Sequence
 
-SCHEMA_VERSION = "anchor-impulse/1.6"
+SCHEMA_VERSION = "anchor-impulse/1.7"
 
 __all__ = [
     "SCHEMA_VERSION",
@@ -145,6 +145,11 @@ class Tier:
     def rpe_mid(self) -> float:
         return (self.rpe_lo + self.rpe_hi) / 2.0
 
+    @property
+    def rate_mid(self) -> float:
+        """The zone's usual rate: the middle of its plausible range (v1.7, §5.18)."""
+        return (self.rate_lo + self.rate_hi) / 2.0
+
 
 # Seed calibration. Verified mutually consistent for a 1:45.0 2k athlete: see the
 # `_check_tier_coherence` self-test, which asserts every tier recovers the same S2k from
@@ -181,6 +186,9 @@ _FIELD_ALIASES = {
     # v1.6: a best the rower typed in (2k, 5k...) rather than a session they logged. Used as
     # an all-out piece, never as training load. See SPEC.md §5.16.
     "declared": ("declared", "is_declared", "isDeclared"),
+    # v1.7: a warm-up, cool-down, extra piece or zone-less post. Counts towards training
+    # volume only, never towards pace. See SPEC.md §5.20.
+    "volume_only": ("volume_only", "volumeOnly", "is_volume_only"),
     # Session RPE on the Borg CR10 scale (1-10). A 1-20 Borg value is detected and
     # converted; see `_normalise_rpe`.
     "rpe": ("rpe", "RPE", "perceived_effort", "perceivedEffort", "effort",
@@ -256,8 +264,9 @@ class EngineConfig:
     # Reconciliation tolerance between a supplied split and one derived from time/distance.
     split_mismatch_tolerance: float = 0.02
 
-    # "median" (default, robust) or "single_session" (v1.0 parity: longest qualifying row).
-    submaximal_anchor_method: str = "median"
+    # "blend" (v1.7 default: every steady zone together, §5.17), "median" (v1.6: the
+    # best-ranked zone's duration-weighted median) or "single_session" (v1.0 parity).
+    submaximal_anchor_method: str = "blend"
 
     # --- v1.6: every all-out piece counts (SPEC.md §5.3, §5.15) --------------------------
     #
@@ -273,6 +282,55 @@ class EngineConfig:
     held_split_floor: bool = True
     # A best the rower typed in rather than rowed in the app is self-reported (§5.16).
     declared_anchor_penalty: int = 10
+
+    # --- v1.7: every erg post counts (SPEC.md §5.17-5.21) --------------------------------
+    #
+    # SEED VALUES, set before any cohort data existed at the user's request (2026-11-09):
+    # tune them with diagnose_history() and posted tests like every other constant (§7.2).
+    #
+    # Steady zones together (§5.17): with no all-out piece, every AT/UT1/UT2 piece gives its
+    # own 2k equivalent, and the weighted median is taken with weight minutes x recency
+    # (halving every `submaximal_blend_half_life_days`) x zone trust (1 / range base²).
+    # `submaximal_anchor_method="median"` restores v1.6 (the best-ranked zone's median).
+    submaximal_blend_half_life_days: float = 14.0
+    # Rate (§5.18): a steady piece rowed above its zone's usual rate gives a faster split
+    # for the same effort, so its 2k equivalent is moved back by this much per stroke away
+    # from the middle of the zone's rate range, capped. Steady zones only (AT/UT1/UT2).
+    rate_sensitivity_s: float = 1.5
+    rate_max_correction_s: float = 4.5
+    # Steady rows since the test (§5.19): the change, zone by zone, in the steady pieces'
+    # 2k equivalent from on/before the newest all-out piece to after it. A 2k is mostly
+    # aerobic, so part of that change carries over: `transfer` at 2000m, rising per
+    # doubling of the target (a 5k is more aerobic), within [min, max]. It can only make
+    # the prediction faster, never slower than what the rower has held all-out.
+    steady_trend: bool = True
+    steady_transfer_at_reference: float = 0.5
+    steady_transfer_per_doubling: float = 0.1
+    steady_transfer_min: float = 0.3
+    steady_transfer_max: float = 0.7
+    steady_gain_cap_s: float = 3.0
+    steady_trend_min_pieces: int = 2      # steady pieces needed on each side, in all
+    steady_slower_flag_s: float = 0.5     # say so when steady rows got this much slower
+    # Volume (§5.20): above `load_gain_from` the modifier gains this much per doubling of
+    # the 30-day load, capped (diminishing returns). "knots" restores v1.6's flat plateau.
+    # With an all-out anchor, only the share of the load rowed after the newest all-out
+    # piece can make the prediction faster (training before a test is inside its time),
+    # and a measured steady change replaces that faster side altogether.
+    volume_curve: str = "per_doubling"
+    load_gain_from: float = 600.0
+    load_gain_per_doubling_s: float = 0.75
+    load_gain_cap_s: float = 2.5
+    volume_after_measurement: bool = True
+    # Personal Paul's Law (§5.21): the seconds per doubling fitted to the rower's own
+    # continuous all-out pieces over `personal_paul_window_days` (each halving in weight
+    # every `personal_paul_half_life_days`), shrunk towards `paul_constant` with a prior
+    # worth `personal_paul_prior_strength` units of spread (doublings²), within [min, max].
+    personal_paul: bool = True
+    personal_paul_window_days: int = 90
+    personal_paul_half_life_days: float = 60.0
+    personal_paul_prior_strength: float = 1.0
+    personal_paul_min: float = 2.5
+    personal_paul_max: float = 8.0
 
     # --- Perceived effort (RPE) --------------------------------------------------------
     #
@@ -351,6 +409,11 @@ class EngineConfig:
     range_thin_history_s: float = 1.5          # at no history, scaled by (1 - load_confidence)
     range_interval_ambiguous_s: float = 3.0    # AN/TR anchor that may have been intervals
     range_tag_mismatch_s: float = 1.0          # each of: anchor rate, anchor RPE contradict tag
+    # v1.7 (§5.13): each nudge carries this share of itself as doubt (the steady change and
+    # the faster side of volume), and a stale anchor's doubt is scaled by this when steady
+    # rows since it were measured (they track what happened after the test).
+    range_gain_share: float = 0.5
+    range_stale_share_when_tracked: float = 0.5
 
     # Reproduce the original v1.0 Step 3 arithmetic, for A/B measurement only.
     legacy_v1_formula: bool = False
@@ -582,6 +645,15 @@ class Session:
     bodyweight_kg: float | None = None
     # v1.6: a best the rower typed in, not a logged session (§5.16).
     declared: bool = False
+    # v1.7: training volume only, never pace (§5.20).
+    volume_only: bool = False
+
+    @property
+    def is_continuous(self) -> bool:
+        """One unbroken piece: no rep distance shorter than the piece, and not suspected
+        of being unlabelled intervals."""
+        return (not self.interval_ambiguous
+                and (self.rep_distance_m is None or self.rep_distance_m >= self.distance_m))
 
     @property
     def duration_minutes(self) -> float:
@@ -707,6 +779,8 @@ def _normalise_session(
 
     declared_raw = _pluck(raw, "declared")
     declared = declared_raw is True or str(declared_raw).strip().lower() in ("true", "1", "yes")
+    volume_raw = _pluck(raw, "volume_only")
+    volume_only = volume_raw is True or str(volume_raw).strip().lower() in ("true", "1", "yes")
 
     return Session(
         id=session_id,
@@ -724,6 +798,7 @@ def _normalise_session(
         rpe_mismatch=rpe_mismatch,
         bodyweight_kg=bodyweight,
         declared=declared,
+        volume_only=volume_only,
     )
 
 
@@ -745,6 +820,14 @@ class Anchor:
     rpe_mismatch: bool = False
     rpe_coverage: float = 1.0   # share of the anchor's duration carrying a usable RPE
     declared: bool = False      # the piece that weighs most is a best the rower typed in
+    # v1.7: the newest day of an all-out anchor's pieces — the last measurement. Training
+    # after it is what can have moved the rower on (§5.19, §5.20).
+    measured_day: date | None = None
+    # v1.7 steady-zone blend (§5.17): corrections already worked out for the median piece,
+    # and the range base weighted across the zones present.
+    rpe_correction: float | None = None
+    rate_correction: float = 0.0
+    range_base: float | None = None
 
     @property
     def tier(self) -> Tier:
@@ -779,7 +862,7 @@ def _blend_weight(session: Session, target_distance: float, as_of: date,
 
 
 def _blended_anchor(candidates: Sequence[Session], tag: str, target_distance: float,
-                    as_of: date, config: EngineConfig) -> Anchor:
+                    as_of: date, config: EngineConfig, paul: float | None = None) -> Anchor:
     """Every all-out piece in the tier, each turned into its own 2k equivalent and averaged
     by `_blend_weight` (v1.6). Returned as one synthetic anchor at the weighted (geometric)
     mean distance whose split gives exactly that blended 2k, so the rest of the pipeline is
@@ -796,12 +879,12 @@ def _blended_anchor(candidates: Sequence[Session], tag: str, target_distance: fl
     else:
         total = sum(w for w, _ in weighted)
         two_k = sum(
-            w * _normalise_to_reference(s.split_s, s.effective_distance_m, tier, config)[0]
+            w * _normalise_to_reference(s.split_s, s.effective_distance_m, tier, config, paul)[0]
             for w, s in weighted
         ) / total
         distance = 2 ** (sum(w * math.log2(s.effective_distance_m) for w, s in weighted) / total)
         # The split that, at `distance`, normalises back to exactly `two_k`.
-        split_s = (two_k + tier.paul_weight * config.paul_constant
+        split_s = (two_k + tier.paul_weight * _paul_for(tier, config, paul)
                    * math.log2(distance / tier.ref_distance_m) + tier.offset)
         method = "weighted_blend"
     return Anchor(
@@ -816,6 +899,62 @@ def _blended_anchor(candidates: Sequence[Session], tag: str, target_distance: fl
         rpe=dominant.rpe,
         rpe_mismatch=dominant.rpe_mismatch,
         declared=dominant.declared,
+        measured_day=max(s.day for _, s in weighted),
+    )
+
+
+def _steady_blend_anchor(candidates: Sequence[Session], as_of: date,
+                         config: EngineConfig) -> Anchor:
+    """Every steady piece (AT/UT1/UT2) together (v1.7, §5.17). Each gives its own 2k
+    equivalent — the §2 inversion plus its RPE correction (scaled by its zone's rated
+    coverage, the v1.3.1 audit fix) and its rate correction — and the weighted median is
+    taken, weight = minutes x recency x zone trust (1 / range base²): threshold work counts
+    most per minute, a big month of UT2 counts through its minutes. The anchor reported is
+    the median piece itself, so the arithmetic shown is exact."""
+    coverage = {tag: _tier_rpe([s for s in candidates if s.tag == tag])[1]
+                for tag in {s.tag for s in candidates}}
+    entries = []
+    for s in candidates:
+        tier = s.tier
+        reference, _, _ = _normalise_to_reference(s.split_s, s.effective_distance_m, tier,
+                                                  config)
+        rpe_c = _rpe_offset_correction(s.rpe, tier, s.rpe_mismatch, config) * coverage[s.tag]
+        rate_c = _rate_correction(s.stroke_rate, tier, config)
+        age_days = max(0, (as_of - s.day).days)
+        recency = 0.5 ** (age_days / config.submaximal_blend_half_life_days)
+        base = config.range_base_split_s[s.tag]
+        entries.append((reference + rpe_c + rate_c, s.duration_minutes * recency / base ** 2,
+                        s.duration_minutes * recency, s, rpe_c, rate_c))
+    ordered = sorted(entries, key=lambda e: (e[0], -e[3].day.toordinal()))
+    total = sum(e[1] for e in ordered)
+    median = ordered[len(ordered) // 2]
+    if total > 0:
+        running = 0.0
+        for entry in ordered:
+            running += entry[1]
+            if running >= total / 2.0:
+                median = entry
+                break
+    piece = median[3]
+    minutes = sum(e[2] for e in entries)
+    trust = sum(e[2] / config.range_base_split_s[e[3].tag] ** 2 for e in entries)
+    range_base = (math.sqrt(minutes / trust) if trust > 0
+                  else config.range_base_split_s[piece.tag])
+    return Anchor(
+        tag=piece.tag,
+        split_s=piece.split_s,
+        effective_distance_m=piece.effective_distance_m,
+        day=max(s.day for s in candidates),
+        session_ids=[s.id for s in candidates],
+        method="zone_blend",
+        interval_ambiguous=any(s.interval_ambiguous for s in candidates),
+        rate_mismatch=sum(s.rate_mismatch for s in candidates) > len(candidates) / 2,
+        rpe=piece.rpe,
+        rpe_mismatch=sum(s.rpe_mismatch for s in candidates) > len(candidates) / 2,
+        rpe_coverage=coverage[piece.tag],
+        rpe_correction=median[4],
+        rate_correction=median[5],
+        range_base=range_base,
     )
 
 
@@ -824,6 +963,7 @@ def _select_anchor(
     target_distance: float,
     config: EngineConfig,
     as_of: date | None = None,
+    paul: float | None = None,
 ) -> Anchor | None:
     """Pick the best available anchor, walking tiers in priority order.
 
@@ -845,7 +985,8 @@ def _select_anchor(
 
         if tag in MAXIMAL_TIERS and config.maximal_anchor_method == "blend":
             reference_day = as_of or max(s.day for s in sessions)
-            return _blended_anchor(candidates, tag, target_distance, reference_day, config)
+            return _blended_anchor(candidates, tag, target_distance, reference_day, config,
+                                   paul)
 
         if tag in MAXIMAL_TIERS:
             def closeness(session: Session) -> tuple[float, int]:
@@ -865,7 +1006,13 @@ def _select_anchor(
                 rpe=best.rpe,
                 rpe_mismatch=best.rpe_mismatch,
                 declared=best.declared,
+                measured_day=best.day,
             )
+
+        if config.submaximal_anchor_method == "blend":
+            # Every steady zone together, not just this best-ranked one (v1.7, §5.17).
+            steady = [s for s in sessions if s.tag in SUBMAXIMAL_TIERS]
+            return _steady_blend_anchor(steady, as_of or max(s.day for s in sessions), config)
 
         if config.submaximal_anchor_method == "single_session":
             best = max(candidates, key=lambda s: (s.distance_m, s.day.toordinal()))
@@ -915,6 +1062,7 @@ def _normalise_to_reference(
     effective_distance_m: float,
     tier: Tier,
     config: EngineConfig,
+    paul: float | None = None,
 ) -> tuple[float, float, float]:
     """Invert the session model to recover the athlete's maximal 2000m split.
 
@@ -931,9 +1079,143 @@ def _normalise_to_reference(
     if effective_distance_m <= 0:
         raise ValueError("effective distance must be positive")
     ratio = effective_distance_m / tier.ref_distance_m
-    paul_adjustment = -tier.paul_weight * config.paul_constant * math.log2(ratio)
+    paul_adjustment = -tier.paul_weight * _paul_for(tier, config, paul) * math.log2(ratio)
     intensity_offset = -tier.offset
     return split_s + paul_adjustment + intensity_offset, paul_adjustment, intensity_offset
+
+
+def _paul_for(tier: Tier, config: EngineConfig, paul: float | None) -> float:
+    """Seconds per doubling for this tier's distance term. The rower's own Paul's Law
+    (v1.7, §5.21) describes how they fade between all-out pieces, so it applies to the
+    all-out zones only (AN, TR); the steady zones' shapes stay the seed's."""
+    if paul is not None and tier.name in MAXIMAL_TIERS:
+        return paul
+    return config.paul_constant
+
+
+def _rate_correction(rate: float | None, tier: Tier, config: EngineConfig) -> float:
+    """Seconds to ADD to a steady piece's 2k equivalent for its rate (v1.7, §5.18).
+
+    Above the zone's usual rate the same effort gives a faster split, so the inversion
+    reads the rower as fitter than they are: move it back (positive). Below, the reverse.
+    Steady zones only — an all-out piece's rate is part of the measurement."""
+    if rate is None or tier.name not in SUBMAXIMAL_TIERS:
+        return 0.0
+    raw = config.rate_sensitivity_s * (rate - tier.rate_mid)
+    return max(-config.rate_max_correction_s, min(config.rate_max_correction_s, raw))
+
+
+def _piece_two_k(session: Session, config: EngineConfig, paul: float | None) -> float:
+    """One piece's own 2k equivalent: inversion, RPE and rate corrections."""
+    tier = session.tier
+    reference, _, _ = _normalise_to_reference(session.split_s, session.effective_distance_m,
+                                              tier, config, paul)
+    return (reference
+            + _rpe_offset_correction(session.rpe, tier, session.rpe_mismatch, config)
+            + _rate_correction(session.stroke_rate, tier, config))
+
+
+@dataclass(frozen=True)
+class PersonalPaul:
+    seconds_per_doubling: float
+    fitted: bool
+    pieces: int
+    spread_doublings2: float   # weighted spread of the pieces' distances, doublings²
+    doubt_share: float         # how much of the per-doubling range doubt is left (§5.13)
+
+
+def _personal_paul(sessions: Sequence[Session], as_of: date,
+                   config: EngineConfig) -> PersonalPaul:
+    """The rower's own seconds per doubling (v1.7, §5.21).
+
+    Weighted least squares of split on log2(distance / 2000) across their continuous
+    all-out pieces (bests they typed in included), newer pieces weighing more, shrunk
+    towards the seed `paul_constant`: with one doubling's spread at equal weight the fit
+    moves about half way. Pieces at one distance only can't show a fade: the seed stands.
+    """
+    seed = PersonalPaul(config.paul_constant, False, 0, 0.0, 1.0)
+    if not config.personal_paul:
+        return seed
+    pieces = [s for s in sessions
+              if s.tag == "AN" and not s.volume_only and s.is_continuous
+              and 0 <= (as_of - s.day).days <= config.personal_paul_window_days]
+    if len(pieces) < 2:
+        return replace(seed, pieces=len(pieces))
+    weights = [0.5 ** ((as_of - s.day).days / config.personal_paul_half_life_days)
+               for s in pieces]
+    xs = [math.log2(s.effective_distance_m / config.reference_distance_m) for s in pieces]
+    ys = [s.split_s for s in pieces]
+    total = sum(weights)
+    x_bar = sum(w * x for w, x in zip(weights, xs)) / total
+    y_bar = sum(w * y for w, y in zip(weights, ys)) / total
+    sxx = sum(w * (x - x_bar) ** 2 for w, x in zip(weights, xs))
+    if sxx < 1e-6:
+        return replace(seed, pieces=len(pieces))
+    sxy = sum(w * (x - x_bar) * (y - y_bar) for w, x, y in zip(weights, xs, ys))
+    prior = config.personal_paul_prior_strength
+    slope = (sxy + prior * config.paul_constant) / (sxx + prior)
+    slope = max(config.personal_paul_min, min(config.personal_paul_max, slope))
+    return PersonalPaul(slope, True, len(pieces), sxx, math.sqrt(prior / (sxx + prior)))
+
+
+def _steady_transfer(target_distance: float, config: EngineConfig) -> float:
+    """Share of a steady-split change that carries over to the target (§5.19)."""
+    raw = (config.steady_transfer_at_reference + config.steady_transfer_per_doubling
+           * math.log2(target_distance / config.reference_distance_m))
+    return max(config.steady_transfer_min, min(config.steady_transfer_max, raw))
+
+
+@dataclass(frozen=True)
+class SteadyChange:
+    change_s: float        # after minus before, 2k-equivalent seconds per 500m
+    pieces_before: int
+    pieces_after: int
+    zones: tuple[str, ...]
+
+
+def _steady_change(sessions: Sequence[Session], anchor: Anchor, config: EngineConfig,
+                   paul: float | None) -> SteadyChange | None:
+    """How the rower's other pieces have moved since their newest all-out piece (§5.19).
+
+    Every piece in a lower-ranked zone than the anchor is compared within its own zone —
+    the median 2k equivalent after the measurement day minus the median on or before it —
+    so the rower's personal gap between zones cancels. Zones are combined by their
+    minutes. None when there aren't enough pieces on both sides to say."""
+    if not config.steady_trend or anchor.measured_day is None:
+        return None
+    supporting = [s for s in sessions
+                  if not s.declared and not s.volume_only and s.tier.rank > anchor.tier.rank]
+    changes: list[tuple[float, float]] = []
+    zones: list[str] = []
+    before_count = after_count = 0
+    for tag in sorted({s.tag for s in supporting}, key=lambda t: TIERS[t].rank):
+        zone = [s for s in supporting if s.tag == tag]
+        before = [(_piece_two_k(s, config, paul), s.duration_minutes)
+                  for s in zone if s.day <= anchor.measured_day]
+        after = [(_piece_two_k(s, config, paul), s.duration_minutes)
+                 for s in zone if s.day > anchor.measured_day]
+        if not before or not after:
+            continue
+        changes.append((_weighted_median(after) - _weighted_median(before),
+                        sum(s.duration_minutes for s in zone)))
+        zones.append(tag)
+        before_count += len(before)
+        after_count += len(after)
+    if (not changes or before_count < config.steady_trend_min_pieces
+            or after_count < config.steady_trend_min_pieces):
+        return None
+    minutes = sum(m for _, m in changes)
+    change = sum(c * m for c, m in changes) / minutes if minutes > 0 else 0.0
+    return SteadyChange(change, before_count, after_count, tuple(zones))
+
+
+def _raw_volume_modifier(load: float, config: EngineConfig) -> float:
+    """Seconds added for the 30-day load (§5.5, §5.20): the v1.6 knots up to
+    `load_gain_from`, then a gain per doubling with diminishing returns, capped."""
+    if config.volume_curve == "knots" or load <= config.load_gain_from:
+        return _interpolate(config.load_knots, load)
+    gain = config.load_gain_per_doubling_s * math.log2(load / config.load_gain_from)
+    return -min(config.load_gain_cap_s, gain)
 
 
 def _interpolate(knots: Sequence[tuple[float, float]], x: float) -> float:
@@ -1193,13 +1475,15 @@ def diagnose_history(
     config = config or DEFAULT_CONFIG
     as_of = as_of or date.today()
     warnings: list[str] = []
-    sessions = [
+    parsed = [
         s for s in (
             _normalise_session(raw, i, config, warnings)
             for i, raw in enumerate(history)
         )
-        if s is not None and as_of - timedelta(days=config.window_days) <= s.day <= as_of
+        if s is not None and s.day <= as_of and not s.volume_only
     ]
+    sessions = [s for s in parsed if s.day >= as_of - timedelta(days=config.window_days)]
+    paul = _personal_paul(parsed, as_of, config).seconds_per_doubling
 
     estimates: dict[str, float] = {}
     for tag in TIERS:
@@ -1210,20 +1494,21 @@ def diagnose_history(
         if tag in MAXIMAL_TIERS:
             # Best effort represents the tier; a slow rep set is not evidence of a ceiling.
             representative = min(candidates, key=lambda s: s.split_s)
-            split, distance = representative.split_s, representative.effective_distance_m
-            rpe, rpe_mismatch = representative.rpe, representative.rpe_mismatch
+            reference, _, _ = _normalise_to_reference(
+                representative.split_s, representative.effective_distance_m, tier, config,
+                paul)
+            reference += _rpe_offset_correction(representative.rpe, tier,
+                                                representative.rpe_mismatch, config)
         else:
-            split = _weighted_median([(s.split_s, s.duration_minutes) for s in candidates])
-            distance = _weighted_median(
-                [(s.effective_distance_m, s.duration_minutes) for s in candidates]
-            )
-            rpe, coverage, rpe_mismatch = _tier_rpe(candidates)
-        if tag in MAXIMAL_TIERS:
-            coverage = 1.0
-        reference, _, _ = _normalise_to_reference(split, distance, tier, config)
-        # Same RPE correction as the prediction path, so the agreement check measures the
-        # model the user actually gets rather than a stripped-down version of it.
-        reference += _rpe_offset_correction(rpe, tier, rpe_mismatch, config) * coverage
+            # v1.7: each piece's own 2k equivalent (RPE scaled by the zone's rated coverage,
+            # rate corrected), then the zone's duration-weighted median — the same model
+            # the prediction path uses, so the agreement check measures what the user gets.
+            coverage = _tier_rpe(candidates)[1]
+            reference = _weighted_median([
+                (_normalise_to_reference(s.split_s, s.effective_distance_m, tier, config)[0]
+                 + _rpe_offset_correction(s.rpe, tier, s.rpe_mismatch, config) * coverage
+                 + _rate_correction(s.stroke_rate, tier, config), s.duration_minutes)
+                for s in candidates])
         estimates[tag] = round(reference, 2)
 
     spread = max(estimates.values()) - min(estimates.values()) if len(estimates) > 1 else 0.0
@@ -1250,6 +1535,10 @@ def _prediction_range(
     load_confidence: float,
     as_of: date,
     config: EngineConfig,
+    paul_doubt_share: float = 1.0,
+    steady_tracked: bool = False,
+    steady_gain: float = 0.0,
+    volume_gain: float = 0.0,
 ) -> float:
     """Half-width of the likely range around the predicted split, seconds per 500m (§5.13).
 
@@ -1257,15 +1546,26 @@ def _prediction_range(
     quadrature. A maximal anchor projects from its own distance; a submaximal one has
     already been converted to the 2000m reference (its doubt is in the zone's base term),
     so it projects from there.
+
+    v1.7: a steady-zone blend's base is weighted across its zones; a fitted personal Paul's
+    Law leaves less doubt per doubling; steady rows measured since a stale test shrink its
+    staleness doubt; and each nudge that makes the prediction faster carries part of itself
+    as doubt.
     """
     days_ago = (as_of - anchor.day).days
     projection_from = (anchor.effective_distance_m if anchor.tag in MAXIMAL_TIERS
                        else config.reference_distance_m)
     doublings = abs(math.log2(target_distance / max(projection_from, 1e-9)))
+    stale = max(0, days_ago - config.recent_anchor_days) * config.range_per_stale_day_s
+    if steady_tracked:
+        stale *= config.range_stale_share_when_tracked
     terms = [
-        config.range_base_split_s[anchor.tag],
-        max(0, days_ago - config.recent_anchor_days) * config.range_per_stale_day_s,
-        doublings * config.range_per_doubling_s,
+        anchor.range_base if anchor.range_base is not None
+        else config.range_base_split_s[anchor.tag],
+        stale,
+        doublings * config.range_per_doubling_s * paul_doubt_share,
+        config.range_gain_share * abs(steady_gain),
+        config.range_gain_share * abs(min(0.0, volume_gain)),
         spread_s * config.range_spread_share if tiers_represented >= 2 else 0.0,
         (1.0 - load_confidence) * config.range_thin_history_s,
         config.range_interval_ambiguous_s if anchor.interval_ambiguous else 0.0,
@@ -1552,11 +1852,19 @@ def predict_test_piece(
                                                resolved_as_of)
         return _empty_result(target, config, warnings, flags)
 
-    anchor = _select_anchor(window, target, config, resolved_as_of)
+    # v1.7: volume-only rows (warm-ups, cool-downs, extras, zone-less posts) are training
+    # load and nothing else (§5.20). The rower's own Paul's Law reads their all-out pieces
+    # over a longer look-back than the window (§5.21).
+    pace_window = [s for s in window if not s.volume_only]
+    personal = _personal_paul([s for s in parsed if not s.volume_only], resolved_as_of,
+                              config)
+    paul = personal.seconds_per_doubling
+    anchor = _select_anchor(pace_window, target, config, resolved_as_of, paul)
     # Bests the rower typed in are evidence of fitness, not training: they never count as
     # load, sessions logged or recent effort (§5.16).
-    training = [s for s in window if not s.declared]
-    if anchor is None:  # defensive: window is non-empty and every session carries a valid tag
+    training = [s for s in pace_window if not s.declared]
+    load_rows = [s for s in window if not s.declared]
+    if anchor is None:  # no session in the window qualified: every one was volume only
         warnings.append("No session in the window qualified as an anchor")
         flags.append("no_anchor")
         return _empty_result(target, config, warnings, flags)
@@ -1578,18 +1886,42 @@ def predict_test_piece(
         flags.append("legacy_v1_formula_enabled")
     else:
         reference_split, paul_adjustment, intensity_offset = _normalise_to_reference(
-            anchor.split_s, anchor.effective_distance_m, tier, config
+            anchor.split_s, anchor.effective_distance_m, tier, config, paul
         )
-        # Perceived effort refines where in its tier the anchor actually sat.
-        rpe_correction = _rpe_offset_correction(anchor.rpe, tier, anchor.rpe_mismatch,
-                                                config) * anchor.rpe_coverage
-        reference_split += rpe_correction
+        # Perceived effort refines where in its tier the anchor actually sat. A steady-zone
+        # blend carries its median piece's corrections already (§5.17).
+        if anchor.rpe_correction is not None:
+            rpe_correction = anchor.rpe_correction
+        else:
+            rpe_correction = _rpe_offset_correction(anchor.rpe, tier, anchor.rpe_mismatch,
+                                                    config) * anchor.rpe_coverage
+        rate_correction = anchor.rate_correction
+        reference_split += rpe_correction + rate_correction
         # A test piece is a maximal effort by definition, so the projection runs at full
-        # Paul weight regardless of what tier the anchor came from.
-        projection = config.paul_constant * math.log2(target / config.reference_distance_m)
+        # Paul weight regardless of what tier the anchor came from — the rower's own Paul's
+        # Law when their all-out pieces show it (v1.7, §5.21).
+        projection = paul * math.log2(target / config.reference_distance_m)
         base_split = reference_split + projection
     if config.legacy_v1_formula:
         rpe_correction = 0.0
+        rate_correction = 0.0
+
+    # --- v1.7: steady rows since the newest all-out piece (§5.19) ------------------------
+    # Only ever faster: an easy piece never drags the prediction slower than what the rower
+    # has held all-out (decision 65). A slower steady split is flagged and advised on.
+    steady = (None if config.legacy_v1_formula or anchor.tag not in MAXIMAL_TIERS
+              else _steady_change(pace_window, anchor, config, paul))
+    transfer = _steady_transfer(target, config)
+    steady_gain = 0.0
+    if steady is not None:
+        steady_gain = max(-config.steady_gain_cap_s, min(0.0, transfer * steady.change_s))
+        if steady_gain < 0:
+            flags.append("steady_change_applied")
+        elif transfer * steady.change_s >= config.steady_slower_flag_s:
+            flags.append("steady_pace_slower")
+    base_split += steady_gain
+    if personal.fitted:
+        flags.append("personal_paul_law")
 
     # --- Bodyweight trend (off by default; see EngineConfig.weight_trend_sensitivity) ---
     weight_correction, anchor_weight, current_weight = _weight_trend_correction(
@@ -1621,10 +1953,24 @@ def predict_test_piece(
     # sparse logger the full +3s detraining penalty punishes logging behaviour rather than
     # fitness, and it is exactly the user who has just logged a single 2k test who would
     # be told their 2k is 11 seconds slower than the one they rowed yesterday.
-    load = _rolling_load(training)
-    raw_modifier = _interpolate(config.load_knots, load)
+    #
+    # v1.7 (§5.20): every minute counts, volume-only rows included; above maintenance the
+    # gain is per doubling. With an all-out anchor only training after the newest all-out
+    # piece can make the prediction faster — the rest is inside that piece's time — and a
+    # measured steady change replaces that faster side, so one improvement isn't counted
+    # twice.
+    load = _rolling_load(load_rows)
+    raw_modifier = _raw_volume_modifier(load, config)
+    after_share = 1.0
+    if (raw_modifier < 0 and config.volume_after_measurement
+            and anchor.measured_day is not None and anchor.tag in MAXIMAL_TIERS):
+        if steady is not None:
+            after_share = 0.0
+        else:
+            after = _rolling_load([s for s in load_rows if s.day > anchor.measured_day])
+            after_share = after / load if load > 0 else 0.0
     load_confidence = min(1.0, len(training) / config.min_sessions_comfortable)
-    volume_modifier = raw_modifier * load_confidence
+    volume_modifier = raw_modifier * after_share * load_confidence
     if load_confidence < 1.0:
         flags.append("load_estimate_damped")
     modelled_split = base_split + volume_modifier
@@ -1633,7 +1979,7 @@ def predict_test_piece(
     held_adjustment = 0.0
     held_piece: Session | None = None
     if config.held_split_floor and not config.legacy_v1_formula:
-        longer = [s for s in window
+        longer = [s for s in pace_window
                   if s.effective_distance_m >= target and not s.interval_ambiguous]
         if longer:
             held_piece = min(longer, key=lambda s: (s.split_s, -s.day.toordinal()))
@@ -1669,8 +2015,12 @@ def predict_test_piece(
         flags.append("tier_disagreement")
 
     score, band, factors, recommendations = _score_confidence(
-        anchor, window, target, spread, resolved_as_of, config, fatigue_excess
+        anchor, pace_window, target, spread, resolved_as_of, config, fatigue_excess
     )
+    if "steady_pace_slower" in flags:
+        recommendations.append(
+            "Your steady rows are slower than around your last all-out piece. If you're "
+            "tired, a test now may come in slower than this prediction.")
     if held_piece is not None:
         what = "best you entered" if held_piece.declared else "piece"
         recommendations.insert(0,
@@ -1698,7 +2048,10 @@ def predict_test_piece(
     rated_count = sum(1 for s in window if s.rpe is not None)
     split_range = _prediction_range(anchor, target, spread,
                                     int(diagnostics["tiers_represented"]), load_confidence,
-                                    resolved_as_of, config)
+                                    resolved_as_of, config,
+                                    paul_doubt_share=personal.doubt_share,
+                                    steady_tracked=steady is not None,
+                                    steady_gain=steady_gain, volume_gain=volume_modifier)
 
     return {
         "schema_version": SCHEMA_VERSION,
@@ -1732,20 +2085,41 @@ def predict_test_piece(
             "window_days": config.window_days,
             "raw_modifier_seconds": round(raw_modifier, 2),
             "load_confidence": round(load_confidence, 2),
+            # v1.7: the share of a faster modifier that applies (training after the newest
+            # all-out piece; 0 when a measured steady change replaces it).
+            "after_measurement_share": round(after_share, 2),
             "modifier_seconds": round(volume_modifier, 2),
         },
-        # Reads top to bottom as the arithmetic: anchor + paul + offset + rpe = 2k
-        # equivalent; then + projection + weight + volume + clamp = predicted split.
+        # v1.7 (§5.21): the rower's own Paul's Law, or the seed 5.0 when unfitted.
+        "personal_paul": {
+            "seconds_per_doubling": round(paul, 2),
+            "fitted": personal.fitted,
+            "pieces": personal.pieces,
+        },
+        # v1.7 (§5.19): steady rows since the newest all-out piece; null when not measured.
+        "steady": None if steady is None else {
+            "change_seconds": round(steady.change_s, 2),
+            "transfer": round(transfer, 2),
+            "pieces_before": steady.pieces_before,
+            "pieces_after": steady.pieces_after,
+            "zones": list(steady.zones),
+            "measured_on": anchor.measured_day.isoformat() if anchor.measured_day else None,
+        },
+        # Reads top to bottom as the arithmetic: anchor + paul + offset + rpe + rate = 2k
+        # equivalent; then + projection + weight + steady + volume + held + clamp =
+        # predicted split.
         "components": {
             "anchor_split": round(anchor.split_s, 2),
             "paul_adjustment": round(paul_adjustment, 2),
             "intensity_offset": round(intensity_offset, 2),
             "rpe_correction": round(rpe_correction, 2),
+            "rate_correction": round(rate_correction, 2),
             "two_k_equivalent": (
                 None if math.isnan(reference_split) else round(reference_split, 2)
             ),
             "projection_to_target": round(projection, 2),
             "weight_trend_correction": round(weight_correction, 2),
+            "steady_change_adjustment": round(steady_gain, 2),
             "volume_modifier": round(volume_modifier, 2),
             "held_split_adjustment": round(held_adjustment, 2),
             "clamp_adjustment": round(final_split - modelled_split, 2),
@@ -1814,7 +2188,10 @@ def _population_estimate_result(
         "anchor": None,
         "load": {"trimp_lite": 0.0, "session_count": 0,
                  "window_days": config.window_days, "raw_modifier_seconds": 0.0,
-                 "load_confidence": 0.0, "modifier_seconds": 0.0},
+                 "load_confidence": 0.0, "after_measurement_share": 0.0,
+                 "modifier_seconds": 0.0},
+        "personal_paul": None,
+        "steady": None,
         "components": {
             "population_2k_seconds": round(two_k_seconds, 2),
             "two_k_equivalent": round(s2k, 2),
@@ -1860,7 +2237,10 @@ def _empty_result(
         "anchor": None,
         "load": {"trimp_lite": 0.0, "session_count": 0,
                  "window_days": config.window_days, "raw_modifier_seconds": 0.0,
-                 "load_confidence": 0.0, "modifier_seconds": 0.0},
+                 "load_confidence": 0.0, "after_measurement_share": 0.0,
+                 "modifier_seconds": 0.0},
+        "personal_paul": None,
+        "steady": None,
         "components": {},
         "effort": {"sessions_with_rpe": 0, "anchor_rpe": None, "recent_rpe_excess": None},
         "athlete": None,
@@ -1893,14 +2273,17 @@ def zone_target_split(s2k: float, tag: str, distance_m: float,
 
 
 def _pace_for(tag: str, distance_m: float, s2k: float,
-              config: EngineConfig = DEFAULT_CONFIG) -> float:
-    """Forward model: the split this athlete would row at this tier and distance.
+              config: EngineConfig = DEFAULT_CONFIG,
+              stroke_rate: float | None = None) -> float:
+    """Forward model: the split this athlete would row at this tier and distance — and,
+    for a steady zone, at this rate (v1.7, §5.18: above the usual rate, a faster split).
 
     The test fixtures are generated through this rather than hand-written, so they are
     physiologically self-consistent by construction. Hand-written fixtures were how the
     original draft ended up asserting a 6k at 2k pace.
     """
-    return zone_target_split(s2k, tag, distance_m, config)
+    return (zone_target_split(s2k, tag, distance_m, config)
+            - _rate_correction(stroke_rate, TIERS[tag], config))
 
 
 def _build_history(as_of: date, s2k: float = 105.0) -> list[dict[str, Any]]:
@@ -1915,7 +2298,7 @@ def _build_history(as_of: date, s2k: float = 105.0) -> list[dict[str, Any]]:
     sessions: list[dict[str, Any]] = []
     for week in range(4):
         for offset, (tag, distance, rate) in enumerate(plan):
-            split = _pace_for(tag, distance, s2k)
+            split = _pace_for(tag, distance, s2k, stroke_rate=rate)
             day = as_of - timedelta(days=week * 7 + offset)
             sessions.append({
                 "id": f"w{week}-{offset}",
@@ -1971,7 +2354,7 @@ def _run_self_test() -> None:
     print("\n" + "=" * 78)
     print("1. The v1.0 formula bug, demonstrated")
     print("=" * 78)
-    ut2_split = _pace_for("UT2", 15000, 105.0)
+    ut2_split = _pace_for("UT2", 15000, 105.0, stroke_rate=19)
     ut2_only = [{
         "id": "ut2-15k", "date": (as_of - timedelta(days=2)).isoformat(),
         "distance_m": 15000, "split_s": round(ut2_split, 1), "stroke_rate": 19, "tag": "UT2",
@@ -2470,11 +2853,11 @@ def _run_self_test() -> None:
         [{"id": "an", "date": (as_of - timedelta(days=2)).isoformat(), "distance_m": 2000,
           "split_s": 105.0, "tag": "AN", "stroke_rate": 32}]
         + [{"id": f"u{i}", "date": (as_of - timedelta(days=i + 3)).isoformat(),
-            "distance_m": 16000, "split_s": round(_pace_for("UT2", 16000, 105.0), 1),
+            "distance_m": 16000, "split_s": round(_pace_for("UT2", 16000, 105.0, stroke_rate=19), 1),
             "tag": "UT2", "stroke_rate": 19} for i in range(8)], 2000, as_of)
     ut2_only = predict_test_piece(
         [{"id": f"u{i}", "date": (as_of - timedelta(days=i + 1)).isoformat(),
-          "distance_m": 16000, "split_s": round(_pace_for("UT2", 16000, 105.0), 1),
+          "distance_m": 16000, "split_s": round(_pace_for("UT2", 16000, 105.0, stroke_rate=19), 1),
           "tag": "UT2", "stroke_rate": 19} for i in range(8)], 2000, as_of)
     check("a fresh all-out 2k gives about ±3 s over 2k",
           abs(fresh_an["predicted_total_time_range_seconds"] - 3.0) < 0.05,
@@ -2484,7 +2867,7 @@ def _run_self_test() -> None:
           f"±{ut2_only['predicted_total_time_range_seconds']}")
     five_k = predict_test_piece(
         [{"id": f"u{i}", "date": (as_of - timedelta(days=i + 1)).isoformat(),
-          "distance_m": 16000, "split_s": round(_pace_for("UT2", 16000, 105.0), 1),
+          "distance_m": 16000, "split_s": round(_pace_for("UT2", 16000, 105.0, stroke_rate=19), 1),
           "tag": "UT2", "stroke_rate": 19} for i in range(8)], 5000, as_of)
     check("projecting further widens the range per 500m",
           five_k["predicted_split_range_seconds"] > ut2_only["predicted_split_range_seconds"])
@@ -2509,7 +2892,8 @@ def _run_self_test() -> None:
           abs(predict_test_piece(
               [{"id": f"t{i}", "date": (as_of - timedelta(days=i + 1)).isoformat(),
                 "distance_m": 8000, "split_s": round(zone_target_split(101.0, "AT", 8000), 2),
-                "tag": "AT", "stroke_rate": 24} for i in range(8)],
+                # The zone's usual rate: a target split assumes it (§5.18).
+                "tag": "AT", "stroke_rate": 25} for i in range(8)],
               2000, as_of)["components"]["two_k_equivalent"] - 101.0) < 0.02)
 
     print("\n" + "=" * 78)
@@ -2555,6 +2939,132 @@ def _run_self_test() -> None:
           declared["load"]["trimp_lite"] == 0 and declared["load"]["session_count"] == 0)
     check("a best you entered costs confidence",
           any("best you entered" in f["label"] for f in declared["confidence_factors"]))
+
+    print("\n" + "=" * 78)
+    print("14. v1.7: every erg post counts; personal Paul's Law")
+    print("=" * 78)
+
+    def row(pid: str, days: int, metres: float, split: float, tag: str,
+            rate: float | None = None, **extra: Any) -> dict[str, Any]:
+        out = {"id": pid, "date": (as_of - timedelta(days=days)).isoformat(),
+               "distance_m": metres, "split_s": split, "tag": tag}
+        if rate is not None:
+            out["stroke_rate"] = rate
+        out.update(extra)
+        return out
+
+    def since_test(after_split: float) -> list[dict[str, Any]]:
+        """An all-out 2k 20 days ago at 1:45.0; UT2 at 2:07.0 before it, then after_split."""
+        return ([row("an", 20, 2000, 105.0, "AN", 32)]
+                + [row(f"b{d}", d, 16000, 127.0, "UT2", 18) for d in (21, 22, 23, 24, 25)]
+                + [row(f"a{d}", d, 16000, after_split, "UT2", 18)
+                   for d in (2, 5, 8, 11, 14, 17)])
+
+    faster = predict_test_piece(since_test(125.0), 2000, as_of)
+    print(f"  UT2 2:07.0 -> 2:05.0 since a 7:00.0 test: {faster['predicted_total_time_formatted']}"
+          f" (steady {faster['components']['steady_change_adjustment']})")
+    check("steady rows 2 s/500m faster since the test take half of that off a 2k",
+          abs(faster["components"]["steady_change_adjustment"] + 1.0) < 0.01
+          and abs(faster["predicted_split_seconds"] - 104.0) < 0.01
+          and "steady_change_applied" in faster["flags"])
+    check("a measured steady change replaces volume's faster side (no double count)",
+          faster["load"]["after_measurement_share"] == 0.0
+          and faster["components"]["volume_modifier"] == 0.0)
+    faster_5k = predict_test_piece(since_test(125.0), 5000, as_of)
+    check("a 5k takes more of it (more aerobic): transfer 0.63",
+          abs(faster_5k["components"]["steady_change_adjustment"]
+              + 2.0 * (0.5 + 0.1 * math.log2(2.5))) < 0.01)
+    slower = predict_test_piece(since_test(129.0), 2000, as_of)
+    check("slower steady rows never drag the prediction slower than the test",
+          abs(slower["predicted_split_seconds"] - 105.0) < 0.01
+          and slower["components"]["steady_change_adjustment"] == 0.0
+          and "steady_pace_slower" in slower["flags"])
+    stale_anchor = Anchor(tag="AN", split_s=105.0, effective_distance_m=2000.0,
+                          day=as_of - timedelta(days=28), session_ids=["an"],
+                          method="closest_distance", interval_ambiguous=False,
+                          rate_mismatch=False)
+    untracked = _prediction_range(stale_anchor, 2000, 0.0, 1, 1.0, as_of, DEFAULT_CONFIG)
+    tracked = _prediction_range(stale_anchor, 2000, 0.0, 1, 1.0, as_of, DEFAULT_CONFIG,
+                                steady_tracked=True)
+    nudged = _prediction_range(stale_anchor, 2000, 0.0, 1, 1.0, as_of, DEFAULT_CONFIG,
+                               steady_tracked=True, steady_gain=-1.0)
+    check("tracked steady rows halve a stale test's doubt; the nudge adds half of itself",
+          abs(untracked - math.hypot(0.75, 14 * 0.05)) < 1e-9
+          and abs(tracked - math.hypot(0.75, 7 * 0.05)) < 1e-9
+          and abs(nudged - math.sqrt(0.75 ** 2 + 0.35 ** 2 + 0.5 ** 2)) < 1e-9)
+
+    fresh_heavy = predict_test_piece(
+        [row("an", 1, 2000, 105.0, "AN", 32)]
+        + [row(f"u{d}", d, 16000, 127.0, "UT2", 18) for d in range(2, 30)], 2000, as_of)
+    check("volume rowed before a fresh test can't beat the test",
+          fresh_heavy["load"]["raw_modifier_seconds"] < -1.0
+          and fresh_heavy["components"]["volume_modifier"] == 0.0
+          and abs(fresh_heavy["predicted_split_seconds"] - 105.0) < 0.01)
+    check("volume gains 0.75 s per doubling above 600, capped at 2.5",
+          abs(_raw_volume_modifier(1200, DEFAULT_CONFIG) + 0.75) < 1e-9
+          and abs(_raw_volume_modifier(2400, DEFAULT_CONFIG) + 1.5) < 1e-9
+          and _raw_volume_modifier(600 * 2 ** 10, DEFAULT_CONFIG) == -2.5
+          and abs(_raw_volume_modifier(300, DEFAULT_CONFIG) - 1.5) < 1e-9)
+
+    zones = ([row(f"at{d}", d, 8000, round(_pace_for("AT", 8000, 105.0, stroke_rate=25), 2),
+                  "AT", 25) for d in (1, 4, 7, 10)]
+             + [row(f"ut{d}", d, 16000, 127.0, "UT2", 18) for d in (2, 3, 5, 6, 8, 9, 11, 12)])
+    together = predict_test_piece(zones, 2000, as_of)
+    check("with no all-out piece, every steady zone counts together",
+          together["anchor"]["method"] == "zone_blend"
+          and len(together["anchor"]["session_ids"]) == 12
+          and abs(together["components"]["two_k_equivalent"] - 105.0) < 0.02)
+    disagree = [dict(r, split_s=129.0) if r["tag"] == "UT2" else r for r in zones]
+    blended = predict_test_piece(disagree, 2000, as_of)["components"]["two_k_equivalent"]
+    best_zone_only = predict_test_piece(
+        disagree, 2000, as_of, replace(DEFAULT_CONFIG, submaximal_anchor_method="median")
+    )["components"]["two_k_equivalent"]
+    check("zones that disagree give a middle, not just the best-ranked zone",
+          abs(best_zone_only - 105.0) < 0.02 and 105.0 - 0.02 <= blended <= 107.0 + 0.02)
+
+    at_rate = predict_test_piece([row("r20", 1, 16000, 124.0, "UT2", 20)], 2000, as_of)
+    check("a UT2 at rate 20 is read at rate 18: 3 s back for two strokes",
+          abs(at_rate["components"]["rate_correction"] - 3.0) < 1e-9
+          and abs(at_rate["components"]["two_k_equivalent"] - 105.0) < 0.02)
+
+    plain = [row(f"u{d}", d, 16000, 127.0, "UT2", 18) for d in range(1, 9)]
+    with_warmup = plain + [row("wu", 1, 2000, 150.0, "UT2", volume_only=True)]
+    p_plain = predict_test_piece(plain, 2000, as_of)
+    p_warm = predict_test_piece(with_warmup, 2000, as_of)
+    check("a warm-up counts as volume, never as pace",
+          p_warm["components"]["two_k_equivalent"] == p_plain["components"]["two_k_equivalent"]
+          and p_warm["load"]["trimp_lite"] > p_plain["load"]["trimp_lite"]
+          and p_warm["load"]["session_count"] == p_plain["load"]["session_count"])
+
+    fade = [row("2k", 10, 2000, 105.0, "AN", 32),
+            row("6k", 10, 6000, round(105.0 + 7.0 * math.log2(3), 2), "AN", 30,
+                rep_distance_m=6000)]
+    personal = predict_test_piece(fade, 5000, as_of)
+    # Both pieces are 10 days old: each weighs 0.5 ** (10 / 60).
+    sxx = 2 * 0.5 ** (10 / 60) * (math.log2(3) / 2) ** 2
+    expected_k = (sxx * 7.0 + 5.0) / (sxx + 1.0)
+    print(f"  2k 1:45.0 and 6k fading 7 s/doubling: yours {personal['personal_paul']}")
+    check("personal Paul's Law moves part of the way from 5 towards the rower's own fade",
+          personal["personal_paul"]["fitted"]
+          and abs(personal["personal_paul"]["seconds_per_doubling"] - expected_k) < 0.01
+          and "personal_paul_law" in personal["flags"]
+          and abs(personal["components"]["projection_to_target"]
+                  - round(expected_k * math.log2(2.5), 2)) < 0.02)
+    same_distance = predict_test_piece(
+        [row("a", 3, 2000, 105.0, "AN", 32), row("b", 9, 2000, 106.0, "AN", 32)], 5000, as_of)
+    check("pieces at one distance can't show a fade: the seed 5 s stands",
+          not same_distance["personal_paul"]["fitted"]
+          and same_distance["personal_paul"]["seconds_per_doubling"] == 5.0)
+    reps = predict_test_piece(
+        [row("a", 3, 2000, 105.0, "AN", 32),
+         row("reps", 5, 4000, 96.0, "AN", 34, rep_distance_m=500)], 5000, as_of)
+    check("interval reps never set a personal Paul's Law",
+          not reps["personal_paul"]["fitted"])
+    check("a fitted Paul's Law leaves less doubt per doubling",
+          predict_test_piece(fade, 10000, as_of)["predicted_split_range_seconds"]
+          < predict_test_piece(fade, 10000, as_of,
+                               replace(DEFAULT_CONFIG, personal_paul=False)
+                               )["predicted_split_range_seconds"])
 
     print("\n" + "=" * 78)
     print("12. Full output shape (with profile and RPE)")

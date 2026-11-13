@@ -79,7 +79,7 @@ struct RowerPracticeView: View {
         }
         .padding(Tokens.Spacing.card)
         .background(Self.cardShape.fill(Tokens.Surface.card))
-        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
         .padding(.top, Tokens.Spacing.tight)
     }
 
@@ -119,7 +119,7 @@ struct RowerPracticeView: View {
             .padding(.horizontal, Tokens.Spacing.card)
             .frame(minHeight: Tokens.Size.input)
             .background(Self.field.fill(Tokens.Surface.card))
-            .overlay { Self.field.strokeBorder(Tokens.Surface.line, lineWidth: 1) }
+            .overlay { Self.field.strokeBorder(Tokens.Surface.line, lineWidth: Tokens.Grouped.hairline) }
             .padding(.top, Tokens.Spacing.loose)
             Text("Only your club’s coaches see your reason.")
                 .textStyle(Typography.meta)
@@ -188,7 +188,7 @@ struct RowerPracticeView: View {
             }
             .padding(Tokens.Spacing.card)
             .background(Self.cardShape.fill(Tokens.Surface.card))
-            .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+            .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
         } else {
             Text("No mark yet.")
                 .textStyle(Typography.meta)

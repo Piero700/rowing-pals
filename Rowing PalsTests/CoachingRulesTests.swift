@@ -243,7 +243,7 @@ struct CoachingRulesTests {
           "confidence_numeric": 60,
           "confidence_factors": [],
           "load": {"trimp_lite": 0, "session_count": 0, "window_days": 30, "raw_modifier_seconds": 0,
-                   "load_confidence": 0, "modifier_seconds": 0},
+                   "load_confidence": 0, "after_measurement_share": 0, "modifier_seconds": 0},
           "components": {},
           "effort": {"sessions_with_rpe": 0},
           "diagnostics": {"two_k_equivalent_by_tier": {\(tiers)}, "spread_seconds": \(spread),

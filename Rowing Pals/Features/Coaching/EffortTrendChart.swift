@@ -66,6 +66,7 @@ struct EffortTrendChart: View {
                 .textStyle(Typography.statLabel)
                 .foregroundStyle(Tokens.Ink.secondary)
                 .frame(maxWidth: .infinity)
+                .guidance()
         }
     }
 

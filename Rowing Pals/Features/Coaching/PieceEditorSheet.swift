@@ -100,7 +100,7 @@ struct PieceEditorSheet: View {
 
                     GroupedSection(
                         header: "Targets · optional",
-                        footer: "Split on Auto: each rower gets their own target from the Pace Engine, for this zone and distance."
+                        hint: "Split on Auto: each rower gets their own target from the Pace Engine, for this zone and distance."
                     ) {
                         GroupedRow(label: "Rest") {
                             timeField("None", text: $restText, field: .rest, isInvalid: restProblem != nil)

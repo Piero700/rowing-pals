@@ -26,7 +26,7 @@ struct SquadsView: View {
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(Tokens.Spacing.card)
                             .background(Self.cardShape.fill(Tokens.Surface.card))
-                            .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+                            .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
                     }
                 } else {
                     VStack(spacing: 0) {
@@ -53,13 +53,13 @@ struct SquadsView: View {
                             .asButton { navigate(.squadEdit(squad.id)) }
                             .accessibilityElement(children: .combine)
                             if index < viewModel.squads.count - 1 {
-                                Rectangle().fill(Tokens.Surface.line).frame(height: 1)
+                                Rectangle().fill(Tokens.Surface.line).frame(height: Tokens.Grouped.hairline)
                             }
                         }
                     }
                     .background(Self.cardShape.fill(Tokens.Surface.card))
                     .clipShape(Self.cardShape)
-                    .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+                    .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
                 }
 
                 Text("Rowers can be in more than one squad. Squads are filters and workout targets: coaches still see every rower in the club.")
@@ -68,6 +68,7 @@ struct SquadsView: View {
                     .padding(.horizontal, 4)
                     .padding(.top, Tokens.Spacing.tight)
                     .fixedSize(horizontal: false, vertical: true)
+                    .guidance()
 
                 Button("New squad") { navigate(.squadEdit(nil)) }
                     .buttonStyle(.rpGlass)

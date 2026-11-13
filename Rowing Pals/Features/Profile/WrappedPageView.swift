@@ -67,7 +67,7 @@ struct WrappedPageView: View {
                 Self.shape.fill(Tokens.Base.photoScrim)
             }
         }
-        .overlay { Self.shape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+        .overlay { Self.shape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
         .accessibilityElement(children: .combine)
     }
 

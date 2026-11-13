@@ -28,6 +28,7 @@ struct InviteRowerView: View {
                     .foregroundStyle(Tokens.Ink.secondary)
                     .padding(.horizontal, 2)
                     .padding(.bottom, Tokens.Spacing.loose)
+                    .guidance()
                 searchField
                     .padding(.bottom, 14)
                 if let errorMessage {
@@ -48,13 +49,13 @@ struct InviteRowerView: View {
                         ForEach(Array(candidates.enumerated()), id: \.element.id) { index, person in
                             row(person)
                             if index < candidates.count - 1 {
-                                Rectangle().fill(Tokens.Surface.line).frame(height: 1)
+                                Rectangle().fill(Tokens.Surface.line).frame(height: Tokens.Grouped.hairline)
                             }
                         }
                     }
                     .background(Self.cardShape.fill(Tokens.Surface.card))
                     .clipShape(Self.cardShape)
-                    .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+                    .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
                 }
             }
             .padding(.horizontal, Tokens.Spacing.screen)
@@ -89,7 +90,7 @@ struct InviteRowerView: View {
         .padding(.horizontal, 14)
         .frame(minHeight: Tokens.Size.input)
         .background(shape.fill(Tokens.Surface.card))
-        .overlay { shape.strokeBorder(Tokens.Surface.line, lineWidth: 1) }
+        .overlay { shape.strokeBorder(Tokens.Surface.line, lineWidth: Tokens.Grouped.hairline) }
     }
 
     private func row(_ person: PersonSummary) -> some View {
@@ -101,7 +102,8 @@ struct InviteRowerView: View {
                     .textStyle(Typography.name)
                     .foregroundStyle(Tokens.Ink.primary)
                     .lineLimit(1)
-                Text(person.club?.name ?? "No club")
+                ClubNameLabel(name: person.club?.name ?? "No club",
+                              isVerified: person.club?.isVerified ?? false, badgeSize: Tokens.Icon.badge)
                     .textStyle(Typography.meta)
                     .foregroundStyle(Tokens.Ink.secondary)
                     .lineLimit(1)

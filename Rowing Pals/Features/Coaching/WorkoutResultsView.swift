@@ -46,14 +46,16 @@ struct WorkoutResultsView: View {
                     .padding(.top, Tokens.Spacing.sectionTop)
                     .padding(.bottom, Tokens.Spacing.tight)
 
-                    LazyVStack(spacing: Tokens.Spacing.tight) {
-                        ForEach(viewModel.shownRows) { row in
+                    // One grouped list, rows divided by hairlines (decision 97, app-wide).
+                    GroupedSection {
+                        ForEach(Array(viewModel.shownRows.enumerated()), id: \.element.id) { index, row in
+                            if index > 0 { GroupedDivider() }
                             rowerCard(row, hasPieces: !workout.pieces.isEmpty)
                                 .asButton { navigate(.coachRower(row.rower.id)) }
                         }
                     }
 
-                    Text("Showing \(viewModel.shownRows.count) of \(viewModel.rows.count). Sessions are linked when a rower posts while the workout is showing.")
+                    GuidedText("Showing \(viewModel.shownRows.count) of \(viewModel.rows.count).", hint: "Sessions are linked when a rower posts while the workout is showing.")
                         .textStyle(Typography.meta)
                         .tabularNumerals()
                         .foregroundStyle(Tokens.Ink.secondary)
@@ -145,7 +147,7 @@ struct WorkoutResultsView: View {
         }
         .padding(Tokens.Spacing.card)
         .background(Self.cardShape.fill(Tokens.Surface.card))
-        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
     }
 
     /// "Senior men, Senior women · rest 5:00 · rate 26–28".
@@ -211,9 +213,9 @@ struct WorkoutResultsView: View {
                 .padding(.top, Tokens.Spacing.loose)
             }
         }
-        .padding(Tokens.Spacing.card)
-        .background(Self.cardShape.fill(Tokens.Surface.card))
-        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+        .padding(.horizontal, Tokens.Grouped.rowPadding)
+        .padding(.vertical, Tokens.Spacing.tight)
+        .contentShape(Rectangle())
         .accessibilityElement(children: .combine)
     }
 

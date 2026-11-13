@@ -28,14 +28,15 @@ struct FollowRequestsView: View {
                         .frame(maxWidth: .infinity)
                         .padding(.top, 40)
                 } else {
-                    LazyVStack(spacing: Tokens.Spacing.tight) {
-                        ForEach(viewModel.requests) { person in
+                    GroupedSection {
+                        ForEach(Array(viewModel.requests.enumerated()), id: \.element.id) { index, person in
+                            if index > 0 { GroupedDivider() }
                             row(person)
                         }
                     }
                 }
             }
-            .padding(.horizontal, 14)
+            .padding(.horizontal, Tokens.Spacing.screen)
             .padding(.top, Tokens.Spacing.tight)
             .padding(.bottom, 40)
         }
@@ -58,7 +59,8 @@ struct FollowRequestsView: View {
                             .font(.system(size: 15.5, weight: .semibold))
                             .foregroundStyle(Tokens.Ink.primary)
                             .lineLimit(1)
-                        Text(person.club?.name ?? person.category.rawValue.capitalized)
+                        ClubNameLabel(name: person.club?.name ?? person.category.rawValue.capitalized,
+                                      isVerified: person.club?.isVerified ?? false, badgeSize: Tokens.Icon.badge)
                             .textStyle(Typography.bodySecondary)
                             .foregroundStyle(Tokens.Ink.secondary)
                             .lineLimit(1)
@@ -99,12 +101,9 @@ struct FollowRequestsView: View {
             .buttonStyle(.plain)
             .disabled(isBusy)
         }
-        .padding(Tokens.Spacing.loose)
+        .padding(.horizontal, Tokens.Grouped.rowPadding)
+        .padding(.vertical, Tokens.Spacing.tight)
         .opacity(viewModel.busyIds.contains(person.id) ? 0.6 : 1)
-        .background {
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .fill(Tokens.Ink.primary.opacity(0.06))
-        }
     }
 }
 

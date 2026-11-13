@@ -35,7 +35,7 @@ struct AddBoatSheet: View {
                     .foregroundStyle(Tokens.Ink.secondary)
                     .padding(.bottom, 4)
                 if viewModel.savedBoats.isEmpty {
-                    Text("No saved boats yet. Make a new one, and turn on Keep in Saved boats to add it in a tap next time.")
+                    GuidedText("No saved boats yet.", hint: "Make a new one, and turn on Keep in Saved boats to add it in a tap next time.")
                         .textStyle(Typography.meta)
                         .foregroundStyle(Tokens.Ink.secondary)
                 } else if viewModel.addableSavedBoats.isEmpty {
@@ -98,7 +98,7 @@ struct AddBoatSheet: View {
             }
             .padding(Tokens.Spacing.loose)
             .background(Self.rowShape.fill(Tokens.Surface.card))
-            .overlay { Self.rowShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: 1) }
+            .overlay { Self.rowShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
             .contentShape(Self.rowShape)
         }
         .buttonStyle(IconPressStyle())
