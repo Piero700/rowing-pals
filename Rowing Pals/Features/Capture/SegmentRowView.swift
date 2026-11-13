@@ -118,6 +118,9 @@ struct SegmentRowView: View {
                     .textStyle(Typography.statLabel)
                     .foregroundStyle(Tokens.Accent.brand)
             }
+            if segment.isInterval && !segment.isManual {
+                repsLine
+            }
             if segment.isManual {
                 Text("Enter the stroke rate from your session.")
                     .textStyle(Typography.statLabel)
@@ -383,6 +386,27 @@ struct SegmentRowView: View {
                 .focused(focusedField, equals: .field(segmentId: segment.id, field: .rate))
                 .onSubmit(commitRate)
                 .fieldBox(highlighted: segment.lowConfidenceFields.contains(.rate))
+        }
+    }
+
+    /// An interval workout's reps read so far, each ranked on its own (decision 104): "5 of 10 reps
+    /// read", with how to add the rest while some are missing.
+    private var repsLine: some View {
+        let read = segment.postedReps.count
+        let expected = segment.expectedRepCount
+        let count = expected.map { "\(min(read, $0)) of \($0) reps read" } ?? "\(read) \(read == 1 ? "rep" : "reps") read"
+        let isMissing = expected.map { read < $0 } ?? false
+        return VStack(alignment: .leading, spacing: 2) {
+            Text(count)
+                .textStyle(Typography.statLabel)
+                .tabularNumerals()
+                .foregroundStyle(Tokens.Ink.secondary)
+            if isMissing || read == 0 {
+                Text("Scroll the monitor to the next reps and add a photo of that screen: its reps join this piece.")
+                    .textStyle(Typography.statLabel)
+                    .foregroundStyle(Tokens.Ink.secondary)
+                    .guidance()
+            }
         }
     }
 

@@ -7,9 +7,9 @@ import Foundation
 
 /// What a session is being posted as: ordinary training, or an attempt at
 /// one of the standard tests (the review screen's "Session type" dropdown,
-/// docs/design/rowing-pals-redesign-handoff-v2.md §2 Screen 05). Only a test
-/// writes a `test_results` row — nothing enters the test rankings without the
-/// rower choosing it here.
+/// docs/design/rowing-pals-redesign-handoff-v2.md §2 Screen 05). Since decision 104 it is a
+/// label only: it names the post and sets AN, and ranking happens for any piece or rep at a
+/// test distance or time whatever is chosen here (`AutoRanking`).
 enum SessionKind: Hashable, Identifiable {
     case training
     case test(StandardTest)

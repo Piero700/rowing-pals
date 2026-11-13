@@ -214,6 +214,19 @@ final class ReviewSheetViewModel {
         return main?.id ?? segments.first?.id
     }
 
+    /// The standard tests and the rower's club tests: what a piece or rep can be ranked on.
+    var rankingTests: [StandardTest] { StandardTest.all + clubTests.map(\.asTest) }
+
+    /// The results this session would put on the test leaderboards (decision 104): the best piece
+    /// or rep for each test it meets. Photographed pieces only.
+    var autoRankedResults: [AutoRanking.Result] {
+        let pieces = segments.filter { !$0.isManual }.map { segment in
+            AutoRanking.Piece(segmentId: segment.id, label: segment.label, distanceM: segment.distanceM,
+                              timeMs: segment.timeMs, isInterval: segment.isInterval, reps: segment.postedReps)
+        }
+        return AutoRanking.results(for: pieces, tests: rankingTests)
+    }
+
     /// Whether a new test result beats the rower's previous best for that
     /// test: faster for a distance test, further for a timed one. With no
     /// earlier result, the first one is the best so far and counts.
@@ -248,8 +261,25 @@ final class ReviewSheetViewModel {
         defer { isProcessingPhoto = false }
 
         let fields = await Self.extractFields(from: jpeg)
+        if joinNextScreen(fields) { return }
         let label: SegmentLabel = segments.isEmpty ? .main : .extra
         segments.append(DraftSegment(label: label, photoJPEG: jpeg, fields: fields))
+    }
+
+    /// A photo of the next screen of an interval workout already on Review (the same total at the
+    /// top) adds its reps to that piece instead of becoming a new one, so every rep counts on the
+    /// leaderboards (decision 104). Reps on both screens are kept once (`NotepadRules.join`). The
+    /// extra photo isn't kept: only its reps are.
+    @discardableResult
+    func joinNextScreen(_ fields: ParsedMonitorFields) -> Bool {
+        guard fields.isInterval, let time = fields.elapsedTimeMs.value, let distance = fields.distanceM.value,
+              let reps = fields.repRows, !reps.isEmpty,
+              let index = segments.firstIndex(where: {
+                  $0.isInterval && !$0.isManual && $0.readTimeMs == time && $0.readDistanceM == distance
+              })
+        else { return false }
+        segments[index].repRows = NotepadRules.join(segments[index].repRows, reps).rows
+        return true
     }
 
     /// Adds a blank piece to a manual entry, e.g. a warm-up before the main
@@ -273,6 +303,7 @@ final class ReviewSheetViewModel {
 
         let fields = await Self.extractFields(from: jpeg)
         if fields.looksLikeMonitor {
+            if joinNextScreen(fields) { return }
             let label: SegmentLabel = segments.isEmpty ? .main : .extra
             segments.append(DraftSegment(label: label, photoJPEG: jpeg, fields: fields))
         } else if galleryPhotos.count < Self.maxGalleryPhotos {
@@ -323,10 +354,13 @@ final class ReviewSheetViewModel {
         do {
             let observations = try await OCRService.recognizeText(in: image)
             var fields = MonitorParser.parse(observations)
-            // A continuous piece's 500m rows, for the coach's test notepad (NP3); not an interval
-            // workout's reps.
-            if fields.repDistanceM == nil, !fields.isIntervalWorkout {
-                fields.splitRowsMs = MonitorParser.splitRows(MonitorParser.intervalRows(observations))
+            let table = MonitorParser.intervalRows(observations)
+            if fields.isInterval {
+                // An interval workout's reps, each ranked on its own (decision 104).
+                fields.repRows = table.filter { !$0.isSummary }
+            } else {
+                // A continuous piece's 500m rows, for the coach's test notepad (NP3).
+                fields.splitRowsMs = MonitorParser.splitRows(table)
             }
             return fields
         } catch {
@@ -408,12 +442,20 @@ final class ReviewSheetViewModel {
         /// A continuous piece's 500m split rows, for the coach's test notepad (NP3); omitted when
         /// nil, so posting works on a project the NP3 migration hasn't reached for every other piece.
         let splits500Ms: [Int]?
+        /// An interval workout, and its reps' times and metres in order (decision 104). Omitted on
+        /// a continuous piece, so posting one works before the migration has run.
+        let isInterval: Bool?
+        let repTimesMs: [Int]?
+        let repDistancesM: [Int]?
 
         enum CodingKeys: String, CodingKey {
             case id
             case isLead = "is_lead"
             case repDistanceM = "rep_distance_m"
             case splits500Ms = "splits_500_ms"
+            case isInterval = "is_interval"
+            case repTimesMs = "rep_times_ms"
+            case repDistancesM = "rep_distances_m"
             case sessionId = "session_id"
             case label, position
             case distanceM = "distance_m"
@@ -437,8 +479,8 @@ final class ReviewSheetViewModel {
         }
     }
 
-    /// Written only when the rower chose a test in the Session type
-    /// dropdown. `genderAtTime`/`categoryAtTime` are snapshots of the
+    /// One per test the session's pieces or reps meet (decision 104), whatever the Session type
+    /// says. `genderAtTime`/`categoryAtTime` are snapshots of the
     /// profile *at post time*, not a join — docs/schema.sql: reading them
     /// live would let a later profile edit silently rewrite history and the
     /// rankings.
@@ -528,30 +570,36 @@ final class ReviewSheetViewModel {
             formatter.dateFormat = "yyyy-MM-dd"
             let sessionDate = formatter.string(from: Date())
 
-            // A new PB is only possible on a photographed test session, and is
-            // judged against the rower's earlier results for that test before
-            // this one is recorded (docs/design/v2-decisions.md #12).
+            // Every photographed Main or Extra piece, and every rep, at a test's distance or time
+            // goes on that test's leaderboard, whatever the Session type says (decision 104). A
+            // new PB is any of them beating the rower's earlier results for its test, judged
+            // before this session's results are recorded (decision 12). Off the leaderboards, or
+            // typed in, nothing is ranked.
+            let rankedResults = isManual || !includeOnLeaderboards ? [] : autoRankedResults
             var isNewPB = false
-            if !isManual, case .test(let test) = sessionKind, let main = mainSegment {
+            if !rankedResults.isEmpty {
                 struct PreviousResult: Decodable {
+                    let distanceKey: String
                     let distanceM: Int
                     let timeMs: Int
                     enum CodingKeys: String, CodingKey {
+                        case distanceKey = "distance_key"
                         case distanceM = "distance_m"
                         case timeMs = "time_ms"
                     }
                 }
                 let previous: [PreviousResult] = try await SupabaseService.shared
                     .from("test_results")
-                    .select("distance_m, time_ms")
+                    .select("distance_key, distance_m, time_ms")
                     .eq("user_id", value: userId)
-                    .eq("distance_key", value: test.key)
+                    .in("distance_key", values: rankedResults.map(\.key))
                     .execute()
                     .value
-                isNewPB = Self.isNewBest(
-                    test: test, distanceM: main.distanceM, timeMs: main.timeMs,
-                    previous: previous.map { ($0.distanceM, $0.timeMs) }
-                )
+                isNewPB = rankedResults.contains { result in
+                    guard let test = rankingTests.first(where: { $0.key == result.key }) else { return false }
+                    let earlier = previous.filter { $0.distanceKey == result.key }.map { ($0.distanceM, $0.timeMs) }
+                    return AutoRanking.isNewBest(result, test: test, previous: earlier)
+                }
             }
 
             let newSession = NewSession(
@@ -594,7 +642,10 @@ final class ReviewSheetViewModel {
                     wasEdited: segment.wasEdited,
                     isLead: segment.id == leadID,
                     repDistanceM: segment.repDistanceM,
-                    splits500Ms: segment.postedSplitRowsMs
+                    splits500Ms: segment.postedSplitRowsMs,
+                    isInterval: segment.isInterval ? true : nil,
+                    repTimesMs: segment.isInterval && !segment.postedReps.isEmpty ? segment.postedReps.map(\.timeMs) : nil,
+                    repDistancesM: segment.isInterval && !segment.postedReps.isEmpty ? segment.postedReps.map(\.distanceM) : nil
                 )
             }
             try await SupabaseService.shared.from("segments").insert(newSegments).execute()
@@ -613,7 +664,7 @@ final class ReviewSheetViewModel {
                 userId: userId, day: sessionDate, distanceM: totalDistanceM, isRanked: isRanked
             )
 
-            if !isManual, case .test(let test) = sessionKind, let main = mainSegment {
+            if !rankedResults.isEmpty {
                 let profile: Profile = try await SupabaseService.shared
                     .from("profiles")
                     .select()
@@ -622,18 +673,20 @@ final class ReviewSheetViewModel {
                     .execute()
                     .value
                 if let gender = profile.gender {
-                    let newTestResult = NewTestResult(
-                        userId: userId,
-                        sessionId: sessionId,
-                        segmentId: main.id,
-                        distanceKey: test.key,
-                        distanceM: main.distanceM,
-                        timeMs: main.timeMs,
-                        splitMs: main.splitMs,
-                        genderAtTime: gender,
-                        categoryAtTime: profile.category
-                    )
-                    try await SupabaseService.shared.from("test_results").insert(newTestResult).execute()
+                    let rows = rankedResults.map { result in
+                        NewTestResult(
+                            userId: userId,
+                            sessionId: sessionId,
+                            segmentId: result.segmentId,
+                            distanceKey: result.key,
+                            distanceM: result.distanceM,
+                            timeMs: result.timeMs,
+                            splitMs: result.splitMs,
+                            genderAtTime: gender,
+                            categoryAtTime: profile.category
+                        )
+                    }
+                    try await SupabaseService.shared.from("test_results").insert(rows).execute()
                 }
             }
 

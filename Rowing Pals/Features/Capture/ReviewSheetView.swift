@@ -538,7 +538,7 @@ struct ReviewSheetView: View {
                 Text("Include on leaderboards")
                     .textStyle(Typography.rowTitle)
                     .foregroundStyle(Tokens.Ink.primary)
-                Text("Include this session in your volume totals.")
+                Text("Your volume, and any piece or rep at a test distance or time.")
                     .textStyle(Typography.meta)
                     .foregroundStyle(Tokens.Ink.secondary)
             }
@@ -607,7 +607,7 @@ struct ReviewSheetView: View {
                     .textStyle(Typography.rowTitle)
                     .tabularNumerals()
                     .foregroundStyle(Tokens.Ink.primary)
-                Text("Post it as a \(test.label) test and add it to the leaderboard?")
+                Text("Call it a \(test.label) test? It goes on the \(test.label) leaderboard either way.")
                     .textStyle(Typography.bodySecondary)
                     .tabularNumerals()
                     .foregroundStyle(Tokens.Ink.secondary)

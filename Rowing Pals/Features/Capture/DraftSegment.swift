@@ -38,6 +38,29 @@ struct DraftSegment: Identifiable {
     var splitRowsMs: [Int]?
     /// The metres read off the photo, to tell whether the split rows still belong to this piece.
     private(set) var readDistanceM: Int?
+    /// The time read off the photo. With `readDistanceM` it tells a photo of the next screen of
+    /// the same workout (the same total at the top) from a new piece (decision 104).
+    private(set) var readTimeMs: Int?
+    /// An interval workout: its total never counts for a test, only its reps (decision 104).
+    var isInterval = false
+    /// The reps read so far, from this photo and any next screens joined onto it.
+    var repRows: [MonitorRow] = []
+
+    /// The reps as posted: each with both its metres and its time, in order.
+    var postedReps: [(distanceM: Int, timeMs: Int)] {
+        repRows.compactMap { row in
+            guard let distance = row.distanceM, let time = row.timeMs, distance > 0, time > 0 else { return nil }
+            return (distance, time)
+        }
+    }
+
+    /// How many reps the workout has, when its title gives a rep distance that divides the total:
+    /// 10 for 10 × 500m. Nil for timed reps or an unread title.
+    var expectedRepCount: Int? {
+        guard let repDistanceM, repDistanceM > 0, let readDistanceM, readDistanceM % repDistanceM == 0 else { return nil }
+        let count = readDistanceM / repDistanceM
+        return count > 1 ? count : nil
+    }
     var isManual: Bool { photoJPEG == nil }
 
     /// The split rows to post: only while the metres are still the ones read off the photo, since
@@ -73,6 +96,9 @@ struct DraftSegment: Identifiable {
         repDistanceM = fields.repDistanceM
         splitRowsMs = fields.splitRowsMs
         readDistanceM = fields.distanceM.value
+        readTimeMs = fields.elapsedTimeMs.value
+        isInterval = fields.isInterval
+        repRows = fields.repRows ?? []
 
         // The average is derived from distance and time, never read, so it
         // can't be "low confidence" — nothing for the rower to check.

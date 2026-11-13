@@ -32,6 +32,13 @@ nonisolated struct ParsedMonitorFields {
     /// The title names an interval workout: a rep count ("3x12:00", "8x500m") or a rest
     /// ("/3:00r", as on "v3000m/3:00r"). Its rows are reps, not one piece's splits.
     var isIntervalWorkout = false
+    /// An interval workout's reps as read off this screen, summary left out (decision 104): each
+    /// rep counts on the test leaderboards on its own. Nil for a continuous piece.
+    var repRows: [MonitorRow]? = nil
+
+    /// Whether the screen shows an interval workout: a rep count or rest in the title, or a rep
+    /// distance read from it.
+    var isInterval: Bool { isIntervalWorkout || repDistanceM != nil }
 
     /// Whether all four fields extracted successfully — the task 09
     /// pass/fail bar is "all four fields correctly", not partial credit.
