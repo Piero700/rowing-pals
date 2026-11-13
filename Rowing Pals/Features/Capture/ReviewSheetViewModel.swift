@@ -348,7 +348,9 @@ final class ReviewSheetViewModel {
         galleryPhotos.removeAll { $0.id == id }
     }
 
-    private static func extractFields(from jpeg: Data) async -> ParsedMonitorFields {
+    /// Off the main actor: decoding the photo, Vision and the parser together take most of a second.
+    @concurrent
+    nonisolated private static func extractFields(from jpeg: Data) async -> ParsedMonitorFields {
         let empty = ParsedMonitorFields(elapsedTimeMs: .empty, distanceM: .empty, splitMs: .empty, rate: .empty)
         guard let image = UIImage(data: jpeg) else { return empty }
         do {

@@ -48,6 +48,11 @@ nonisolated enum OCRService {
     /// correction is off: it rewrites digits into words (an "8" reads as
     /// "B", a "0" as "O") and would destroy every reading. This is not
     /// optional, however tempting it looks in testing.
+    ///
+    /// `@concurrent`: with approachable concurrency a plain `nonisolated async` function runs on
+    /// its caller's actor, and every caller is on the main actor, so Vision's synchronous
+    /// `perform` froze the screen for the whole read (1.2 s per photo, measured 2026-11-13).
+    @concurrent
     static func recognizeText(in image: UIImage) async throws -> [RecognizedTextObservation] {
         guard let cgImage = image.cgImage else { throw OCRError.invalidImage }
 

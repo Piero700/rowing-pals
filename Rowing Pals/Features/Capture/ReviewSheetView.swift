@@ -473,26 +473,17 @@ struct ReviewSheetView: View {
         for item in items {
             guard
                 let data = try? await item.loadTransferable(type: Data.self),
-                let jpeg = Self.downscaledJPEG(from: data)
+                let jpeg = await Self.downscaledJPEG(from: data)
             else { continue }
             await viewModel.addPhoto(jpeg)
         }
         pickedItems = []
     }
 
-    /// JPEG at 80% quality, longest side capped at 1600 pixels.
-    private static func downscaledJPEG(from data: Data, maxSide: CGFloat = 1600) -> Data? {
-        guard let image = UIImage(data: data) else { return nil }
-        let longest = max(image.size.width, image.size.height)
-        guard longest > maxSide else { return image.jpegData(compressionQuality: 0.8) }
-        let scale = maxSide / longest
-        let size = CGSize(width: image.size.width * scale, height: image.size.height * scale)
-        let format = UIGraphicsImageRendererFormat.default()
-        format.scale = 1
-        let resized = UIGraphicsImageRenderer(size: size, format: format).image { _ in
-            image.draw(in: CGRect(origin: .zero, size: size))
-        }
-        return resized.jpegData(compressionQuality: 0.8)
+    /// JPEG at 80% quality, longest side capped at 1600 pixels, shrunk off the main actor.
+    private static func downscaledJPEG(from data: Data) async -> Data? {
+        await PhotoDownscaler.jpeg(from: data, maxPixelSide: 1600, quality: 0.8,
+                                   screenFormat: true, reencodesSmallPhotos: true)
     }
 
     // MARK: - Session type

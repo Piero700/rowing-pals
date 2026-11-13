@@ -472,10 +472,11 @@ final class CaptureViewModel: NSObject {
                 frontData = try await capturePhotoData(from: rearOutput, isRear: false)
             }
 
-            guard
-                let rearJPEG = Self.downscaledJPEG(from: rearData),
-                let frontJPEG = Self.downscaledJPEG(from: frontData)
-            else {
+            // Both shrunk at once, off the main actor.
+            async let rearShrunk = Self.downscaledJPEG(from: rearData)
+            async let frontShrunk = Self.downscaledJPEG(from: frontData)
+            let (rearJPEG, frontJPEG) = await (rearShrunk, frontShrunk)
+            guard let rearJPEG, let frontJPEG else {
                 throw CaptureError.downscaleFailed
             }
 
@@ -493,7 +494,7 @@ final class CaptureViewModel: NSObject {
         do {
             phase = .capturingRear
             let data = try await capturePhotoData(from: rearOutput, isRear: true)
-            guard let jpeg = Self.downscaledJPEG(from: data) else { throw CaptureError.downscaleFailed }
+            guard let jpeg = await Self.downscaledJPEG(from: data) else { throw CaptureError.downscaleFailed }
             phase = .done
             return jpeg
         } catch {
@@ -514,22 +515,9 @@ final class CaptureViewModel: NSObject {
         }
     }
 
-    private static func downscaledJPEG(from data: Data, maxDimension: CGFloat = 1600, quality: CGFloat = 0.7) -> Data? {
-        guard let image = UIImage(data: data) else { return nil }
-        let longEdge = max(image.size.width, image.size.height)
-        let scale = min(1, maxDimension / longEdge)
-        let targetSize = CGSize(width: image.size.width * scale, height: image.size.height * scale)
-
-        // Without an explicit format, UIGraphicsImageRenderer defaults to the
-        // device's screen scale (3x on most iPhones) — targetSize is in
-        // points, so that silently renders 3x the intended pixel dimensions.
-        let format = UIGraphicsImageRendererFormat()
-        format.scale = 1
-        let renderer = UIGraphicsImageRenderer(size: targetSize, format: format)
-        let resized = renderer.image { _ in
-            image.draw(in: CGRect(origin: .zero, size: targetSize))
-        }
-        return resized.jpegData(compressionQuality: quality)
+    /// Longest side 1600 pixels, JPEG at 70%, shrunk off the main actor.
+    private static func downscaledJPEG(from data: Data) async -> Data? {
+        await PhotoDownscaler.jpeg(from: data, maxPixelSide: 1600, quality: 0.7)
     }
 
 }

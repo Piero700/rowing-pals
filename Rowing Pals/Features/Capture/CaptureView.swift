@@ -449,17 +449,8 @@ struct CaptureView: View {
         defer { libraryItem = nil }
         guard
             let data = try? await item.loadTransferable(type: Data.self),
-            let image = UIImage(data: data)
+            let jpeg = await PhotoDownscaler.jpeg(from: data, maxPixelSide: 1600, quality: 0.8, screenFormat: true)
         else { return }
-        let longest = max(image.size.width, image.size.height)
-        let scale = min(1, 1600 / longest)
-        let size = CGSize(width: image.size.width * scale, height: image.size.height * scale)
-        let format = UIGraphicsImageRendererFormat.default()
-        format.scale = 1
-        let resized = UIGraphicsImageRenderer(size: size, format: format).image { _ in
-            image.draw(in: CGRect(origin: .zero, size: size))
-        }
-        guard let jpeg = resized.jpegData(compressionQuality: 0.8) else { return }
         viewModel.stop()
         libraryStart = LibraryStart(jpeg: jpeg)
     }
