@@ -29,6 +29,19 @@ enum ChallengeService {
             .rpc("challenge_standings", params: Params(p_challenge: id)).execute().value
     }
 
+    /// Several challenges' standings, all asked for at once rather than one after another. A
+    /// challenge whose standings can't be read gets none, as it would on its own.
+    static func standings(of ids: [UUID]) async -> [UUID: [ChallengeStanding]] {
+        await withTaskGroup(of: (UUID, [ChallengeStanding]).self) { group in
+            for id in Set(ids) {
+                group.addTask { (id, (try? await standings(of: id)) ?? []) }
+            }
+            var found: [UUID: [ChallengeStanding]] = [:]
+            for await (id, rows) in group { found[id] = rows }
+            return found
+        }
+    }
+
     /// The club's squads, for a squad-vs-squad challenge.
     static func squads() async throws -> [Squad] {
         guard let clubId = try await ViewerContext.shared.current().clubId else { return [] }

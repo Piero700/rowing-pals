@@ -49,14 +49,14 @@ final class ChallengesViewModel {
             events = loadedEvents
             canSet = allowed
             let today = ChallengeRules.day(Date(), calendar: calendar)
-            var found: [UUID: [ChallengeStanding]] = [:]
-            for challenge in loadedChallenges where ChallengeRules.status(challenge, today: today) == .running {
-                found[challenge.id] = (try? await ChallengeService.standings(of: challenge.id)) ?? []
-            }
-            standings = found
-            if loadedChallenges.contains(where: { $0.kind == .squads }) {
-                squads = (try? await ChallengeService.squads()) ?? []
-            }
+            let running = loadedChallenges.filter { ChallengeRules.status($0, today: today) == .running }.map(\.id)
+            // Every running challenge's standings and the squads, all at once.
+            let needsSquads = loadedChallenges.contains(where: { $0.kind == .squads })
+            async let found = ChallengeService.standings(of: running)
+            async let loadedSquads: [Squad]? = needsSquads ? ((try? await ChallengeService.squads()) ?? []) : nil
+            let (foundStandings, squadRows) = await (found, loadedSquads)
+            standings = foundStandings
+            if let squadRows { squads = squadRows }
             errorMessage = nil
         } catch {
             errorMessage = "Couldn’t load challenges. \(error.localizedDescription)"

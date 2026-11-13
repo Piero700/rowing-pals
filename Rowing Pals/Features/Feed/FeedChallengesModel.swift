@@ -39,12 +39,14 @@ final class FeedChallengesModel {
             let (challenges, events) = try await (challengesTask, eventsTask)
             let running = challenges.filter { ChallengeRules.status($0, today: today) == .running }
                 .sorted { $0.endsOn < $1.endsOn }
-            let squads = running.contains { $0.kind == .squads } ? ((try? await ChallengeService.squads()) ?? []) : []
-            var found: [Item] = []
-            for challenge in running {
-                let rows = (try? await ChallengeService.standings(of: challenge.id)) ?? []
-                found.append(.challenge(challenge, progress: ChallengeText.progress(in: challenge, standings: rows,
-                                                                                     squads: squads, viewerId: viewer.userId)))
+            // The squads and every running challenge's standings, all at once.
+            let needsSquads = running.contains { $0.kind == .squads }
+            async let squadsTask: [Squad] = needsSquads ? ((try? await ChallengeService.squads()) ?? []) : []
+            async let standingsTask = ChallengeService.standings(of: running.map(\.id))
+            let (squads, standings) = await (squadsTask, standingsTask)
+            let found: [Item] = running.map { challenge in
+                .challenge(challenge, progress: ChallengeText.progress(in: challenge, standings: standings[challenge.id] ?? [],
+                                                                        squads: squads, viewerId: viewer.userId))
             }
             let shownEvents = events.filter { Self.isShown($0, now: now, calendar: calendar) }
                 .sorted { $0.startsAt < $1.startsAt }
