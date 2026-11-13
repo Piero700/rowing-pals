@@ -21,7 +21,7 @@ import Supabase
 enum PredictionService {
     /// The cold-start Population Estimate stays hidden (decision 30): it is shown as "no
     /// prediction yet". Its values are fitted (engine v1.4); showing it is the user's call.
-    static let showsPopulationEstimate = false
+    nonisolated static let showsPopulationEstimate = false
 
     /// Days of sessions read: the engine's 30-day window, the 90 days its personal Paul's Law
     /// looks back over (v1.7, §5.21), and enough to tell a lapsed rower ("history outside the
@@ -57,7 +57,7 @@ enum PredictionService {
 
     /// Whether a prediction is a number to show. Insufficient Data never is; a Population
     /// Estimate only once it's switched on.
-    static func isShowable(_ prediction: Prediction) -> Bool {
+    nonisolated static func isShowable(_ prediction: Prediction) -> Bool {
         switch prediction.confidenceScore {
         case .high, .medium, .low: true
         case .populationEstimate: showsPopulationEstimate
@@ -71,8 +71,8 @@ enum PredictionService {
     static let sessionColumns = "id, session_date, zone, rpe, segments(id, label, position, distance_m, time_ms, split_ms, rate, rep_distance_m), test_results(segment_id)"
 
     /// One `sessions` row with its segments, as read for the engine.
-    struct SessionRow: Decodable {
-        struct SegmentRow: Decodable {
+    nonisolated struct SessionRow: Decodable, Sendable {
+        struct SegmentRow: Decodable, Sendable {
             let id: UUID?
             let label: SegmentLabel
             let position: Int
@@ -99,7 +99,7 @@ enum PredictionService {
         /// The pieces that set a test result: one continuous effort, whatever its length.
         let testSegmentIds: Set<UUID>
 
-        struct TestRef: Decodable {
+        struct TestRef: Decodable, Sendable {
             let segmentId: UUID
             enum CodingKeys: String, CodingKey { case segmentId = "segment_id" }
         }
@@ -139,7 +139,7 @@ enum PredictionService {
     /// session total — and every other segment as volume only (v1.7). A session's first main
     /// piece keeps the post's id; any further one adds its position, and a volume-only row adds
     /// "v" and its position, so the engine's de-duplication never merges them.
-    static func history(from rows: [SessionRow], calendar: Calendar) -> [SessionInput] {
+    nonisolated static func history(from rows: [SessionRow], calendar: Calendar) -> [SessionInput] {
         var history: [SessionInput] = []
         for row in rows {
             guard let date = day(row.sessionDate, calendar: calendar) else { continue }
@@ -197,7 +197,7 @@ enum PredictionService {
 
     /// The engine's athlete input from a rower's gender and private details; nil with none.
     /// Also used by Coaching for each rower a coach sees (decision 35).
-    static func athlete(
+    nonisolated static func athlete(
         gender: RowerGender?,
         details: AthletePrivateService.Details,
         asOf: Date,
@@ -215,13 +215,13 @@ enum PredictionService {
         return AthleteProfile(age: age, sex: sex, weightKg: details.weightKg)
     }
 
-    static func isoDay(_ date: Date, calendar: Calendar) -> String {
+    nonisolated static func isoDay(_ date: Date, calendar: Calendar) -> String {
         let parts = calendar.dateComponents([.year, .month, .day], from: date)
         return String(format: "%04d-%02d-%02d", parts.year ?? 0, parts.month ?? 0, parts.day ?? 0)
     }
 
     /// `sessions.session_date` ("YYYY-MM-DD", the rower's local day) as that day in `calendar`.
-    static func day(_ text: String, calendar: Calendar) -> Date? {
+    nonisolated static func day(_ text: String, calendar: Calendar) -> Date? {
         let parts = text.split(separator: "-").compactMap { Int($0) }
         guard parts.count == 3 else { return nil }
         return calendar.date(from: DateComponents(year: parts[0], month: parts[1], day: parts[2]))

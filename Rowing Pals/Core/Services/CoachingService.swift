@@ -113,7 +113,7 @@ enum CoachingService {
         let viewer = try await ViewerContext.shared.current()
         guard viewer.isCoach, let clubId = viewer.clubId else { throw CoachingError.notACoach }
         let raw = try await load(clubId: clubId, only: nil, asOf: asOf, calendar: calendar)
-        let rowers = raw.profiles.map { makeRower($0, raw: raw, asOf: asOf, calendar: calendar) }
+        let rowers = await makeRowers(raw, asOf: asOf, calendar: calendar)
         return Roster(clubId: clubId, clubName: viewer.clubName ?? "Your club", rowers: rowers, squads: raw.squads)
     }
 
@@ -271,7 +271,7 @@ enum CoachingService {
         }
     }
 
-    private struct Raw {
+    nonisolated private struct Raw: Sendable {
         let profiles: [ProfileRow]
         let squads: [Squad]
         let totals: [TotalRow]
@@ -327,14 +327,21 @@ enum CoachingService {
                    privateDetails: privateDetails, declaredBests: declaredBests)
     }
 
-    private static func ratings(_ sessions: [UserSessionRow], calendar: Calendar) -> [CoachingRules.Rating] {
+    /// Every rower's numbers and Pace Engine prediction, off the main actor: a few milliseconds
+    /// of engine work per rower, which for a whole club held the screen for a moment.
+    @concurrent
+    nonisolated private static func makeRowers(_ raw: Raw, asOf: Date, calendar: Calendar) async -> [CoachRower] {
+        raw.profiles.map { makeRower($0, raw: raw, asOf: asOf, calendar: calendar) }
+    }
+
+    nonisolated private static func ratings(_ sessions: [UserSessionRow], calendar: Calendar) -> [CoachingRules.Rating] {
         sessions.compactMap { session in
             guard let rpe = session.row.rpe, let day = PredictionService.day(session.row.sessionDate, calendar: calendar) else { return nil }
             return CoachingRules.Rating(day: day, rpe: rpe)
         }
     }
 
-    private static func makeRower(_ profile: ProfileRow, raw: Raw, asOf: Date, calendar: Calendar) -> CoachRower {
+    nonisolated private static func makeRower(_ profile: ProfileRow, raw: Raw, asOf: Date, calendar: Calendar) -> CoachRower {
         let weekStart = CoachingRules.weekStart(of: asOf, calendar: calendar)
         var weekMetres = 0
         var weekSessions = 0

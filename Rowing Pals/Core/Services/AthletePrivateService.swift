@@ -12,7 +12,7 @@ import Supabase
 /// docs/migrations/2026-10-05-pace-engine-inputs.sql and 2026-10-05-coaching.sql) — not on
 /// `profiles`, which every signed-in rower can read.
 enum AthletePrivateService {
-    struct Details: Equatable {
+    nonisolated struct Details: Equatable, Sendable {
         var birthDate: Date?
         var weightKg: Double?
     }

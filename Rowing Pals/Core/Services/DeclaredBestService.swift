@@ -44,7 +44,7 @@ enum DeclaredBestService {
     }
 
     /// The engine's input: each best as one continuous all-out piece on the day it was entered.
-    static func engineInputs(_ bests: [DeclaredBest], calendar: Calendar) -> [SessionInput] {
+    nonisolated static func engineInputs(_ bests: [DeclaredBest], calendar: Calendar) -> [SessionInput] {
         bests.compactMap { best in
             guard let date = PredictionService.day(best.setOn, calendar: calendar) else { return nil }
             return SessionInput(
