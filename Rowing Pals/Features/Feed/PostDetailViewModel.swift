@@ -261,6 +261,7 @@ final class PostDetailViewModel {
     func stop() {
         thread.stop()
         guard let realtimeChannel else { return }
+        self.realtimeChannel = nil
         Task { await SupabaseService.shared.removeChannel(realtimeChannel) }
     }
 
@@ -623,14 +624,17 @@ final class PostDetailViewModel {
     /// the optimistic update already applied. Comments are `thread`'s job.
     @MainActor
     private func subscribeRealtime() {
+        // One channel at a time, remembered before it subscribes: leaving the screen while it was
+        // still subscribing, or loading again, used to leave a channel open for good.
+        guard realtimeChannel == nil else { return }
         let channel = SupabaseService.shared.channel("post-detail-\(sessionId.uuidString)")
+        realtimeChannel = channel
 
         let reactionInserts = channel.postgresChange(InsertAction.self, schema: "public", table: "reactions", filter: .eq("session_id", value: sessionId))
         let reactionDeletes = channel.postgresChange(DeleteAction.self, schema: "public", table: "reactions", filter: .eq("session_id", value: sessionId))
 
         Task {
             try? await channel.subscribeWithError()
-            realtimeChannel = channel
 
             Task { [weak self] in
                 for await insertion in reactionInserts {
