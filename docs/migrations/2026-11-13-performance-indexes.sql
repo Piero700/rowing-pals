@@ -1,5 +1,5 @@
 -- Performance indexes (2026-11-13). Run once in the Supabase SQL editor, staging first. Safe to run
--- again. Changes no data and no behaviour: each index serves a lookup the app already makes, which
+-- again. Run on staging 2026-11-14 (dry run rolled back first); not yet on production. Changes no data and no behaviour: each index serves a lookup the app already makes, which
 -- today reads the whole table. On staging, pg_stat_user_tables showed profiles scanned whole
 -- 345,726 times (against 47,561 index scans) and test_results 16,438 times (against 992).
 --
