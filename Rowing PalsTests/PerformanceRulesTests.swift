@@ -48,4 +48,35 @@ struct PerformanceRulesTests {
         #expect(PostDetailViewModel.rank(of: b, in: rows, isDurationBased: true) == 1)
         #expect(PostDetailViewModel.rank(of: a, in: rows, isDurationBased: true) == 2)
     }
+
+    /// The shared formatter writes exactly what a new one did, and is far cheaper per call.
+    @Test func sharedDateFormatterMatchesANewOne() {
+        let calendar = Calendar.current
+        let date = Date(timeIntervalSince1970: 1_790_000_000)
+        for format in ["EEE d MMM", "HH:mm", "MMMM yyyy", "EEEE", "d MMM"] {
+            let fresh = DateFormatter()
+            fresh.calendar = calendar
+            fresh.timeZone = calendar.timeZone
+            fresh.locale = Locale(identifier: "en_GB")
+            fresh.dateFormat = format
+            let shared = DateFormatterCache.formatter(format, calendar: calendar, timeZone: calendar.timeZone, locale: "en_GB")
+            #expect(shared.string(from: date) == fresh.string(from: date))
+        }
+        #expect(CalendarRules.monthTitle(date, calendar: calendar) == {
+            let f = DateFormatter(); f.calendar = calendar; f.timeZone = calendar.timeZone
+            f.locale = Locale(identifier: "en_GB"); f.dateFormat = "MMMM yyyy"; return f.string(from: date)
+        }())
+
+        let clock = ContinuousClock()
+        let before = clock.measure {
+            for _ in 0..<500 {
+                let f = DateFormatter(); f.calendar = calendar; f.timeZone = calendar.timeZone
+                f.locale = Locale(identifier: "en_GB"); f.dateFormat = "EEE d MMM"; _ = f.string(from: date)
+            }
+        }
+        let after = clock.measure {
+            for _ in 0..<500 { _ = CalendarRules.dayLabel(date, calendar: calendar) }
+        }
+        print("PERF date text x500: new formatter each \(before), shared \(after)")
+    }
 }

@@ -268,12 +268,8 @@ enum CalendarRules {
         formatter("MMMM yyyy", calendar: calendar).string(from: date)
     }
 
+    /// Shared: one per format and calendar, not a new one per call (each day cell asked for one).
     private static func formatter(_ format: String, calendar: Calendar) -> DateFormatter {
-        let formatter = DateFormatter()
-        formatter.calendar = calendar
-        formatter.timeZone = calendar.timeZone
-        formatter.locale = Locale(identifier: "en_GB")
-        formatter.dateFormat = format
-        return formatter
+        DateFormatterCache.formatter(format, calendar: calendar, timeZone: calendar.timeZone, locale: "en_GB")
     }
 }

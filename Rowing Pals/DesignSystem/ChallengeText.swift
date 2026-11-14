@@ -109,10 +109,8 @@ enum ChallengeText {
     }
 
     private static func format(_ date: Date, _ pattern: String) -> String {
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "en_GB")
-        formatter.calendar = calendar
-        formatter.dateFormat = pattern
-        return formatter.string(from: date)
+        // Shared, not a new one per call; the time zone is the phone's, as a new formatter's is.
+        DateFormatterCache.formatter(pattern, calendar: calendar, timeZone: .current, locale: "en_GB")
+            .string(from: date)
     }
 }
