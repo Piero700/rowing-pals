@@ -17,7 +17,6 @@ struct SettingsView: View {
     /// Whether iOS allows alerts, re-read on return from the iOS Settings app.
     @State private var push = PushNotificationService.shared
     @Environment(\.scenePhase) private var scenePhase
-    @Environment(\.openURL) private var openURL
     /// Redesign phase B — per-device display preferences, not synced to
     /// the profile. See DesignSystem/DistanceUnit.swift (leaderboards only)
     /// and PaceDisplay.swift.
@@ -64,43 +63,43 @@ struct SettingsView: View {
                     if canSwitchVersion {
                         switchVersionRow
                     }
-                    group("Appearance") {
-                        row(title: "Dark mode", subtitle: "Reduce glare in low light.") {
-                            checkmark(appearance == .dark)
+                    SettingsGroup(title: "Appearance") {
+                        SettingsRow(title: "Dark mode", subtitle: "Reduce glare in low light.") {
+                            SettingsCheckmark(isOn: appearance == .dark)
                         } action: { appearance = .dark }
-                        divider
-                        row(title: "Light mode", subtitle: "Higher contrast in daylight.") {
-                            checkmark(appearance == .light)
+                        SettingsDivider()
+                        SettingsRow(title: "Light mode", subtitle: "Higher contrast in daylight.") {
+                            SettingsCheckmark(isOn: appearance == .light)
                         } action: { appearance = .light }
-                        divider
-                        row(title: "Match iPhone", subtitle: "Switches with your iPhone’s Light or Dark setting.") {
-                            checkmark(appearance == .system)
+                        SettingsDivider()
+                        SettingsRow(title: "Match iPhone", subtitle: "Switches with your iPhone’s Light or Dark setting.") {
+                            SettingsCheckmark(isOn: appearance == .system)
                         } action: { appearance = .system }
                     }
 
                     if let ownedClub {
-                        group("Your club") {
+                        SettingsGroup(title: "Your club") {
                             NavigationLink {
                                 ClubNameEditView(currentName: ownedClub.name, clubId: ownedClub.id) { saved in
                                     self.ownedClub = (ownedClub.id, saved)
                                 }
                             } label: {
-                                rowContent(title: "Club name", subtitle: nil) {
+                                SettingsRowContent(title: "Club name", subtitle: nil) {
                                     ClubNameLabel(name: ownedClub.name, isVerified: verification == .verified)
                                         .textStyle(Typography.detail)
                                         .foregroundStyle(Tokens.Ink.secondary)
                                         .lineLimit(1)
-                                    chevron
+                                    SettingsChevron()
                                 }
                             }
                             .buttonStyle(IconPressStyle())
-                            divider
+                            SettingsDivider()
                             NavigationLink {
                                 ClubVerificationView(clubName: ownedClub.name, status: $verification)
                             } label: {
-                                rowContent(title: "Verification", subtitle: "A tag that shows your club is the real one") {
-                                    value(verificationLabel)
-                                    chevron
+                                SettingsRowContent(title: "Verification", subtitle: "A tag that shows your club is the real one") {
+                                    SettingsValueText(text: verificationLabel)
+                                    SettingsChevron()
                                 }
                             }
                             .buttonStyle(IconPressStyle())
@@ -114,8 +113,8 @@ struct SettingsView: View {
                     }
 
                     if canChooseWaterScope {
-                        group("Boats") {
-                            stackedRow(title: "Water sessions in Calendar",
+                        SettingsGroup(title: "Boats") {
+                            SettingsStackedRow(title: "Water sessions in Calendar",
                                        subtitle: "Just the ones you’re in, or every water session in the club.") {
                                 PillSegmentedControl(options: WaterCalendarScope.allCases.map(\.label), selection: Binding(
                                     get: { WaterCalendarScope.allCases.firstIndex(of: waterScope) ?? 0 },
@@ -126,8 +125,8 @@ struct SettingsView: View {
                     }
 
                     if let clubWeek {
-                        group("Club · coaches") {
-                            stackedRow(title: "Week starts on",
+                        SettingsGroup(title: "Club · coaches") {
+                            SettingsStackedRow(title: "Week starts on",
                                        subtitle: "For all of \(clubWeek.clubName): calendars, availability and weekly totals.") {
                                 PillSegmentedControl(options: WeekStart.allCases.map(\.label), selection: Binding(
                                     get: { WeekStart.allCases.firstIndex(of: clubWeek.day) ?? 0 },
@@ -151,15 +150,15 @@ struct SettingsView: View {
                         }
                     }
 
-                    group("Units and display") {
-                        stackedRow(title: "Leaderboard distance", subtitle: "Volume rankings only; everything else is metres.") {
+                    SettingsGroup(title: "Units and display") {
+                        SettingsStackedRow(title: "Leaderboard distance", subtitle: "Volume rankings only; everything else is metres.") {
                             PillSegmentedControl(options: ["Metres", "km"], selection: Binding(
                                 get: { distanceUnit == .kilometres ? 1 : 0 },
                                 set: { distanceUnit = $0 == 1 ? .kilometres : .metres }
                             ), compact: true)
                         }
-                        divider
-                        stackedRow(title: "Average shown as", subtitle: paceExample) {
+                        SettingsDivider()
+                        SettingsStackedRow(title: "Average shown as", subtitle: paceExample) {
                             PillSegmentedControl(options: ["Split", "Watts"], selection: Binding(
                                 get: { paceDisplay == .watts ? 1 : 0 },
                                 set: { paceDisplay = $0 == 1 ? .watts : .split }
@@ -168,8 +167,8 @@ struct SettingsView: View {
                     }
 
                     if viewModel.isRower {
-                        group("Logging") {
-                            plainToggleRow(title: "Selfie with each session",
+                        SettingsGroup(title: "Logging") {
+                            SettingsSwitchRow(title: "Selfie with each session",
                                            subtitle: "The front camera takes you with the monitor photo.",
                                            isOn: $selfieByDefault)
                         }
@@ -181,15 +180,15 @@ struct SettingsView: View {
                             .guidance()
                     }
 
-                    notificationsGroup
+                    SettingsNotificationsSection(viewModel: viewModel, push: push)
 
-                    group("Privacy") {
+                    SettingsGroup(title: "Privacy") {
                         NavigationLink {
                             ProfileVisibilityView(viewModel: viewModel)
                         } label: {
-                            rowContent(title: "Profile visibility", subtitle: nil) {
-                                value(viewModel.isPrivate ? "Private" : "Public")
-                                chevron
+                            SettingsRowContent(title: "Profile visibility", subtitle: nil) {
+                                SettingsValueText(text: viewModel.isPrivate ? "Private" : "Public")
+                                SettingsChevron()
                             }
                         }
                         .buttonStyle(IconPressStyle())
@@ -202,43 +201,43 @@ struct SettingsView: View {
                         .padding(.top, Tokens.Spacing.tight)
                         .guidance()
 
-                    group("Account") {
+                    SettingsGroup(title: "Account") {
                         NavigationLink {
                             EditProfileView(viewModel: viewModel)
                         } label: {
-                            rowContent(title: "Edit profile", subtitle: "Name, gender, level and weekly target") { chevron }
+                            SettingsRowContent(title: "Edit profile", subtitle: "Name, gender, level and weekly target") { SettingsChevron() }
                         }
                         .buttonStyle(IconPressStyle())
-                        divider
+                        SettingsDivider()
                         // Decision 64: bests you typed in, for your predictions. Rowers only.
                         if viewModel.isRower {
                             NavigationLink {
                                 YourBestsView()
                             } label: {
-                                rowContent(title: "Your bests", subtitle: "Your 2k, 5k and others, for your predictions") { chevron }
+                                SettingsRowContent(title: "Your bests", subtitle: "Your 2k, 5k and others, for your predictions") { SettingsChevron() }
                             }
                             .buttonStyle(IconPressStyle())
-                            divider
+                            SettingsDivider()
                         }
-                        row(title: "Log out", subtitle: nil, titleColor: Tokens.Accent.brand) { EmptyView() } action: {
+                        SettingsRow(title: "Log out", subtitle: nil, titleColor: Tokens.Accent.brand) { EmptyView() } action: {
                             Task { await viewModel.signOut() }
                         }
                     }
 
-                    group("Help") {
-                        plainToggleRow(title: "Helper text",
+                    SettingsGroup(title: "Help") {
+                        SettingsSwitchRow(title: "Helper text",
                                        subtitle: "Tips and explanations under sections and forms.",
                                        isOn: helperTextBinding)
-                        divider
+                        SettingsDivider()
                         if let supportMailtoURL = Self.supportMailtoURL {
                             Link(destination: supportMailtoURL) {
-                                rowContent(title: "Contact us", subtitle: nil) { chevron }
+                                SettingsRowContent(title: "Contact us", subtitle: nil) { SettingsChevron() }
                             }
-                            divider
+                            SettingsDivider()
                         }
-                        row(title: "Terms of Service", subtitle: nil) { chevron } action: { isShowingTerms = true }
-                        divider
-                        row(title: "Privacy Policy", subtitle: nil) { chevron } action: { isShowingPrivacyPolicy = true }
+                        SettingsRow(title: "Terms of Service", subtitle: nil) { SettingsChevron() } action: { isShowingTerms = true }
+                        SettingsDivider()
+                        SettingsRow(title: "Privacy Policy", subtitle: nil) { SettingsChevron() } action: { isShowingPrivacyPolicy = true }
                     }
 
                     // v4: a card of its own with centred red text, 24 pt below Help.
@@ -329,23 +328,6 @@ struct SettingsView: View {
 
     // MARK: - v3 building blocks
 
-    /// Section title then one card (radius 30, card fill, card edge) of rows.
-    private func group<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
-        VStack(alignment: .leading, spacing: 0) {
-            Text(title)
-                .textStyle(Typography.sectionTitle)
-                .foregroundStyle(Tokens.Ink.secondary)
-                .padding(.horizontal, 4)
-                .padding(.top, Tokens.Spacing.group)
-                .padding(.bottom, Tokens.Spacing.tight)
-                .accessibilityAddTraits(.isHeader)
-            VStack(spacing: 0) { content() }
-                .background(Self.cardShape.fill(Tokens.Surface.card))
-                .clipShape(Self.cardShape)
-                .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
-        }
-    }
-
     /// Someone who rows and coaches moves between the two versions here (decision 67); the coach's
     /// Profile has the same switch. The app then opens in whichever they used last.
     /// Saves the club's week start; the calendars reload with it.
@@ -369,89 +351,6 @@ struct SettingsView: View {
             dismiss()
         }
         .padding(.top, Tokens.Spacing.tight)
-    }
-
-    private var divider: some View {
-        Rectangle().fill(Tokens.Surface.line).frame(height: Tokens.Grouped.hairline)
-    }
-
-    /// v4 row: title 15 semibold, optional 13 description, trailing control; 66 pt tall with a
-    /// description, 56 without.
-    private func rowContent<Trailing: View>(
-        title: String, subtitle: String?, titleColor: Color = Tokens.Ink.primary, @ViewBuilder trailing: () -> Trailing
-    ) -> some View {
-        HStack(spacing: Tokens.Spacing.loose) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                    .textStyle(Typography.rowTitle)
-                    .foregroundStyle(titleColor)
-                if let subtitle {
-                    Text(subtitle)
-                        .textStyle(Typography.meta)
-                        .foregroundStyle(Tokens.Ink.secondary)
-                        .tabularNumerals()
-                }
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            trailing()
-        }
-        .padding(.horizontal, Tokens.Spacing.card)
-        .padding(.vertical, Tokens.Spacing.loose)
-        .frame(minHeight: subtitle == nil ? Tokens.Size.rowCompact : Tokens.Size.row)
-        .contentShape(Rectangle())
-    }
-
-    /// v4 units row: title and description on top, the full-width control beneath.
-    private func stackedRow<Control: View>(title: String, subtitle: String, @ViewBuilder control: () -> Control) -> some View {
-        VStack(alignment: .leading, spacing: Tokens.Spacing.tight) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                    .textStyle(Typography.rowTitle)
-                    .foregroundStyle(Tokens.Ink.primary)
-                Text(subtitle)
-                    .textStyle(Typography.meta)
-                    .tabularNumerals()
-                    .foregroundStyle(Tokens.Ink.secondary)
-            }
-            control()
-        }
-        .padding(.horizontal, Tokens.Spacing.card)
-        .padding(.top, Tokens.Spacing.gap)
-        .padding(.bottom, Tokens.Spacing.loose)
-    }
-
-    /// A row that is itself a control (a whole-row button) when `action` is given.
-    @ViewBuilder
-    private func row<Trailing: View>(
-        title: String, subtitle: String?, titleColor: Color = Tokens.Ink.primary,
-        @ViewBuilder trailing: () -> Trailing, action: (() -> Void)? = nil
-    ) -> some View {
-        if let action {
-            Button(action: action) { rowContent(title: title, subtitle: subtitle, titleColor: titleColor, trailing: trailing) }
-                .buttonStyle(IconPressStyle())
-        } else {
-            rowContent(title: title, subtitle: subtitle, titleColor: titleColor, trailing: trailing)
-        }
-    }
-
-    private func checkmark(_ isOn: Bool) -> some View {
-        RPIconView(icon: .check, size: Tokens.Icon.small)
-            .textStyle(Typography.rowTitle)
-            .foregroundStyle(Tokens.Accent.brand)
-            .opacity(isOn ? 1 : 0)
-            .accessibilityHidden(!isOn)
-    }
-
-    private var chevron: some View {
-        RPIconView(icon: .chevronRight, size: Tokens.Icon.small)
-            .textStyle(Typography.pill)
-            .foregroundStyle(Tokens.Ink.secondary)
-    }
-
-    private func value(_ text: String) -> some View {
-        Text(text)
-            .textStyle(Typography.detail)
-            .foregroundStyle(Tokens.Ink.secondary)
     }
 
     private var verificationLabel: String {
@@ -486,96 +385,6 @@ struct SettingsView: View {
             },
             set: { guidanceChoice = ($0 ? GuidanceRules.Choice.on : .off).rawValue }
         )
-    }
-
-    /// A 66 pt row with a switch bound straight to a value (brand blue when on, as v4).
-    private func plainToggleRow(title: String, subtitle: String, isOn: Binding<Bool>) -> some View {
-        Toggle(isOn: isOn) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                    .textStyle(Typography.rowTitle)
-                    .foregroundStyle(Tokens.Ink.primary)
-                Text(subtitle)
-                    .textStyle(Typography.meta)
-                    .foregroundStyle(Tokens.Ink.secondary)
-            }
-        }
-        .tint(Tokens.Accent.brand)
-        .padding(.horizontal, Tokens.Spacing.card)
-        .padding(.vertical, Tokens.Spacing.loose)
-        .frame(minHeight: Tokens.Size.row)
-    }
-
-    // MARK: - Notifications
-
-    /// v3 §07: three switches (docs/design/v2-decisions.md #19; Quiet hours removed by #36). If iOS has
-    /// alerts turned off for the app, a first row says so and opens the page in the iOS
-    /// Settings app where they're turned back on — the switches alone can't override iOS.
-    private var notificationsGroup: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            group("Notifications") {
-                if push.authorizationStatus == .denied {
-                    row(title: "Notifications are off", subtitle: "Allow them in iOS Settings to get alerts.") {
-                        chevron
-                    } action: {
-                        if let url = URL(string: UIApplication.openNotificationSettingsURLString) {
-                            openURL(url)
-                        }
-                    }
-                    divider
-                }
-                if viewModel.notificationSettings != nil {
-                    toggleRow(title: "Comments and replies", subtitle: "Including your own threads", \.comments)
-                    divider
-                    toggleRow(title: "Personal bests", subtitle: "When you or a friend beats one", \.personalBests)
-                    divider
-                    toggleRow(
-                        title: "Club activity",
-                        subtitle: "New posts from \(viewModel.clubName ?? "your club")",
-                        \.clubActivity
-                    )
-                    divider
-                    toggleRow(title: "New workouts", subtitle: "When your coach sets you a workout", \.newWorkouts)
-                    divider
-                    toggleRow(title: "Practice reminders", subtitle: "Two hours before a practice you’re going to", \.practiceReminders)
-                    divider
-                    toggleRow(title: "Rank changes", subtitle: "Mondays, when your place in last week’s metres moved", \.rankChanges)
-                } else {
-                    rowContent(title: "Notifications", subtitle: "Loading…") { ProgressView() }
-                }
-            }
-            if let error = viewModel.notificationError {
-                Text(error)
-                    .textStyle(Typography.meta)
-                    .foregroundStyle(Tokens.System.error)
-                    .padding(.top, 6)
-            }
-        }
-    }
-
-    /// A 66 pt row whose trailing control is a switch; on = the success colour, as v3's
-    /// `.switch` and the Review screen's "Include on leaderboards".
-    private func toggleRow(
-        title: String, subtitle: String, _ keyPath: WritableKeyPath<NotificationSettings, Bool>
-    ) -> some View {
-        Toggle(isOn: Binding(
-            get: { viewModel.notificationSettings?[keyPath: keyPath] ?? false },
-            set: { value in Task { await viewModel.updateNotifications { $0[keyPath: keyPath] = value } } }
-        )) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                    .textStyle(Typography.rowTitle)
-                    .foregroundStyle(Tokens.Ink.primary)
-                Text(subtitle)
-                    .textStyle(Typography.meta)
-                    .foregroundStyle(Tokens.Ink.secondary)
-            }
-        }
-        // v4: switches are brand blue when on.
-        .tint(Tokens.Accent.brand)
-        .padding(.horizontal, Tokens.Spacing.card)
-        .padding(.vertical, Tokens.Spacing.loose)
-        .frame(minHeight: Tokens.Size.row)
     }
 }
 
