@@ -27,13 +27,6 @@ struct ProfileView: View {
         }
     }
 
-    /// Where a new profile picture comes from (decision 29).
-    private enum PhotoSource: Identifiable {
-        case camera, library
-        var id: Self { self }
-        var pickerSource: UIImagePickerController.SourceType { self == .camera ? .camera : .photoLibrary }
-    }
-
     /// A distance Profile predicts, and what to call it.
     struct PredictedDistance: Identifiable, Hashable {
         let title: String
@@ -42,7 +35,7 @@ struct ProfileView: View {
     }
 
     /// Decision 31: the 2k and 5k cards.
-    private static let predictedDistances = [
+    static let predictedDistances = [
         PredictedDistance(title: "2k", metres: 2000),
         PredictedDistance(title: "5k", metres: 5000),
     ]
@@ -57,22 +50,10 @@ struct ProfileView: View {
     @State private var isShowingSettings = false
     @State private var isShowingAllPBs = false
     @State private var tab: Tab = .overview
-    @State private var isChoosingPhoto = false
-    @State private var photoSource: PhotoSource?
-    @State private var isSavingPhoto = false
-    @State private var photoError: String?
     /// The post a press-and-hold on the Posts grid asked to delete (decision 63).
     @State private var postToDelete: UUID?
-    /// The post whose Delete bubble a press-and-hold opened, and whether that press should stop the
-    /// tap that follows it from opening the post.
-    @State private var bubblePost: UUID?
-    @State private var heldPost: UUID?
     @State private var deleteError: String?
-    @Environment(\.navigate) private var navigate
     @Environment(\.dismiss) private var dismiss
-
-    private static let overviewPBKeys = ["2k", "5k"]
-    private static let cardShape = RoundedRectangle(cornerRadius: Tokens.Radius.card, style: .continuous)
 
     init(viewing: UUID? = nil, reselects: Int = 0) {
         self.viewing = viewing
@@ -83,16 +64,21 @@ struct ProfileView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
-                identity
-                socialRow
+                ProfileIdentity(viewModel: viewModel, isOtherRower: isOtherRower)
+                ProfileSocialRow(viewModel: viewModel, isOtherRower: isOtherRower)
 
                 if isOtherRower {
-                    otherRowerSections
+                    ProfileOtherRowerSections(viewModel: viewModel) { expandedTest = $0 }
                 } else if viewModel.isLocked {
-                    privateCard
+                    ProfilePrivateCard()
                         .padding(.top, Tokens.Spacing.loose)
                 } else {
-                    statsCard
+                    ProfileStatsCard(stats: [
+                        .init(value: ProfileStatsCard.compactMetres(currentWeekVolumeM), label: "weekly volume"),
+                        .init(value: "\(viewModel.seasonSessionCount)", label: "sessions"),
+                        .init(value: "\(pbCount)", label: "PBs"),
+                        .init(value: "\(viewModel.streakDays)", label: "streak days")
+                    ])
                     PillSegmentedControl(
                         options: Tab.allCases.map(\.label),
                         selection: Binding(get: { tab.rawValue }, set: { tab = Tab(rawValue: $0) ?? .overview })
@@ -100,9 +86,17 @@ struct ProfileView: View {
                     .padding(.top, Tokens.Spacing.loose)
 
                     switch tab {
-                    case .overview: overview
-                    case .pbs: allPBs
-                    case .posts: postsGrid
+                    case .overview:
+                        ProfileOverview(
+                            viewModel: viewModel,
+                            onOpenTest: { expandedTest = $0 },
+                            onShowAllPBs: { isShowingAllPBs = true },
+                            onExplain: { explainedTarget = $0 }
+                        )
+                    case .pbs:
+                        ProfilePBGrid(tiles: viewModel.pbTiles) { expandedTest = $0 }
+                    case .posts:
+                        ProfilePostsGrid(viewModel: viewModel) { postToDelete = $0 }
                     }
                 }
 
@@ -114,7 +108,7 @@ struct ProfileView: View {
         .scrollsToTopOnReselect(reselects) { ViewerContext.shared.invalidate(); await viewModel.load() }
         .safeAreaInset(edge: .top, spacing: 0) {
             if viewing == nil {
-                header
+                ProfileHeaderBar { isShowingSettings = true }
             } else {
                 ScreenHeader(title: "Rower profile") { dismiss() }
             }
@@ -169,291 +163,11 @@ struct ProfileView: View {
         }
     }
 
-    // MARK: - Header and identity
-
-    private var header: some View {
-        HStack(spacing: Tokens.Spacing.gap) {
-            Text("Profile")
-                .textStyle(Typography.largeTitle)
-                .foregroundStyle(Tokens.Ink.primary)
-                .accessibilityAddTraits(.isHeader)
-            Spacer(minLength: 0)
-            GlassIconButton(icon: .settings, accessibilityLabel: "Settings") {
-                isShowingSettings = true
-            }
-        }
-        .padding(.top, Tokens.Spacing.tight)
-        .padding(.horizontal, Tokens.Spacing.headerHorizontal)
-        .padding(.bottom, 14)
-        .frame(minHeight: Tokens.Size.headerMinHeight)
-        .background(Tokens.Base.ground)
-    }
-
-    /// Your own avatar is a button: tap it to take a new picture, choose one from your library, or
-    /// remove it (decision 29). A small camera badge says so. Anyone else's is just their avatar.
-    @ViewBuilder
-    private var avatar: some View {
-        let picture = AvatarPlaceholder(
-            diameter: 76,
-            streakDays: viewModel.streakDays,
-            name: viewModel.displayName,
-            userId: viewModel.profileUserId
-        )
-        if viewModel.isOwnProfile && !isOtherRower {
-            Button { isChoosingPhoto = true } label: {
-                picture
-                    .overlay {
-                        if isSavingPhoto {
-                            Circle().fill(Tokens.Base.ground.opacity(0.55))
-                            ProgressView().tint(Tokens.Ink.primary)
-                        }
-                    }
-                    .overlay(alignment: .bottomTrailing) {
-                        RPIconView(icon: .camera, size: Tokens.Icon.small)
-                            .textStyle(Typography.fieldLabel)
-                            .foregroundStyle(Tokens.Ink.onBrand)
-                            .frame(width: Tokens.Size.avatarBadge, height: Tokens.Size.avatarBadge)
-                            .background(Circle().fill(Tokens.Accent.brand))
-                            .overlay { Circle().strokeBorder(Tokens.Base.ground, lineWidth: 2) }
-                            .offset(x: 2, y: 2)
-                    }
-            }
-            .buttonStyle(IconPressStyle())
-            .disabled(isSavingPhoto)
-            .accessibilityLabel("Change profile picture")
-            .confirmationDialog("Profile picture", isPresented: $isChoosingPhoto, titleVisibility: .visible) {
-                if UIImagePickerController.isSourceTypeAvailable(.camera) {
-                    Button("Take photo") { photoSource = .camera }
-                }
-                Button("Choose from library") { photoSource = .library }
-                if let id = viewModel.profileUserId, AvatarStore.shared.url(for: id) != nil {
-                    Button("Remove photo", role: .destructive) { Task { await removePhoto() } }
-                }
-                Button("Cancel", role: .cancel) {}
-            }
-            .fullScreenCover(item: $photoSource) { source in
-                ImagePickerView(source: source.pickerSource) { image in
-                    Task { await savePhoto(image) }
-                }
-                .ignoresSafeArea()
-            }
-            if let photoError {
-                Text(photoError)
-                    .textStyle(Typography.meta)
-                    .foregroundStyle(Tokens.System.error)
-                    .multilineTextAlignment(.center)
-                    .padding(.top, Tokens.Spacing.tight)
-            }
-        } else {
-            picture
-        }
-    }
-
-    private func savePhoto(_ image: UIImage) async {
-        isSavingPhoto = true
-        photoError = nil
-        defer { isSavingPhoto = false }
-        do {
-            try await AvatarService.setPicture(image)
-        } catch {
-            photoError = error.localizedDescription
-        }
-    }
-
-    private func removePhoto() async {
-        isSavingPhoto = true
-        photoError = nil
-        defer { isSavingPhoto = false }
-        do {
-            try await AvatarService.removePicture()
-        } catch {
-            photoError = error.localizedDescription
-        }
-    }
-
-    /// Centred 76 pt avatar (with a 32 pt streak badge), name 23 bold, "Club · Level" 13 muted.
-    private var identity: some View {
-        VStack(spacing: 0) {
-            avatar
-                .padding(.bottom, Tokens.Spacing.gap)
-            Text(viewModel.displayName)
-                .textStyle(Typography.profileName)
-                .foregroundStyle(Tokens.Ink.primary)
-                .multilineTextAlignment(.center)
-            if let username = viewModel.username {
-                Text("@\(username)")
-                    .textStyle(Typography.meta)
-                    .foregroundStyle(Tokens.Ink.secondary)
-                    .padding(.top, 2)
-            }
-            // The club, with its verified tag (decision 98), then the level on your own profile.
-            HStack(spacing: Tokens.Spacing.verifiedGap) {
-                ClubNameLabel(name: viewModel.clubName ?? "No club",
-                              isVerified: viewModel.clubName != nil && viewModel.clubIsVerified,
-                              badgeSize: Tokens.Icon.badge)
-                if let level = identityLevel {
-                    Text("· \(level)")
-                }
-            }
-                .textStyle(Typography.meta)
-                .foregroundStyle(Tokens.Ink.secondary)
-                .padding(.top, 4)
-                .padding(.bottom, isOtherRower ? 0 : 8)
-            if isOtherRower {
-                // v3 §08: the club on one line, whether the profile is public on the next.
-                Text(viewModel.isPrivateAccount ? "Private profile" : "Public profile")
-                    .textStyle(Typography.meta)
-                    .foregroundStyle(Tokens.Ink.secondary)
-                    .padding(.top, 4)
-                    .padding(.bottom, Tokens.Spacing.tight)
-            }
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.top, Tokens.Spacing.loose)
-        .padding(.bottom, 14)
-    }
-
-    /// Your own profile: "Club · Level". Another rower's (v3 §08), or a coach-only account's
-    /// (no level, decision 34): the club alone.
-    private var identityLevel: String? {
-        if isOtherRower || !viewModel.isRower { return nil }
-        let level = viewModel.categoryLabel.capitalized
-        return level.isEmpty ? nil : level
-    }
+    // MARK: - Figures
 
     /// Someone else's profile, reached from a post, a list or a search.
     private var isOtherRower: Bool {
         viewing != nil && !viewModel.isOwnProfile
-    }
-
-    // MARK: - Social
-
-    /// Centred Followers / Following counts (each opens its list), then Find rowers and — on
-    /// your own profile, when someone is waiting — Follow requests. Hidden for a locked profile.
-    @ViewBuilder
-    private var socialRow: some View {
-        if isOtherRower {
-            // v3 §08: a full-width Follow / Following button under the identity.
-            FollowButton(
-                state: viewModel.followState,
-                followsYou: viewModel.followsYou,
-                isBusy: viewModel.isFollowBusy,
-                variant: .fullWidth
-            ) {
-                Task { await viewModel.toggleFollow() }
-            }
-        }
-        if !viewModel.isLocked, let userId = viewModel.profileUserId {
-            HStack(spacing: 6) {
-                countButton(value: viewModel.followerCount, label: "Followers") {
-                    navigate(.people(.followers(userId)))
-                }
-                countButton(value: viewModel.followingCount, label: "Following") {
-                    navigate(.people(.following(userId)))
-                }
-            }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, Tokens.Spacing.gap)
-        }
-        if viewModel.isOwnProfile {
-            Button("Find rowers") { navigate(.people(.find)) }
-                .buttonStyle(.rpText)
-                .frame(maxWidth: .infinity)
-            if viewModel.pendingRequestCount > 0 {
-                Button {
-                    navigate(.followRequests)
-                } label: {
-                    HStack {
-                        Text("Follow requests · \(viewModel.pendingRequestCount)")
-                            .tabularNumerals()
-                        Spacer()
-                        RPIconView(icon: .chevronRight, size: Tokens.Icon.small)
-                    }
-                }
-                .buttonStyle(.rpGlass)
-                .padding(.bottom, Tokens.Spacing.loose)
-            }
-        }
-    }
-
-    private func countButton(value: Int, label: String, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            VStack(spacing: 0) {
-                Text("\(value)")
-                    .textStyle(Typography.cardTitle)
-                    .tabularNumerals()
-                    .foregroundStyle(Tokens.Ink.primary)
-                Text(label)
-                    .textStyle(Typography.meta)
-                    .foregroundStyle(Tokens.Ink.secondary)
-            }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 6)
-            .frame(minHeight: 48)
-            .contentShape(Capsule())
-        }
-        .buttonStyle(IconPressStyle())
-        .accessibilityLabel("\(value) \(label)")
-    }
-
-    /// Shown in place of every stat for a private account the viewer is not approved to see.
-    private var privateCard: some View {
-        VStack(spacing: Tokens.Spacing.gap) {
-            RPIconView(icon: .lock, size: Tokens.Icon.feature)
-                .foregroundStyle(Tokens.Ink.secondary)
-            Text("This profile is private")
-                .textStyle(Typography.cardTitle)
-                .foregroundStyle(Tokens.Ink.primary)
-            Text("Send a follow request to see their stats, personal bests, followers and following.")
-                .textStyle(Typography.meta)
-                .multilineTextAlignment(.center)
-                .foregroundStyle(Tokens.Ink.secondary)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 30)
-        .padding(.horizontal, 20)
-        .background(Self.cardShape.fill(Tokens.Surface.card))
-        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
-    }
-
-    // MARK: - Stats
-
-    /// 4-up card: weekly volume, sessions, PBs, streak days — value 21 bold over a 10 pt label,
-    /// thin dividers between columns.
-    private var statsCard: some View {
-        statsCard([
-            (Self.compactMetres(currentWeekVolumeM), "weekly volume"),
-            ("\(viewModel.seasonSessionCount)", "sessions"),
-            ("\(pbCount)", "PBs"),
-            ("\(viewModel.streakDays)", "streak days")
-        ])
-    }
-
-    private func statsCard(_ stats: [(String, String)]) -> some View {
-        HStack(spacing: 0) {
-            ForEach(stats.indices, id: \.self) { index in
-                VStack(spacing: 2) {
-                    Text(stats[index].0)
-                        .font(.system(size: 22, weight: .semibold))
-                        .tabularNumerals()
-                        .foregroundStyle(Tokens.Ink.primary)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.7)
-                    Text(stats[index].1)
-                        .font(.system(size: 10))
-                        .foregroundStyle(Tokens.Ink.secondary)
-                        .lineLimit(1)
-                }
-                .frame(maxWidth: .infinity)
-                .accessibilityElement(children: .combine)
-                if index < stats.count - 1 {
-                    Rectangle().fill(Tokens.Surface.line).frame(width: 1, height: 30)
-                }
-            }
-        }
-        .padding(.vertical, Tokens.Spacing.loose)
-        .background(Self.cardShape.fill(Tokens.Surface.card))
-        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
     }
 
     private var currentWeekVolumeM: Int {
@@ -462,328 +176,6 @@ struct ProfileView: View {
 
     private var pbCount: Int {
         viewModel.pbTiles.filter(\.hasResult).count
-    }
-
-    /// "116.3k" — thousands of metres, as the v3 stats card writes it.
-    private static func compactMetres(_ metres: Int) -> String {
-        guard metres >= 1_000 else { return "\(metres)" }
-        return String(format: "%.1fk", Double(metres) / 1_000)
-    }
-
-    // MARK: - Another rower (v3 §08)
-
-    /// v3 §08 exactly (decision 22): this week's volume, two personal bests and their place
-    /// in their own club — no tabs, chart, grid or posts. A private account you aren't
-    /// approved for shows only the lock card.
-    @ViewBuilder
-    private var otherRowerSections: some View {
-        if viewModel.isLocked {
-            privateCard
-                .padding(.top, Tokens.Spacing.loose)
-        } else {
-            sectionTitle("Volume · This week")
-            statsCard([
-                (Self.compactMetres(currentWeekVolumeM), "metres"),
-                (Self.rankText(viewModel.clubRanks?.weeklyVolume), "volume ranking"),
-                ("\(viewModel.weekSessionCount)", "sessions"),
-                ("\(viewModel.streakDays)", "streak days")
-            ])
-
-            sectionTitle("Personal bests")
-            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: Tokens.Spacing.tight), count: 2), spacing: Tokens.Spacing.tight) {
-                ForEach(viewModel.pbTiles.filter { Self.rowerPBKeys.contains($0.test.key) }) { tile in
-                    // Decision 21: their all-time best, not a season best.
-                    PBTileView(tile: tile, label: tile.test.longTitle, footnote: "Personal best") { expandedTest = tile.test }
-                }
-            }
-
-            // Decision 20: ranks within their own club — app-wide rankings were dropped (17).
-            if viewModel.clubName != nil {
-                sectionTitle("Club rankings")
-                rankingsCard
-            }
-        }
-    }
-
-    /// Three columns — this week's volume, 2k, 5k — each "#n" over its label.
-    private var rankingsCard: some View {
-        let ranks: [(Int?, String)] = [
-            (viewModel.clubRanks?.weeklyVolume, "weekly volume"),
-            (viewModel.clubRanks?.twoK, "2k test"),
-            (viewModel.clubRanks?.fiveK, "5k test")
-        ]
-        return HStack(spacing: 0) {
-            ForEach(ranks.indices, id: \.self) { index in
-                VStack(spacing: 2) {
-                    Text(Self.rankText(ranks[index].0))
-                        .textStyle(Typography.rankValue)
-                        .tabularNumerals()
-                        .foregroundStyle(Tokens.Ink.primary)
-                    Text(ranks[index].1)
-                        .textStyle(Typography.statLabel)
-                        .foregroundStyle(Tokens.Ink.secondary)
-                        .lineLimit(1)
-                }
-                .frame(maxWidth: .infinity)
-                .accessibilityElement(children: .combine)
-                if index < ranks.count - 1 {
-                    Rectangle().fill(Tokens.Surface.line).frame(width: 1, height: 30)
-                }
-            }
-        }
-        .padding(.vertical, Tokens.Spacing.loose)
-        .background(Self.cardShape.fill(Tokens.Surface.card))
-        .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
-    }
-
-    /// v3 §08's two PB tiles.
-    private static let rowerPBKeys = ["2k", "30min"]
-
-    /// "#5", or a dash with nothing to rank.
-    private static func rankText(_ rank: Int?) -> String {
-        rank.map { "#\($0)" } ?? "—"
-    }
-
-    // MARK: - Overview
-
-    private var overview: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            sectionHeader("Top personal bests") {
-                Button("View all ›") { isShowingAllPBs = true }
-                    .buttonStyle(.rpText)
-            }
-            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: Tokens.Spacing.tight), count: 2), spacing: Tokens.Spacing.tight) {
-                ForEach(topPBTiles) { tile in
-                    PBTileView(tile: tile) { expandedTest = tile.test }
-                }
-            }
-
-            if viewModel.isOwnProfile {
-                VStack(spacing: Tokens.Spacing.gap) {
-                    ForEach(Self.predictedDistances, id: \.metres) { target in
-                        PredictionCard(
-                            title: target.title,
-                            prediction: viewModel.predictions[target.metres],
-                            isLoading: viewModel.isLoadingPredictions,
-                            didFail: viewModel.predictionsFailed,
-                            onRetry: { Task { await viewModel.loadPredictions() } }
-                        ) { explainedTarget = target }
-                    }
-                }
-                .padding(.top, Tokens.Spacing.loose)
-            }
-
-            sectionHeader("Weekly volume") { chip("12 weeks") }
-                .padding(.top, 4)
-            WeeklyVolumeChart(weeks: viewModel.weeklyVolumes)
-                .padding(.vertical, 16)
-                .padding(.horizontal, Tokens.Spacing.card)
-                .background(Self.cardShape.fill(Tokens.Surface.card))
-                .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
-
-            sectionHeader("Consistency") { chip("\(viewModel.activeDaysInGrid) active days") }
-            ConsistencyCalendarView(days: viewModel.consistencyDays, footnote: streakFootnote)
-                .padding(.vertical, 16)
-                .padding(.horizontal, Tokens.Spacing.card)
-                .background(Self.cardShape.fill(Tokens.Surface.card))
-                .overlay { Self.cardShape.strokeBorder(Tokens.Surface.cardEdge, lineWidth: Tokens.Grouped.hairline) }
-
-            if let latest = viewModel.latestSession {
-                sectionTitle("Recent activity")
-                recentActivity(latest)
-            }
-
-            if viewModel.isOwnProfile {
-                // Season Wrapped (decision 92): any time, for this term so far or any before.
-                Button {
-                    navigate(.seasonWrapped(nil))
-                } label: {
-                    Label("Season Wrapped", icon: .star)
-                }
-                .buttonStyle(.rpGlass)
-                .padding(.top, Tokens.Spacing.group)
-                clubEntry
-            }
-        }
-    }
-
-    /// The v2 prototype's club entry (decision 25): admins and up manage the club; members see
-    /// Your crew; rowers without a club join or create one. A pending request shows beneath.
-    private var clubEntry: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            sectionTitle("Club")
-            Button(clubEntryTitle) {
-                navigate(viewModel.clubRole?.canManageMembers == true ? .manageClub : .clubHub)
-            }
-            .buttonStyle(.rpGlass)
-            if let pending = viewModel.pendingClubName {
-                Text("Join request pending · \(pending)")
-                    .textStyle(Typography.meta)
-                    .foregroundStyle(Tokens.Ink.secondary)
-                    .padding(.horizontal, 2)
-            }
-            ForEach(viewModel.invitingClubNames, id: \.self) { club in
-                Button {
-                    navigate(.clubHub)
-                } label: {
-                    Text("\(club) invited you to join · View")
-                        .textStyle(Typography.meta)
-                        .foregroundStyle(Tokens.Accent.brand)
-                        .frame(minHeight: Tokens.Size.minTap)
-                }
-                .buttonStyle(IconPressStyle())
-                .padding(.horizontal, 2)
-            }
-        }
-    }
-
-    private var clubEntryTitle: String {
-        switch viewModel.clubRole {
-        case .none: "Join or create a club"
-        case .member?: "Your club"
-        default: "Manage your club"
-        }
-    }
-
-    private var topPBTiles: [ProfileViewModel.PBTile] {
-        viewModel.pbTiles.filter { Self.overviewPBKeys.contains($0.test.key) }
-    }
-
-    /// v3 streak footnote, carrying the rest-day allowance the old streak block showed.
-    private var streakFootnote: String {
-        let remaining = max(0, viewModel.restDaysAllowedPerWeek - viewModel.restDaysUsedThisWeek)
-        let rest = "\(remaining) rest day\(remaining == 1 ? "" : "s") left this week"
-        if viewModel.streakDays > 0 {
-            return "\(viewModel.streakDays)-day current streak · \(rest)"
-        }
-        return "Post a workout to start a streak · \(rest)"
-    }
-
-    /// v3 section title: 12 pt heavy uppercase, muted, 20 top / 9 bottom.
-    private func sectionTitle(_ text: String) -> some View {
-        Text(text)
-            .textStyle(Typography.sectionTitle)
-            .foregroundStyle(Tokens.Ink.secondary)
-            .padding(.horizontal, 2)
-            .padding(.top, Tokens.Spacing.sectionTop)
-            .padding(.bottom, Tokens.Spacing.sectionBottom)
-            .accessibilityAddTraits(.isHeader)
-    }
-
-    /// A section title with something on the right (a chip, "View all"), both centred on one
-    /// line, with the section spacing around the whole row.
-    private func sectionHeader<Trailing: View>(_ text: String, @ViewBuilder trailing: () -> Trailing) -> some View {
-        HStack {
-            Text(text)
-                .textStyle(Typography.sectionTitle)
-                .foregroundStyle(Tokens.Ink.secondary)
-                .padding(.horizontal, 2)
-                .accessibilityAddTraits(.isHeader)
-            Spacer()
-            trailing()
-        }
-        .padding(.top, Tokens.Spacing.sectionTop - 8)
-        .padding(.bottom, Tokens.Spacing.sectionBottom - 4)
-    }
-
-    private func chip(_ text: String) -> some View {
-        Text(text)
-            .textStyle(Typography.fieldLabel)
-            .tabularNumerals()
-            .foregroundStyle(Tokens.Ink.secondary)
-            .padding(.horizontal, Tokens.Spacing.tight)
-            .frame(minHeight: 27)
-            .background(Capsule().fill(Tokens.Surface.raised))
-    }
-
-    /// Placeholder until the rower's own prediction algorithm is added (decision 2): the v3
-    /// card, with no number invented.
-    private func recentActivity(_ session: ProfileViewModel.ProfilePhoto) -> some View {
-        let shape = RoundedRectangle(cornerRadius: Tokens.Radius.workoutLink, style: .continuous)
-        return Button {
-            navigate(.post(session.id))
-        } label: {
-            HStack(spacing: Tokens.Spacing.loose) {
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("\(session.workoutLabel ?? "Training") · \(session.distanceM.formattedMetres)")
-                        .textStyle(Typography.rowTitle)
-                        .tabularNumerals()
-                        .foregroundStyle(Tokens.Ink.primary)
-                    Text("\(session.totalTimeMs.formattedDurationMs) · View workout")
-                        .textStyle(Typography.statLabel)
-                        .tabularNumerals()
-                        .foregroundStyle(Tokens.Ink.secondary)
-                }
-                Spacer(minLength: 0)
-                RPIconView(icon: .chevronRight, size: Tokens.Icon.small)
-                    .textStyle(Typography.rowTitle)
-                    .foregroundStyle(Tokens.Ink.primary)
-            }
-            .padding(Tokens.Spacing.card)
-            .frame(maxWidth: .infinity, minHeight: 68, alignment: .leading)
-            .background(shape.fill(Tokens.Surface.card))
-            .overlay { shape.strokeBorder(Tokens.Surface.line, lineWidth: Tokens.Grouped.hairline) }
-            .contentShape(shape)
-        }
-        .buttonStyle(IconPressStyle())
-    }
-
-    // MARK: - PBs tab
-
-    private var allPBs: some View {
-        LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: Tokens.Spacing.tight), count: 2), spacing: Tokens.Spacing.tight) {
-            ForEach(viewModel.pbTiles) { tile in
-                PBTileView(tile: tile) { expandedTest = tile.test }
-            }
-        }
-        .padding(.top, Tokens.Spacing.sectionTop)
-    }
-
-    // MARK: - Posts tab
-
-    private var postsGrid: some View {
-        LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 4), count: 3), spacing: 4) {
-            ForEach(viewModel.photos) { photo in
-                photoTile(photo)
-                    .asButton {
-                        // The release after a press-and-hold isn't a tap.
-                        if heldPost == photo.id { heldPost = nil; return }
-                        navigate(.post(photo.id))
-                    }
-                    // Your own posts: press and hold for a small Delete post bubble (decision 63).
-                    .simultaneousGesture(LongPressGesture(minimumDuration: 0.45).onEnded { _ in
-                        guard viewModel.isOwnProfile else { return }
-                        heldPost = photo.id
-                        bubblePost = photo.id
-                    })
-                    .sensoryFeedback(.impact, trigger: bubblePost) { _, new in new == photo.id }
-                    .deleteBubble(isPresented: Binding(
-                        get: { bubblePost == photo.id },
-                        set: { if !$0 { bubblePost = nil } }
-                    ), title: "Delete post") {
-                        postToDelete = photo.id
-                    }
-            }
-        }
-        .padding(.top, Tokens.Spacing.sectionTop)
-    }
-
-    private func photoTile(_ photo: ProfileViewModel.ProfilePhoto) -> some View {
-        CachedAsyncImage(url: viewModel.photoURL(for: photo.monitorPath)) {
-            PhotoPlaceholder(cornerRadius: 12)
-        }
-        .aspectRatio(1, contentMode: .fill)
-        .clipped()
-        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-        .overlay(alignment: .bottomLeading) {
-            Text(photo.distanceM.formattedMetres)
-                .font(.system(size: 10, weight: .semibold))
-                .tabularNumerals()
-                .foregroundStyle(.white)
-                .shadow(radius: 3)
-                .padding(6)
-        }
-        .accessibilityLabel("Workout, \(photo.distanceM.formattedMetres)")
     }
 }
 
