@@ -224,6 +224,18 @@ struct SettingsView: View {
                         }
                     }
 
+                    // Decision 108: only app admins see this; the database refuses anyone else anyway.
+                    if viewModel.isAppAdmin {
+                        SettingsGroup(title: "Admin") {
+                            NavigationLink {
+                                ClubVerificationsView()
+                            } label: {
+                                SettingsRowContent(title: "Club verifications", subtitle: "Approve or decline the verified tag") { SettingsChevron() }
+                            }
+                            .buttonStyle(IconPressStyle())
+                        }
+                    }
+
                     SettingsGroup(title: "Help") {
                         SettingsSwitchRow(title: "Helper text",
                                        subtitle: "Tips and explanations under sections and forms.",

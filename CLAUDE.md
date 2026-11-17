@@ -168,7 +168,9 @@ After any change:
 
 ## Current focus
 
-**On `main` (2026-11-17): minimum age 13** (decision 107, migration run on staging; checklist `docs/testing/minimum-age.md`;
+**On `main` (2026-11-17): in-app club verification for admins** (decision 108, migration run on staging; `piero` is the
+staging admin), **restyled sign-up/reset emails** and why sign-up emails don't arrive (`docs/testing/sign-up-emails.md`:
+Confirm email is off on staging; needs custom SMTP), **minimum age 13** (decision 107, migration run on staging; checklist `docs/testing/minimum-age.md`;
 website Terms/Privacy updated but not yet uploaded), **private posts** (decision 106, migration run on staging; checklist `docs/testing/private-posts.md`),
 and Settings, Profile and Review session split into small views after Settings crashed the iPhone (`ScreenStackDepthTests`
 fails any screen past 700 KB of stack — build screens from small `View` structs, not deep `some View` helpers). Earlier:

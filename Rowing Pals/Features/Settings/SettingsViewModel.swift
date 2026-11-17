@@ -61,6 +61,9 @@ final class SettingsViewModel {
     var isDeletingAccount = false
     var deleteError: String?
 
+    /// An app admin (decision 108): Settings shows Club verifications.
+    var isAppAdmin = false
+
     /// Notifications (docs/design/v2-decisions.md #19). Each change is saved the moment
     /// it's made, like the privacy switch; nil until loaded.
     var notificationSettings: NotificationSettings?
@@ -134,7 +137,9 @@ final class SettingsViewModel {
             // Before docs/migrations/2026-10-05-pace-engine-inputs.sql has run, there's nothing yet.
             async let detailsRequest = try? await AthletePrivateService.mine()
             async let notificationsRequest = Self.notificationRows(userId: id)
+            async let adminRequest = ClubVerificationAdminService.isAdmin()
             let profile = try await profileRequest
+            isAppAdmin = await adminRequest
             displayName = profile.displayName
             username = profile.username ?? ""
             originalUsername = username
