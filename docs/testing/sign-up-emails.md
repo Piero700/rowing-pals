@@ -6,58 +6,29 @@ the same instant as `created_at`, and `confirmation_sent_at` is empty), so Supab
 email at all. The app copes either way: with it off you go straight in; with it on you're asked for
 the code from the email (decision 66).
 
-Turning it on only works once Supabase can actually send mail to anyone. Its built-in mailer only
-delivers to your own team's addresses and a couple of times an hour, so first give it a real mail
-server (section 2). Do sections 1–5 on **staging** first; repeat on **production** before launch.
+Mail itself is already set up: Supabase sends through **Resend** (Authentication → Emails → SMTP
+Settings: custom SMTP on, host `smtp.resend.com`, port `465`, username `resend`, the password is the
+Resend API key, sender `noreply@rowingpals.com`, name "Rowing Pals"). Those settings are right.
 
-## 1. Check what's set now
+Do this on **staging** first, and the same on **production** before launch.
 
-1. Go to **supabase.com** → sign in → open the **staging** project.
-2. Left bar: **Authentication** → **Sign In / Providers** → open **Email**.
-   - Note whether **Confirm email** is on or off (it's off on staging today).
-3. Left bar: **Authentication** → **Emails** → **SMTP Settings**.
-   - Note whether **Enable Custom SMTP** is on.
+## 1. Check the sending domain in Resend
 
-## 2. Let Supabase send from noreply@rowingpals.com (Microsoft 365)
+Resend only sends from `noreply@rowingpals.com` once rowingpals.com is verified there.
 
-**First, allow the mailbox to send by SMTP** (Microsoft turns this off by default):
+1. Go to **resend.com** → sign in → **Domains** in the left bar.
+   - [ ] **rowingpals.com** shows **Verified** (green).
+2. If it says **Pending** or **Failed**, click it: it lists DNS records (usually a TXT for `resend._domainkey`,
+   an MX and a TXT for `send`). Add each one in **godaddy.com → My Products → rowingpals.com → DNS →
+   Add New Record**, exactly as shown, without removing the Microsoft 365 records. Then click **Verify DNS
+   Records** in Resend (it can take up to an hour).
+3. **API Keys**: the key used as Supabase's SMTP password must have **Sending access** (or Full access).
 
-1. Go to **admin.microsoft.com** and sign in with your Microsoft 365 admin account (through
-   GoDaddy: **godaddy.com → My Products → Microsoft 365 → Admin** if it asks).
-2. **Users** → **Active users** → click **noreply@rowingpals.com**.
-3. **Mail** tab → **Manage email apps** → tick **Authenticated SMTP** → **Save changes**.
-
-**Then give Supabase the server:**
-
-4. Back in Supabase: **Authentication** → **Emails** → **SMTP Settings** → turn on **Enable Custom SMTP**.
-5. Fill in:
-   - **Sender email:** `noreply@rowingpals.com`
-   - **Sender name:** `Rowing Pals`
-   - **Host:** `smtp.office365.com`
-   - **Port:** `587`
-   - **Username:** `noreply@rowingpals.com`
-   - **Password:** that mailbox's password (type it yourself; it's never put in the app or the code)
-   - **Minimum interval between emails:** leave as it is
-6. **Save changes**.
-
-If Microsoft refuses (the test in section 5 shows an error mentioning "authentication unsuccessful"
-or "SmtpClientAuthentication is disabled"), GoDaddy's Microsoft 365 often blocks SMTP sign-in
-completely. Then the simplest fix is a sending service such as **Resend** or **Postmark** (both have a
-free tier): sign up, add the DNS records they show you in **GoDaddy → My Products → rowingpals.com →
-DNS** (don't remove the Microsoft 365 records), and put their SMTP host, port, username and password in
-step 5 instead.
-
-## 3. Raise the email limit
-
-1. **Authentication** → **Rate Limits**.
-2. **Rate limit for sending emails:** set to `30` per hour (only possible once custom SMTP is on).
-3. **Save changes**.
-
-## 4. Put in the new email designs
+## 2. Put in the new email designs
 
 The emails now look like rowingpals.com (solid colours, 12 px corners, same fonts and blues).
 
-1. **Authentication** → **Emails** → **Templates** → **Confirm signup**.
+1. Supabase → **staging** project → **Authentication** → **Emails** → **Templates** → **Confirm signup**.
 2. **Subject:** `Your Rowing Pals code: {{ .Token }}`
 3. In Finder open `Rowing Pals/marketing/emails/confirm-account.html` in TextEdit (right-click →
    Open With → TextEdit; if it shows the design instead of code, TextEdit → Settings → Open and Save →
@@ -71,7 +42,7 @@ The emails now look like rowingpals.com (solid colours, 12 px corners, same font
 The logo in the emails loads from rowingpals.com, so it only shows once the website is uploaded
 (`docs/testing/minimum-age.md`, section 8).
 
-## 5. Turn on Confirm email and test
+## 3. Turn on Confirm email and test
 
 1. **Authentication** → **Sign In / Providers** → **Email** → turn on **Confirm email** → **Save**.
 2. In the app: sign out → **New here? Create an account** → sign up with an email address you can open
@@ -81,5 +52,8 @@ The logo in the emails loads from rowingpals.com, so it only shows once the webs
    - [ ] Typing the code signs you in.
 3. Sign out → **Forgot password?** → your email → **Send code**.
    - [ ] The reset email arrives in the new design and its code works.
-4. If no email comes: **Authentication** → **Logs** (or **Logs & Analytics → Auth**) and look for a
-   red line about SMTP; send me a screenshot of it.
+4. If no email comes:
+   - Supabase → **Authentication** → **Logs** (or **Logs & Analytics → Auth**): look for a red line
+     about SMTP.
+   - Resend → **Emails** (or **Logs**): see whether the email reached Resend and whether it bounced.
+   - Send me a screenshot of either.
