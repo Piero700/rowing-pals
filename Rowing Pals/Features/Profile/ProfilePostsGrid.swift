@@ -6,7 +6,8 @@
 import SwiftUI
 
 /// Profile's Posts tab: three photos to a row, each opening its post. On your own profile a
-/// press-and-hold opens a small Delete post bubble (decision 63); Profile asks to confirm.
+/// press-and-hold opens a small bubble: Make private / Make visible (decision 106), and Delete post
+/// (decision 63), which Profile asks to confirm. A private post's tile wears a crossed-out eye.
 struct ProfilePostsGrid: View {
     let viewModel: ProfileViewModel
     let onDelete: (UUID) -> Void
@@ -20,7 +21,7 @@ struct ProfilePostsGrid: View {
     var body: some View {
         LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 4), count: 3), spacing: 4) {
             ForEach(viewModel.photos) { photo in
-                ProfilePhotoTile(photo: photo, url: viewModel.photoURL(for: photo.monitorPath))
+                ProfilePhotoTile(photo: photo, url: viewModel.photoURL(for: photo.monitorPath), isPrivate: photo.isPrivate)
                     .asButton {
                         // The release after a press-and-hold isn't a tap.
                         if heldPost == photo.id { heldPost = nil; return }
@@ -32,14 +33,25 @@ struct ProfilePostsGrid: View {
                         bubblePost = photo.id
                     })
                     .sensoryFeedback(.impact, trigger: bubblePost) { _, new in new == photo.id }
-                    .deleteBubble(isPresented: Binding(
-                        get: { bubblePost == photo.id },
-                        set: { if !$0 { bubblePost = nil } }
-                    ), title: "Delete post") {
-                        onDelete(photo.id)
-                    }
+                    .postActionsBubble(
+                        isPresented: Binding(
+                            get: { bubblePost == photo.id },
+                            set: { if !$0 { bubblePost = nil } }
+                        ),
+                        isPrivate: photo.isPrivate,
+                        onTogglePrivate: { Task { await viewModel.setPrivate(photo.id, !photo.isPrivate) } },
+                        onDelete: { onDelete(photo.id) }
+                    )
             }
         }
         .padding(.top, Tokens.Spacing.sectionTop)
+        .alert("Couldn't change who can see the post", isPresented: Binding(
+            get: { viewModel.privacyError != nil },
+            set: { if !$0 { viewModel.privacyError = nil } }
+        )) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(viewModel.privacyError ?? "")
+        }
     }
 }

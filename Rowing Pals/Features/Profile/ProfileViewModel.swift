@@ -46,6 +46,8 @@ final class ProfileViewModel {
         let monitorPath: String?
         var workoutLabel: String? = nil
         var totalTimeMs: Int = 0
+        /// Only its owner can see it (decision 106); the grid marks it with the crossed-out eye.
+        var isPrivate = false
     }
 
     /// The most recent session, for v3's "Recent activity" row.
@@ -291,7 +293,8 @@ final class ProfileViewModel {
 
             photos = sessionRows.map {
                 ProfilePhoto(id: $0.id, distanceM: $0.totalDistanceM, monitorPath: $0.primarySegmentPath,
-                             workoutLabel: $0.workoutLabel, totalTimeMs: $0.totalTimeMs)
+                             workoutLabel: $0.workoutLabel, totalTimeMs: $0.totalTimeMs,
+                             isPrivate: $0.isPrivate ?? false)
             }
 
             // Round 2, together: photo links, and your predictions or their club ranks.
@@ -619,6 +622,25 @@ final class ProfileViewModel {
         return days
     }
 
+    // MARK: - Private posts (decision 106)
+
+    /// The last attempt to make a post private or visible failed with this.
+    var privacyError: String?
+
+    /// Makes one of your own posts private, or visible again; its tile changes straight away.
+    @MainActor
+    func setPrivate(_ sessionId: UUID, _ makePrivate: Bool) async {
+        guard isOwnProfile else { return }
+        do {
+            try await SessionService.setPrivate(sessionId, makePrivate)
+            if let index = photos.firstIndex(where: { $0.id == sessionId }) {
+                photos[index].isPrivate = makePrivate
+            }
+        } catch {
+            privacyError = error.localizedDescription
+        }
+    }
+
     // MARK: - Photo grid
 
     struct SessionRow: Decodable {
@@ -635,6 +657,7 @@ final class ProfileViewModel {
         let totalDistanceM: Int
         let totalTimeMs: Int
         let workoutLabel: String?
+        let isPrivate: Bool?
         let segments: [Segment]
 
         enum CodingKeys: String, CodingKey {
@@ -642,6 +665,7 @@ final class ProfileViewModel {
             case totalDistanceM = "total_distance_m"
             case totalTimeMs = "total_time_ms"
             case workoutLabel = "workout_label"
+            case isPrivate = "is_private"
             case segments
         }
 
@@ -653,7 +677,7 @@ final class ProfileViewModel {
     private static func fetchRecentSessions(userId: UUID) async throws -> [SessionRow] {
         try await SupabaseService.shared
             .from("sessions")
-            .select("id, total_distance_m, total_time_ms, workout_label, segments(position, monitor_photo_path)")
+            .select("id, total_distance_m, total_time_ms, workout_label, is_private, segments(position, monitor_photo_path)")
             .eq("user_id", value: userId)
             .order("posted_at", ascending: false)
             .limit(30)

@@ -84,6 +84,8 @@ enum RPIcon: String, CaseIterable, Sendable {
     case eye
     /// A coach's account.
     case clipboard
+    /// A private post: the eye crossed through (drawn to match).
+    case eyeOff
     /// A private account (drawn to match).
     case lock
     /// How we got this (drawn to match).
@@ -450,6 +452,16 @@ enum RPIcon: String, CaseIterable, Sendable {
             p.addLine(to: .init(x: 15, y: 14))
             p.move(to: .init(x: 9, y: 18))
             p.addLine(to: .init(x: 12, y: 18))
+        case .eyeOff:
+            p.move(to: .init(x: 2, y: 12))
+            p.addCurve(to: .init(x: 12, y: 5), control1: .init(x: 2, y: 12), control2: .init(x: 5.5, y: 5))
+            p.addCurve(to: .init(x: 22, y: 12), control1: .init(x: 18.5, y: 5), control2: .init(x: 22, y: 12))
+            p.addCurve(to: .init(x: 12, y: 19), control1: .init(x: 22, y: 12), control2: .init(x: 18.5, y: 19))
+            p.addCurve(to: .init(x: 2, y: 12), control1: .init(x: 5.5, y: 19), control2: .init(x: 2, y: 12))
+            p.closeSubpath()
+            p.addEllipse(in: CGRect(x: 9, y: 9, width: 6, height: 6))
+            p.move(to: .init(x: 3.5, y: 3.5))
+            p.addLine(to: .init(x: 20.5, y: 20.5))
         case .lock:
             p.addRoundedRect(in: CGRect(x: 5, y: 10.5, width: 14, height: 10), cornerSize: CGSize(width: 2.5, height: 2.5))
             p.move(to: .init(x: 8, y: 10.5))

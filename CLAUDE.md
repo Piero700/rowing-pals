@@ -168,6 +168,10 @@ After any change:
 
 ## Current focus
 
+**On `main` (2026-11-17): private posts** (decision 106, migration run on staging; checklist `docs/testing/private-posts.md`),
+and Settings, Profile and Review session split into small views after Settings crashed the iPhone (`ScreenStackDepthTests`
+fails any screen past 700 KB of stack — build screens from small `View` structs, not deep `some View` helpers). Earlier:
+
 **Merged into `main` and pushed (2026-11-13): the combined build** (was branch `t45-combined-test`). Also in it: automatic
 leaderboards (decision 104, migration run on staging), Pace Engine v1.7 predictions from every erg post (105) and the Log
 camera fix (Together after a one-camera session, tested on the phone). Phone checklists still open:

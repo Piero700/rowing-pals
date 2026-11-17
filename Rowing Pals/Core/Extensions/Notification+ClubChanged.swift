@@ -15,6 +15,9 @@ extension Notification.Name {
     static let sessionPosted = Notification.Name("sessionPosted")
     /// The signed-in rower deleted one of their posts (decision 63); `object` is its id.
     static let sessionDeleted = Notification.Name("sessionDeleted")
+    /// The signed-in rower made one of their posts private or visible again (decision 106);
+    /// `object` is its id.
+    static let sessionPrivacyChanged = Notification.Name("sessionPrivacyChanged")
     /// The signed-in rower answered a practice or a race away from the Calendar (its page, the
     /// Feed's card); the Calendar and Feed reload (decision 68).
     static let practiceAnswered = Notification.Name("practiceAnswered")

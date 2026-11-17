@@ -110,6 +110,14 @@ struct PostDetailView: View {
         } message: {
             Text(viewModel.deleteError ?? "")
         }
+        .alert(viewModel.isPrivate ? "Couldn't make the post visible" : "Couldn't make the post private", isPresented: Binding(
+            get: { viewModel.privacyError != nil },
+            set: { if !$0 { viewModel.privacyError = nil } }
+        )) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(viewModel.privacyError ?? "")
+        }
         .alert("Report sent", isPresented: $isShowingReportConfirmation) {
             Button("OK", role: .cancel) {}
         } message: {
@@ -247,7 +255,8 @@ struct PostDetailView: View {
         }
     }
 
-    /// Your own post's ⋯: a small bubble with Delete post, then a confirmation (decision 63).
+    /// Your own post's ⋯: a small bubble with Make private / Make visible (decision 106) and Delete
+    /// post, which asks to confirm (decision 63).
     private var ownPostMenu: some View {
         Button {
             isShowingDeleteBubble = true
@@ -256,10 +265,13 @@ struct PostDetailView: View {
         }
         .buttonStyle(IconPressStyle())
         .accessibilityLabel("More options")
-        .disabled(viewModel.isDeleting)
-        .deleteBubble(isPresented: $isShowingDeleteBubble, title: "Delete post") {
-            isConfirmingDelete = true
-        }
+        .disabled(viewModel.isDeleting || viewModel.isChangingPrivacy)
+        .postActionsBubble(
+            isPresented: $isShowingDeleteBubble,
+            isPrivate: viewModel.isPrivate,
+            onTogglePrivate: { Task { await viewModel.setPrivate(!viewModel.isPrivate) } },
+            onDelete: { isConfirmingDelete = true }
+        )
     }
 
     /// Avatar + name + chevron, glass pill, tappable → that person's

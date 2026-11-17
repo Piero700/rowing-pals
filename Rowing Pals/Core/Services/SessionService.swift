@@ -14,6 +14,18 @@ enum SessionService {
     /// The confirmation's message, wherever a post is deleted from.
     static let deleteWarning = "Its photos, splits, any test result, reactions and comments go too, and its metres come off your totals. This can't be undone."
 
+    /// Makes your own post private, or visible again (decision 106). While it's private only you
+    /// can see it — not followers, clubmates or a coach — and its metres and any test result are off
+    /// the leaderboards; your own totals, streak and PBs still count it
+    /// (docs/migrations/2026-11-17-private-posts.sql).
+    static func setPrivate(_ sessionId: UUID, _ isPrivate: Bool) async throws {
+        struct Params: Encodable { let p_session: UUID; let p_private: Bool }
+        try await SupabaseService.shared
+            .rpc("set_session_private", params: Params(p_session: sessionId, p_private: isPrivate))
+            .execute()
+        NotificationCenter.default.post(name: .sessionPrivacyChanged, object: sessionId)
+    }
+
     static func delete(_ sessionId: UUID) async throws {
         struct Params: Encodable { let p_session: UUID }
         let monitorPaths: [String] = try await SupabaseService.shared

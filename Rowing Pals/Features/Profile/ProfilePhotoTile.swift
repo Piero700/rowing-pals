@@ -5,10 +5,12 @@
 
 import SwiftUI
 
-/// One square on Profile's Posts grid: the monitor photo with its distance in the corner.
+/// One square on Profile's Posts grid: the monitor photo with its distance in the corner. A private
+/// post (decision 106) is dimmed under the photo scrim with a crossed-out eye in the middle.
 struct ProfilePhotoTile: View {
     let photo: ProfileViewModel.ProfilePhoto
     let url: URL?
+    var isPrivate = false
 
     var body: some View {
         CachedAsyncImage(url: url) {
@@ -16,6 +18,15 @@ struct ProfilePhotoTile: View {
         }
         .aspectRatio(1, contentMode: .fill)
         .clipped()
+        .overlay {
+            if isPrivate {
+                ZStack {
+                    Tokens.Base.photoScrim
+                    RPIconView(icon: .eyeOff, size: Tokens.Icon.large)
+                        .foregroundStyle(Tokens.Ink.primary)
+                }
+            }
+        }
         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         .overlay(alignment: .bottomLeading) {
             Text(photo.distanceM.formattedMetres)
@@ -25,6 +36,8 @@ struct ProfilePhotoTile: View {
                 .shadow(radius: 3)
                 .padding(6)
         }
-        .accessibilityLabel("Workout, \(photo.distanceM.formattedMetres)")
+        .accessibilityLabel(isPrivate
+                            ? "Private workout, \(photo.distanceM.formattedMetres)"
+                            : "Workout, \(photo.distanceM.formattedMetres)")
     }
 }

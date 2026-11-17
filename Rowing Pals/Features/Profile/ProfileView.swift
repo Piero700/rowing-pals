@@ -123,6 +123,10 @@ struct ProfileView: View {
         .onReceive(NotificationCenter.default.publisher(for: .sessionDeleted)) { _ in
             Task { await viewModel.load() }
         }
+        // A post made private or visible on its own page shows its new state here (decision 106).
+        .onReceive(NotificationCenter.default.publisher(for: .sessionPrivacyChanged)) { _ in
+            Task { await viewModel.load() }
+        }
         .alert("Delete this post?", isPresented: Binding(
             get: { postToDelete != nil },
             set: { if !$0 { postToDelete = nil } }

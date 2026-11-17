@@ -178,6 +178,7 @@ final class PostDetailViewModel {
                 let avgRate: Double?
                 let photoVerified: Bool
                 let loggedLate: Bool
+                let isPrivate: Bool
                 let postedAt: Date
                 let author: AuthorRow
                 let segments: [SegmentRow]
@@ -193,6 +194,7 @@ final class PostDetailViewModel {
                     case avgRate = "avg_rate"
                     case photoVerified = "photo_verified"
                     case loggedLate = "logged_late"
+                    case isPrivate = "is_private"
                     case postedAt = "posted_at"
                     case author = "profiles"
                     case segments
@@ -203,7 +205,7 @@ final class PostDetailViewModel {
                 .from("sessions")
                 .select("""
                 user_id, type, caption, workout_label, total_distance_m, total_time_ms, avg_split_ms, avg_rate, \
-                photo_verified, logged_late, posted_at, \
+                photo_verified, logged_late, is_private, posted_at, \
                 profiles!sessions_user_id_fkey(id, display_name, category, gender, clubs(*)), \
                 segments(id, label, position, distance_m, time_ms, split_ms, rate, monitor_photo_path), \
                 session_photos(position, path)
@@ -227,6 +229,7 @@ final class PostDetailViewModel {
                 .sorted { $0.position < $1.position }
                 .map { DetailSegment(id: $0.id, label: $0.label, position: $0.position, distanceM: $0.distanceM, timeMs: $0.timeMs, splitMs: $0.splitMs, rate: $0.rate, monitorPhotoPath: $0.monitorPhotoPath) }
             isOwnPost = row.userId == userId
+            isPrivate = row.isPrivate
             workoutLabel = row.workoutLabel
             galleryPaths = (row.sessionPhotos ?? []).sorted { $0.position < $1.position }.map(\.path)
 
@@ -538,6 +541,27 @@ final class PostDetailViewModel {
         } catch {
             deleteError = error.localizedDescription
             return false
+        }
+    }
+
+    // MARK: - Private posts (decision 106)
+
+    /// Only you can see this post (it's yours): it's off the leaderboards and hidden from everyone else.
+    var isPrivate = false
+    var isChangingPrivacy = false
+    var privacyError: String?
+
+    /// Makes your own post private, or visible again.
+    @MainActor
+    func setPrivate(_ makePrivate: Bool) async {
+        guard isOwnPost, !isChangingPrivacy else { return }
+        isChangingPrivacy = true
+        defer { isChangingPrivacy = false }
+        do {
+            try await SessionService.setPrivate(sessionId, makePrivate)
+            isPrivate = makePrivate
+        } catch {
+            privacyError = error.localizedDescription
         }
     }
 
