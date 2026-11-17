@@ -159,6 +159,17 @@ struct SignInView: View {
                         .padding(.bottom, Tokens.Spacing.tight)
                 }
                 GroupedDivider()
+                // Decision 107: Rowing Pals is for people 13 and over.
+                GroupedRow(label: "Date of birth") { birthDateField }
+                if let problem = viewModel.birthDateProblem {
+                    Text(problem)
+                        .textStyle(Typography.meta)
+                        .foregroundStyle(Tokens.System.error)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, Tokens.Grouped.rowPadding)
+                        .padding(.bottom, Tokens.Spacing.tight)
+                }
+                GroupedDivider()
             }
             field(viewModel.isSigningUp ? "Email" : "Email or username", text: $viewModel.email, field: .email)
                 .textInputAutocapitalization(.never)
@@ -281,10 +292,29 @@ struct SignInView: View {
         }
     }
 
+    /// "Add" until a date is picked, then the date itself (decision 107).
+    @ViewBuilder
+    private var birthDateField: some View {
+        if let birthDate = viewModel.birthDate {
+            DatePicker(
+                "Date of birth",
+                selection: Binding(get: { birthDate }, set: { viewModel.birthDate = $0 }),
+                in: AgeRules.earliestBirthDate()...Date(),
+                displayedComponents: .date
+            )
+            .labelsHidden()
+        } else {
+            Button("Add") { viewModel.birthDate = BirthDateViewModel.startingDate }
+                .textStyle(Typography.detail)
+                .foregroundStyle(Tokens.Accent.brand)
+        }
+    }
+
     private var canSubmit: Bool {
         guard !viewModel.email.isEmpty, !viewModel.password.isEmpty else { return false }
         if viewModel.isSigningUp {
             if viewModel.displayName.trimmingCharacters(in: .whitespaces).isEmpty || !viewModel.hasAgreedToTerms { return false }
+            if viewModel.birthDate == nil || viewModel.birthDateProblem != nil { return false }
             if UsernameRules.problem(with: viewModel.username) != nil { return false }
             if viewModel.password.count < SignInViewModel.minimumPasswordLength { return false }
         }

@@ -27,9 +27,9 @@ struct PrivacyPolicyView: View {
                         "reactions. Your activity: who you follow and block, and what you report. " +
                         "Your club: your answers to practices, your attendance, your seat in a boat, " +
                         "and any note a club owner sends with a verification request. From your " +
-                        "coaches: the scores they write for you on a workout's notepad. If you add " +
-                        "them, your date of birth and bodyweight. If you allow notifications, your " +
-                        "phone's notification address."
+                        "coaches: the scores they write for you on a workout's notepad. Your date of " +
+                        "birth, which we ask for to check you're 13 or older, and your bodyweight if " +
+                        "you add it. If you allow notifications, your phone's notification address."
                     }
                     section("What happens on your phone") {
                         "Reading the numbers off a monitor photo happens on your iPhone, and the " +
@@ -41,18 +41,30 @@ struct PrivacyPolicyView: View {
                         "Your posts and their photos are seen by people you allow under the app's " +
                         "visibility rules: friends (people you follow who follow you back) and " +
                         "members of your club, narrowed by each post's own setting and by a private " +
-                        "account. Your username, display name, club, level and gender can be seen by " +
+                        "account. A post you've made private is seen only by you. " +
+                        "Your username, display name, club, level and gender can be seen by " +
                         "any Rowing Pals user. Your profile picture, test results, training totals " +
                         "and leaderboard places can also be seen by any Rowing Pals user, unless your " +
                         "account is private; then only people you've approved and your club's coaches " +
                         "can see them. Your club's coaches see all your training in that club — " +
                         "sessions, photos, tests, personal bests, effort ratings and predictions — " +
-                        "even if your account is private, plus your age and bodyweight; you are told " +
+                        "even if your account is private, except posts you've made private, plus your " +
+                        "age and your bodyweight (under 18, only once you've said a parent or guardian " +
+                        "agrees); you are told " +
                         "before you join a club that has coaches. Scores your coaches write for you " +
                         "are seen by your club's coaches and by you. Coaches can read but cannot " +
                         "comment or react unless the rules above already let them see the post. " +
                         "Nobody else sees your date of birth or bodyweight; they are also used to " +
                         "work out your predictions. We do not sell your data or show advertising."
+                    }
+                    section("Children and young people") {
+                        "Rowing Pals is for people 13 and over. We ask for your date of birth when " +
+                        "you sign up, and nobody under 13 can make an account; if we learn that an " +
+                        "account belongs to someone under 13, we delete it and everything in it. If " +
+                        "you're under 18, your account starts private, the selfie with each session " +
+                        "starts off, and your coaches see your bodyweight only once you've turned on " +
+                        "\"Parent or guardian agrees\" in Edit profile. You can change the first two " +
+                        "in Settings."
                     }
                     section("Where it's kept") {
                         "Everything you post is stored with our database and file-storage provider, " +

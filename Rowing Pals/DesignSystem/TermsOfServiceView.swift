@@ -22,6 +22,11 @@ struct TermsOfServiceView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
+                    section("Who can use Rowing Pals") {
+                        "You must be 13 or older to create an account or use Rowing Pals. We ask " +
+                        "for your date of birth when you sign up. If we find that an account belongs " +
+                        "to someone under 13, we delete it and everything in it."
+                    }
                     section("Zero tolerance for abusive content and conduct") {
                         "Rowing Pals has zero tolerance for objectionable content or abusive " +
                         "behaviour of any kind — harassment, hate speech, nudity or sexual content, " +

@@ -20,12 +20,18 @@ struct AppShell: View {
         /// No username yet (decision 85): asked for before anything else.
         var needsUsername = false
         var displayName = ""
+        /// No date of birth yet (decision 107): asked next, before the app opens.
+        var needsBirthDate = false
     }
 
     var body: some View {
         Group {
             if let account, account.needsUsername {
                 ChooseUsernameView(name: account.displayName) {
+                    Task { await loadAccount() }
+                }
+            } else if let account, account.needsBirthDate {
+                BirthDateView {
                     Task { await loadAccount() }
                 }
             } else if let account {
@@ -48,11 +54,16 @@ struct AppShell: View {
         }
     }
 
-    /// Offline, the rower version opens: it copes with no connection already.
+    /// Offline, the rower version opens: it copes with no connection already. The date of birth is
+    /// only asked for when the check itself worked, so a bad connection never locks anyone out.
     private func loadAccount() async {
-        if let viewer = try? await ViewerContext.shared.current() {
+        async let viewerRequest = try? await ViewerContext.shared.current()
+        async let detailsRequest = try? await AthletePrivateService.mine()
+        let (viewer, details) = await (viewerRequest, detailsRequest)
+        if let viewer {
             account = Account(isCoach: viewer.isCoach, isRower: viewer.isRower,
-                              needsUsername: viewer.needsUsername, displayName: viewer.displayName)
+                              needsUsername: viewer.needsUsername, displayName: viewer.displayName,
+                              needsBirthDate: details.map { $0.birthDate == nil } ?? false)
         } else if account == nil {
             account = Account(isCoach: false, isRower: true)
         }

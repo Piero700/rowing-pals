@@ -168,7 +168,8 @@ After any change:
 
 ## Current focus
 
-**On `main` (2026-11-17): private posts** (decision 106, migration run on staging; checklist `docs/testing/private-posts.md`),
+**On `main` (2026-11-17): minimum age 13** (decision 107, migration run on staging; checklist `docs/testing/minimum-age.md`;
+website Terms/Privacy updated but not yet uploaded), **private posts** (decision 106, migration run on staging; checklist `docs/testing/private-posts.md`),
 and Settings, Profile and Review session split into small views after Settings crashed the iPhone (`ScreenStackDepthTests`
 fails any screen past 700 KB of stack — build screens from small `View` structs, not deep `some View` helpers). Earlier:
 

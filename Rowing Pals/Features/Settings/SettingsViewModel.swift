@@ -28,10 +28,27 @@ final class SettingsViewModel {
     var side: RowingSide?
     /// For the photo at the top of Edit profile.
     var userId: UUID?
-    /// Private inputs to the prediction algorithm (decision 30), never shown anywhere.
+    /// Private inputs to the prediction algorithm (decision 30), never shown anywhere. Everyone
+    /// gives a date of birth (decision 107); it can be changed but not removed.
     var birthDate: Date?
     /// Bodyweight as typed, in kg; empty when not given.
     var weightText = ""
+    /// A junior's parent or guardian agrees to their coaches seeing their bodyweight (decision 107).
+    var guardianAgreesWeight = false
+
+    /// Under 18 by the date of birth on screen.
+    var isJunior: Bool { birthDate.map { AgeRules.isJunior(bornOn: $0) } ?? false }
+
+    /// Why the date of birth on screen can't be saved, or nil.
+    var birthDateProblem: String? {
+        guard let birthDate else { return nil }
+        return AgeRules.isOldEnough(bornOn: birthDate) ? nil : AgeRules.tooYoungMessage
+    }
+
+    private var editedPrivate: AthletePrivateService.Details {
+        AthletePrivateService.Details(birthDate: birthDate, weightKg: parsedWeight,
+                                      guardianAgreesWeight: isJunior && guardianAgreesWeight)
+    }
     /// Redesign phase E. Saved the moment it's toggled, not with the Save
     /// button — the prototype's privacy sheet acts immediately.
     var isPrivate = false
@@ -66,7 +83,8 @@ final class SettingsViewModel {
             || isRower != original.isRower
             || side != original.side
             || (isRower && weightProblem != nil)
-            || (isRower && AthletePrivateService.Details(birthDate: birthDate, weightKg: parsedWeight) != originalPrivate)
+            || birthDateProblem != nil
+            || editedPrivate != originalPrivate
     }
 
     private var parsedWeight: Double? {
@@ -132,6 +150,7 @@ final class SettingsViewModel {
             originalPrivate = details
             birthDate = details.birthDate
             weightText = details.weightKg.map(Self.weightString) ?? ""
+            guardianAgreesWeight = details.guardianAgreesWeight
             await loadNotifications(await notificationsRequest, userId: id, clubId: profile.clubId)
         } catch {
             saveError = error.localizedDescription
@@ -272,6 +291,10 @@ final class SettingsViewModel {
             saveError = problem
             return
         }
+        if let problem = birthDateProblem {
+            saveError = problem
+            return
+        }
         let usernameChanged = UsernameRules.normalised(username) != originalUsername
         if usernameChanged, let problem = UsernameRules.problem(with: username) {
             saveError = problem
@@ -321,8 +344,8 @@ final class SettingsViewModel {
                 ViewerContext.shared.invalidate()
             }
 
-            let details = AthletePrivateService.Details(birthDate: birthDate, weightKg: parsedWeight)
-            if isRower, details != originalPrivate {
+            let details = editedPrivate
+            if details != originalPrivate {
                 try await AthletePrivateService.save(details)
                 originalPrivate = details
             }
@@ -389,8 +412,7 @@ final class SettingsViewModel {
         deleteError = nil
         defer { isDeletingAccount = false }
         do {
-            try await SupabaseService.shared.functions.invoke("delete-account")
-            await signOut()
+            try await AccountService.deleteAccount()
             return true
         } catch {
             deleteError = error.localizedDescription

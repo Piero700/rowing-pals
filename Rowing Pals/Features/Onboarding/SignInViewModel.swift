@@ -58,6 +58,15 @@ final class SignInViewModel {
 
     var isSigningUp: Bool { step == .signUp }
 
+    /// Asked at sign-up (decision 107); nil until they pick one.
+    var birthDate: Date?
+
+    /// The date picked makes them under 13, or nil.
+    var birthDateProblem: String? {
+        guard let birthDate else { return nil }
+        return AgeRules.isOldEnough(bornOn: birthDate) ? nil : AgeRules.tooYoungMessage
+    }
+
     /// Payload for the one-time profiles insert. Not the full `Profile`
     /// model — the DB fills in every other column's default.
     private struct NewProfile: Encodable {
@@ -120,6 +129,15 @@ final class SignInViewModel {
             errorMessage = "Please agree to the Terms of Service to continue."
             return
         }
+        // Nobody under 13 gets an account (decision 107): refused before one is made.
+        guard let birthDate else {
+            errorMessage = "Please add your date of birth."
+            return
+        }
+        guard AgeRules.isOldEnough(bornOn: birthDate) else {
+            errorMessage = AgeRules.tooYoungMessage
+            return
+        }
         if let problem = UsernameRules.problem(with: username) {
             errorMessage = problem
             return
@@ -136,6 +154,7 @@ final class SignInViewModel {
             data: [
                 "display_name": .string(displayName.trimmingCharacters(in: .whitespacesAndNewlines)),
                 "username": .string(UsernameRules.normalised(username)),
+                "birth_date": .string(AthletePrivateService.dayString(birthDate)),
                 "terms_accepted_at": .string(ISO8601DateFormatter().string(from: Date()))
             ]
         )
@@ -364,6 +383,15 @@ final class SignInViewModel {
         // The username chosen at sign-up; if someone took it meanwhile, the app asks for another.
         if let chosen = text("username") {
             _ = try? await UsernameService.set(chosen)
+        }
+        // The date of birth given at sign-up (decision 107). If it can't be saved now, the app asks
+        // for it again before it opens. A junior starts with no selfie on this phone; the database
+        // makes their account private.
+        if let given = text("birth_date"), let birthDate = AthletePrivateService.day(from: given) {
+            if (try? await AthletePrivateService.saveBirthDate(birthDate)) != nil,
+               AgeRules.isJunior(bornOn: birthDate) {
+                UserDefaults.standard.set(false, forKey: SelfieDefault.storageKey)
+            }
         }
     }
 

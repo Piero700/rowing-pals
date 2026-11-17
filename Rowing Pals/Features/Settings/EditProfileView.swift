@@ -127,11 +127,19 @@ struct EditProfileView: View {
                 // rows; a coach-only account isn't asked (user, 2026-10-16).
                 if viewModel.isRower {
                     GroupedSection(header: "About you",
-                                   hint: "Visible to you and your club’s coaches. Bodyweight is used for watts per kilo. Any logged session counts towards your weekly target.") {
+                                   hint: "Visible to you and your club’s coaches (under 18, your weight only with a parent’s or guardian’s OK). Bodyweight is used for watts per kilo. Any logged session counts towards your weekly target.") {
                         GroupedRow(label: "Date of birth") { birthDateField }
                         GroupedDivider()
                         GroupedRow(label: "Weight") { weightField }
                         GroupedDivider()
+                        // Decision 107: a junior's weight stays hidden from coaches until a parent or
+                        // guardian agrees.
+                        if viewModel.isJunior {
+                            GroupedToggleRow(label: "Parent or guardian agrees",
+                                             detail: "Your coaches see your weight only when this is on.",
+                                             isOn: $viewModel.guardianAgreesWeight)
+                            GroupedDivider()
+                        }
                         GroupedRow(label: "Weekly target") {
                             TextField("0", text: $viewModel.weeklyTargetText)
                                 .keyboardType(.decimalPad)
@@ -151,6 +159,15 @@ struct EditProfileView: View {
                     if let targetProblem = viewModel.weeklyTargetProblem {
                         problem(targetProblem)
                     }
+                } else {
+                    // Everyone gives a date of birth (decision 107), a coach-only account too.
+                    GroupedSection(header: "About you", hint: "Visible only to you.") {
+                        GroupedRow(label: "Date of birth") { birthDateField }
+                    }
+                    .padding(.top, Tokens.Spacing.group)
+                }
+                if let birthDateProblem = viewModel.birthDateProblem {
+                    problem(birthDateProblem)
                 }
 
                 if let saveError = viewModel.saveError {
@@ -237,16 +254,7 @@ struct EditProfileView: View {
                     displayedComponents: .date
                 )
                 .labelsHidden()
-                Button {
-                    viewModel.birthDate = nil
-                } label: {
-                    RPIconView(icon: .clear, size: Tokens.Icon.small)
-                        .foregroundStyle(Tokens.Ink.faint)
-                        .frame(width: Tokens.Size.iconButton, height: Tokens.Size.minTap)
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(IconPressStyle())
-                .accessibilityLabel("Remove date of birth")
+                // Changed but never removed (decision 107).
             } else {
                 Button("Add") { viewModel.birthDate = Self.suggestedBirthDate }
                     .textStyle(Typography.detail)
@@ -269,12 +277,9 @@ struct EditProfileView: View {
         }
     }
 
-    /// Born 1900 or later, and at least 5 years old (the engine's own range).
+    /// Born 1900 or later, and at least 13 (decision 107).
     private static var birthDateRange: ClosedRange<Date> {
-        let calendar = Calendar.current
-        let earliest = calendar.date(from: DateComponents(year: 1900, month: 1, day: 1)) ?? .distantPast
-        let latest = calendar.date(byAdding: .year, value: -5, to: Date()) ?? Date()
-        return earliest...latest
+        AgeRules.earliestBirthDate()...AgeRules.latestBirthDate()
     }
 
     /// Where the picker starts when a date is first added.
