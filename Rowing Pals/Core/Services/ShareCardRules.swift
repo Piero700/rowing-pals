@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import PaceEngine
 
 /// What goes on the picture a coach shares to WhatsApp (decision 110): the week's rows, one
 /// workout's pieces, the date range and the footer.
@@ -30,7 +31,7 @@ nonisolated enum ShareCardRules {
                   inRange(range, start) else { continue }
             let timed = WorkoutRules.startDate(workout, calendar: calendar) != nil
             let summary = WorkoutRules.piecesSummary(workout.pieces) ?? workout.title
-            let extras = [WorkoutRules.rateText(workout.pieces), WorkoutRules.restText(workout.pieces)]
+            let extras = [WorkoutRules.rateText(workout.pieces), WorkoutRules.restText(workout.pieces).map(restText)]
                 .compactMap { $0 }
             rows.append(row(id: "workout-\(workout.id)", start: start, timed: timed,
                             title: "Erg · \(summary)",
@@ -74,11 +75,45 @@ nonisolated enum ShareCardRules {
     static func workoutRows(_ workout: CoachWorkout) -> [ShareCardRow] {
         workout.pieces.enumerated().map { index, piece in
             ShareCardRow(id: "piece-\(index)", start: .distantPast, dayText: "", timeText: nil,
-                         title: WorkoutRules.pieceTitle(piece), detail: WorkoutRules.pieceDetail(piece))
+                         title: WorkoutRules.pieceTitle(piece), detail: pieceDetail(piece))
+        }
+    }
+
+    /// A piece's targets on the card: "rate 26–28 · split 1:42 · 5:00 rest", or nil with none.
+    static func pieceDetail(_ piece: WorkoutPiece) -> String? {
+        var parts: [String] = []
+        if let rate = WorkoutRules.rateText(piece) { parts.append("rate \(rate)") }
+        if let split = piece.splitMs { parts.append("split \(WorkoutRules.splitText(split))") }
+        if let rest = piece.restMs, rest > 0 { parts.append(restText(WorkoutRules.clock(rest))) }
+        return parts.isEmpty ? nil : parts.joined(separator: " · ")
+    }
+
+    /// "Novice men · Wed 25 Nov · 06:30 · UT2": who the workout is for, when, then its zone when one
+    /// was chosen or it's a test day (AN).
+    static func workoutSubheading(_ workout: CoachWorkout, clubName: String, squads: [UUID: String],
+                                  calendar: Calendar) -> String {
+        var parts = [workoutAudience(workout, clubName: clubName, squads: squads),
+                     WorkoutRules.whenText(workout, calendar: calendar)]
+        if workout.zone != nil || workout.isTestDay { parts.append(WorkoutRules.zone(of: workout).rawValue) }
+        return parts.joined(separator: " · ")
+    }
+
+    /// Who the workout card is for: its squads' names, or the club. A workout set for chosen rowers
+    /// is named by the club, as no rower's name goes on the picture.
+    static func workoutAudience(_ workout: CoachWorkout, clubName: String, squads: [UUID: String]) -> String {
+        switch workout.audience {
+        case .squads:
+            let names = workout.squadIds.compactMap { squads[$0] }.sorted()
+            return names.isEmpty ? clubName : names.joined(separator: ", ")
+        case .club, .rowers:
+            return clubName
         }
     }
 
     // MARK: - Private
+
+    /// "5:00 rest".
+    private static func restText(_ clock: String) -> String { "\(clock) rest" }
 
     private static func row(id: String, start: Date, timed: Bool, title: String, detail: String?,
                             calendar: Calendar) -> ShareCardRow {

@@ -14,7 +14,6 @@ struct WorkoutResultsView: View {
     @State private var viewModel: WorkoutResultsViewModel
     @State private var isConfirmingDelete = false
     @State private var hasAppeared = false
-    @State private var isSharing = false
     @Environment(\.dismiss) private var dismiss
     @Environment(\.navigate) private var navigate
 
@@ -88,8 +87,10 @@ struct WorkoutResultsView: View {
         .safeAreaInset(edge: .top, spacing: 0) {
             ScreenHeader(title: "Workout", onBack: { dismiss() }) {
                 HStack(spacing: Tokens.Spacing.tight) {
-                    GlassIconButton(icon: .share, accessibilityLabel: "Share workout") { isSharing = true }
-                        .disabled(viewModel.workout == nil)
+                    GlassIconButton(icon: .share, accessibilityLabel: "Share workout") {
+                        navigate(.shareWorkout(viewModel.workoutId))
+                    }
+                    .disabled(viewModel.workout == nil)
                     Button("Edit") { navigate(.editWorkout(viewModel.workoutId)) }
                         .buttonStyle(.rpText)
                         .disabled(viewModel.workout == nil)
@@ -100,7 +101,6 @@ struct WorkoutResultsView: View {
         }
         .background(Tokens.Base.ground)
         .toolbar(.hidden, for: .navigationBar)
-        .sheet(isPresented: $isSharing) { ShareWeekSheet(mode: .workout(viewModel.workoutId)) }
         .task { await viewModel.load() }
         // Back from Edit workout: show the saved changes.
         .onAppear { if hasAppeared { Task { await viewModel.load() } }; hasAppeared = true }

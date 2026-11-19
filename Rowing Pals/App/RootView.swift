@@ -50,6 +50,8 @@ struct RootView: View {
     /// `navigate` environment action; this is the one place that turns it
     /// into a screen.
     @State private var presentedRoute: AppRoute?
+    /// The share picture (decision 110) opens as a sheet over the tabs.
+    @State private var shareRoute: AppRoute?
     /// A tapped push alert's post arrives here (docs/design/v2-decisions.md #19).
     @State private var push = PushNotificationService.shared
     @State private var membershipMonitor = MembershipMonitor()
@@ -111,10 +113,15 @@ struct RootView: View {
                 } else if case .logWorkout(let workoutId) = route {
                     logWorkoutId = workoutId
                     if isRower { isShowingPostSheet = true }
+                } else if route.isShareSheet {
+                    shareRoute = route
                 } else {
                     presentedRoute = route
                 }
             })
+            .sheet(item: $shareRoute) { route in
+                ShareRouteSheet(route: route)
+            }
             // v3: Log opens capture as a full-screen modal, no tab bar.
             .fullScreenCover(isPresented: $isShowingPostSheet) {
                 PostSheetView(workoutId: logWorkoutId)

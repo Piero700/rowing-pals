@@ -21,6 +21,8 @@ struct CoachRootView: View {
     @State private var selection: CoachTab = .rowers
     @State private var barVisibility = FloatingBarVisibility()
     @State private var presentedRoute: AppRoute?
+    /// The share picture (decision 110) opens as a sheet over the tabs.
+    @State private var shareRoute: AppRoute?
     /// + asks Land session or Water session; the choice opens once the sheet has gone.
     @State private var isChoosingNew = false
     @State private var chosenRoute: AppRoute?
@@ -70,8 +72,15 @@ struct CoachRootView: View {
                 // A coach logs nothing here: Log belongs to the rower version.
                 if route == .log { return }
                 if case .logWorkout = route { return }
-                presentedRoute = route
+                if route.isShareSheet {
+                    shareRoute = route
+                } else {
+                    presentedRoute = route
+                }
             })
+            .sheet(item: $shareRoute) { route in
+                ShareRouteSheet(route: route)
+            }
             .sheet(isPresented: $isChoosingNew, onDismiss: {
                 if let route = chosenRoute {
                     chosenRoute = nil

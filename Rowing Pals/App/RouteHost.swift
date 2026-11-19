@@ -21,6 +21,8 @@ struct RouteHost: View {
     @State private var barVisibility = FloatingBarVisibility()
     /// Settings opens as a sheet, as from the rower's Profile (it has its own navigation stack).
     @State private var isShowingSettings = false
+    /// The share picture opens as a sheet too (decision 110).
+    @State private var shareRoute: AppRoute?
 
     var body: some View {
         NavigationStack(path: $path) {
@@ -55,12 +57,17 @@ struct RouteHost: View {
             if case .logWorkout = route { return }
             if route == .settings {
                 isShowingSettings = true
+            } else if route.isShareSheet {
+                shareRoute = route
             } else {
                 path.append(route)
             }
         })
         .sheet(isPresented: $isShowingSettings) {
             SettingsView()
+        }
+        .sheet(item: $shareRoute) { route in
+            ShareRouteSheet(route: route)
         }
     }
 
@@ -102,6 +109,9 @@ struct RouteHost: View {
         case .settings:
             // Shown as a sheet by `navigate`; never pushed.
             EmptyView()
+        case .shareWeek, .shareWorkout:
+            // Shown as a sheet by `navigate`, or by the root shells; never pushed.
+            ShareRouteSheet(route: route)
         case .editProfile:
             EditProfileHost()
         case .coachRower(let userId):

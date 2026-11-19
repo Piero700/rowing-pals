@@ -51,7 +51,24 @@ struct ShareWeekViewModelTests {
         let workout = Self.workout()
         let model = Self.model(.workout(workout.id), workouts: [workout])
         #expect(model.heading == "Steady 3 x 2k")
-        #expect(model.subheading == "Wed 25 Nov · 06:30")
+        #expect(model.subheading == "Test BC · Wed 25 Nov · 06:30")
         #expect(model.rows.count == 1)
+    }
+
+    @Test func workoutCardNamesItsSquadAndZone() {
+        let squad = Squad(id: UUID(), name: "Novice men", memberIds: [])
+        let workout = CoachWorkout(id: UUID(), clubId: UUID(), createdBy: nil, title: "Steady", workoutDate: "2026-11-25",
+                                   startTime: "06:30:00", description: nil, zone: "UT2", testKey: nil,
+                                   pieces: [WorkoutPiece(kind: .distance, value: 2000, reps: 3, restMs: 300_000)],
+                                   audience: .squads, squadIds: [squad.id])
+        let model = Self.model(.workout(workout.id), squads: [squad], workouts: [workout])
+        #expect(model.subheading == "Novice men · Wed 25 Nov · 06:30 · UT2")
+        #expect(model.rows.first?.detail == "5:00 rest")
+    }
+
+    @Test func cancellingTheLoadIsNotAnError() {
+        #expect(ShareWeekViewModel.isCancellation(CancellationError()))
+        #expect(ShareWeekViewModel.isCancellation(URLError(.cancelled)))
+        #expect(!ShareWeekViewModel.isCancellation(URLError(.notConnectedToInternet)))
     }
 }

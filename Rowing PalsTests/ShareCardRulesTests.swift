@@ -68,7 +68,7 @@ struct ShareCardRulesTests {
                                    workoutDate: "2026-11-24", startTime: nil, description: nil, zone: nil,
                                    testKey: nil, pieces: [piece], audience: .club)
         let row = Self.rows(workouts: [workout])[0]
-        #expect(row.detail == "20–22 · 5:00")
+        #expect(row.detail == "20–22 · 5:00 rest")
         #expect(row.timeText == nil)
     }
 
@@ -143,6 +143,48 @@ struct ShareCardRulesTests {
         let rows = ShareCardRules.workoutRows(Self.workout("2026-11-24"))
         #expect(rows.count == 1)
         #expect(rows[0].title == "2,000m × 3")
+        #expect(rows[0].detail == "5:00 rest")
         #expect(ShareCardRules.link != nil)
+    }
+
+    @Test func pieceDetailEndsWithTheRest() {
+        var piece = WorkoutPiece(kind: .distance, value: 2000, reps: 3, restMs: 300_000)
+        piece.rateMin = 26
+        piece.rateMax = 28
+        piece.splitMs = 102_000
+        #expect(ShareCardRules.pieceDetail(piece) == "rate 26–28 · split 1:42 · 5:00 rest")
+        #expect(ShareCardRules.pieceDetail(WorkoutPiece(kind: .time, value: 1_200_000, reps: 1)) == nil)
+    }
+
+    private static func dated(audience: WorkoutAudience, squads: [UUID] = [], zone: String? = nil,
+                              testKey: String? = nil) -> CoachWorkout {
+        CoachWorkout(id: UUID(), clubId: UUID(), createdBy: nil, title: "Steady", workoutDate: "2026-11-25",
+                     startTime: "06:30:00", description: nil, zone: zone, testKey: testKey,
+                     pieces: [], audience: audience, squadIds: squads)
+    }
+
+    @Test func workoutSubheadingNamesTheAudienceAndZone() {
+        let men = UUID(), women = UUID()
+        let names = [men: "Novice men", women: "Novice women"]
+        let squad = Self.dated(audience: .squads, squads: [men], zone: "UT2")
+        #expect(ShareCardRules.workoutSubheading(squad, clubName: "Test BC", squads: names, calendar: Self.calendar())
+                == "Novice men · Wed 25 Nov · 06:30 · UT2")
+        let both = Self.dated(audience: .squads, squads: [women, men])
+        #expect(ShareCardRules.workoutSubheading(both, clubName: "Test BC", squads: names, calendar: Self.calendar())
+                == "Novice men, Novice women · Wed 25 Nov · 06:30")
+        let club = Self.dated(audience: .club, zone: "UT1")
+        #expect(ShareCardRules.workoutSubheading(club, clubName: "Test BC", squads: names, calendar: Self.calendar())
+                == "Test BC · Wed 25 Nov · 06:30 · UT1")
+    }
+
+    @Test func workoutSubheadingOnATestDayShowsAN() {
+        let test = Self.dated(audience: .club, testKey: "2k")
+        #expect(ShareCardRules.workoutSubheading(test, clubName: "Test BC", squads: [:], calendar: Self.calendar())
+                == "Test BC · Wed 25 Nov · 06:30 · AN")
+    }
+
+    @Test func rowersWorkoutIsNamedByTheClubNotTheRowers() {
+        let rowers = Self.dated(audience: .rowers)
+        #expect(ShareCardRules.workoutAudience(rowers, clubName: "Test BC", squads: [:]) == "Test BC")
     }
 }

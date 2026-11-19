@@ -99,6 +99,18 @@ enum AppRoute: Hashable, Identifiable {
     case editErgEvent(UUID)
     /// Season Wrapped, opened on a club term or (nil) the term going on now (decision 92).
     case seasonWrapped(UUID?)
+    /// The WhatsApp picture (decision 110): the week, from the coach's Calendar, or one workout, from
+    /// its page. Shown as a sheet over whatever raised it, never pushed.
+    case shareWeek
+    case shareWorkout(UUID)
 
     var id: Self { self }
+
+    /// Whether this route opens as a sheet (the share picture) rather than a screen.
+    var isShareSheet: Bool {
+        switch self {
+        case .shareWeek, .shareWorkout: true
+        default: false
+        }
+    }
 }

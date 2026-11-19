@@ -99,7 +99,10 @@ final class ShareWeekViewModel {
             }
             return "\(who) · \(ShareCardRules.dateRangeText(range, calendar: calendar))"
         case .workout:
-            return workout.map { WorkoutRules.whenText($0, calendar: calendar) } ?? ""
+            let names = Dictionary(squads.map { ($0.id, $0.name) }, uniquingKeysWith: { first, _ in first })
+            return workout.map {
+                ShareCardRules.workoutSubheading($0, clubName: clubName, squads: names, calendar: calendar)
+            } ?? ""
         }
     }
 
@@ -122,15 +125,32 @@ final class ShareWeekViewModel {
         do {
             switch mode {
             case .week: try await loadWeeks()
-            case .workout(let id):
-                weekStart = await CalendarService.weekStart()
-                calendar = weekStart.calendar()
-                workouts = [try await WorkoutService.workout(id)]
+            case .workout(let id): try await loadWorkout(id)
             }
             errorMessage = nil
         } catch {
+            // Closing the sheet mid-load cancels it: that isn't an error to show.
+            if Self.isCancellation(error) { return }
             errorMessage = "Couldn’t load it. \(error.localizedDescription)"
         }
+    }
+
+    static func isCancellation(_ error: Error) -> Bool {
+        if Task.isCancelled || error is CancellationError { return true }
+        if let url = error as? URLError, url.code == .cancelled { return true }
+        return false
+    }
+
+    /// The workout, with the club's name and squads that name its card.
+    private func loadWorkout(_ id: UUID) async throws {
+        weekStart = await CalendarService.weekStart()
+        calendar = weekStart.calendar()
+        let viewer = try await ViewerContext.shared.current()
+        clubName = viewer.clubName ?? "Your club"
+        async let workoutRow = WorkoutService.workout(id)
+        async let squadRows = Self.squads(ofClub: viewer.clubId)
+        workouts = [try await workoutRow]
+        squads = try await squadRows
     }
 
     /// This week and next week at once, with the same calls the Calendar makes.
