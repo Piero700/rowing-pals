@@ -7,7 +7,7 @@ import { checkIn, load, respond, respondEvent } from "./weekService";
 type Which = "this" | "next";
 
 /** Your week: Available / Can't for practices, Can you race? for races, check-in on the day. */
-export function WeekScreen({ isCoach }: { isCoach: boolean }) {
+export function WeekScreen({ isCoach, onAccount }: { isCoach: boolean; onAccount?: () => void }) {
   const [which, setWhich] = useState<Which>("this");
   const [data, setData] = useState<WeekData | null>(null);
   const [failed, setFailed] = useState(false);
@@ -65,6 +65,11 @@ export function WeekScreen({ isCoach }: { isCoach: boolean }) {
     <main className="form-page">
       {isCoach && <p className="form-notice coach-notice" role="status">Coach tools are in the iPhone app for now.</p>}
       <h1>Your week</h1>
+      {onAccount && (
+        <button className="form-link" type="button" onClick={onAccount}>
+          Account
+        </button>
+      )}
       <div className="week-tabs" role="tablist">
         {(["this", "next"] as const).map((w) => (
           <button

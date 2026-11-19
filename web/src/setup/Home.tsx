@@ -3,6 +3,8 @@ import { Navigate } from "react-router-dom";
 import { getSupabase } from "../lib/supabase";
 import { BirthDateScreen } from "./BirthDateScreen";
 import { JoinClubScreen } from "./JoinClubScreen";
+import { AccountScreen } from "../account/AccountScreen";
+import { isSessionExpired } from "./sessionExpired";
 import { nextStep } from "./nextStep";
 import { loadSetupState } from "./setupService";
 import { UsernameScreen } from "./UsernameScreen";
@@ -15,12 +17,24 @@ type Loaded = Awaited<ReturnType<typeof loadSetupState>>;
 export function Home() {
   const [state, setState] = useState<Loaded | null>(null);
   const [failed, setFailed] = useState(false);
+  const [showAccount, setShowAccount] = useState(false);
 
   const load = useCallback(async () => {
     try {
       setState(await loadSetupState(getSupabase()));
       setFailed(false);
-    } catch {
+    } catch (e) {
+      if (isSessionExpired(e)) {
+        // The saved session is dead: sign out locally and go to sign in.
+        try {
+          await getSupabase().auth.signOut({ scope: "local" });
+        } catch {
+          /* ignored */
+        }
+        setState({ signedIn: false, username: null, birthDate: null, clubStatus: "none", isCoach: false, requestClub: null, requestDeclined: false });
+        setFailed(false);
+        return;
+      }
       setFailed(true);
     }
   }, []);
@@ -50,6 +64,18 @@ export function Home() {
     case "waiting":
       return <WaitingScreen clubName={state.requestClub?.name ?? null} onDone={load} />;
     case "week":
-      return <WeekScreen isCoach={state.isCoach} />;
+      return showAccount ? (
+        <AccountScreen
+          username={state.username}
+          onBack={() => setShowAccount(false)}
+          onLeftClub={() => {
+            setShowAccount(false);
+            void load();
+          }}
+          onSignedOut={() => setState((s) => (s ? { ...s, signedIn: false } : s))}
+        />
+      ) : (
+        <WeekScreen isCoach={state.isCoach} onAccount={() => setShowAccount(true)} />
+      );
   }
 }

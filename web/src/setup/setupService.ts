@@ -126,5 +126,10 @@ export async function loadSetupState(client: SupabaseClient): Promise<SetupState
 export async function deleteMyAccount(client: SupabaseClient): Promise<void> {
   const { error } = await client.functions.invoke("delete-account");
   if (error) throw error;
-  await client.auth.signOut();
+  // The account is already gone; a failing sign-out must not show an error for it.
+  try {
+    await client.auth.signOut();
+  } catch {
+    /* ignored */
+  }
 }
