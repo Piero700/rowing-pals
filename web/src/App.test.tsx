@@ -2,13 +2,13 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { App } from "./App";
 
 test("the sign-in route shows Sign in", () => {
-  window.history.pushState({}, "", "/go/sign-in");
+  window.history.pushState({}, "", `${import.meta.env.BASE_URL}sign-in`);
   render(<App />);
   expect(screen.getByRole("heading", { name: "Sign in" })).toBeInTheDocument();
 });
 
 test("create account refuses an under-13 date with the age copy", () => {
-  window.history.pushState({}, "", "/go/create-account");
+  window.history.pushState({}, "", `${import.meta.env.BASE_URL}create-account`);
   render(<App />);
   const set = (label: string, value: string) =>
     fireEvent.change(screen.getByLabelText(label), { target: { value } });
