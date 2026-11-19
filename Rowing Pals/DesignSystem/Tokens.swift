@@ -260,6 +260,16 @@ enum Tokens {
 
     /// The Calendar (decision 68; docs/design/v4/RowerCalendar, CoachCalendar): a day's date
     /// block, the month grid's cells, the Available / Can't control and the availability bars.
+    /// The week / workout picture a coach shares to WhatsApp (decision 110), 1080 px wide at 3x.
+    enum ShareWeek {
+        static let width: CGFloat = Tokens.Size.shareCardWidth
+        static let rowSpacing: CGFloat = 8
+        static let rowPadding: CGFloat = 12
+        /// The day / time column on the left of a row.
+        static let dayColumn: CGFloat = 52
+        static let margin: CGFloat = 16
+    }
+
     enum Schedule {
         static let dateBlockWidth: CGFloat = 44
         static let dateBlockHeight: CGFloat = 48
