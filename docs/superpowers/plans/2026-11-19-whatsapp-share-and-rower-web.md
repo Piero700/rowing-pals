@@ -111,9 +111,9 @@ Look: `Tokens.Base.ground` behind, rows on `Tokens.Surface.card` with `Tokens.Ra
 Data: week mode loads the chosen week with the same service calls `CoachCalendarViewModel.load()` uses (practices, workouts, water sessions, events, squads), limited to the week from `CalendarService.weekStart()`. Workout mode loads the workout as `WorkoutResultsViewModel` does. The sheet shows the preview like `ShareWorkoutSheet`, then **Share** opens `ActivityShareSheet` with the image and `ShareCardRules.link`. Who for lists Whole club, then each squad by name. Subheading: squad name (or club name), " · ", `dateRangeText`.
 
 - [ ] **Step 1: Write the failing tests** with the test init:
-  - `nextWeekHeadingAndDates`: `.nextWeek`, Monday start, today Wed 19 Nov 2026 → heading "Next week", subheading ends "24–30 Nov".
+  - `nextWeekHeadingAndDates`: `.nextWeek`, Monday start, today Thu 19 Nov 2026 → heading "Next week", subheading ends "23–29 Nov".
   - `squadNameInSubheading`: `.squad(A)` named "Novice men" → subheading starts "Novice men · ".
-  - `workoutModeUsesWorkoutTitle`: heading is the workout's title; subheading "Tue 25 Nov · 06:30".
+  - `workoutModeUsesWorkoutTitle`: heading is the workout's title; subheading "Wed 25 Nov · 06:30".
 - [ ] **Step 2: Run** with `-only-testing:Rowing PalsTests/ShareWeekViewModelTests`. Expected: build fails.
 - [ ] **Step 3: Implement** the view model, sheet, options card and share wrapper; wire both buttons.
 - [ ] **Step 4: Run the whole suite** (`test_sim`, no filter). Expected: all pass, ScreenStackDepthTests included.
@@ -153,7 +153,7 @@ Data: week mode loads the chosen week with the same service calls `CoachCalendar
 - [ ] **Step 1: Write failing tests** using the values in `UsernameTests.swift`, `AgeRulesTests.swift` and `CalendarRulesTests.swift`, plus:
   - `canCheckIn`: true at exactly 30 min before and exactly at the end; false at 31 min before, 1 min after the end, and when cancelled.
   - `groupByLocalDay` under `TZ=Europe/London`: 23:30 Sat 25 Oct 2026 and 00:30 Sun 26 Oct land on two different days.
-  - `weekRange("next", Wed 19 Nov 2026, "sunday")` → Sun 23 Nov 00:00 to Sun 30 Nov 00:00 local.
+  - `weekRange("next", Thu 19 Nov 2026, "sunday")` → Sun 22 Nov 00:00 to Sun 29 Nov 00:00 local.
 - [ ] **Step 2: Run** `TZ=Europe/London npx vitest run src/rules`. Expected: fail.
 - [ ] **Step 3: Implement** the three files.
 - [ ] **Step 4: Run.** Expected: pass. Set `"test": "TZ=Europe/London vitest run"` in `package.json`.
