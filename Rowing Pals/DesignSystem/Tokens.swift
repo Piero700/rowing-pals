@@ -520,6 +520,16 @@ enum Tokens {
         static let blur: CGFloat = 14
     }
 
+    /// The first-run tour (decision 109): the dimmed screen around the control a card points at.
+    enum Tour {
+        /// Solid black at part opacity over the whole screen, a hole left round the control.
+        static let scrim = Color(light: Color(hex: 0x000000, opacity: 0.45), dark: Color(hex: 0x000000, opacity: 0.62))
+        /// How far the hole reaches past the control's own edge.
+        static let cutoutInset: CGFloat = 4
+        /// Between the card and the control it points at.
+        static let cardGap: CGFloat = 12
+    }
+
     /// v3 motion. Callers skip animation when Reduce Motion is on.
     enum Motion {
         /// Press feedback on every button.

@@ -168,6 +168,9 @@ After any change:
 
 ## Current focus
 
+**On branch `t47-tour` (2026-11-19): the first-run tour** (decision 109) — five cards over the tab bar for rowers and
+for coaches, starting once while helper text is on, replayed from Settings → Help. Checklist `docs/testing/first-run-tour.md`. Earlier:
+
 **On `main` (2026-11-17): in-app club verification for admins** (decision 108, migration run on staging; `piero` is the
 staging admin), **restyled sign-up/reset emails** and why sign-up emails don't arrive (`docs/testing/sign-up-emails.md`:
 Confirm email is off on staging; Resend SMTP is already set up), **minimum age 13** (decision 107, migration run on staging; checklist `docs/testing/minimum-age.md`;

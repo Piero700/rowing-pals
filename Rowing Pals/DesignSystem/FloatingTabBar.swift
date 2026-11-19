@@ -112,6 +112,8 @@ struct FloatingTabBar<Tab: Hashable>: View {
             .contentShape(Capsule())
         }
         .buttonStyle(IconPressStyle())
+        // The first-run tour points at each tab by its label (decision 109).
+        .tourTarget(.tab(item.label))
         .accessibilityLabel(item.label)
         .accessibilityAddTraits(isSelected ? [.isSelected, .isButton] : .isButton)
     }
@@ -129,6 +131,7 @@ struct FloatingTabBar<Tab: Hashable>: View {
                 .contentShape(Circle())
         }
         .buttonStyle(IconPressStyle())
+        .tourTarget(.newButton)
         .accessibilityLabel(logLabel)
     }
 }

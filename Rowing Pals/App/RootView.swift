@@ -93,6 +93,16 @@ struct RootView: View {
                 .ignoresSafeArea(.container, edges: .bottom)
             }
             .environment(barVisibility)
+            // The first-run tour (decision 109), over the tabs and the bar.
+            .modifier(FirstRunTour(mode: .rowing, steps: TourRules.rowerSteps(showsLog: isRower),
+                                   barVisibility: barVisibility,
+                                   onStep: { step in
+                                       if case .tab(let label) = step.target,
+                                          let tab = Self.items.first(where: { $0.label == label })?.tab {
+                                           selection = tab
+                                       }
+                                   },
+                                   onFinish: { selection = .feed }))
             .environment(\.navigate, NavigateAction { route in
                 if route == .log {
                     // A coach-only account never logs a session.

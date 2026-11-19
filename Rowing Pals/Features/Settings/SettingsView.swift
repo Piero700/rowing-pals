@@ -241,6 +241,16 @@ struct SettingsView: View {
                                        subtitle: "Tips and explanations under sections and forms.",
                                        isOn: helperTextBinding)
                         SettingsDivider()
+                        // The first-run tour (decision 109) again, once Settings has closed.
+                        SettingsRow(title: "Show the tour again", subtitle: "A quick look round the main parts of the app.") {
+                            SettingsChevron()
+                        } action: {
+                            for mode in [AppMode.rowing, .coaching] {
+                                UserDefaults.standard.set(false, forKey: TourRules.seenKey(mode))
+                            }
+                            dismiss()
+                        }
+                        SettingsDivider()
                         if let supportMailtoURL = Self.supportMailtoURL {
                             Link(destination: supportMailtoURL) {
                                 SettingsRowContent(title: "Contact us", subtitle: nil) { SettingsChevron() }
