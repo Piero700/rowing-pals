@@ -71,7 +71,7 @@ export function AccountScreen({ username, onBack, onLeftClub, onSignedOut }: Pro
       </GroupedCard>
       <div className="form-gap" />
       <GroupedCard>
-        <button className="grouped-button" type="button" disabled={busy} onClick={() => setConfirming("leave")}>
+        <button className="grouped-button form-link-destructive" type="button" disabled={busy} onClick={() => setConfirming("leave")}>
           <GroupedRow label="Leave club" />
         </button>
         <button className="grouped-button" type="button" disabled={busy} onClick={() => run(() => signOut(getSupabase()), onSignedOut)}>

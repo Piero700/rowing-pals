@@ -207,6 +207,10 @@ a {
   color: var(--error);
 }
 
+.form-link-destructive .grouped-row-label {
+  color: var(--error);
+}
+
 .coach-notice {
   margin: 0 0 var(--space-2);
   padding: var(--space-1) var(--space-2);

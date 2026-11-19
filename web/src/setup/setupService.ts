@@ -128,7 +128,7 @@ export async function deleteMyAccount(client: SupabaseClient): Promise<void> {
   if (error) throw error;
   // The account is already gone; a failing sign-out must not show an error for it.
   try {
-    await client.auth.signOut();
+    await client.auth.signOut({ scope: "local" });
   } catch {
     /* ignored */
   }

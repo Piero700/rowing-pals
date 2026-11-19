@@ -80,3 +80,9 @@ test("Sign out signs out", async () => {
   fireEvent.click(screen.getByRole("button", { name: /Sign out/ }));
   await waitFor(() => expect(props.onSignedOut).toHaveBeenCalled());
 });
+
+test("Leave club and Delete account rows are red (destructive)", () => {
+  setup();
+  expect(screen.getByRole("button", { name: /Leave club/ })).toHaveClass("form-link-destructive");
+  expect(screen.getByRole("button", { name: /Delete account/ })).toHaveClass("form-link-destructive");
+});
