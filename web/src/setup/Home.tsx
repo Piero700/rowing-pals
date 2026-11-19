@@ -7,7 +7,7 @@ import { nextStep } from "./nextStep";
 import { loadSetupState } from "./setupService";
 import { UsernameScreen } from "./UsernameScreen";
 import { WaitingScreen } from "./WaitingScreen";
-import { WeekScreen } from "./WeekScreen";
+import { WeekScreen } from "../week/WeekScreen";
 
 type Loaded = Awaited<ReturnType<typeof loadSetupState>>;
 

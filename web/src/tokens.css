@@ -225,3 +225,143 @@ a {
 .form-legal a {
   color: var(--accent-brand);
 }
+
+/* Your week */
+.week-tabs {
+  display: flex;
+  gap: var(--space-1);
+  margin: var(--space-2) 0;
+}
+
+.week-tab {
+  flex: 1;
+  min-height: var(--row-height);
+  border: var(--hairline) solid var(--surface-line);
+  border-radius: var(--radius-card);
+  background: transparent;
+  color: var(--ink-secondary);
+  font: inherit;
+  font-size: var(--font-subhead);
+}
+
+.week-tab-on {
+  border-color: var(--accent-brand);
+  color: var(--accent-brand);
+}
+
+.week-day-heading {
+  margin: var(--space-3) var(--space-2) var(--space-1);
+  color: var(--ink-secondary);
+  font-size: var(--font-footnote);
+  font-weight: var(--weight-title);
+  font-variant-numeric: tabular-nums;
+}
+
+.week-row {
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--font-body);
+}
+
+.week-row + .week-row {
+  border-top: var(--hairline) solid var(--surface-line);
+}
+
+.week-row-head {
+  display: flex;
+  gap: var(--space-2);
+  align-items: baseline;
+  min-height: var(--row-height);
+  padding: var(--space-1) 0;
+}
+
+.week-time {
+  color: var(--ink-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.week-title {
+  display: flex;
+  flex-direction: column;
+  color: var(--ink-primary);
+}
+
+.week-sub {
+  color: var(--ink-secondary);
+  font-size: var(--font-footnote);
+  font-variant-numeric: tabular-nums;
+}
+
+.week-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1);
+  padding-bottom: var(--space-1);
+}
+
+.week-question,
+.week-checked {
+  color: var(--ink-secondary);
+  font-size: var(--font-subhead);
+  font-variant-numeric: tabular-nums;
+}
+
+.week-checked {
+  color: var(--accent-success);
+}
+
+.week-pill {
+  min-height: var(--row-height);
+  padding: 0 var(--space-2);
+  border: var(--hairline) solid var(--surface-line);
+  border-radius: var(--radius-card);
+  background: transparent;
+  color: var(--ink-primary);
+  font: inherit;
+  font-size: var(--font-subhead);
+}
+
+.week-pill:disabled {
+  opacity: 0.5;
+}
+
+.week-pill-on {
+  border-color: var(--accent-brand);
+  background: var(--accent-brand);
+  color: var(--base);
+}
+
+.week-pill-off {
+  border-color: var(--error);
+  color: var(--error);
+}
+
+.week-cancelled {
+  margin: 0;
+  padding-bottom: var(--space-1);
+  color: var(--error);
+  font-size: var(--font-subhead);
+}
+
+.week-error {
+  margin: 0 0 var(--space-1);
+}
+
+.week-sheet {
+  padding-bottom: var(--space-1);
+}
+
+.week-sheet-input {
+  width: 100%;
+  min-height: var(--row-height);
+  padding: 0 var(--space-2);
+  border: var(--hairline) solid var(--surface-line);
+  border-radius: var(--radius-card);
+  background: var(--surface-raised);
+  color: var(--ink-primary);
+  font: inherit;
+}
+
+.week-sheet .form-notice {
+  margin: var(--space-1) 0;
+}
