@@ -1,0 +1,83 @@
+/* Design tokens, ported from CLAUDE.md "Current v2 palette". Dark is primary. No gradients. */
+:root {
+  color-scheme: dark light;
+
+  --accent-brand: #91b8ff;
+  --accent-records: #c6adff;
+  --accent-rank: #efc37c;
+  --accent-success: #78d7ac;
+  --accent-verified: #91b8ff;
+  --error: #ff766f;
+  --ink-primary: #f7f8fc;
+  --ink-secondary: #bbc0ce;
+  --ink-faint: #a3abba;
+  --base: #101114;
+  --surface-card: #1b1c21;
+  --surface-raised: #292c34;
+  --surface-line: #464a56;
+
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro", system-ui, "Segoe UI", Roboto, sans-serif;
+  --font-large-title: 34px;
+  --font-title: 22px;
+  --font-body: 17px;
+  --font-subhead: 15px;
+  --font-footnote: 13px;
+
+  /* 8-point grid */
+  --space-1: 8px;
+  --space-2: 16px;
+  --space-3: 24px;
+  --space-4: 32px;
+  --space-5: 40px;
+  --space-6: 48px;
+
+  --radius-card: 12px;
+  --row-height: 44px;
+  --hairline: 1px;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --accent-brand: #214fa3;
+    --accent-records: #67409b;
+    --accent-rank: #84500b;
+    --accent-success: #176a4a;
+    --accent-verified: #214fa3;
+    --error: #c93c36;
+    --ink-primary: #111723;
+    --ink-secondary: #3e4c61;
+    --ink-faint: #4e5c70;
+    --base: #edf0f5;
+    --surface-card: #ffffff;
+    --surface-raised: #dce2ec;
+    --surface-line: #949eae;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--base);
+  color: var(--ink-primary);
+  font-family: var(--font-sans);
+  font-size: var(--font-body);
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1 {
+  margin: 0;
+  font-size: var(--font-large-title);
+  font-weight: 700;
+}
+
+a {
+  color: var(--accent-brand);
+}
+
+.grouped-row + .grouped-row {
+  border-top: var(--hairline) solid var(--surface-line);
+}
