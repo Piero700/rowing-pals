@@ -168,6 +168,12 @@ After any change:
 
 ## Current focus
 
+**App Store launch (2026-11-19):** step-by-step in `docs/production/app-store-launch.md`. Done in code: privacy
+manifest (`PrivacyInfo.xcprivacy`), the Sensitive Content Analysis entitlement (photo filtering now really runs), and
+`docs/production/production-setup.sql`, built by `scripts/build-production-sql.sh` from `docs/schema.sql` plus every
+migration from 2026-10-16 on. Production Supabase doesn't exist yet; `Release.xcconfig` still holds a placeholder.
+**Every new migration must be added to `MIGRATIONS` in that script** and, once production exists, run there too.
+
 **On `main` (2026-11-17): in-app club verification for admins** (decision 108, migration run on staging; `piero` is the
 staging admin), **restyled sign-up/reset emails** and why sign-up emails don't arrive (`docs/testing/sign-up-emails.md`:
 Confirm email is off on staging; Resend SMTP is already set up), **minimum age 13** (decision 107, migration run on staging; checklist `docs/testing/minimum-age.md`;
