@@ -15,7 +15,7 @@ struct ShareWeekCardView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: Tokens.Spacing.loose) {
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: Tokens.ShareWeek.lineGap) {
                 Text(heading)
                     .textStyle(Typography.profileName)
                     .foregroundStyle(Tokens.Ink.primary)
@@ -24,6 +24,7 @@ struct ShareWeekCardView: View {
                     .textStyle(Typography.meta)
                     .tabularNumerals()
                     .foregroundStyle(Tokens.Ink.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
             }
             if rows.isEmpty {
                 Text("Nothing planned yet")

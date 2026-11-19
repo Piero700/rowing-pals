@@ -13,10 +13,11 @@ struct ShareCardRowView: View {
     var body: some View {
         HStack(alignment: .top, spacing: Tokens.Spacing.loose) {
             if !row.dayText.isEmpty || row.timeText != nil {
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: Tokens.ShareWeek.lineGap) {
                     if !row.dayText.isEmpty {
                         Text(row.dayText)
                             .textStyle(Typography.rowTitle)
+                            .tabularNumerals()
                     }
                     if let time = row.timeText {
                         Text(time)
@@ -27,7 +28,7 @@ struct ShareCardRowView: View {
                 .foregroundStyle(Tokens.Accent.brand)
                 .frame(width: Tokens.ShareWeek.dayColumn, alignment: .leading)
             }
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: Tokens.ShareWeek.lineGap) {
                 Text(row.title)
                     .textStyle(Typography.rowTitle)
                     .tabularNumerals()
