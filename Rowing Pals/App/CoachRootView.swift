@@ -56,6 +56,16 @@ struct CoachRootView: View {
                 .ignoresSafeArea(.container, edges: .bottom)
             }
             .environment(barVisibility)
+            // The first-run tour (decision 109), over the tabs and the bar.
+            .modifier(FirstRunTour(mode: .coaching, steps: TourRules.coachSteps,
+                                   barVisibility: barVisibility,
+                                   onStep: { step in
+                                       if case .tab(let label) = step.target,
+                                          let tab = Self.items.first(where: { $0.label == label })?.tab {
+                                           selection = tab
+                                       }
+                                   },
+                                   onFinish: { selection = .rowers }))
             .environment(\.navigate, NavigateAction { route in
                 // A coach logs nothing here: Log belongs to the rower version.
                 if route == .log { return }
