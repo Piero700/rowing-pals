@@ -44,6 +44,7 @@ erg/water split or a Water leaderboard filter are superseded.
 - Supabase — Postgres, Auth, Storage, Realtime
 - Vision framework for on-device OCR (no cloud OCR, no per-image cost)
 - No third-party UI libraries. If a component seems to need one, ask first.
+- Web page for rowers without an iPhone (decision 110): React, Vite, TypeScript in `web/`, built to static files for rowingpals.com/go.
 
 ## Hard rules — never do these
 
@@ -167,6 +168,8 @@ After any change:
 3. Never report a task complete on the basis that the code looks right.
 
 ## Current focus
+
+**On branch `t48-whatsapp-web` (2026-11-19, not yet merged): WhatsApp share picture and the rower web page** (decision 110). Coach Calendar → Share week and a workout → Share workout make a picture for the WhatsApp group; `web/` is the page at rowingpals.com/go where rowers without an iPhone answer Available / Can't, Can you race? and check in. The Edge Functions' CORS change is not yet deployed. Phone checklist `docs/testing/whatsapp-share-and-web.md`; putting it online `docs/production/web-launch.md`. Earlier:
 
 **App Store launch (2026-11-19):** step-by-step in `docs/production/app-store-launch.md`. Done in code: privacy
 manifest (`PrivacyInfo.xcprivacy`), the Sensitive Content Analysis entitlement (photo filtering now really runs), and
