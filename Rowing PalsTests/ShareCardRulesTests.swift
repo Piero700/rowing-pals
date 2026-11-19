@@ -107,6 +107,21 @@ struct ShareCardRulesTests {
         #expect(result[0].detail == "Putney")
     }
 
+    @Test func theMondayAfterTheWeekIsNotOnThisCard() {
+        let event = ClubEvent(id: UUID(), clubId: UUID(), kind: .race, name: "Head", firstDay: "2026-11-30",
+                              lastDay: "2026-11-30")
+        #expect(Self.rows(workouts: [Self.workout("2026-11-30")], events: [event]).isEmpty)
+        #expect(Self.rows(practices: [Self.practice(Self.date(2026, 11, 30))]).isEmpty)
+    }
+
+    @Test func anEventFromBeforeTheWeekAppearsOnceOnItsFirstDayInRange() {
+        let event = ClubEvent(id: UUID(), clubId: UUID(), kind: .race, name: "Camp", firstDay: "2026-11-21",
+                              lastDay: "2026-11-24")
+        let result = Self.rows(events: [event])
+        #expect(result.count == 1)
+        #expect(result[0].dayText == "Mon")
+    }
+
     @Test func dateRangeFollowsWeekStart() {
         let day = Self.date(2026, 11, 24, 12)
         let monday = Self.calendar(.monday)

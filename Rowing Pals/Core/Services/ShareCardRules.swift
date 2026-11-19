@@ -19,7 +19,7 @@ nonisolated enum ShareCardRules {
         var rows: [ShareCardRow] = []
 
         for practice in practices where !practice.cancelled
-            && keeps(practice.squadIds, audience) && range.contains(practice.startsAt) {
+            && keeps(practice.squadIds, audience) && inRange(range, practice.startsAt) {
             rows.append(row(id: "practice-\(practice.id)", start: practice.startsAt, timed: true,
                             title: practice.displayTitle, detail: practice.place, calendar: calendar))
         }
@@ -27,7 +27,7 @@ nonisolated enum ShareCardRules {
         for workout in workouts where workout.audience != .rowers && keeps(workout, audience) {
             guard let start = WorkoutRules.startDate(workout, calendar: calendar)
                     ?? WorkoutRules.day(workout.workoutDate, calendar: calendar),
-                  range.contains(start) else { continue }
+                  inRange(range, start) else { continue }
             let timed = WorkoutRules.startDate(workout, calendar: calendar) != nil
             let summary = WorkoutRules.piecesSummary(workout.pieces) ?? workout.title
             let extras = [WorkoutRules.rateText(workout.pieces), WorkoutRules.restText(workout.pieces)]
@@ -37,7 +37,7 @@ nonisolated enum ShareCardRules {
                             detail: extras.isEmpty ? nil : extras.joined(separator: " · "), calendar: calendar))
         }
 
-        for session in water where range.contains(session.startsAt) && keeps(session, practices, events, audience) {
+        for session in water where inRange(range, session.startsAt) && keeps(session, practices, events, audience) {
             rows.append(row(id: "water-\(session.id)", start: session.startsAt, timed: true, title: "Water",
                             detail: session.meetAt.map { "meet \($0)" }, calendar: calendar))
         }
@@ -46,7 +46,7 @@ nonisolated enum ShareCardRules {
             guard let first = WorkoutRules.day(event.firstDay, calendar: calendar),
                   let last = WorkoutRules.day(event.lastDay, calendar: calendar) else { continue }
             let begin = max(first, calendar.startOfDay(for: range.start))
-            guard begin <= last, range.contains(begin) else { continue }
+            guard begin <= last, inRange(range, begin) else { continue }
             rows.append(row(id: "event-\(event.id)", start: begin, timed: false, title: event.name,
                             detail: event.place, calendar: calendar))
         }
@@ -86,6 +86,11 @@ nonisolated enum ShareCardRules {
                      dayText: CalendarRules.weekdayShort(start, calendar: calendar).capitalized,
                      timeText: timed ? CalendarRules.time(start, calendar: calendar) : nil,
                      title: title, detail: detail)
+    }
+
+    /// The range's end is exclusive, as a week's is.
+    private static func inRange(_ range: DateInterval, _ date: Date) -> Bool {
+        date >= range.start && date < range.end
     }
 
     private static func monthShort(_ date: Date, _ calendar: Calendar) -> String {
