@@ -6,7 +6,9 @@ browser or Android phone uses the web page. Do the **web launch steps for stagin
 
 **Things in here that weren't in the canvas or the brief (check them):**
 - The week card's rows, wording and footer (the design's text, laid out by Claude).
-- Rest between pieces shows as a bare "5:00". Say if it should read "5:00 rest" instead.
+- Rest shows as "5:00 rest" on the card (a piece's line ends with it; a week row's erg line reads "rate · 5:00 rest").
+- The workout card's line under the title: who it's for (its squads, or the club; a workout for chosen rowers shows the
+  club, as no rower's name goes on the picture), the day and time, then the zone if one was chosen (AN on a test day).
 - On the web: the 6-digit email code screen, the "Waiting for the club to approve you" screen and the
   "Coach tools are in the iPhone app for now" note.
 
@@ -21,7 +23,8 @@ browser or Android phone uses the web page. Do the **web launch steps for stagin
 ## A. On the iPhone: Share week
 1. Open the app and switch to the coach version (the coach tab bar: Rowers, Workouts, Boats, Calendar, +).
 2. Tap **Calendar**.
-3. Find the **Share week** button on the Calendar screen. Tap it. A sheet opens.
+3. At the top right of the Calendar screen there are two round icons. Tap the share icon (Share week: an arrow pointing
+   up out of a tray, the left one of the two). A sheet opens.
    - [ ] The sheet shows **Which week**, **Who for** and a picture preview.
 4. Under **Which week** tap **This week**.
    - [ ] The preview's title says **This week** and the dates under it match this week.
@@ -48,12 +51,15 @@ browser or Android phone uses the web page. Do the **web launch steps for stagin
 ## A2. On the iPhone: Share workout
 1. In the coach version tap **Workouts**.
 2. Tap a workout that has pieces (for example 3 × 2k with a rate and a rest).
-3. On the workout page tap **Share workout**. The same sheet opens.
+3. On the workout page tap the share icon at the top right (Share workout: an arrow pointing up out of a tray, left of
+   **Edit**). The same sheet opens.
    - [ ] It shows one day: the day, date and start time, the workout title, and each piece with its targets (split, rate, rest).
    - [ ] There is no **Which week** or **Who for** choice.
-   - [ ] The audience in the workout names the card (the squad or the club).
-   - [ ] The zone shows if the workout has one.
-   - [ ] Rest between pieces shows as a bare "5:00". Say if it should read "5:00 rest".
+   - [ ] The line under the title starts with who the workout is for: the squad name(s), or your club's name.
+         For example "Novice men · Wed 25 Nov · 06:30 · UT2".
+   - [ ] The zone (UT2, UT1, AT, TR or AN) ends that line if the workout has one; a test day shows AN; with no zone
+         chosen there is none.
+   - [ ] Rest shows as "5:00 rest", at the end of each piece's line.
 4. Tap **Share**, pick **WhatsApp**, your group, and send.
    - [ ] Same checks as A9: the picture arrives, the link is its caption, the picture is readable.
 
@@ -79,9 +85,9 @@ On a laptop you can narrow the window to phone width to see the phone layout.
 
 ### B3. Username
 1. On **Choose a username**, type one that is taken (try `piero`).
-   - [ ] It says it's taken.
+   - [ ] It says "That username is taken. Try another."
 2. Type a free one.
-   - [ ] It says it's available, and Save works.
+   - [ ] It says "@yourname is free." (with the name you typed), and Save works.
 
 ### B4. Join your club
 1. On **Join your club** type your club's invite code and continue.
@@ -117,13 +123,15 @@ On a laptop you can narrow the window to phone width to see the phone layout.
 4. Do not delete your real account. Delete the test account at the end (step D).
 
 ## C. The coach sees it on the iPhone
-1. On the iPhone, coach version, tap **Calendar**, then the practice you answered **Available** on, then **Who's available**.
+1. On the iPhone, coach version, tap **Calendar**, then the Who's available icon at the top right (two people with a
+   tick, the right one of the two round icons). Choose **This week** or **Next week** to match the practice, then tap the
+   practice you answered **Available** on.
    - [ ] Your web account is listed as Available.
-2. Open the practice you answered **Can't** on.
+2. In Who's available, tap the practice you answered **Can't** on.
    - [ ] It shows Can't, with the reason "Exams".
-3. Open the practice you checked in to and tap **Take register**.
+3. Go back to **Calendar**, tap the practice you checked in to, and tap **Take register**.
    - [ ] Your web account shows as checked in with the time.
-4. Open the race you answered.
+4. In Who's available, scroll to the races coming up and tap the race you answered.
    - [ ] Your Yes and No answers are shown.
 
 ## D. Tidy up
@@ -132,4 +140,4 @@ On a laptop you can narrow the window to phone width to see the phone layout.
       **Authentication** (left bar) → **Users** → find the one whose email starts **webtest.** (it was never confirmed) →
       click the three dots at the end of its row → **Delete user** → confirm.
 
-Tell Claude what you ticked and what you wrote down (the Confirm email setting, the caption, "5:00 rest").
+Tell Claude what you ticked and what you wrote down (the Confirm email setting, the caption).

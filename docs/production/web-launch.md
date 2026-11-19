@@ -29,12 +29,14 @@ They gained CORS headers so a browser may call them. The change is **not deploye
    (change it to `main` after the branch is merged: **Site configuration** → **Build & deploy** → **Branches**).
 3. Fill in the build settings:
    - **Base directory**: `web`
-   - **Build command**: `npm run build -- --mode staging`
+   - **Build command**: `npm run build:site` (the same as `web/netlify.toml`, which wins if the two differ)
    - **Publish directory**: `web/dist`
+   The build puts the page in `web/dist/go` and copies the website (`marketing/website`) beside it in `web/dist`, so the
+   staging site also shows the website at its root. With no `WEB_MODE` variable it builds in staging mode.
 4. Click **Add environment variables** (or after making the site: **Site configuration** → **Environment variables** → **Add a variable**) and add:
    - `VITE_SUPABASE_URL` = the staging Project URL (copy it from `Staging.xcconfig`; if it shows with a stray `$()` in the file, use the plain https address).
    - `VITE_SUPABASE_ANON_KEY` = the staging anon key (copy it from `Staging.xcconfig`).
-   Use staging values only. Never put the production ones here.
+   Use staging values only. Never put the production ones here. Don't add `WEB_MODE` on this site.
 5. Click **Deploy**. When it says **Published**, copy the site address at the top (ending `.netlify.app`).
    Optionally rename it: **Site configuration** → **Change site name**.
 6. Open that address followed by `/go/`.
@@ -63,16 +65,23 @@ Only after the production project exists (`docs/production/app-store-launch.md`)
    `https://rowingpals.com/go/`. Click **Save changes**.
 4. Google Cloud → **Credentials** → the **Web** OAuth client → **Authorised JavaScript origins** → **Add URI**:
    `https://rowingpals.com`. Click **Save**.
-5. Make the production build. **(Claude)** Tell Claude "build the web page for production". Claude makes `web/.env.production`
-   from the production Project URL and anon key (gitignored, never committed), runs `npm run build -- --mode production`
-   and tells you the `web/dist` folder is ready. Check it has `VITE_SUPABASE_URL` pointing at production:
-   the page must never talk to staging.
-6. Publish `/go` **with the website**. The website goes to Netlify as one site: the static pages in
-   `marketing/website/` plus the page build in a `go` folder. Easiest: make the production Netlify site from the repository
-   with **Base directory** `web`, **Build command** `npm run build -- --mode production`, **Publish directory** `web/dist`,
-   env vars `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` (production values), and ask Claude to add the website files so
-   one deploy holds both (**(Claude)** "make the production site hold the website and /go"). Then point rowingpals.com at it:
-   Netlify → **Domain management** → **Add a domain** → `rowingpals.com`, and follow the DNS steps.
+5. Make the production Netlify site. One site holds both the website and `/go`: `npm run build:site` builds the page into
+   `web/dist/go` and copies `marketing/website/` (the home page, `/privacy`, `/terms`, `/support` and `assets/`) into
+   `web/dist` beside it; Netlify publishes `web/dist`. Nothing needs adding by hand.
+   1. https://app.netlify.com → **Add new site** → **Import an existing project** → **GitHub** → the Rowing Pals repository.
+      Branch to deploy: `main`.
+   2. **Base directory** `web`, **Build command** `npm run build:site`, **Publish directory** `web/dist`.
+   3. **Add environment variables**:
+      - `WEB_MODE` = `production`
+      - `VITE_SUPABASE_URL` = the production Project URL (Supabase → the **production** project → **Project Settings** → **API**).
+      - `VITE_SUPABASE_ANON_KEY` = the production anon key (same page).
+   4. Click **Deploy**. When it says **Published**, open the `.netlify.app` address it shows, add `/go/`, and sign in with a
+      real account: it must be a production account (a staging-only account must fail). The page must never talk to staging.
+   5. If rowingpals.com is already served by another Netlify site (the website on its own), delete that site's domain first:
+      that site → **Domain management** → the three dots beside `rowingpals.com` → **Remove domain**.
+6. Point rowingpals.com at the new site: Netlify → the new site → **Domain management** → **Add a domain** →
+   `rowingpals.com` → **Verify** → **Add domain**, and follow the DNS steps it shows. Add `www.rowingpals.com` too when it
+   offers (the Edge Functions allow both addresses).
 7. Check it, on a phone that is not on your Wi-Fi:
    - [ ] https://rowingpals.com/go/ shows the sign-in screen, and https://rowingpals.com/go/anything does too.
    - [ ] https://rowingpals.com, /privacy, /terms and /support still load.
