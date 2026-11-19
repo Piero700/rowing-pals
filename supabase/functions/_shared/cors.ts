@@ -35,7 +35,17 @@ export function withCors(handler: (req: Request) => Response | Promise<Response>
   return async (req: Request): Promise<Response> => {
     const cors = corsHeaders(req.headers.get("Origin"))
     if (req.method === "OPTIONS") return new Response(null, { status: 200, headers: cors })
-    const res = await handler(req)
+    let res: Response
+    try {
+      res = await handler(req)
+    } catch (error) {
+      // Answer with a real error (carrying the CORS headers) so a browser doesn't report a CORS failure.
+      console.error(error)
+      res = new Response(
+        JSON.stringify({ error: "server_error", message: "Something went wrong. Try again." }),
+        { status: 500, headers: { "Content-Type": "application/json" } },
+      )
+    }
     const headers = new Headers(res.headers)
     for (const [k, v] of Object.entries(cors)) headers.set(k, v)
     return new Response(res.body, { status: res.status, statusText: res.statusText, headers })

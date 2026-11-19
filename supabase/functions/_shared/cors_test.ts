@@ -1,4 +1,4 @@
-// Run with: deno test supabase/functions/_shared/cors_test.ts
+// Run with: deno test --allow-env supabase/functions/_shared/cors_test.ts
 import { corsHeaders, withCors } from "./cors.ts"
 
 const assertEq = (a: unknown, b: unknown) => {
@@ -39,4 +39,20 @@ Deno.test("errors keep their status and body and still get the headers", async (
   assertEq(res.status, 401)
   assertEq(await res.text(), '{"error":"x"}')
   assertEq(res.headers.get("Access-Control-Allow-Origin"), "https://rowingpals.com")
+})
+
+Deno.test("a throwing handler becomes a 500 JSON error with the CORS headers", async () => {
+  const handler = withCors(() => {
+    throw new Error("boom")
+  })
+  const orig = console.error
+  console.error = () => {}
+  try {
+    const res = await handler(new Request("http://x/", { method: "POST", headers: { Origin: "https://rowingpals.com" } }))
+    assertEq(res.status, 500)
+    assertEq(res.headers.get("Access-Control-Allow-Origin"), "https://rowingpals.com")
+    assertEq(await res.text(), '{"error":"server_error","message":"Something went wrong. Try again."}')
+  } finally {
+    console.error = orig
+  }
 })
