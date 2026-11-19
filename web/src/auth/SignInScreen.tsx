@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { GroupedCard } from "../components/GroupedCard";
 import { getSupabase } from "../lib/supabase";
 import { EmailNotConfirmedError, ensureProfileExists, messageFor, resendSignupCode, signIn, signInWithGoogle } from "./authService";
-import { FormError, FormNotice, InputRow } from "./FormBits";
+import { FormError, InputRow } from "./FormBits";
 
 export function SignInScreen() {
   const navigate = useNavigate();
@@ -103,7 +103,11 @@ export function SignInScreen() {
       <button className="form-link" type="button" onClick={() => navigate("/create-account")}>
         Create account
       </button>
-      <FormNotice message={null} />
+      <p className="form-legal">
+        By continuing with Google you agree to the{" "}
+        <a href="https://rowingpals.com/terms">Terms of Service</a> and{" "}
+        <a href="https://rowingpals.com/privacy">Privacy Policy</a>.
+      </p>
     </main>
   );
 }

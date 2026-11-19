@@ -3,6 +3,7 @@ import { CreateAccountScreen } from "./auth/CreateAccountScreen";
 import { ResetScreen } from "./auth/ResetScreen";
 import { SignInScreen } from "./auth/SignInScreen";
 import { VerifyCodeScreen } from "./auth/VerifyCodeScreen";
+import { Home } from "./setup/Home";
 
 export function App() {
   return (
@@ -12,7 +13,7 @@ export function App() {
         <Route path="/create-account" element={<CreateAccountScreen />} />
         <Route path="/verify" element={<VerifyCodeScreen />} />
         <Route path="/reset" element={<ResetScreen />} />
-        <Route path="/" element={<main className="form-page"><h1>You’re signed in</h1></main>} />
+        <Route path="/" element={<Home />} />
         <Route path="*" element={<Navigate to="/sign-in" replace />} />
       </Routes>
     </BrowserRouter>
