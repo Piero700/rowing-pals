@@ -74,3 +74,4 @@ web/.env.*
 !web/.env.example
 web/node_modules
 web/dist
+*.tsbuildinfo

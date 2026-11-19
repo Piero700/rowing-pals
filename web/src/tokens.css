@@ -34,6 +34,8 @@
   --radius-card: 12px;
   --row-height: 44px;
   --hairline: 1px;
+  --content-max-width: 480px;
+  --weight-title: 700;
 }
 
 @media (prefers-color-scheme: light) {
@@ -71,11 +73,29 @@ body {
 h1 {
   margin: 0;
   font-size: var(--font-large-title);
-  font-weight: 700;
+  font-weight: var(--weight-title);
 }
 
 a {
   color: var(--accent-brand);
+}
+
+.grouped-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  min-height: var(--row-height);
+  padding: 0 var(--space-2);
+  font-size: var(--font-body);
+}
+
+.grouped-row-label {
+  color: var(--ink-primary);
+}
+
+.grouped-row-value {
+  color: var(--ink-secondary);
 }
 
 .grouped-row + .grouped-row {

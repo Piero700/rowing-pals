@@ -3,5 +3,5 @@ import { App } from "./App";
 
 test("the sign-in route shows Sign in", () => {
   render(<App />);
-  expect(screen.getAllByText("Sign in").length).toBeGreaterThan(0);
+  expect(screen.getByRole("heading", { name: "Sign in" })).toBeInTheDocument();
 });
