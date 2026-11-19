@@ -1,10 +1,10 @@
 // CORS for the Edge Functions the rower web page calls from a browser (username-auth, delete-account).
 //
 // These calls carry auth, so the request's Origin is echoed back only when it is on the list below
-// (never "*"). The list is the live site, the local dev server, and any comma-separated origins in
+// (never "*"). The list is the live site (with and without www), the local dev server, and any comma-separated origins in
 // the WEB_ORIGINS environment variable (the staging web address).
 
-const BASE_ORIGINS = ["https://rowingpals.com", "http://localhost:5173"]
+const BASE_ORIGINS = ["https://rowingpals.com", "https://www.rowingpals.com", "http://localhost:5173"]
 
 function allowedOrigins(): string[] {
   const extra = (Deno.env.get("WEB_ORIGINS") ?? "")

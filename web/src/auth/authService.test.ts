@@ -8,7 +8,7 @@ function mockClient() {
   const insert = vi.fn().mockResolvedValue({ error: null });
   const from = vi.fn((table: string) =>
     table === "profiles"
-      ? { select: () => ({ eq: () => Promise.resolve({ data: [{ id: "u1" }], error: null }) }), insert }
+      ? { select: () => ({ eq: () => Promise.resolve({ data: [{ id: "u1" }], error: null }) }), insert, upsert }
       : { upsert },
   );
   const auth = {

@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite --mode staging",
     "build": "tsc -b && vite build",
+    "build:site": "npm run build -- --mode ${WEB_MODE:-staging} && cp -R ../marketing/website/. dist/",
     "preview": "vite preview",
     "test": "TZ=Europe/London vitest run"
   },

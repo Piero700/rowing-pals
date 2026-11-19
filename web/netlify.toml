@@ -1,6 +1,8 @@
+# One site holds the website (marketing/website, copied to dist) and the rower page (dist/go).
+# WEB_MODE picks the Vite mode: unset builds staging; the production site sets WEB_MODE=production.
 [build]
   publish = "dist"
-  command = "npm run build"
+  command = "npm run build:site"
 
 [[redirects]]
   from = "/go/*"

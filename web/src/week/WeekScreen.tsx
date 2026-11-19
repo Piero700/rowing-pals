@@ -1,13 +1,24 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getSupabase } from "../lib/supabase";
+import { isSessionExpired } from "../setup/sessionExpired";
 import { buildWeek, type EventAnswer, type PracticeAnswer, type WeekData } from "./buildWeek";
 import { DayCard } from "./DayCard";
+import { saveErrorMessage } from "./saveErrorMessage";
 import { checkIn, load, respond, respondEvent } from "./weekService";
 
 type Which = "this" | "next";
 
 /** Your week: Available / Can't for practices, Can you race? for races, check-in on the day. */
-export function WeekScreen({ isCoach, onAccount }: { isCoach: boolean; onAccount?: () => void }) {
+export function WeekScreen({
+  isCoach,
+  onAccount,
+  onSessionExpired,
+}: {
+  isCoach: boolean;
+  onAccount?: () => void;
+  /** The saved session is dead: Home signs out locally and goes to sign in. */
+  onSessionExpired?: () => void;
+}) {
   const [which, setWhich] = useState<Which>("this");
   const [data, setData] = useState<WeekData | null>(null);
   const [failed, setFailed] = useState(false);
@@ -15,14 +26,27 @@ export function WeekScreen({ isCoach, onAccount }: { isCoach: boolean; onAccount
   const [busyId, setBusyId] = useState<string | null>(null);
   const [now, setNow] = useState(() => new Date());
 
-  const refresh = useCallback(async (w: Which) => {
-    try {
-      setData(await load(getSupabase(), w));
-      setFailed(false);
-    } catch {
-      setFailed(true);
-    }
-  }, []);
+  // Each load gets a number; a slow earlier load that finishes after a tab switch is ignored.
+  const latest = useRef(0);
+  const refresh = useCallback(
+    async (w: Which) => {
+      const ticket = ++latest.current;
+      try {
+        const week = await load(getSupabase(), w);
+        if (ticket !== latest.current) return;
+        setData(week);
+        setFailed(false);
+      } catch (err) {
+        if (ticket !== latest.current) return;
+        if (isSessionExpired(err) && onSessionExpired) {
+          onSessionExpired();
+          return;
+        }
+        setFailed(true);
+      }
+    },
+    [onSessionExpired],
+  );
 
   useEffect(() => {
     setData(null);
@@ -48,8 +72,11 @@ export function WeekScreen({ isCoach, onAccount }: { isCoach: boolean; onAccount
       await action();
       await refresh(which);
     } catch (err) {
-      const message = (err as { message?: string } | null)?.message;
-      setErrors((e) => ({ ...e, [id]: message || "Couldn’t save that. Try again." }));
+      if (isSessionExpired(err) && onSessionExpired) {
+        onSessionExpired();
+        return;
+      }
+      setErrors((e) => ({ ...e, [id]: saveErrorMessage(err) }));
     } finally {
       setBusyId(null);
     }

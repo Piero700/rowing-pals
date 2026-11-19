@@ -19,25 +19,30 @@ export function Home() {
   const [failed, setFailed] = useState(false);
   const [showAccount, setShowAccount] = useState(false);
 
+  // The saved session is dead: sign out locally and go to sign in.
+  const sessionExpired = useCallback(async () => {
+    try {
+      await getSupabase().auth.signOut({ scope: "local" });
+    } catch {
+      /* ignored */
+    }
+    setState({ signedIn: false, username: null, birthDate: null, clubStatus: "none", isCoach: false, requestClub: null, requestDeclined: false });
+    setFailed(false);
+  }, []);
+
   const load = useCallback(async () => {
     try {
       setState(await loadSetupState(getSupabase()));
       setFailed(false);
     } catch (e) {
       if (isSessionExpired(e)) {
-        // The saved session is dead: sign out locally and go to sign in.
-        try {
-          await getSupabase().auth.signOut({ scope: "local" });
-        } catch {
-          /* ignored */
-        }
-        setState({ signedIn: false, username: null, birthDate: null, clubStatus: "none", isCoach: false, requestClub: null, requestDeclined: false });
-        setFailed(false);
+        await sessionExpired();
         return;
       }
       setFailed(true);
     }
-  }, []);
+  }, [sessionExpired]);
+  const onWeekSessionExpired = useCallback(() => void sessionExpired(), [sessionExpired]);
   useEffect(() => {
     void load();
   }, [load]);
@@ -75,7 +80,7 @@ export function Home() {
           onSignedOut={() => setState((s) => (s ? { ...s, signedIn: false } : s))}
         />
       ) : (
-        <WeekScreen isCoach={state.isCoach} onAccount={() => setShowAccount(true)} />
+        <WeekScreen isCoach={state.isCoach} onAccount={() => setShowAccount(true)} onSessionExpired={onWeekSessionExpired} />
       );
   }
 }

@@ -9,6 +9,7 @@ Deno.test("allowed origin is echoed back", () => {
   const h = corsHeaders("https://rowingpals.com")
   assertEq(h["Access-Control-Allow-Origin"], "https://rowingpals.com")
   assertEq(h["Vary"], "Origin")
+  assertEq(corsHeaders("https://www.rowingpals.com")["Access-Control-Allow-Origin"], "https://www.rowingpals.com")
   assertEq(corsHeaders("http://localhost:5173")["Access-Control-Allow-Origin"], "http://localhost:5173")
 })
 

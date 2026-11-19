@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { ensureProfileExists } from "../auth/authService";
 import { normalised } from "../rules/username";
 import type { ClubStatus, SetupState } from "./nextStep";
 
@@ -93,12 +94,15 @@ export async function loadSetupState(client: SupabaseClient): Promise<SetupState
   if (!id) {
     return { signedIn: false, username: null, birthDate: null, clubStatus: "none", isCoach: false, requestClub: null, requestDeclined: false };
   }
-  const profile = await client.from("profiles").select("username, club_id, is_coach").eq("id", id).single();
+  // A first Google sign-in comes back here (/go/) without passing through sign in, so make the profile now.
+  await ensureProfileExists(client);
+  const profile = await client.from("profiles").select("username, club_id, is_coach").eq("id", id).maybeSingle();
   if (profile.error) throw profile.error;
+  const row = (profile.data ?? {}) as { username?: string | null; club_id?: string | null; is_coach?: boolean | null };
   const priv = await client.from("athlete_private").select("birth_date").eq("user_id", id);
   if (priv.error) throw priv.error;
 
-  let clubStatus: ClubStatus = profile.data.club_id ? "member" : "none";
+  let clubStatus: ClubStatus = row.club_id ? "member" : "none";
   let requestClub: ClubSummary | null = null;
   let requestDeclined = false;
   if (clubStatus === "none") {
@@ -113,10 +117,10 @@ export async function loadSetupState(client: SupabaseClient): Promise<SetupState
   }
   return {
     signedIn: true,
-    username: (profile.data.username as string | null) ?? null,
+    username: row.username ?? null,
     birthDate: ((priv.data?.[0]?.birth_date as string | null | undefined) ?? null),
     clubStatus,
-    isCoach: profile.data.is_coach === true,
+    isCoach: row.is_coach === true,
     requestClub,
     requestDeclined,
   };

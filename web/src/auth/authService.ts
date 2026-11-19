@@ -166,9 +166,13 @@ export async function ensureProfileExists(client: SupabaseClient): Promise<void>
 
   const meta = (user.user_metadata ?? {}) as Record<string, unknown>;
   const { displayName, termsAcceptedAt } = profileFromMetadata(meta, user.email ?? null);
+  // ON CONFLICT DO NOTHING: a second call racing this one (StrictMode, sign-in then Home) can't error.
   const inserted = await client
     .from("profiles")
-    .insert({ id: user.id, display_name: displayName, terms_accepted_at: termsAcceptedAt });
+    .upsert(
+      { id: user.id, display_name: displayName, terms_accepted_at: termsAcceptedAt },
+      { onConflict: "id", ignoreDuplicates: true },
+    );
   if (inserted.error) throw inserted.error;
 
   const birth = meta.birth_date;
