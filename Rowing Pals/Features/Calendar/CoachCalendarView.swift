@@ -17,6 +17,7 @@ struct CoachCalendarView: View {
     @State private var viewModel = CoachCalendarViewModel()
     @State private var addingTo: AddTarget?
     @State private var chosenRoute: AppRoute?
+    @State private var isSharingWeek = false
     @Environment(\.navigate) private var navigate
 
     private struct AddTarget: Identifiable {
@@ -92,6 +93,7 @@ struct CoachCalendarView: View {
         .scrollsToTopOnReselect(reselects) { await viewModel.load() }
         .safeAreaInset(edge: .top, spacing: 0) {
             CoachTabHeader(title: "Calendar") {
+                GlassIconButton(icon: .share, accessibilityLabel: "Share week") { isSharingWeek = true }
                 GlassIconButton(icon: .peopleCheck, accessibilityLabel: "Who’s available") {
                     navigate(.availability)
                 }
@@ -116,6 +118,7 @@ struct CoachCalendarView: View {
         .onReceive(NotificationCenter.default.publisher(for: .announcementsChanged)) { _ in
             Task { await viewModel.load() }
         }
+        .sheet(isPresented: $isSharingWeek) { ShareWeekSheet(mode: .week) }
         .sheet(item: $addingTo, onDismiss: {
             if let route = chosenRoute {
                 chosenRoute = nil
