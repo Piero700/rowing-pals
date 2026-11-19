@@ -15,6 +15,7 @@
 // and email rate limits apply per person, not to this function as a whole.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
+import { withCors } from "../_shared/cors.ts"
 
 const USERNAME = /^[a-z0-9_]([a-z0-9._]{1,18})[a-z0-9_]$/
 const MIN_PASSWORD = 6
@@ -27,7 +28,7 @@ const wrongPassword = () =>
 const badCode = () =>
   json({ error: "otp_expired", message: "That code has expired or isn’t right. Tap Resend code for a new one." }, 400)
 
-Deno.serve(async (req) => {
+Deno.serve(withCors(async (req) => {
   if (req.method !== "POST") return json({ error: "method", message: "Use POST." }, 405)
   const body = await req.json().catch(() => ({})) as Record<string, unknown>
   const action = String(body.action ?? "")
@@ -97,4 +98,4 @@ Deno.serve(async (req) => {
     default:
       return json({ error: "action", message: "Unknown action." }, 400)
   }
-})
+}))

@@ -10,6 +10,7 @@
 // to configure by hand beyond deploying this file.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
+import { withCors } from "../_shared/cors.ts"
 
 const PAGE = 1000
 
@@ -34,7 +35,7 @@ async function removeAll(admin: any, bucket: string, paths: string[]) {
   }
 }
 
-Deno.serve(async (req) => {
+Deno.serve(withCors(async (req) => {
   const authHeader = req.headers.get("Authorization")
   if (!authHeader) {
     return new Response(JSON.stringify({ error: "Missing Authorization header" }), { status: 401 })
@@ -117,4 +118,4 @@ Deno.serve(async (req) => {
     status: 200,
     headers: { "Content-Type": "application/json" },
   })
-})
+}))
