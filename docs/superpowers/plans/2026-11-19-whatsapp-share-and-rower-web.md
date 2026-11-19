@@ -81,7 +81,7 @@ Rules the tests pin:
 
 **Interfaces:**
 - Consumes: `ShareCardRow`, `ShareCardRules.footer` (Task 1).
-- Produces: `struct ShareWeekCardView: View { let heading: String; let subheading: String; let rows: [ShareCardRow] }`, used for both cards: week (heading "This week" / "Next week", subheading "Novice men · 24–30 Nov") and workout (heading the workout title, subheading "Tue 25 Nov · 06:30"). Empty `rows` shows "Nothing planned yet".
+- Produces: `struct ShareWeekCardView: View { let heading: String; let subheading: String; let rows: [ShareCardRow] }`, used for both cards: week (heading "This week" / "Next week", subheading "Novice men · 23–29 Nov") and workout (heading the workout title, subheading "Wed 25 Nov · 06:30"). Empty `rows` shows "Nothing planned yet".
 
 Look: `Tokens.Base.ground` behind, rows on `Tokens.Surface.card` with `Tokens.Radius.card` corners; day and time in `Tokens.Accent.brand` on the left, title `Ink.primary`, detail `Ink.secondary`; footer line in brand blue, then the wordmark as `ShareCardView` draws it. Fixed width, height from content.
 
