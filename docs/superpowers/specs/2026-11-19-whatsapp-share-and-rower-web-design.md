@@ -152,6 +152,9 @@ The page is not glass (Liquid Glass is the iPhone app's requirement).
   staging site use the staging project only.
 - Supabase Auth: add the web origins (staging and live) to the allowed redirect URLs, and the Google
   sign-in redirect for the web.
+- **One server change, found while planning:** the `username-auth` and `delete-account` Edge
+  Functions don't answer browsers yet (no CORS headers). They gain them, behaviour otherwise
+  unchanged, deployed to staging first and production at launch.
 
 ### Which database
 **The live page uses the same Supabase project as the App Store app (production); the staging copy
