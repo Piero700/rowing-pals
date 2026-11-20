@@ -7,11 +7,16 @@ No keys or project references go in this file: take them from `Staging.xcconfig`
 **(Claude)** marks a step you tell Claude to do.
 
 ## 1. Deploy the two Edge Functions to staging
-They gained CORS headers so a browser may call them. The change is **not deployed yet**.
-1. **(Claude)** Tell Claude "deploy the web functions to staging". Claude runs
-   `supabase functions deploy username-auth --project-ref <staging ref>` and the same for `delete-account`
-   (the staging ref is the part of the Supabase URL in `Staging.xcconfig` before `.supabase.co`).
-2. Set the allowed web address. Go to https://supabase.com/dashboard → open the **staging** project →
+They gained CORS headers so a browser may call them.
+1. **Done 20 Nov 2026:** both are deployed to staging (`username-auth` version 2, `delete-account` version 6,
+   the sign-in token check left on as before). Claude checked them: an OPTIONS call from `http://localhost:5173` or
+   `https://rowingpals.com` gets `200` with that address echoed back, another address gets no permission line, a
+   wrong username sign-in from the web page shows "That username and password don’t match.", and a call without an
+   Origin (as the iPhone app makes) still works. If they ever need redeploying, tell Claude "deploy the web functions
+   to staging", or run `supabase functions deploy username-auth` and `supabase functions deploy delete-account` in
+   Terminal in the `Rowing Pals` folder.
+2. **Still to do, after section 2:** set the allowed web address for the staging site (`localhost:5173`,
+   `rowingpals.com` and `www.rowingpals.com` are already allowed in the code). Go to https://supabase.com/dashboard → open the **staging** project →
    **Edge Functions** (left bar) → **Secrets** (or **Manage secrets**) → **Add new secret**. Name:
    `WEB_ORIGINS`. Value: the staging web address from section 2 (for example `https://something.netlify.app`, with no
    slash at the end; separate several with commas). Click **Save**. If you haven't made the site yet, do section 2
