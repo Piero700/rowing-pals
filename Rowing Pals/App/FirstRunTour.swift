@@ -6,8 +6,8 @@
 import SwiftUI
 
 /// Runs the first-run tour (decision 109) over a version's tabs: starts it once, shortly after the
-/// version first opens while helper text is on, and again when Settings → Help → Show the tour again
-/// clears its "seen" flag. Each card shows its tab behind it; finishing or skipping goes back to
+/// version first opens while helper text is on, and again each time Settings → Help → Show the tour
+/// again is tapped. Each card shows its tab behind it; finishing or skipping goes back to
 /// the first tab and remembers the tour was seen, on this phone, for this version.
 struct FirstRunTour: ViewModifier {
     let steps: [TourStep]
@@ -17,6 +17,8 @@ struct FirstRunTour: ViewModifier {
     let onFinish: () -> Void
 
     @AppStorage private var seen: Bool
+    /// Settings → Help → Show the tour again bumps it.
+    @AppStorage(TourRules.replayKey) private var replays = 0
     @Environment(\.showsGuidance) private var showsGuidance
     @State private var index: Int?
 
@@ -42,9 +44,9 @@ struct FirstRunTour: ViewModifier {
                 try? await Task.sleep(for: .milliseconds(700))
                 if TourRules.startsByItself(seen: seen, showsGuidance: showsGuidance) { start() }
             }
-            .onChange(of: seen) { wasSeen, isSeen in
+            .onChange(of: replays) {
                 // Show the tour again, from Settings.
-                if wasSeen && !isSeen { start() }
+                start()
             }
             .onChange(of: index) { _, now in
                 if let now, steps.indices.contains(now) { onStep(steps[now]) }

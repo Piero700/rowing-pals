@@ -8,6 +8,12 @@ text switched on). Your own account has used the app for longer, so to see it:
 1. Open the app (rower version) → **Profile** → the settings button at the top right.
 2. Scroll to **Help** → tap **Show the tour again**. Settings closes.
 
+Fixed 2026-11-20: **Show the tour again** used to close Settings and leave you on Profile with no
+tour, for anyone whose tour had never started by itself (it cleared a "seen" flag that was already
+clear, so nothing changed). It now bumps a counter of its own, so every tap starts it.
+
+- [ ] Tap **Show the tour again** twice in a row (finishing the tour in between): it starts both times.
+
 ## Rower version
 - [ ] The screen dims, with a clear rounded hole round **Feed**, and a card above the bar: "1 of 5 · Your club's sessions".
 - [ ] **Next** moves the hole to the **+** (Log) — "Log a session" — then Rankings, Calendar, Profile; the tab behind changes each time.

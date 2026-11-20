@@ -30,6 +30,8 @@ struct SettingsView: View {
     /// Helper text (decision 98): the days counted and the person's own choice, which wins once made.
     @AppStorage(GuidanceStore.daysKey) private var guidanceDays = ""
     @AppStorage(GuidanceStore.choiceKey) private var guidanceChoice = ""
+    /// Show the tour again (decision 109): the tabs underneath start the tour when it changes.
+    @AppStorage(TourRules.replayKey) private var tourReplays = 0
     /// Whether Log takes a selfie with the monitor photo (decision 98).
     @AppStorage(SelfieDefault.storageKey) private var selfieByDefault = true
     /// The rower or coach version (decision 67); the switch row changes it.
@@ -245,9 +247,7 @@ struct SettingsView: View {
                         SettingsRow(title: "Show the tour again", subtitle: "A quick look round the main parts of the app.") {
                             SettingsChevron()
                         } action: {
-                            for mode in [AppMode.rowing, .coaching] {
-                                UserDefaults.standard.set(false, forKey: TourRules.seenKey(mode))
-                            }
+                            tourReplays += 1
                             dismiss()
                         }
                         SettingsDivider()
