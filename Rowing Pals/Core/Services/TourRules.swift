@@ -19,6 +19,11 @@ nonisolated enum TourRules {
         }
     }
 
+    /// Bumped by Settings → Help → Show the tour again; the shown version's tour starts on every
+    /// change. A counter, not the "seen" flag: someone whose tour never started by itself already has
+    /// "seen" false, so clearing it again changed nothing and the tour never came.
+    static let replayKey = "tourReplayRequests"
+
     /// Whether the tour starts by itself when the version opens.
     static func startsByItself(seen: Bool, showsGuidance: Bool) -> Bool {
         !seen && showsGuidance

@@ -44,4 +44,10 @@ struct TourRulesTests {
         }
         #expect(TourRules.progressText(index: 1, count: 5) == "2 of 5")
     }
+
+    /// Replay is its own counter: clearing "seen" did nothing for someone who'd never seen the tour.
+    @Test func replayHasItsOwnKey() {
+        #expect(TourRules.replayKey != TourRules.seenKey(.rowing))
+        #expect(TourRules.replayKey != TourRules.seenKey(.coaching))
+    }
 }
