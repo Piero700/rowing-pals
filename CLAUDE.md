@@ -169,7 +169,7 @@ After any change:
 
 ## Current focus
 
-**On branch `t48-whatsapp-web` (2026-11-19, not yet merged): WhatsApp share picture and the rower web page** (decision 110). Coach Calendar → Share week and a workout → Share workout make a picture for the WhatsApp group; `web/` is the page at rowingpals.com/go where rowers without an iPhone answer Available / Can't, Can you race? and check in. The Edge Functions' CORS change is deployed to staging (2026-11-20), not production. Phone checklist `docs/testing/whatsapp-share-and-web.md`; putting it online `docs/production/web-launch.md`. Earlier:
+**On branch `t48-whatsapp-web` (2026-11-19, not yet merged): WhatsApp share picture and the rower web page** (decision 110). Coach Calendar → Share week and a workout → Share workout make a picture for the WhatsApp group; `web/` is the page at rowingpals.com/go where rowers without an iPhone answer Available / Can't, Can you race? and check in. The Edge Functions' CORS change is deployed to staging (2026-11-20), not production. Since 2026-11-23 rowingpals.com itself (Netlify site `earnest-lokum-3b10a8`) builds this branch with the staging Supabase variables, so every push to it goes live there; see the note at the top of `docs/production/web-launch.md`. Phone checklist `docs/testing/whatsapp-share-and-web.md`; putting it online `docs/production/web-launch.md`. Earlier:
 
 **App Store launch (2026-11-19):** step-by-step in `docs/production/app-store-launch.md`. Done in code: privacy
 manifest (`PrivacyInfo.xcprivacy`), the Sensitive Content Analysis entitlement (photo filtering now really runs), and

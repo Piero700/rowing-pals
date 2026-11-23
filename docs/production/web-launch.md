@@ -6,6 +6,16 @@ Do section 4 only at App Store launch, after `docs/production/app-store-launch.m
 No keys or project references go in this file: take them from `Staging.xcconfig` and the Supabase dashboard.
 **(Claude)** marks a step you tell Claude to do.
 
+> **Changed 23 Nov 2026: rowingpals.com is the test site.** GitHub was connected to the existing rowingpals.com
+> Netlify site (`earnest-lokum-3b10a8`), not a new staging site, and the user chose to keep it that way. Until
+> production Supabase exists, rowingpals.com builds branch `t48-whatsapp-web` in staging mode with the **staging**
+> Supabase variables, so `rowingpals.com/go` uses staging data and every push to that branch goes live. So, in place of
+> sections 2 and 3: add `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` (staging) to that site and redeploy;
+> `WEB_ORIGINS` is not needed (rowingpals.com is allowed in the code); add `https://rowingpals.com/go/` to staging
+> Supabase's Redirect URLs and `https://rowingpals.com` to the Google Web client's Authorised JavaScript origins.
+> After the branch is merged, set the site's branch to `main`. At launch (section 4), change the same site's variables to
+> production and add `WEB_MODE` = `production`, instead of making a new site.
+
 ## 1. Deploy the two Edge Functions to staging
 They gained CORS headers so a browser may call them.
 1. **Done 20 Nov 2026:** both are deployed to staging (`username-auth` version 2, `delete-account` version 6,
