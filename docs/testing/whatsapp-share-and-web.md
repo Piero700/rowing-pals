@@ -64,7 +64,8 @@ browser or Android phone uses the web page. Do the **web launch steps for stagin
    - [ ] Same checks as A9: the picture arrives, the link is its caption, the picture is readable.
 
 ## B. On an Android phone, or a browser on your laptop
-Use the staging web address from `docs/production/web-launch.md` section 2 (written there once you've made the site).
+Use https://rowingpals.com/go/ — since 2026-11-23 rowingpals.com is the test site, on staging data (see the note at the
+top of `docs/production/web-launch.md`).
 On a laptop you can narrow the window to phone width to see the phone layout.
 
 ### B1. Sign-in screen
