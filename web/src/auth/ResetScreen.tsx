@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { GroupedCard } from "../components/GroupedCard";
 import { getSupabase } from "../lib/supabase";
 import { MINIMUM_PASSWORD_LENGTH, messageFor, resetWithCode, sendReset } from "./authService";
-import { FormError, FormNotice, InputRow } from "./FormBits";
+import { FormError, FormNotice, FieldRow } from "./FormBits";
 
 export function ResetScreen() {
   const navigate = useNavigate();
@@ -67,7 +67,7 @@ export function ResetScreen() {
         <div className="form-gap" />
         <form onSubmit={send}>
           <GroupedCard>
-            <InputRow
+            <FieldRow
               label="Email or username"
               value={identifier}
               onChange={(e) => setIdentifier(e.target.value)}
@@ -95,14 +95,14 @@ export function ResetScreen() {
       <div className="form-gap" />
       <form onSubmit={reset}>
         <GroupedCard>
-          <InputRow
+          <FieldRow
             label="Code"
             value={code}
             onChange={(e) => setCode(e.target.value)}
             inputMode="numeric"
             autoComplete="one-time-code"
           />
-          <InputRow
+          <FieldRow
             label="New password"
             type="password"
             value={newPassword}

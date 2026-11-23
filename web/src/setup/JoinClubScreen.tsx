@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { FormError, FormNotice, InputRow } from "../auth/FormBits";
+import { FormError, FormNotice, FieldRow } from "../auth/FormBits";
 import { messageFor } from "../auth/authService";
 import { GroupedCard } from "../components/GroupedCard";
 import { GroupedRow } from "../components/GroupedRow";
@@ -67,7 +67,7 @@ export function JoinClubScreen({ onDone }: { onDone: () => void }) {
       <p className="form-notice">Search for your club to join it, or enter an invite code from a club admin.</p>
       <div className="form-gap" />
       <GroupedCard>
-        <InputRow label="Search clubs" value={text} onChange={(e) => setText(e.target.value)} autoCapitalize="none" autoCorrect="off" />
+        <FieldRow label="Search clubs" value={text} onChange={(e) => setText(e.target.value)} autoCapitalize="none" autoCorrect="off" />
       </GroupedCard>
       <div className="form-gap" />
       {results.length > 0 && (
@@ -87,7 +87,7 @@ export function JoinClubScreen({ onDone }: { onDone: () => void }) {
       <div className="form-gap" />
       <form onSubmit={submitCode}>
         <GroupedCard>
-          <InputRow label="Invite code" value={code} onChange={(e) => setCode(e.target.value)} autoCapitalize="none" autoCorrect="off" />
+          <FieldRow label="Invite code" value={code} onChange={(e) => setCode(e.target.value)} autoCapitalize="none" autoCorrect="off" />
         </GroupedCard>
         <FormError message={error} />
         <div className="form-gap" />

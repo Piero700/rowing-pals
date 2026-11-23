@@ -119,6 +119,25 @@ a {
   text-align: right;
 }
 
+.grouped-field {
+  width: 100%;
+  min-height: var(--row-height);
+  border: 0;
+  background: transparent;
+  color: var(--ink-primary);
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+  text-align: left;
+}
+
+.grouped-field::placeholder {
+  color: var(--ink-faint);
+}
+
+.grouped-field:focus {
+  outline: none;
+}
+
 .grouped-input:focus {
   outline: none;
   color: var(--ink-primary);

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { GroupedCard } from "../components/GroupedCard";
 import { getSupabase } from "../lib/supabase";
 import { EmailNotConfirmedError, ensureProfileExists, messageFor, resendSignupCode, signIn, signInWithGoogle } from "./authService";
-import { FormError, InputRow } from "./FormBits";
+import { FormError, FieldRow } from "./FormBits";
 
 export function SignInScreen() {
   const navigate = useNavigate();
@@ -72,7 +72,7 @@ export function SignInScreen() {
       <div className="form-gap" />
       <form onSubmit={submit}>
         <GroupedCard>
-          <InputRow
+          <FieldRow
             label="Email or username"
             value={identifier}
             onChange={(e) => setIdentifier(e.target.value)}
@@ -80,7 +80,7 @@ export function SignInScreen() {
             autoComplete="username"
             autoCorrect="off"
           />
-          <InputRow
+          <FieldRow
             label="Password"
             type="password"
             value={password}

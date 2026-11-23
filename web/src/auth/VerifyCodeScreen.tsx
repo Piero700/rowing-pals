@@ -3,7 +3,7 @@ import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { GroupedCard } from "../components/GroupedCard";
 import { getSupabase } from "../lib/supabase";
 import { messageFor, resendSignupCode, verifySignupCode } from "./authService";
-import { FormError, FormNotice, InputRow } from "./FormBits";
+import { FormError, FormNotice, FieldRow } from "./FormBits";
 
 export function VerifyCodeScreen() {
   const navigate = useNavigate();
@@ -51,7 +51,7 @@ export function VerifyCodeScreen() {
       <div className="form-gap" />
       <form onSubmit={submit}>
         <GroupedCard>
-          <InputRow
+          <FieldRow
             label="Code"
             value={code}
             onChange={(e) => setCode(e.target.value)}

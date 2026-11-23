@@ -4,7 +4,7 @@ import { GroupedCard } from "../components/GroupedCard";
 import { getSupabase } from "../lib/supabase";
 import { TOO_YOUNG_MESSAGE, isOldEnough } from "../rules/age";
 import { MINIMUM_PASSWORD_LENGTH, messageFor, signUp } from "./authService";
-import { FormError, InputRow } from "./FormBits";
+import { FieldRow, FormError, InputRow } from "./FormBits";
 
 export function CreateAccountScreen() {
   const navigate = useNavigate();
@@ -42,8 +42,8 @@ export function CreateAccountScreen() {
       <div className="form-gap" />
       <form onSubmit={submit}>
         <GroupedCard>
-          <InputRow label="Name" value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" maxLength={40} />
-          <InputRow
+          <FieldRow label="Name" value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" maxLength={40} />
+          <FieldRow
             label="Email"
             type="email"
             value={email}
@@ -51,7 +51,7 @@ export function CreateAccountScreen() {
             autoCapitalize="none"
             autoComplete="email"
           />
-          <InputRow
+          <FieldRow
             label="Password"
             type="password"
             value={password}
