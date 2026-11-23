@@ -16,7 +16,7 @@ browser or Android phone uses the web page. Do the **web launch steps for stagin
 - [ ] On your iPhone, install the build from this branch from Xcode (Staging scheme), signed in as a coach whose club has
       at least one practice or workout this week and next week. If it has none, add one in Calendar first.
 - [ ] Have a real WhatsApp group (you plus one other person is enough) open on the iPhone.
-- [ ] Staging only: Supabase → **Authentication** → **Providers** → **Email** → look at **Confirm email**.
+- [ ] Staging only: Supabase → **Authentication** → **Providers** → **Email** → look at **Confirm email**. (On, checked 2026-11-23.)
       CLAUDE.md says it's off on staging, but staging has been sending a 6-digit code by email. Write down what it shows
       (on or off). It decides whether step B2 shows a code screen.
 
